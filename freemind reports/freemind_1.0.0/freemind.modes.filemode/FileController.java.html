@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FileController.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.filemode</a> &gt; <span class="el_source">FileController.java</span></div><h1>FileController.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.filemode;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.io.File;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JToolBar;
+
+import freemind.controller.MenuBar;
+import freemind.controller.StructuredMenuHolder;
+import freemind.extensions.HookFactory;
+import freemind.modes.MapAdapter;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.Mode;
+import freemind.modes.ModeController;
+import freemind.modes.common.actions.NewMapAction;
+import freemind.modes.viewmodes.ViewControllerAdapter;
+import freemind.view.mindmapview.MainView;
+
+public class FileController extends ViewControllerAdapter {
+
+<span class="nc" id="L47">	Action newMap = new NewMapAction(this);</span>
+<span class="nc" id="L48">	Action center = new CenterAction();</span>
+<span class="nc" id="L49">	Action openPath = new OpenPathAction();</span>
+
+<span class="nc" id="L51">	private JPopupMenu popupmenu = new FilePopupMenu(this);</span>
+
+	public FileController(Mode mode) {
+<span class="nc" id="L54">		super(mode);</span>
+<span class="nc" id="L55">	}</span>
+
+	public JToolBar getModeToolBar() {
+<span class="nc" id="L58">		return ((FileMode) getMode()).getToolbar();</span>
+	}
+
+	public MapAdapter newModel(ModeController modeController) {
+<span class="nc" id="L62">		return new FileMapModel(getFrame(), modeController);</span>
+	}
+
+	public MindMapNode newNode(Object userObject, MindMap map) {
+<span class="nc" id="L66">		return new FileNodeModel((File) userObject, getFrame(), map);</span>
+	}
+
+	public JPopupMenu getPopupMenu() {
+<span class="nc" id="L70">		return this.popupmenu;</span>
+	}
+
+	// -----------------------------------------------------------------------------------
+
+	// Private
+	//
+
+	private class CenterAction extends AbstractAction {
+<span class="nc" id="L79">		CenterAction() {</span>
+<span class="nc" id="L80">			super(getController().getResourceString(&quot;center&quot;));</span>
+<span class="nc" id="L81">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			if (getSelected() != null) {</span>
+<span class="nc" id="L85">				MindMap map = new FileMapModel(</span>
+<span class="nc" id="L86">						((FileNodeModel) getSelected()).getFile(), getFrame(),</span>
+						/*
+						 * DON'T COPY THIS, AS THIS IS A BAD HACK! The
+						 * Constructor needs a new instance of a modecontroller.
+						 */
+<span class="nc" id="L91">						FileController.this);</span>
+<span class="nc" id="L92">				newMap(map);</span>
+			}
+<span class="nc" id="L94">		}</span>
+	}
+
+	private class OpenPathAction extends AbstractAction {
+<span class="nc" id="L98">		OpenPathAction() {</span>
+<span class="nc" id="L99">			super(getController().getResourceString(&quot;open&quot;));</span>
+<span class="nc" id="L100">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L103">			String inputValue = JOptionPane.showInputDialog(getController()</span>
+<span class="nc" id="L104">					.getView().getSelected(), getText(&quot;open&quot;), &quot;&quot;);</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			if (inputValue != null) {</span>
+<span class="nc" id="L106">				File newCenter = new File(inputValue);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (newCenter.exists()) { // and is a folder</span>
+<span class="nc" id="L108">					MindMap map = new FileMapModel(newCenter, getFrame(),</span>
+					/*
+					 * DON'T COPY THIS, AS THIS IS A BAD HACK! The Constructor
+					 * needs a new instance of a modecontroller.
+					 */
+<span class="nc" id="L113">					FileController.this);</span>
+<span class="nc" id="L114">					newMap(map);</span>
+				}
+			}
+<span class="nc" id="L117">		}</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.ModeController#updateMenus(freemind.controller.
+	 * StructuredMenuHolder)
+	 */
+	public void updateMenus(StructuredMenuHolder holder) {
+<span class="nc" id="L127">		add(holder, MenuBar.EDIT_MENU + &quot;/find&quot;, find, &quot;keystroke_find&quot;);</span>
+<span class="nc" id="L128">		add(holder, MenuBar.EDIT_MENU + &quot;/findNext&quot;, findNext,</span>
+<span class="nc" id="L129">				&quot;keystroke_find_next&quot;);</span>
+<span class="nc" id="L130">		add(holder, MenuBar.EDIT_MENU + &quot;/openPath&quot;, openPath, null);</span>
+<span class="nc" id="L131">	}</span>
+
+	public HookFactory getHookFactory() {
+<span class="nc" id="L134">		throw new IllegalArgumentException(&quot;Not implemented yet.&quot;);</span>
+	}
+
+	public void plainClick(MouseEvent e) {
+		/* perform action only if one selected node. */
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (getSelecteds().size() != 1)</span>
+<span class="nc" id="L140">			return;</span>
+<span class="nc" id="L141">		final MainView component = (MainView) e.getComponent();</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		if (component.isInFollowLinkRegion(e.getX())) {</span>
+<span class="nc" id="L143">			loadURL();</span>
+<span class="nc" id="L144">		} else {</span>
+<span class="nc" id="L145">			MindMapNode node = (component).getNodeView().getModel();</span>
+<span class="nc" id="L146">			toggleFolded(node);</span>
+		}
+<span class="nc" id="L148">	}</span>
+
+	private void toggleFolded(MindMapNode node) {
+<span class="nc bnc" id="L151" title="All 4 branches missed.">		if (node.hasChildren() &amp;&amp; !node.isRoot()) {</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			setFolded(node, !node.isFolded());</span>
+		}
+<span class="nc" id="L154">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

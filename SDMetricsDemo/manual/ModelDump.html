@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - The View 'Model'</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="CCompView.html">Prev</a> - <a href="MetCat.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > 4.12 The View 'Model'
+<hr>
+<h2><a name="ModelDump"></a>4.12 The View 'Model'</h2>
+
+This view shows the "raw" UML model information that
+SDMetrics extracted from your XMI files. For each element type, you
+obtain one table showing the model elements by row, element attributes
+by column.<p>
+
+<img src="images/modelview.png" alt="Model View"><br>
+<b>Figure 20:&nbsp;The View 'Model'</b><p>
+
+Figure&nbsp;20 shows, for example, the table for metamodel element "package" 
+with three of its attributes "id", "name", and "context" (see <a href="MetaModel.html">Section&nbsp;7.1 "SDMetrics Metamodel"</a> and
+<a href="LOMeta.html">Appendix&nbsp;A: "Metamodels"</a>). The table provides the XMI id, name, and a reference to its
+owner (XMI id of the owner) for all packages of the UML model.<p>
+
+Likewise, you obtain tables for all other model element types with 
+their respective attributes. As a result, you have a complete representation
+of your UML design in a table format (complete as far as SDMetrics' design
+measurement and rule checking requirements are concerned).<p>
+
+The context menu of the table provides quick access to the Kiviat diagram of the selected element,
+as well as simple navigation feature for cross-reference attributes. Via the context menu for cross-reference
+attributes you can find and show each model element referenced by the cross-reference attribute.
+With the <img src="images/histback.gif"> and <img src="images/histforw.gif"> arrows in the upper right corner 
+of the model view you can move back and forth within the previously selected model elements.<p>
+
+The most important feature of this view is the save button 
+<img src="images/save.gif" alt="save button" /> to export the tables to files (see <a href="ExMetrics.html">Section&nbsp;4.15.1 "Exporting Data Tables"</a>).
+These files are easy to parse. This feature is useful if you want
+to build a custom application that performs operations on your UML
+designs, using the flexible XMI import capabilities of SDMetrics.<p>
+
+The model view also comes in handy when you create your own custom metamodels
+and XMI transformations (see <a href="MetaTrans.html">Section&nbsp;7 "SDMetrics Metamodel and XMI Transformation Files"</a>). You can use this view to quickly
+verify if your XMI transformations work as intended.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="CCompView.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="MainWind.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="MetCat.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.11.2 "Viewing Connected Components"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.13 "The View 'Catalog'"</td></tr></table>
+
+</body>
+</html>

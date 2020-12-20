@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MainView.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">MainView.java</span></div><h1>MainView.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2007  Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.view.mindmapview;
+
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.event.KeyEvent;
+import java.awt.geom.AffineTransform;
+
+import javax.swing.Icon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+
+import freemind.controller.Controller;
+import freemind.controller.MenuBar;
+import freemind.main.HtmlTools;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+
+/**
+ * Base class for all node views.
+ * */
+public abstract class MainView extends JLabel {
+<span class="nc" id="L48">	static Dimension minimumSize = new Dimension(0, 0);</span>
+<span class="nc" id="L49">	static Dimension maximumSize = new Dimension(Integer.MAX_VALUE,</span>
+<span class="nc" id="L50">			Integer.MAX_VALUE);</span>
+<span class="nc" id="L51">	private static java.util.logging.Logger logger = null;</span>
+	private static final int MIN_HOR_NODE_SIZE = 10;
+
+	int getZoomedFoldingSymbolHalfWidth() {
+<span class="nc" id="L55">		return getNodeView().getZoomedFoldingSymbolHalfWidth();</span>
+	}
+
+<span class="nc" id="L58">	MainView() {</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L60">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L61">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L63">		isPainting = false;</span>
+<span class="nc" id="L64">		setAlignmentX(NodeView.CENTER_ALIGNMENT);</span>
+<span class="nc" id="L65">		setHorizontalAlignment(CENTER);</span>
+<span class="nc" id="L66">		setVerticalAlignment(CENTER);</span>
+<span class="nc" id="L67">	}</span>
+
+	public Dimension getMinimumSize() {
+<span class="nc" id="L70">		return minimumSize;</span>
+	}
+
+	public Dimension getMaximumSize() {
+<span class="nc" id="L74">		return maximumSize;</span>
+	}
+
+	private boolean isPainting;
+
+	public NodeView getNodeView() {
+<span class="nc" id="L80">		return (NodeView) SwingUtilities.getAncestorOfClass(NodeView.class,</span>
+<span class="nc" id="L81">				this);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JComponent#getPreferredSize()
+	 */
+	public Dimension getPreferredSize() {
+<span class="nc" id="L90">		final String text = getText();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		boolean isEmpty = text.length() == 0</span>
+<span class="nc bnc" id="L92" title="All 6 branches missed.">				|| (HtmlTools.isHtmlNode(text) &amp;&amp; text.indexOf(&quot;&lt;img&quot;) &lt; 0 &amp;&amp; HtmlTools</span>
+<span class="nc" id="L93">						.htmlToPlain(text).length() == 0);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (isEmpty) {</span>
+<span class="nc" id="L95">			setText(&quot;!&quot;);</span>
+		}
+<span class="nc" id="L97">		Dimension prefSize = super.getPreferredSize();</span>
+<span class="nc" id="L98">		final float zoom = getNodeView().getMap().getZoom();</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (zoom != 1F) {</span>
+			// TODO: Why 0.99? fc, 23.4.2011
+<span class="nc" id="L101">			prefSize.width = (int) (0.99 + prefSize.width * zoom);</span>
+<span class="nc" id="L102">			prefSize.height = (int) (0.99 + prefSize.height * zoom);</span>
+		}
+
+<span class="nc bnc" id="L105" title="All 4 branches missed.">		if (isCurrentlyPrinting() &amp;&amp; MapView.NEED_PREF_SIZE_BUG_FIX) {</span>
+<span class="nc" id="L106">			prefSize.width += getNodeView().getMap().getZoomed(10);</span>
+		}
+<span class="nc" id="L108">		prefSize.width = Math.max(</span>
+<span class="nc" id="L109">				getNodeView().getMap().getZoomed(MIN_HOR_NODE_SIZE),</span>
+<span class="nc" id="L110">				prefSize.width);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (isEmpty) {</span>
+<span class="nc" id="L112">			setText(&quot;&quot;);</span>
+		}
+<span class="nc" id="L114">		prefSize.width += getNodeView().getMap().getZoomed(12);</span>
+<span class="nc" id="L115">		prefSize.height += getNodeView().getMap().getZoomed(4);</span>
+		// /*@@@@@@@@@@@@@@*/
+		// prefSize.width = 150;
+		// prefSize.height = 20;
+<span class="nc" id="L119">		return prefSize;</span>
+	}
+
+	public void paint(Graphics g) {
+<span class="nc" id="L123">		float zoom = getZoom();</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (zoom != 1F) {</span>
+			// Dimitry: Workaround because Swing do not use fractional metrics
+			// for laying JLabels out
+<span class="nc" id="L127">			final Graphics2D g2 = (Graphics2D) g;</span>
+<span class="nc" id="L128">			zoom *= ZOOM_CORRECTION_FACTOR;</span>
+<span class="nc" id="L129">			final AffineTransform transform = g2.getTransform();</span>
+<span class="nc" id="L130">			g2.scale(zoom, zoom);</span>
+<span class="nc" id="L131">			isPainting = true;</span>
+<span class="nc" id="L132">			super.paint(g);</span>
+<span class="nc" id="L133">			isPainting = false;</span>
+<span class="nc" id="L134">			g2.setTransform(transform);</span>
+<span class="nc" id="L135">		} else {</span>
+<span class="nc" id="L136">			super.paint(g);</span>
+		}
+<span class="nc" id="L138">	}</span>
+
+	Controller getController() {
+<span class="nc" id="L141">		return getNodeView().getMap().getController();</span>
+	}
+
+	protected boolean isCurrentlyPrinting() {
+<span class="nc" id="L145">		return getNodeView().getMap().isCurrentlyPrinting();</span>
+	}
+
+	private float getZoom() {
+<span class="nc" id="L149">		float zoom = getNodeView().getMap().getZoom();</span>
+<span class="nc" id="L150">		return zoom;</span>
+	}
+
+	protected void printComponent(Graphics g) {
+<span class="nc" id="L154">		super.paintComponent(g);</span>
+<span class="nc" id="L155">	}</span>
+
+	public void paintSelected(Graphics2D graphics) {
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		if (getNodeView().useSelectionColors()) {</span>
+<span class="nc" id="L159">			paintBackground(graphics, getNodeView().getSelectedColor());</span>
+<span class="nc" id="L160">		} else {</span>
+<span class="nc" id="L161">			final Color backgroundColor = getNodeView().getModel()</span>
+<span class="nc" id="L162">					.getBackgroundColor();</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			if (backgroundColor != null) {</span>
+<span class="nc" id="L164">				paintBackground(graphics, backgroundColor);</span>
+			}
+		}
+<span class="nc" id="L167">	}</span>
+
+	protected void paintBackground(Graphics2D graphics, Color color) {
+<span class="nc" id="L170">		graphics.setColor(color);</span>
+<span class="nc" id="L171">		graphics.fillRect(0, 0, getWidth() - 1, getHeight() - 1);</span>
+<span class="nc" id="L172">	}</span>
+
+	public void paintDragOver(Graphics2D graphics) {
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (isDraggedOver == NodeView.DRAGGED_OVER_SON) {</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if (getNodeView().isLeft()) {</span>
+<span class="nc" id="L177">				graphics.setPaint(new GradientPaint(getWidth() * 3 / 4, 0,</span>
+<span class="nc" id="L178">						getNodeView().getMap().getBackground(), getWidth() / 4,</span>
+<span class="nc" id="L179">						0, NodeView.dragColor));</span>
+<span class="nc" id="L180">				graphics.fillRect(0, 0, getWidth() * 3 / 4, getHeight() - 1);</span>
+<span class="nc" id="L181">			} else {</span>
+<span class="nc" id="L182">				graphics.setPaint(new GradientPaint(getWidth() / 4, 0,</span>
+<span class="nc" id="L183">						getNodeView().getMap().getBackground(),</span>
+<span class="nc" id="L184">						getWidth() * 3 / 4, 0, NodeView.dragColor));</span>
+<span class="nc" id="L185">				graphics.fillRect(getWidth() / 4, 0, getWidth() - 1,</span>
+<span class="nc" id="L186">						getHeight() - 1);</span>
+			}
+		}
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		if (isDraggedOver == NodeView.DRAGGED_OVER_SIBLING) {</span>
+<span class="nc" id="L191">			graphics.setPaint(new GradientPaint(0, getHeight() * 3 / 5,</span>
+<span class="nc" id="L192">					getNodeView().getMap().getBackground(), 0, getHeight() / 5,</span>
+<span class="nc" id="L193">					NodeView.dragColor));</span>
+<span class="nc" id="L194">			graphics.fillRect(0, 0, getWidth() - 1, getHeight() - 1);</span>
+		}
+<span class="nc" id="L196">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JComponent#getHeight()
+	 */
+	public int getHeight() {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (isPainting) {</span>
+<span class="nc" id="L205">			final float zoom = getZoom();</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">			if (zoom != 1F) {</span>
+<span class="nc" id="L207">				return (int) (super.getHeight() / zoom);</span>
+			}
+		}
+<span class="nc" id="L210">		return super.getHeight();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JComponent#getWidth()
+	 */
+	public int getWidth() {
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		if (isPainting) {</span>
+<span class="nc" id="L220">			final float zoom = getZoom();</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			if (zoom != 1F) {</span>
+<span class="nc" id="L222">				return (int) (0.99f + super.getWidth() / zoom);</span>
+			}
+		}
+<span class="nc" id="L225">		return super.getWidth();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JComponent#processKeyBinding(javax.swing.KeyStroke,
+	 * java.awt.event.KeyEvent, int, boolean)
+	 */
+	protected boolean processKeyBinding(KeyStroke ks, KeyEvent e,
+			int condition, boolean pressed) {
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		if (super.processKeyBinding(ks, e, condition, pressed))</span>
+<span class="nc" id="L237">			return true;</span>
+		// try key bindings of the menu bar even if the menu bar is not visible
+<span class="nc" id="L239">		final MenuBar freeMindMenuBar = getController().getFrame()</span>
+<span class="nc" id="L240">				.getFreeMindMenuBar();</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">		return !freeMindMenuBar.isVisible()</span>
+<span class="nc" id="L242">				&amp;&amp; freeMindMenuBar.processKeyBinding(ks, e,</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">						JComponent.WHEN_IN_FOCUSED_WINDOW, pressed);</span>
+	}
+
+	abstract Point getCenterPoint();
+
+	abstract Point getLeftPoint();
+
+	abstract Point getRightPoint();
+
+	/** get x coordinate including folding symbol */
+	public int getDeltaX() {
+<span class="nc" id="L254">		return 0;</span>
+	}
+
+	/** get y coordinate including folding symbol */
+	public int getDeltaY() {
+<span class="nc" id="L259">		return 0;</span>
+	}
+
+	/** get height including folding symbol */
+	protected int getMainViewHeightWithFoldingMark() {
+<span class="nc" id="L264">		return getHeight();</span>
+	}
+
+	/** get width including folding symbol */
+	protected int getMainViewWidthWithFoldingMark() {
+<span class="nc" id="L269">		return getWidth();</span>
+	}
+
+	protected void convertPointToMap(Point p) {
+<span class="nc" id="L273">		Tools.convertPointToAncestor(this, p, getNodeView().getMap());</span>
+<span class="nc" id="L274">	}</span>
+
+	protected void convertPointFromMap(Point p) {
+<span class="nc" id="L277">		Tools.convertPointFromAncestor(getNodeView().getMap(), p, this);</span>
+<span class="nc" id="L278">	}</span>
+
+<span class="nc" id="L280">	protected int isDraggedOver = NodeView.DRAGGED_OVER_NO;</span>
+<span class="nc" id="L281">	public static final float ZOOM_CORRECTION_FACTOR = 1.0F;// former value, but</span>
+															// not very
+															// understandable,
+															// was: 0.97F;
+
+	public void setDraggedOver(int draggedOver) {
+<span class="nc" id="L287">		isDraggedOver = draggedOver;</span>
+<span class="nc" id="L288">	}</span>
+
+	public void setDraggedOver(Point p) {
+<span class="nc bnc" id="L291" title="All 2 branches missed.">		setDraggedOver((dropAsSibling(p.getX())) ? NodeView.DRAGGED_OVER_SIBLING</span>
+<span class="nc" id="L292">				: NodeView.DRAGGED_OVER_SON);</span>
+<span class="nc" id="L293">	}</span>
+
+	public int getDraggedOver() {
+<span class="nc" id="L296">		return isDraggedOver;</span>
+	}
+
+	public boolean dropAsSibling(double xCoord) {
+<span class="nc" id="L300">		return isInVerticalRegion(xCoord, 1. / 3);</span>
+	}
+
+	/** @return true if should be on the left, false otherwise. */
+	public boolean dropPosition(double xCoord) {
+		/* here it is the same as me. */
+<span class="nc" id="L306">		return getNodeView().isLeft();</span>
+	}
+
+	/**
+	 * Determines whether or not the xCoord is in the part p of the node: if
+	 * node is on the left: part [1-p,1] if node is on the right: part[ 0,p] of
+	 * the total width.
+	 */
+	public boolean isInVerticalRegion(double xCoord, double p) {
+<span class="nc bnc" id="L315" title="All 4 branches missed.">		return getNodeView().isLeft() ? xCoord &gt; getSize().width * (1.0 - p)</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">				: xCoord &lt; getSize().width * p;</span>
+	}
+
+	abstract String getStyle();
+
+	abstract int getAlignment();
+
+	public int getTextWidth() {
+<span class="nc" id="L324">		return getWidth() - getIconWidth();</span>
+	}
+
+	public int getTextX() {
+<span class="nc" id="L328">		int gap = (getWidth() - getPreferredSize().width) / 2;</span>
+<span class="nc" id="L329">		final boolean isLeft = getNodeView().isLeft();</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">		if (isLeft) {</span>
+<span class="nc" id="L331">			gap = -gap;</span>
+		}
+<span class="nc bnc" id="L333" title="All 4 branches missed.">		return gap + (isLeft &amp;&amp; !getNodeView().isRoot() ? 0 : getIconWidth());</span>
+	}
+
+	protected int getIconWidth() {
+<span class="nc" id="L337">		final Icon icon = getIcon();</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">		if (icon == null) {</span>
+<span class="nc" id="L339">			return 0;</span>
+		}
+<span class="nc" id="L341">		return getNodeView().getMap().getZoomed(icon.getIconWidth());</span>
+	}
+
+	public boolean isInFollowLinkRegion(double xCoord) {
+<span class="nc" id="L345">		final MindMapNode model = getNodeView().getModel();</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">		return model.getLink() != null</span>
+<span class="nc bnc" id="L347" title="All 4 branches missed.">				&amp;&amp; (model.isRoot() || !model.hasChildren() || isInVerticalRegion(</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">						xCoord, 1. / 2));</span>
+	}
+
+	/**
+	 * @return true if a link is to be displayed and the cursor is the hand now.
+	 */
+	public boolean updateCursor(double xCoord) {
+<span class="nc" id="L355">		boolean followLink = isInFollowLinkRegion(xCoord);</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		int requiredCursor = followLink ? Cursor.HAND_CURSOR</span>
+<span class="nc" id="L357">				: Cursor.DEFAULT_CURSOR;</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">		if (getCursor().getType() != requiredCursor) {</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			setCursor(requiredCursor != Cursor.DEFAULT_CURSOR ? new Cursor(</span>
+<span class="nc" id="L360">					requiredCursor) : null);</span>
+		}
+<span class="nc" id="L362">		return followLink;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

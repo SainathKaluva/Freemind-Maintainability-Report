@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Identifiers</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Constants.html">Prev</a> - <a href="DefMetExp.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="ExpTerms.html">8.5 Expression Terms</a> > <a href="ConstIdent.html">8.5.1 Constants and Identifiers</a> > 8.5.1.2 Identifiers
+<hr>
+<h4><a name="Ident"></a>8.5.1.2 Identifiers</h4> 
+
+Identifiers denote the name of attributes of metamodel elements, 
+the name of metrics, the name of sets, or variables (which we will
+discuss in more depth in a moment).<p>
+
+An identifier is a letter or underscore (a-z, A-Z, _), followed by any sequence of
+digits (0-9), letters, and underscores. Examples of valid
+identifiers are: i, visibility, NumOps, set2, Metric1_a, _principal.<p>
+
+By convention, attribute names start with a lowercase letter, metric and
+set names with an uppercase letter, and variables with an underscore. This
+avoids name conflicts between metrics or sets, attributes, and variables.<p>
+
+<p><b>Variables</b></p>
+
+Metric, set, and rule procedures can define variables that hold values
+with special meanings for the calculation. We access those values in metric,
+set, and condition expressions. SDMetrics defines two standard variables
+<tt>_self</tt> and <tt>_principal</tt>.<p>
+
+The variable <b><tt>_self</tt></b> yields the model
+element for which the expression is evaluated. The variable <b><tt>_principal</tt></b> 
+yields the model element for which the current
+metric, set, or rule is evaluated. Variables <tt>_principal</tt> and 
+<tt>_self</tt> need not be the same element. In fact, the variable
+<tt>_principal</tt> should only be used if it is not the same 
+element as <tt>_self</tt>.<p> 
+
+Consider the following example. The metric counts, for a class
+<tt>A</tt> the supplier classes on which <tt>A</tt> depends that
+have more operations than <tt>A</tt>:
+
+<pre>
+&lt;metric name="SuppliersWithMoreOperations" domain="class"&gt; 
+  &lt;description>The number of classes this class depends on that have
+     more operations.&lt;/description&gt;
+  &lt;projection relation="depclient" target="dependency" element="depsupplier" 
+    eltype="class" condition="_self.NumOps > _principal.NumOps"/&gt;
+&lt;/metric&gt;
+</pre>
+
+The <tt>condition</tt> expression is evaluated, in turn, for each supplier class of class <tt>A</tt>.
+The variable <tt>_self</tt> therefore refers to the supplier class. 
+The variable <tt>_principal</tt> always refers to class <tt>A</tt> for which the metric
+is calculated.<p>
+
+Note: the condition expression in the above example could have also been written as
+<tt>"NumOps > _principal.NumOps"</tt>, because the identifier <tt>NumOps</tt> will be interpreted
+as a metric of the model element for which the expression is calculated. In fact, 
+variable <tt>_self</tt> is rarely needed in practice. Useful applications include
+<ul>
+<li>for clarity/readability, as in the above example to make it clear which model elements are
+being compared.
+<li>to pass the element for which an expression is evaluated into a function, for example in 
+<tt>qualifiedname(_self)</tt>.
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Constants.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="ConstIdent.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="DefMetExp.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.5.1.1 "Constants"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.5.2 "Metric Expressions"</td></tr></table>
+
+</body>
+</html>

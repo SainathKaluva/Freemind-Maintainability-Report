@@ -1,0 +1,600 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>StructuredMenuHolder.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller</a> &gt; <span class="el_source">StructuredMenuHolder.java</span></div><h1>StructuredMenuHolder.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 21.05.2004
+ */
+/*$Id: StructuredMenuHolder.java,v 1.1.4.7.4.11 2010/09/30 22:38:47 christianfoltin Exp $*/
+
+package freemind.controller;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import javax.swing.Action;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
+import javax.swing.JToolBar;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
+
+import freemind.main.HtmlTools;
+import freemind.main.Resources;
+import freemind.main.Tools;
+
+/**
+ * @author foltin
+ * 
+ */
+public class StructuredMenuHolder {
+
+	/**
+	 * 
+	 */
+	public static final String AMOUNT_OF_VISIBLE_MENU_ITEMS = &quot;AMOUNT_OF_VISIBLE_MENU_ITEMS&quot;;
+	public static final int ICON_SIZE = 16;
+	private String mOutputString;
+<span class="nc" id="L61">	private static Icon blindIcon = new BlindIcon(ICON_SIZE);</span>
+	private static final String SELECTED_ICON_PATH = &quot;images/button_ok.png&quot;;
+
+	private static final String SEPARATOR_TEXT = &quot;000&quot;;
+	private static final String ORDER_NAME = &quot;/order&quot;;
+	Map menuMap;
+<span class="nc" id="L67">	private static java.util.logging.Logger logger = null;</span>
+
+	private int mIndent;
+<span class="nc" id="L70">	private static ImageIcon sSelectedIcon;</span>
+
+<span class="nc" id="L72">	public StructuredMenuHolder() {</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L74">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L75">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L77">		menuMap = new HashMap();</span>
+<span class="nc" id="L78">		Vector order = new Vector();</span>
+<span class="nc" id="L79">		menuMap.put(ORDER_NAME, order);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (sSelectedIcon == null) {</span>
+<span class="nc" id="L81">			sSelectedIcon = new ImageIcon(Resources.getInstance().getResource(</span>
+<span class="nc" id="L82">					SELECTED_ICON_PATH));</span>
+		}
+
+<span class="nc" id="L85">	}</span>
+
+	/**
+	 */
+	public JMenu addMenu(JMenu item, String category) {
+<span class="nc" id="L90">		StringTokenizer tokens = new StringTokenizer(category, &quot;/&quot;);</span>
+<span class="nc" id="L91">		return (JMenu) addMenu(item, tokens);</span>
+	}
+
+	/**
+	 */
+	public JMenuItem addMenuItem(JMenuItem item, String category) {
+<span class="nc" id="L97">		StringTokenizer tokens = new StringTokenizer(category, &quot;/&quot;);</span>
+<span class="nc" id="L98">		StructuredMenuItemHolder holder = new StructuredMenuItemHolder();</span>
+<span class="nc" id="L99">		holder.setAction(item.getAction());</span>
+<span class="nc" id="L100">		holder.setMenuItem(item);</span>
+<span class="nc" id="L101">		adjustTooltips(holder);</span>
+<span class="nc" id="L102">		addMenu(holder, tokens);</span>
+<span class="nc" id="L103">		return item;</span>
+	}
+
+	/**
+	 * @param item is an action. If it derives from MenuItemSelectedListener, 
+	 * a check box is used.
+	 */
+	public JMenuItem addAction(Action item, String category) {
+<span class="nc" id="L111">		StringTokenizer tokens = new StringTokenizer(category, &quot;/&quot;);</span>
+<span class="nc" id="L112">		StructuredMenuItemHolder holder = new StructuredMenuItemHolder();</span>
+<span class="nc" id="L113">		holder.setAction(item);</span>
+		/*
+		 * Dimitry, Eric and Dan requested to have the check marks with the
+		 * original JCheckBoxMenuItem.
+		 */
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (item instanceof MenuItemSelectedListener) {</span>
+<span class="nc" id="L119">			holder.setMenuItem(new JCheckBoxMenuItem(item));</span>
+<span class="nc" id="L120">		} else {</span>
+<span class="nc" id="L121">			holder.setMenuItem(new JMenuItem(item));</span>
+		}
+<span class="nc" id="L123">		adjustTooltips(holder);</span>
+<span class="nc" id="L124">		addMenu(holder, tokens);</span>
+<span class="nc" id="L125">		return holder.getMenuItem();</span>
+	}
+
+	/**
+	 * Under Mac, no HTML is rendered for menus.
+	 * 
+	 * @param holder
+	 */
+	private void adjustTooltips(StructuredMenuItemHolder holder) {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if (Tools.isMacOsX()) {</span>
+			// remove html tags from tooltips:
+<span class="nc" id="L136">			String toolTipText = holder.getMenuItem().getToolTipText();</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			if (toolTipText != null) {</span>
+<span class="nc" id="L138">				String toolTipTextWithoutTags = HtmlTools</span>
+<span class="nc" id="L139">						.removeHtmlTagsFromString(toolTipText);</span>
+<span class="nc" id="L140">				logger.finest(&quot;Old tool tip: &quot; + toolTipText</span>
+<span class="nc" id="L141">						+ &quot;, New tool tip: &quot; + toolTipTextWithoutTags);</span>
+<span class="nc" id="L142">				holder.getMenuItem().setToolTipText(toolTipTextWithoutTags);</span>
+			}
+		}
+<span class="nc" id="L145">	}</span>
+
+	public void addCategory(String category) {
+<span class="nc" id="L148">		StringTokenizer tokens = new StringTokenizer(category + &quot;/blank&quot;, &quot;/&quot;);</span>
+		// with this call, the category is created.
+<span class="nc" id="L150">		MapTokenPair categoryPair = getCategoryMap(tokens, menuMap);</span>
+<span class="nc" id="L151">	}</span>
+
+	public void addSeparator(String category) {
+<span class="nc" id="L154">		String sep = category;</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (!sep.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L156">			sep += &quot;/&quot;;</span>
+		}
+<span class="nc" id="L158">		sep += SEPARATOR_TEXT;</span>
+<span class="nc" id="L159">		StringTokenizer tokens = new StringTokenizer(sep, &quot;/&quot;);</span>
+		// separators can occur as doubles.
+<span class="nc" id="L161">		MapTokenPair categoryPair = getCategoryMap(tokens, menuMap);</span>
+		// add an separator
+<span class="nc" id="L163">		categoryPair.map.put(categoryPair.token, new SeparatorHolder());</span>
+<span class="nc" id="L164">		categoryPair.order.add(categoryPair.token);</span>
+<span class="nc" id="L165">	}</span>
+
+	/**
+	 */
+	private Object addMenu(Object item, StringTokenizer tokens) {
+<span class="nc" id="L170">		MapTokenPair categoryPair = getCategoryMap(tokens, menuMap);</span>
+		// add the item:
+<span class="nc" id="L172">		categoryPair.map.put(categoryPair.token, item);</span>
+<span class="nc" id="L173">		categoryPair.order.add(categoryPair.token);</span>
+<span class="nc" id="L174">		return item;</span>
+	}
+
+<span class="nc" id="L177">	private final class PrintMenuAdder implements MenuAdder {</span>
+		public void addMenuItem(StructuredMenuItemHolder holder) {
+<span class="nc" id="L179">			print(&quot;JMenuItem '&quot; + holder.getMenuItem().getActionCommand() + &quot;'&quot;);</span>
+<span class="nc" id="L180">		}</span>
+
+		public void addSeparator() {
+<span class="nc" id="L183">			print(&quot;Separator '&quot; + &quot;'&quot;);</span>
+<span class="nc" id="L184">		}</span>
+
+		// public void addAction(Action action) {
+		// print(&quot;Action    '&quot;+action.getValue(Action.NAME)+&quot;'&quot;);
+		// }
+		public void addCategory(String category) {
+<span class="nc" id="L190">			print(&quot;Category: '&quot; + category + &quot;'&quot;);</span>
+<span class="nc" id="L191">		}</span>
+	}
+
+	private class MapTokenPair {
+		Map map;
+		String token;
+		Vector order;
+
+<span class="nc" id="L199">		MapTokenPair(Map map, String token, Vector order) {</span>
+<span class="nc" id="L200">			this.map = map;</span>
+<span class="nc" id="L201">			this.token = token;</span>
+<span class="nc" id="L202">			this.order = order;</span>
+<span class="nc" id="L203">		}</span>
+	}
+
+	private MapTokenPair getCategoryMap(StringTokenizer tokens, Map thisMap) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (tokens.hasMoreTokens()) {</span>
+<span class="nc" id="L208">			String nextToken = tokens.nextToken();</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">			if (tokens.hasMoreTokens()) {</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">				if (!thisMap.containsKey(nextToken)) {</span>
+<span class="nc" id="L211">					Map newMap = new HashMap();</span>
+<span class="nc" id="L212">					Vector newOrder = new Vector();</span>
+<span class="nc" id="L213">					newMap.put(ORDER_NAME, newOrder);</span>
+<span class="nc" id="L214">					thisMap.put(nextToken, newMap);</span>
+				}
+<span class="nc" id="L216">				Map nextMap = (Map) thisMap.get(nextToken);</span>
+<span class="nc" id="L217">				Vector order = (Vector) thisMap.get(ORDER_NAME);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">				if (!order.contains(nextToken)) {</span>
+<span class="nc" id="L219">					order.add(nextToken);</span>
+				}
+<span class="nc" id="L221">				return getCategoryMap(tokens, nextMap);</span>
+			} else {
+<span class="nc" id="L223">				Vector order = (Vector) thisMap.get(ORDER_NAME);</span>
+<span class="nc" id="L224">				return new MapTokenPair(thisMap, nextToken, order);</span>
+			}
+		}
+		// error case?
+<span class="nc" id="L228">		return null;</span>
+	}
+
+	public void updateMenus(final JMenuBar myItem, String prefix) {
+
+<span class="nc" id="L233">		MapTokenPair pair = getCategoryMap(new StringTokenizer(prefix, &quot;/&quot;),</span>
+<span class="nc" id="L234">				menuMap);</span>
+<span class="nc" id="L235">		Map myMap = (Map) pair.map.get(pair.token);</span>
+<span class="nc" id="L236">		updateMenus(new MenuAdder() {</span>
+
+			public void addMenuItem(StructuredMenuItemHolder holder) {
+<span class="nc" id="L239">				Tools.setLabelAndMnemonic(holder.getMenuItem(), null);</span>
+<span class="nc" id="L240">				myItem.add(holder.getMenuItem());</span>
+<span class="nc" id="L241">			}</span>
+
+			public void addSeparator() {
+<span class="nc" id="L244">				throw new NoSuchMethodError(&quot;addSeparator for JMenuBar&quot;);</span>
+			}
+
+			// public void addAction(Action action) {
+			// throw new NoSuchMethodError(&quot;addAction for JMenuBar&quot;);
+			// }
+
+			public void addCategory(String category) {
+<span class="nc" id="L252">			}</span>
+<span class="nc" id="L253">		}, myMap, new DefaultMenuAdderCreator());</span>
+<span class="nc" id="L254">	}</span>
+
+	public void updateMenus(final JPopupMenu myItem, String prefix) {
+<span class="nc" id="L257">		MapTokenPair pair = getCategoryMap(new StringTokenizer(prefix, &quot;/&quot;),</span>
+<span class="nc" id="L258">				menuMap);</span>
+<span class="nc" id="L259">		Map myMap = (Map) pair.map.get(pair.token);</span>
+<span class="nc" id="L260">		updateMenus(new MenuAdder() {</span>
+
+<span class="nc" id="L262">			StructuredMenuListener listener = new StructuredMenuListener();</span>
+
+			public void addMenuItem(StructuredMenuItemHolder holder) {
+<span class="nc" id="L265">				Tools.setLabelAndMnemonic(holder.getMenuItem(), null);</span>
+<span class="nc" id="L266">				JMenuItem menuItem = holder.getMenuItem();</span>
+<span class="nc" id="L267">				adjustMenuItem(menuItem);</span>
+<span class="nc" id="L268">				myItem.add(menuItem);</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">				if (myItem instanceof MenuEventSupplier) {</span>
+<span class="nc" id="L270">					MenuEventSupplier receiver = (MenuEventSupplier) myItem;</span>
+<span class="nc" id="L271">					receiver.addMenuListener(listener);</span>
+<span class="nc" id="L272">					listener.addItem(holder);</span>
+				}
+
+<span class="nc" id="L275">			}</span>
+
+			public void addSeparator() {
+<span class="nc bnc" id="L278" title="All 2 branches missed.">				if (lastItemIsASeparator(myItem))</span>
+<span class="nc" id="L279">					return;</span>
+<span class="nc" id="L280">				myItem.addSeparator();</span>
+<span class="nc" id="L281">			}</span>
+
+			// public void addAction(Action action) {
+			// myItem.add(action);
+			// }
+
+			public void addCategory(String category) {
+<span class="nc" id="L288">			}</span>
+<span class="nc" id="L289">		}, myMap, new DefaultMenuAdderCreator());</span>
+<span class="nc" id="L290">	}</span>
+
+	/**
+	 */
+	public void updateMenus(final JToolBar bar, String prefix) {
+<span class="nc" id="L295">		MapTokenPair pair = getCategoryMap(new StringTokenizer(prefix, &quot;/&quot;),</span>
+<span class="nc" id="L296">				menuMap);</span>
+<span class="nc" id="L297">		Map myMap = (Map) pair.map.get(pair.token);</span>
+<span class="nc" id="L298">		updateMenus(new MenuAdder() {</span>
+
+			public void addMenuItem(StructuredMenuItemHolder holder) {
+<span class="nc" id="L301">				bar.add(holder.getAction());</span>
+<span class="nc" id="L302">			}</span>
+
+			public void addSeparator() {
+				// no separators to save place. But they look good. fc,
+				// 16.6.2005.
+<span class="nc" id="L307">				bar.addSeparator();</span>
+<span class="nc" id="L308">			}</span>
+
+			// public void addAction(Action action) {
+			// bar.add(action);
+			// }
+
+			public void addCategory(String category) {
+<span class="nc" id="L315">			}</span>
+<span class="nc" id="L316">		}, myMap, new DefaultMenuAdderCreator());</span>
+
+<span class="nc" id="L318">	}</span>
+
+	private interface MenuAdder {
+		void addMenuItem(StructuredMenuItemHolder holder);
+
+		void addSeparator();
+
+		// void addAction(Action action);
+		void addCategory(String category);
+	}
+
+	private static class MenuItemAdder implements MenuAdder {
+
+		/**
+		 * 
+		 */
+<span class="nc" id="L334">		private int mAmountOfVisibleMenuItems = 20;</span>
+<span class="nc" id="L335">		private int mItemCounter = 0;</span>
+<span class="nc" id="L336">		private int mMenuCounter = 0;</span>
+		
+		private JMenu mBaseMenuItem;
+
+		private JMenu myMenuItem;
+
+		private StructuredMenuListener listener;
+
+<span class="nc" id="L344">		public MenuItemAdder(JMenu pMenuItem) {</span>
+<span class="nc" id="L345">			this.myMenuItem = pMenuItem;</span>
+<span class="nc" id="L346">			this.mBaseMenuItem = myMenuItem;</span>
+<span class="nc" id="L347">			mAmountOfVisibleMenuItems = Resources.getInstance().getIntProperty(AMOUNT_OF_VISIBLE_MENU_ITEMS, 20);</span>
+<span class="nc" id="L348">			listener = new StructuredMenuListener();</span>
+<span class="nc" id="L349">			pMenuItem.addMenuListener(listener);</span>
+<span class="nc" id="L350">		}</span>
+
+		public void addMenuItem(StructuredMenuItemHolder holder) {
+<span class="nc" id="L353">			mItemCounter++;</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">			if(mItemCounter &gt; mAmountOfVisibleMenuItems) {</span>
+<span class="nc" id="L355">				String label = Resources.getInstance().getResourceString(&quot;StructuredMenuHolder.next&quot;);</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">				if(mMenuCounter &gt; 0) {</span>
+<span class="nc" id="L357">					label += &quot; &quot; + mMenuCounter;</span>
+				}
+<span class="nc" id="L359">				JMenu jMenu = new JMenu(label);</span>
+<span class="nc" id="L360">				mBaseMenuItem.add(jMenu);</span>
+<span class="nc" id="L361">				myMenuItem = jMenu;</span>
+<span class="nc" id="L362">				mItemCounter = 0;</span>
+<span class="nc" id="L363">				mMenuCounter++;</span>
+			}
+<span class="nc" id="L365">			Tools.setLabelAndMnemonic(holder.getMenuItem(), null);</span>
+<span class="nc" id="L366">			JMenuItem item = holder.getMenuItem();</span>
+<span class="nc" id="L367">			adjustMenuItem(item);</span>
+<span class="nc" id="L368">			listener.addItem(holder);</span>
+<span class="nc" id="L369">			myMenuItem.add(item);</span>
+<span class="nc" id="L370">		}</span>
+
+		public void addSeparator() {
+<span class="nc bnc" id="L373" title="All 2 branches missed.">			if (lastItemIsASeparator(myMenuItem)) {</span>
+<span class="nc" id="L374">				return;</span>
+			}
+<span class="nc" id="L376">			myMenuItem.addSeparator();</span>
+<span class="nc" id="L377">		}</span>
+
+		// public void addAction(Action action) {
+		// myItem.add(action);
+		// }
+
+		public void addCategory(String category) {
+<span class="nc" id="L384">		}</span>
+	}
+
+	/**
+     */
+	static private void adjustMenuItem(JMenuItem item) {
+<span class="nc bnc" id="L390" title="All 2 branches missed.">		if (item.getIcon() == null) {</span>
+<span class="nc" id="L391">			item.setIcon(blindIcon);</span>
+<span class="nc" id="L392">		} else {</span>
+			// align
+<span class="nc bnc" id="L394" title="All 2 branches missed.">			if (item.getIcon().getIconWidth() &lt; ICON_SIZE) {</span>
+<span class="nc" id="L395">				item.setIconTextGap(item.getIconTextGap()</span>
+<span class="nc" id="L396">						+ (ICON_SIZE - item.getIcon().getIconWidth()));</span>
+			}
+		}
+<span class="nc" id="L399">	}</span>
+
+	private interface MenuAdderCreator {
+		MenuAdder createAdder(JMenu baseObject);
+	}
+
+<span class="nc" id="L405">	private class DefaultMenuAdderCreator implements MenuAdderCreator {</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * freemind.controller.StructuredMenuHolder.MenuAdderCreator#createAdder
+		 * (javax.swing.JMenu)
+		 */
+		public MenuAdder createAdder(JMenu baseObject) {
+<span class="nc" id="L415">			return new MenuItemAdder(baseObject);</span>
+		}
+	}
+
+	private class SeparatorHolder {
+<span class="nc" id="L420">		public SeparatorHolder() {</span>
+<span class="nc" id="L421">		}</span>
+	}
+
+	private void updateMenus(MenuAdder menuAdder, Map thisMap,
+			MenuAdderCreator factory) {
+		// System.out.println(thisMap);
+		// iterate through maps and do the changes:
+<span class="nc" id="L428">		Vector myVector = (Vector) thisMap.get(ORDER_NAME);</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">		for (Iterator i = myVector.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L430">			String category = (String) i.next();</span>
+			// The &quot;.&quot; target was handled earlier.
+<span class="nc bnc" id="L432" title="All 2 branches missed.">			if (category.equals(&quot;.&quot;))</span>
+<span class="nc" id="L433">				continue;</span>
+<span class="nc" id="L434">			Object nextObject = thisMap.get(category);</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">			if (nextObject instanceof SeparatorHolder) {</span>
+<span class="nc" id="L436">				menuAdder.addSeparator();</span>
+<span class="nc" id="L437">				continue;</span>
+			}
+<span class="nc bnc" id="L439" title="All 2 branches missed.">			if (nextObject instanceof StructuredMenuItemHolder) {</span>
+<span class="nc" id="L440">				StructuredMenuItemHolder holder = (StructuredMenuItemHolder) nextObject;</span>
+<span class="nc" id="L441">				menuAdder.addMenuItem(holder);</span>
+<span class="nc" id="L442">			}/*</span>
+			 * if(nextObject instanceof JMenuItem) {
+			 * menuAdder.addMenuItem((JMenuItem) nextObject); }
+			 *//*
+				 * else if(nextObject instanceof Action){
+				 * menuAdder.addAction((Action) nextObject); }
+<span class="nc bnc" id="L448" title="All 2 branches missed.">				 */else if (nextObject instanceof Map) {</span>
+<span class="nc" id="L449">				menuAdder.addCategory(category);</span>
+<span class="nc" id="L450">				Map nextMap = (Map) nextObject;</span>
+				MenuAdder nextItem;
+<span class="nc bnc" id="L452" title="All 2 branches missed.">				if (nextMap.containsKey(&quot;.&quot;)) {</span>
+					// add this item to the current place:
+<span class="nc" id="L454">					JMenu baseObject = (JMenu) nextMap.get(&quot;.&quot;);</span>
+<span class="nc" id="L455">					StructuredMenuItemHolder holder = new StructuredMenuItemHolder();</span>
+<span class="nc" id="L456">					holder.setMenuItem(baseObject);</span>
+<span class="nc" id="L457">					menuAdder.addMenuItem(holder);</span>
+<span class="nc" id="L458">					nextItem = factory.createAdder(baseObject);</span>
+<span class="nc" id="L459">				} else {</span>
+<span class="nc" id="L460">					nextItem = menuAdder;</span>
+				}
+<span class="nc" id="L462">				mIndent++;</span>
+<span class="nc" id="L463">				updateMenus(nextItem, nextMap, factory);</span>
+<span class="nc" id="L464">				mIndent--;</span>
+			}
+		}
+<span class="nc" id="L467">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString() {
+<span class="nc" id="L475">		mIndent = 0;</span>
+<span class="nc" id="L476">		mOutputString = &quot;&quot;;</span>
+<span class="nc" id="L477">		updateMenus(new PrintMenuAdder(), menuMap, new PrintMenuAdderCreator());</span>
+
+<span class="nc" id="L479">		return mOutputString;</span>
+	}
+
+<span class="nc" id="L482">	private class PrintMenuAdderCreator implements MenuAdderCreator {</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * freemind.controller.StructuredMenuHolder.MenuAdderCreator#createAdder
+		 * (javax.swing.JMenu)
+		 */
+		public MenuAdder createAdder(JMenu baseObject) {
+<span class="nc" id="L492">			return new PrintMenuAdder();</span>
+		}
+	}
+
+	private void print(String string) {
+<span class="nc bnc" id="L497" title="All 2 branches missed.">		for (int i = 0; i &lt; mIndent; ++i) {</span>
+<span class="nc" id="L498">			mOutputString += (&quot;  &quot;);</span>
+		}
+<span class="nc" id="L500">		mOutputString += (string) + &quot;\n&quot;;</span>
+<span class="nc" id="L501">	}</span>
+
+	public interface MenuEventSupplier {
+		void addMenuListener(MenuListener listener);
+
+		void removeMenuListener(MenuListener listener);
+
+	}
+
+	public static class StructuredMenuListener implements
+			javax.swing.event.MenuListener {
+<span class="nc" id="L512">		private Vector menuItemHolder = new Vector();</span>
+
+<span class="nc" id="L514">		public StructuredMenuListener() {</span>
+<span class="nc" id="L515">		}</span>
+
+		public void menuSelected(MenuEvent arg0) {
+//			System.out.println(&quot;Selected menu items &quot; + arg0);
+<span class="nc bnc" id="L519" title="All 2 branches missed.">			for (Iterator i = menuItemHolder.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L520">				StructuredMenuItemHolder holder = (StructuredMenuItemHolder) i</span>
+<span class="nc" id="L521">						.next();</span>
+<span class="nc" id="L522">				Action action = holder.getAction();</span>
+<span class="nc" id="L523">				boolean isEnabled = false;</span>
+<span class="nc" id="L524">				JMenuItem menuItem = holder.getMenuItem();</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">				if (holder.getEnabledListener() != null) {</span>
+					try {
+<span class="nc" id="L527">						isEnabled = holder.getEnabledListener().isEnabled(</span>
+<span class="nc" id="L528">								menuItem, action);</span>
+<span class="nc" id="L529">					} catch (Exception e) {</span>
+<span class="nc" id="L530">						Resources.getInstance().logException(e);</span>
+					}
+<span class="nc" id="L532">					action.setEnabled(isEnabled);</span>
+//					menuItem.setEnabled(isEnabled);
+				}
+<span class="nc" id="L535">				isEnabled = menuItem.isEnabled();</span>
+<span class="nc bnc" id="L536" title="All 4 branches missed.">				if (isEnabled &amp;&amp; holder.getSelectionListener() != null) {</span>
+<span class="nc" id="L537">					boolean selected = false;</span>
+					try {
+<span class="nc" id="L539">						selected = holder.getSelectionListener().isSelected(</span>
+<span class="nc" id="L540">								menuItem, action);</span>
+<span class="nc" id="L541">					} catch (Exception e) {</span>
+<span class="nc" id="L542">						Resources.getInstance().logException(e);</span>
+					}
+<span class="nc bnc" id="L544" title="All 2 branches missed.">					if (menuItem instanceof JCheckBoxMenuItem) {</span>
+<span class="nc" id="L545">						JCheckBoxMenuItem checkItem = (JCheckBoxMenuItem) menuItem;</span>
+<span class="nc" id="L546">						checkItem.setSelected(selected);</span>
+<span class="nc" id="L547">					} else {</span>
+						// Do icon change if not a check box menu!
+<span class="nc" id="L549">						setSelected(menuItem, selected);</span>
+					}
+				}
+			}
+<span class="nc" id="L553">		}</span>
+
+		public void menuDeselected(MenuEvent arg0) {
+<span class="nc" id="L556">		}</span>
+
+		public void menuCanceled(MenuEvent arg0) {
+<span class="nc" id="L559">		}</span>
+
+		public void addItem(StructuredMenuItemHolder holder) {
+<span class="nc" id="L562">			menuItemHolder.add(holder);</span>
+<span class="nc" id="L563">		}</span>
+	}
+
+	public static boolean lastItemIsASeparator(JMenu menu) {
+<span class="nc bnc" id="L567" title="All 2 branches missed.">		if (menu.getItemCount() &gt; 0) {</span>
+<span class="nc bnc" id="L568" title="All 2 branches missed.">			if (menu.getMenuComponents()[menu.getItemCount() - 1] instanceof JSeparator) {</span>
+				// no separator, if the last was such.
+<span class="nc" id="L570">				return true;</span>
+			}
+		}
+<span class="nc" id="L573">		return false;</span>
+	}
+
+	public static boolean lastItemIsASeparator(JPopupMenu menu) {
+<span class="nc bnc" id="L577" title="All 2 branches missed.">		if (menu.getComponentCount() &gt; 0) {</span>
+<span class="nc bnc" id="L578" title="All 2 branches missed.">			if (menu.getComponent(menu.getComponentCount() - 1) instanceof JPopupMenu.Separator) {</span>
+				// no separator, if the last was such.
+<span class="nc" id="L580">				return true;</span>
+			}
+		}
+<span class="nc" id="L583">		return false;</span>
+	}
+
+	private static void setSelected(JMenuItem menuItem, boolean state) {
+<span class="nc bnc" id="L587" title="All 2 branches missed.">		if (state) {</span>
+<span class="nc" id="L588">			menuItem.setIcon(sSelectedIcon);</span>
+<span class="nc" id="L589">		} else {</span>
+<span class="nc" id="L590">			Icon normalIcon = (Icon) menuItem.getAction().getValue(</span>
+<span class="nc" id="L591">					Action.SMALL_ICON);</span>
+<span class="nc bnc" id="L592" title="All 2 branches missed.">			if (normalIcon == null) {</span>
+<span class="nc" id="L593">				normalIcon = blindIcon;</span>
+			}
+<span class="nc" id="L595">			menuItem.setIcon(normalIcon);</span>
+		}
+<span class="nc" id="L597">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,1048 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MapDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.map</a> &gt; <span class="el_source">MapDialog.java</span></div><h1>MapDialog.java</h1><pre class="source lang-java linenums">package plugins.map;
+
+//License: GPL. Copyright 2008 by Jan Peter Stotz
+
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
+
+import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+
+<span class="nc" id="L43">import org.openstreetmap.gui.jmapviewer.Coordinate;</span>
+import org.openstreetmap.gui.jmapviewer.JMapViewer;
+import org.openstreetmap.gui.jmapviewer.OsmMercator;
+import org.openstreetmap.gui.jmapviewer.OsmTileLoader;
+import org.openstreetmap.gui.jmapviewer.events.JMVCommandEvent;
+import org.openstreetmap.gui.jmapviewer.interfaces.JMapViewerEventListener;
+import org.openstreetmap.gui.jmapviewer.tilesources.OsmTileSource.Mapnik;
+
+import plugins.map.FreeMindMapController.CursorPositionListener;
+import plugins.map.MapNodePositionHolder.MapNodePositionListener;
+import plugins.map.Registration.NodeVisibilityListener;
+import accessories.plugins.time.TableSorter;
+import freemind.common.TextTranslator;
+import freemind.controller.MapModuleManager.MapModuleChangeObserver;
+import freemind.controller.actions.generated.instance.MapLocationStorage;
+import freemind.controller.actions.generated.instance.MapWindowConfigurationStorage;
+import freemind.controller.actions.generated.instance.Place;
+import freemind.controller.actions.generated.instance.TableColumnSetting;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.modes.Mode;
+import freemind.modes.ModeController.NodeSelectionListener;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.hooks.MindMapHookAdapter;
+import freemind.view.MapModule;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * 
+ * Demonstrates the usage of {@link JMapViewer}
+ * 
+ * @author Jan Peter Stotz adapted for FreeMind by Chris.
+ */
+public class MapDialog extends MindMapHookAdapter implements
+		JMapViewerEventListener, MapModuleChangeObserver,
+		MapNodePositionListener, NodeSelectionListener, NodeVisibilityListener {
+
+	private static final String WINDOW_PREFERENCE_STORAGE_PROPERTY = MapDialog.class
+			.getName();
+
+	static final String TILE_CACHE_CLASS = &quot;tile_cache_class&quot;;
+
+	static final String FILE_TILE_CACHE_DIRECTORY = &quot;file_tile_cache_directory&quot;;
+
+	public static final String TILE_CACHE_MAX_AGE = &quot;tile_cache_max_age&quot;;
+
+	private static final int SEARCH_DESCRIPTION_COLUMN = 0;
+
+	public static final int SEARCH_DISTANCE_COLUMN = 1;
+
+	private JCursorMapViewer map = null;
+
+	private JLabel zoomValue = null;
+
+	private JLabel mperpLabelValue = null;
+
+	private MindMapController mMyMindMapController;
+
+	private JDialog mMapDialog;
+
+	private HashMap /* &lt; MapNodePositionHolder, MapMarkerLocation &gt; */mMarkerMap = new HashMap();
+
+	private CloseAction mCloseAction;
+
+	private JPanel mSearchFieldPanel;
+
+	private JSplitPane mSearchSplitPane;
+
+	private boolean mSearchBarVisible;
+
+	private JPanel mSearchPanel;
+
+	private JTextField mSearchTerm;
+
+	static final String MAP_HOOK_NAME = &quot;plugins/map/MapDialog.properties&quot;;
+
+	public static final String TILE_CACHE_PURGE_TIME = &quot;tile_cache_purge_time&quot;;
+
+	public static final long TILE_CACHE_PURGE_TIME_DEFAULT = 1000 * 60 * 10;
+
+	private static final String SEARCH_DESCRIPTION_COLUMN_TEXT = &quot;plugins/map/MapDialog.Description&quot;;
+
+	private static final String SEARCH_DISTANCE_COLUMN_TEXT = &quot;plugins/map/MapDialog.Distance&quot;;
+
+	private JLabel mStatusLabel;
+
+	/**
+	 * Indicates that after a search, when a place was selected, the search
+	 * dialog should close
+	 */
+	private boolean mSingleSearch = false;
+
+	private JTable mResultTable;
+
+	private ResultTableModel mResultTableModel;
+
+	private TableSorter mResultTableSorter;
+
+	private Color mTableOriginalBackgroundColor;
+
+	/**
+	 * I know, that the JSplitPane collects this information, but I want to
+	 * handle it here.
+	 */
+	private int mLastDividerPosition = 300;
+
+	private boolean mLimitSearchToRegion = false;
+
+	private JLabel mSearchStringLabel;
+
+	private String mResourceSearchLocationString;
+
+	private String mResourceSearchString;
+
+	private final class CloseAction extends AbstractAction {
+
+		public CloseAction() {
+			super(getResourceString(&quot;MapDialog_close&quot;));
+		}
+
+<span class="nc" id="L164">		public void actionPerformed(ActionEvent arg0) {</span>
+			disposeDialog();
+		}
+	}
+
+	/**
+	 * @author foltin
+	 * @date 25.04.2012
+	 */
+	public final class ResultTableModel extends AbstractTableModel implements
+			CursorPositionListener {
+		/**
+		 * 
+		 */
+		private final String[] COLUMNS = new String[] {
+				SEARCH_DESCRIPTION_COLUMN_TEXT, SEARCH_DISTANCE_COLUMN_TEXT };
+		Vector mData = new Vector();
+		private Coordinate mCursorCoordinate = new Coordinate(0, 0);
+		private HashMap mMapSearchMarkerLocationHash = new HashMap();
+		private final TextTranslator mTextTranslator;
+
+		/**
+		 * @param pCursorCoordinate
+		 */
+		public ResultTableModel(Coordinate pCursorCoordinate,
+				TextTranslator pTextTranslator) {
+			super();
+			mCursorCoordinate = pCursorCoordinate;
+			mTextTranslator = pTextTranslator;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see javax.swing.table.AbstractTableModel#getColumnClass(int)
+		 */
+<span class="nc" id="L200">		public Class getColumnClass(int arg0) {</span>
+			switch (arg0) {
+			case SEARCH_DESCRIPTION_COLUMN:
+				return String.class;
+			case SEARCH_DISTANCE_COLUMN:
+				return Double.class;
+			default:
+				return Object.class;
+			}
+		}
+
+		/**
+		 * @param pPlace
+		 */
+		public void addPlace(Place pPlace) {
+			mData.add(pPlace);
+			final int row = mData.size() - 1;
+			MapSearchMarkerLocation location = new MapSearchMarkerLocation(
+					MapDialog.this, pPlace);
+			mMapSearchMarkerLocationHash.put(pPlace, location);
+<span class="nc" id="L220">			getMap().addMapMarker(location);</span>
+			fireTableRowsInserted(row, row);
+		}
+
+<span class="nc" id="L224">		public MapSearchMarkerLocation getMapSearchMarkerLocation(int index) {</span>
+			if (index &gt;= 0 &amp;&amp; index &lt; getRowCount()) {
+				Place place = getPlace(index);
+				return (MapSearchMarkerLocation) mMapSearchMarkerLocationHash
+						.get(place);
+			}
+			throw new IllegalArgumentException(&quot;Index &quot; + index
+					+ &quot; is out of range.&quot;);
+		}
+
+<span class="nc" id="L234">		public Place getPlace(int pIndex) {</span>
+			return (Place) mData.get(pIndex);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see javax.swing.table.AbstractTableModel#getColumnName(int)
+		 */
+<span class="nc" id="L243">		public String getColumnName(int pColumn) {</span>
+			return mTextTranslator.getText(COLUMNS[pColumn]);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see javax.swing.table.TableModel#getRowCount()
+		 */
+<span class="nc" id="L252">		public int getRowCount() {</span>
+			return mData.size();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see javax.swing.table.TableModel#getColumnCount()
+		 */
+<span class="nc" id="L261">		public int getColumnCount() {</span>
+			return 2;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see javax.swing.table.TableModel#getValueAt(int, int)
+		 */
+		public Object getValueAt(int pRowIndex, int pColumnIndex) {
+			final Place place = getPlace(pRowIndex);
+			switch (pColumnIndex) {
+			case SEARCH_DISTANCE_COLUMN:
+<span class="nc" id="L274">				final double value = OsmMercator.getDistance(</span>
+						mCursorCoordinate.getLat(), mCursorCoordinate.getLon(),
+						place.getLat(), place.getLon()) / 1000.0;
+				if (Double.isInfinite(value) || Double.isNaN(value)) {
+					return Double.valueOf(-1.0);
+				}
+				return new Double(value);
+			case SEARCH_DESCRIPTION_COLUMN:
+				return place.getDisplayName();
+			}
+			return null;
+		}
+
+		/**
+		 * 
+		 */
+		public void clear() {
+			// clear old search results:
+			for (Iterator it = mMapSearchMarkerLocationHash.keySet().iterator(); it
+					.hasNext();) {
+				Place place = (Place) it.next();
+				MapSearchMarkerLocation location = (MapSearchMarkerLocation) mMapSearchMarkerLocationHash
+						.get(place);
+<span class="nc" id="L297">				getMap().removeMapMarker(location);</span>
+			}
+			mMapSearchMarkerLocationHash.clear();
+			mData.clear();
+			fireTableDataChanged();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see plugins.map.FreeMindMapController.CursorPositionListener#
+		 * cursorPositionChanged(org.openstreetmap.gui.jmapviewer.Coordinate)
+		 */
+<span class="nc" id="L310">		public void cursorPositionChanged(Coordinate pCursorPosition) {</span>
+			mCursorCoordinate = pCursorPosition;
+			fireTableDataChanged();
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.HookAdapter#startupMapHook()
+	 */
+	public void startupMapHook() {
+		super.startupMapHook();
+		mMyMindMapController = super.getMindMapController();
+		getMindMapController().getController().getMapModuleManager()
+				.addListener(this);
+		mMapDialog = new JDialog(getController().getFrame().getJFrame(), false /* unmodal */);
+		mMapDialog.setTitle(getResourceString(&quot;MapDialog_title&quot;));
+		mMapDialog
+				.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		mMapDialog.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent event) {
+				disposeDialog();
+			}
+		});
+		mCloseAction = new CloseAction();
+		// the action title is changed by the following method, thus we create
+		// another close action.
+		Tools.addEscapeActionToDialog(mMapDialog, new CloseAction());
+		mMapDialog.setSize(400, 400);
+
+		map = new JCursorMapViewer(getMindMapController(), mMapDialog,
+<span class="nc" id="L342">				getRegistration().getTileCache(), this);</span>
+		map.addJMVListener(this);
+		map.setScrollWrapEnabled(true);
+		FreeMindMapController.changeTileSource(Mapnik.class.getName(), map);
+		OsmTileLoader loader = getRegistration().createTileLoader(map);
+		map.setTileLoader(loader);
+		map.setCursorPosition(new Coordinate(49.8, 8.8));
+		map.setUseCursor(true);
+
+		mMapDialog.setLayout(new BorderLayout());
+		mSearchPanel = new JPanel(new BorderLayout());
+		mResourceSearchString = getResourceString(&quot;MapDialog_Search&quot;);
+		mResourceSearchLocationString = getResourceString(&quot;MapDialog_Search_Location&quot;);
+		mSearchStringLabel = new JLabel(mResourceSearchString);
+		mSearchTerm = new JTextField();
+		mSearchTerm.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent pEvent) {
+				if (pEvent.getKeyCode() == KeyEvent.VK_DOWN
+						&amp;&amp; pEvent.getModifiers() == 0) {
+					logger.info(&quot;Set Focus to search list.&quot;);
+					mResultTable.requestFocusInWindow();
+					mResultTable.getSelectionModel().setSelectionInterval(0, 0);
+					pEvent.consume();
+				}
+			}
+		});
+		mSearchFieldPanel = new JPanel();
+		mSearchFieldPanel.setLayout(new BorderLayout(10, 0));
+		JButton clearButton = new JButton(new ImageIcon(Resources.getInstance()
+				.getResource(&quot;images/clear_box.png&quot;)));
+		clearButton.setFocusable(false);
+		mSearchFieldPanel.add(mSearchStringLabel, BorderLayout.WEST);
+		mSearchFieldPanel.add(mSearchTerm, BorderLayout.CENTER);
+		mSearchFieldPanel.add(clearButton, BorderLayout.EAST);
+		mResultTable = new JTable();
+		mTableOriginalBackgroundColor = mResultTable.getBackground();
+
+		mResultTable
+				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		mResultTable.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent pEvent) {
+				int index = mResultTable.getSelectedRow();
+				if (index == 0 &amp;&amp; pEvent.getKeyCode() == KeyEvent.VK_UP
+						&amp;&amp; pEvent.getModifiers() == 0) {
+					logger.info(&quot;Set Focus to search item.&quot;);
+					mResultTable.clearSelection();
+					mSearchTerm.requestFocusInWindow();
+					pEvent.consume();
+					return;
+				}
+				if (pEvent.getKeyCode() == KeyEvent.VK_ENTER
+						&amp;&amp; pEvent.getModifiers() == 0 &amp;&amp; index &gt;= 0) {
+					logger.info(&quot;Set result in map.&quot;);
+					pEvent.consume();
+					displaySearchItem(index);
+					return;
+				}
+				if (pEvent.getKeyCode() == KeyEvent.VK_ENTER
+						&amp;&amp; pEvent.isControlDown() &amp;&amp; index &gt;= 0) {
+					pEvent.consume();
+					addSearchResultsToMap();
+					displaySearchItem(index);
+					return;
+				}
+
+			}
+		});
+		mResultTable.getSelectionModel().addListSelectionListener(
+				new ListSelectionListener() {
+
+					public void valueChanged(ListSelectionEvent pE) {
+						clearIndexes();
+						final int selectedRow = mResultTable.getSelectedRow();
+						if (selectedRow &gt;= 0
+								&amp;&amp; selectedRow &lt; mResultTableSorter
+										.getRowCount()) {
+							int index = selectedRow;
+							index = mResultTableSorter.modelIndex(index);
+							MapSearchMarkerLocation marker = mResultTableModel
+									.getMapSearchMarkerLocation(index);
+							marker.setSelected(true);
+						}
+						mResultTable.repaint();
+						getMap().repaint();
+					}
+
+					private void clearIndexes() {
+						for (int i = 0; i &lt; mResultTableModel.getRowCount(); i++) {
+							MapSearchMarkerLocation marker = mResultTableModel
+									.getMapSearchMarkerLocation(i);
+							marker.setSelected(false);
+						}
+					}
+				});
+		mResultTable.getTableHeader().setReorderingAllowed(false);
+		mResultTableModel = new ResultTableModel(getMap().getCursorPosition(),
+				getMindMapController());
+		getFreeMindMapController().addCursorPositionListener(mResultTableModel);
+		mResultTableSorter = new TableSorter(mResultTableModel);
+		mResultTable.setModel(mResultTableSorter);
+		mResultTableSorter.setTableHeader(mResultTable.getTableHeader());
+		mResultTableSorter.setColumnComparator(String.class,
+				TableSorter.LEXICAL_COMPARATOR);
+		mResultTableSorter.setColumnComparator(Double.class,
+				TableSorter.COMPARABLE_COMAPRATOR);
+		// Sort by default by date.
+		mResultTableSorter.setSortingStatus(SEARCH_DISTANCE_COLUMN,
+				TableSorter.ASCENDING);
+
+		clearButton.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent pE) {
+				mResultTableModel.clear();
+				mSearchTerm.setText(&quot;&quot;);
+				mResultTable.setBackground(mTableOriginalBackgroundColor);
+			}
+		});
+		MouseListener mouseListener = new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					// int index = mResultTable.locationToIndex(e.getPoint());
+					int index = mResultTable.getSelectedRow();
+					displaySearchItem(index);
+				}
+			}
+		};
+		mResultTable.addMouseListener(mouseListener);
+
+		mSearchTerm.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent pE) {
+				search(mSearchTerm.getText(), false);
+			}
+		});
+		final JScrollPane resultTableScrollPane = new JScrollPane(mResultTable);
+		mSearchPanel.setLayout(new BorderLayout());
+		mSearchPanel.add(mSearchFieldPanel, BorderLayout.NORTH);
+		mSearchPanel.add(resultTableScrollPane, BorderLayout.CENTER);
+		mSearchBarVisible = true;
+		mSearchSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+				mSearchPanel, map);
+		mSearchSplitPane.setContinuousLayout(true);
+		mSearchSplitPane.setOneTouchExpandable(false);
+		Tools.correctJSplitPaneKeyMap();
+		mSearchSplitPane.setResizeWeight(0d);
+		mSearchSplitPane.addPropertyChangeListener(
+				JSplitPane.DIVIDER_LOCATION_PROPERTY,
+				new PropertyChangeListener() {
+
+					public void propertyChange(PropertyChangeEvent pEvt) {
+						final int dividerLocation = mSearchSplitPane
+								.getDividerLocation();
+						if (dividerLocation &gt; 1) {
+							mLastDividerPosition = dividerLocation;
+							logger.info(&quot;Setting last divider to &quot;
+									+ mLastDividerPosition);
+						}
+					}
+				});
+		mMapDialog.add(mSearchSplitPane, BorderLayout.CENTER);
+		mStatusLabel = new JLabel(&quot; &quot;);
+		mMapDialog.add(mStatusLabel, BorderLayout.SOUTH);
+
+		getRegistration().registerMapNodePositionListener(this);
+		getRegistration().registerNodeVisibilityListener(this);
+		getMindMapController().registerNodeSelectionListener(this, true);
+
+		mMapDialog.validate();
+		// restore preferences:
+		// Retrieve window size and column positions.
+		MapWindowConfigurationStorage storage = (MapWindowConfigurationStorage) getMindMapController()
+				.decorateDialog(mMapDialog, WINDOW_PREFERENCE_STORAGE_PROPERTY);
+		if (storage != null) {
+			map.setZoomContolsVisible(storage.getZoomControlsVisible());
+			map.setTileGridVisible(storage.getTileGridVisible());
+			map.setMapMarkerVisible(storage.getShowMapMarker());
+			map.setHideFoldedNodes(storage.getHideFoldedNodes());
+			int column = 0;
+			for (Iterator i = storage.getListTableColumnSettingList()
+					.iterator(); i.hasNext();) {
+				TableColumnSetting setting = (TableColumnSetting) i.next();
+				mResultTable.getColumnModel().getColumn(column)
+						.setPreferredWidth(setting.getColumnWidth());
+				mResultTableSorter.setSortingStatus(column,
+						setting.getColumnSorting());
+				column++;
+			}
+			// default is false, so if true, toggle it.
+			if (storage.getLimitSearchToVisibleArea()) {
+				toggleLimitSearchToRegion();
+			}
+			if (!storage.getSearchControlVisible()) {
+				toggleSearchBar();
+			}
+			mLastDividerPosition = storage.getLastDividerPosition();
+			mSearchSplitPane.setDividerLocation(mLastDividerPosition);
+			// restore last map positions
+			final Vector positionHolderVector = getFreeMindMapController()
+					.getPositionHolderVector();
+			for (Iterator it = storage.getListMapLocationStorageList()
+					.iterator(); it.hasNext();) {
+				MapLocationStorage location = (MapLocationStorage) it.next();
+				positionHolderVector
+						.add(new FreeMindMapController.PositionHolder(location
+								.getCursorLatitude(), location
+								.getCursorLongitude(), location.getZoom()));
+			}
+			if (getFreeMindMapController().checkPositionHolderIndex(
+					storage.getMapLocationStorageIndex())) {
+				getFreeMindMapController().setPositionHolderIndex(
+						storage.getMapLocationStorageIndex());
+			}
+			// TODO: Better would be to store these data per map.
+			map.setDisplayPositionByLatLon(storage.getMapCenterLatitude(),
+					storage.getMapCenterLongitude(), storage.getZoom());
+			final Coordinate position = new Coordinate(
+					storage.getCursorLatitude(), storage.getCursorLongitude());
+			getFreeMindMapController().setCursorPosition(position);
+			FreeMindMapController
+					.changeTileSource(storage.getTileSource(), map);
+		}
+		addMarkersToMap();
+		mMapDialog.setVisible(true);
+		getRegistration().setMapDialog(this);
+	}
+
+<span class="nc" id="L568">	public void addMarkersToMap() {</span>
+		// add known markers to the map.
+		Set mapNodePositionHolders = getAllMapNodePositionHolders();
+		for (Iterator it = mapNodePositionHolders.iterator(); it.hasNext();) {
+			MapNodePositionHolder nodePositionHolder = (MapNodePositionHolder) it
+					.next();
+			boolean visible = !nodePositionHolder.hasFoldedParents();
+			changeVisibilityOfNode(nodePositionHolder, visible);
+		}
+
+	}
+
+<span class="nc" id="L580">	protected void changeVisibilityOfNode(</span>
+			MapNodePositionHolder nodePositionHolder, boolean pVisible) {
+		if (!pVisible &amp;&amp; map.isHideFoldedNodes()) {
+			removeMapMarker(nodePositionHolder);
+		} else {
+			addMapMarker(nodePositionHolder);
+		}
+	}
+
+<span class="nc" id="L589">	public Registration getRegistration() {</span>
+		return (Registration) getPluginBaseClass();
+	}
+
+<span class="nc" id="L593">	public void toggleSearchBar() {</span>
+		mSingleSearch = false;
+		toggleSearchBar(null);
+	}
+
+	public void toggleSearchBar(AWTEvent pEvent) {
+		if (mSearchBarVisible) {
+			mLastDividerPosition = mSearchSplitPane.getDividerLocation();
+			logger.fine(&quot;Setting last divider to &quot; + mLastDividerPosition);
+			// clear results
+			mResultTableModel.clear();
+			// hide search bar
+			mSearchSplitPane.setBottomComponent(null);
+			mMapDialog.remove(mSearchSplitPane);
+<span class="nc" id="L607">			mMapDialog.add(map, BorderLayout.CENTER);</span>
+			mMapDialog.requestFocusInWindow();
+			mSearchBarVisible = false;
+		} else {
+			// show search bar
+			mMapDialog.remove(map);
+			mMapDialog.add(mSearchSplitPane, BorderLayout.CENTER);
+			mSearchSplitPane.setBottomComponent(map);
+			mSearchSplitPane.setDividerLocation(mLastDividerPosition);
+			focusSearchTerm();
+			mSearchBarVisible = true;
+		}
+		mMapDialog.validate();
+		if (pEvent != null) {
+			mSearchTerm.setText(&quot;&quot;);
+			mSearchTerm.dispatchEvent(pEvent);
+			/* Special for mac, as otherwise, everything is selected... GRRR. */
+			if (Tools.isMacOsX()) {
+				EventQueue.invokeLater(new Runnable() {
+					public void run() {
+						mSearchTerm.setCaretPosition(mSearchTerm.getDocument()
+								.getLength());
+					}
+				});
+			}
+		}
+	}
+
+<span class="nc" id="L635">	protected void focusSearchTerm() {</span>
+		mSearchTerm.selectAll();
+		mSearchTerm.requestFocusInWindow();
+	}
+
+	/**
+	 * @return a set of MapNodePositionHolder elements of all nodes (even if
+	 *         hidden)
+	 */
+<span class="nc" id="L644">	public Set getAllMapNodePositionHolders() {</span>
+		return getRegistration().getMapNodePositionHolders();
+	}
+
+	/**
+	 * @return a set of MapNodePositionHolder elements to those nodes currently
+	 *         displayed (ie. not hidden).
+	 */
+<span class="nc" id="L652">	public Set getMapNodePositionHolders() {</span>
+		return mMarkerMap.keySet();
+	}
+
+	protected void addMapMarker(MapNodePositionHolder nodePositionHolder) {
+		if (mMarkerMap.containsKey(nodePositionHolder)) {
+			// already present.
+			logger.fine(&quot;Node &quot; + nodePositionHolder + &quot; already present.&quot;);
+			return;
+		}
+<span class="nc" id="L662">		Coordinate position = nodePositionHolder.getPosition();</span>
+		logger.fine(&quot;Adding map position for &quot; + nodePositionHolder.getNode()
+				+ &quot; at &quot; + position);
+		MapMarkerLocation marker = new MapMarkerLocation(nodePositionHolder,
+				this);
+		map.addMapMarker(marker);
+		mMarkerMap.put(nodePositionHolder, marker);
+	}
+
+	protected void removeMapMarker(MapNodePositionHolder pMapNodePositionHolder) {
+		MapMarkerLocation marker = (MapMarkerLocation) mMarkerMap
+				.remove(pMapNodePositionHolder);
+		if (marker != null) {
+<span class="nc" id="L675">			map.removeMapMarker(marker);</span>
+		}
+	}
+
+	/**
+	 * Overwritten, as this dialog is not modal, but after the plugin has
+	 * terminated, the dialog is still present and needs the controller to store
+	 * its values.
+	 * */
+<span class="nc" id="L684">	public MindMapController getMindMapController() {</span>
+		return mMyMindMapController;
+	}
+
+<span class="nc" id="L688">	public FreeMindMapController getFreeMindMapController() {</span>
+		return map.getFreeMindMapController();
+	}
+
+	/**
+	 * 
+	 */
+	public void disposeDialog() {
+		Registration registration = (Registration) getPluginBaseClass();
+		if (registration != null) {
+			// on close, it is null. Why?
+			registration.setMapDialog(null);
+			registration.deregisterMapNodePositionListener(this);
+			registration.deregisterNodeVisibilityListener(this);
+		}
+		getMindMapController().deregisterNodeSelectionListener(this);
+
+		// store window positions:
+		MapWindowConfigurationStorage storage = new MapWindowConfigurationStorage();
+		// Set coordinates
+<span class="nc" id="L708">		storage.setZoom(map.getZoom());</span>
+		Coordinate position = map.getPosition();
+		storage.setMapCenterLongitude(position.getLon());
+		storage.setMapCenterLatitude(position.getLat());
+		Coordinate cursorPosition = map.getCursorPosition();
+		storage.setCursorLongitude(cursorPosition.getLon());
+		storage.setCursorLatitude(cursorPosition.getLat());
+		storage.setTileSource(map.getTileController().getTileSource()
+				.getClass().getName());
+		storage.setTileGridVisible(map.isTileGridVisible());
+		storage.setZoomControlsVisible(map.getZoomContolsVisible());
+		storage.setShowMapMarker(map.getMapMarkersVisible());
+		storage.setSearchControlVisible(mSearchBarVisible);
+		storage.setLimitSearchToVisibleArea(mLimitSearchToRegion);
+		storage.setHideFoldedNodes(map.isHideFoldedNodes());
+		storage.setLastDividerPosition(mLastDividerPosition);
+		for (int i = 0; i &lt; mResultTable.getColumnCount(); i++) {
+			TableColumnSetting setting = new TableColumnSetting();
+			setting.setColumnWidth(mResultTable.getColumnModel().getColumn(i)
+					.getWidth());
+			setting.setColumnSorting(mResultTableSorter.getSortingStatus(i));
+			storage.addTableColumnSetting(setting);
+		}
+		for (Iterator it = getFreeMindMapController().getPositionHolderVector()
+				.iterator(); it.hasNext();) {
+			FreeMindMapController.PositionHolder pos = (FreeMindMapController.PositionHolder) it
+					.next();
+			MapLocationStorage mapLocationStorage = new MapLocationStorage();
+			mapLocationStorage.setCursorLatitude(pos.lat);
+			mapLocationStorage.setCursorLongitude(pos.lon);
+			mapLocationStorage.setZoom(pos.zoom);
+			storage.addMapLocationStorage(mapLocationStorage);
+		}
+		storage.setMapLocationStorageIndex(getFreeMindMapController()
+				.getPositionHolderIndex());
+		getMindMapController().storeDialogPositions(mMapDialog, storage,
+				WINDOW_PREFERENCE_STORAGE_PROPERTY);
+
+		getMindMapController().getController().getMapModuleManager()
+				.removeListener(this);
+		mMapDialog.setVisible(false);
+		mMapDialog.dispose();
+	}
+
+	private void updateZoomParameters() {
+		if (mperpLabelValue != null)
+<span class="nc" id="L754">			mperpLabelValue.setText(format(&quot;%s&quot;, map.getMeterPerPixel()));</span>
+		if (zoomValue != null)
+			zoomValue.setText(format(&quot;%s&quot;, map.getZoom()));
+	}
+
+	/**
+	 * @param pString
+	 * @param pMeterPerPixel
+	 * @return
+	 */
+<span class="nc" id="L764">	private String format(String pString, double pObject) {</span>
+		return &quot;&quot; + pObject;
+	}
+
+<span class="nc" id="L768">	public void processCommand(JMVCommandEvent command) {</span>
+		if (command.getCommand().equals(JMVCommandEvent.COMMAND.ZOOM)
+				|| command.getCommand().equals(JMVCommandEvent.COMMAND.MOVE)) {
+			updateZoomParameters();
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.MapModuleManager.MapModuleChangeObserver#
+	 * isMapModuleChangeAllowed(freemind.view.MapModule, freemind.modes.Mode,
+	 * freemind.view.MapModule, freemind.modes.Mode)
+	 */
+<span class="nc" id="L782">	public boolean isMapModuleChangeAllowed(MapModule pOldMapModule,</span>
+			Mode pOldMode, MapModule pNewMapModule, Mode pNewMode) {
+		return true;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.MapModuleManager.MapModuleChangeObserver#
+	 * beforeMapModuleChange(freemind.view.MapModule, freemind.modes.Mode,
+	 * freemind.view.MapModule, freemind.modes.Mode)
+	 */
+<span class="nc" id="L794">	public void beforeMapModuleChange(MapModule pOldMapModule, Mode pOldMode,</span>
+			MapModule pNewMapModule, Mode pNewMode) {
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.MapModuleManager.MapModuleChangeObserver#afterMapClose
+	 * (freemind.view.MapModule, freemind.modes.Mode)
+	 */
+<span class="nc" id="L805">	public void afterMapClose(MapModule pOldMapModule, Mode pOldMode) {</span>
+		disposeDialog();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.MapModuleManager.MapModuleChangeObserver#
+	 * afterMapModuleChange(freemind.view.MapModule, freemind.modes.Mode,
+	 * freemind.view.MapModule, freemind.modes.Mode)
+	 */
+<span class="nc" id="L816">	public void afterMapModuleChange(MapModule pOldMapModule, Mode pOldMode,</span>
+			MapModule pNewMapModule, Mode pNewMode) {
+		disposeDialog();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.MapModuleManager.MapModuleChangeObserver#
+	 * numberOfOpenMapInformation(int, int)
+	 */
+<span class="nc" id="L827">	public void numberOfOpenMapInformation(int pNumber, int pIndex) {</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * plugins.map.MapNodePositionHolder.MapNodePositionListener#registerMapNode
+	 * (plugins.map.MapNodePositionHolder)
+	 */
+<span class="nc" id="L837">	public void registerMapNode(MapNodePositionHolder pMapNodePositionHolder) {</span>
+		addMapMarker(pMapNodePositionHolder);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * plugins.map.MapNodePositionHolder.MapNodePositionListener#deregisterMapNode
+	 * (plugins.map.MapNodePositionHolder)
+	 */
+<span class="nc" id="L848">	public void deregisterMapNode(MapNodePositionHolder pMapNodePositionHolder) {</span>
+		removeMapMarker(pMapNodePositionHolder);
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.modes.ModeController.NodeSelectionListener#onUpdateNodeHook(
+	 * freemind.modes.MindMapNode)
+	 */
+<span class="nc" id="L860">	public void onUpdateNodeHook(MindMapNode pNode) {</span>
+		// update MapMarkerLocation if present:
+		MapNodePositionHolder hook = MapNodePositionHolder.getHook(pNode);
+		if (hook != null &amp;&amp; mMarkerMap.containsKey(hook)) {
+			MapMarkerLocation location = (MapMarkerLocation) mMarkerMap
+					.get(hook);
+			location.update();
+			location.repaint();
+		}
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.modes.ModeController.NodeSelectionListener#onSelectHook(freemind
+	 * .view.mindmapview.NodeView)
+	 */
+<span class="nc" id="L879">	public void onFocusNode(NodeView pNode) {</span>
+	}
+
+	public void selectMapPosition(NodeView pNode, boolean sel) {
+		// test for map position:
+		MapNodePositionHolder hook = MapNodePositionHolder.getHook(pNode
+				.getModel());
+		if (hook != null) {
+			if (mMarkerMap.containsKey(hook)) {
+				MapMarkerLocation location = (MapMarkerLocation) mMarkerMap
+						.get(hook);
+				location.setSelected(sel);
+<span class="nc" id="L891">				map.repaint();</span>
+			}
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.modes.ModeController.NodeSelectionListener#onDeselectHook(freemind
+	 * .view.mindmapview.NodeView)
+	 */
+<span class="nc" id="L903">	public void onLostFocusNode(NodeView pNode) {</span>
+
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.modes.ModeController.NodeSelectionListener#onSaveNode(freemind
+	 * .modes.MindMapNode)
+	 */
+<span class="nc" id="L914">	public void onSaveNode(MindMapNode pNode) {</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.modes.ModeController.NodeSelectionListener#onSelectionChange
+	 * (freemind.modes.MindMapNode, boolean)
+	 */
+<span class="nc" id="L924">	public void onSelectionChange(NodeView pNode, boolean pIsSelected) {</span>
+		selectMapPosition(pNode, pIsSelected);
+
+	}
+
+<span class="nc" id="L929">	public CloseAction getCloseAction() {</span>
+		return mCloseAction;
+	}
+
+<span class="nc" id="L933">	public boolean isSearchBarVisible() {</span>
+		return mSearchBarVisible;
+	}
+
+	/**
+	 * @return &lt; MapNodePositionHolder, MapMarkerLocation &gt; of those nodes
+	 *         currently displayed (ie. not hidden)
+	 */
+<span class="nc" id="L941">	public Map getMarkerMap() {</span>
+		return Collections.unmodifiableMap(mMarkerMap);
+	}
+
+<span class="nc" id="L945">	public JCursorMapViewer getMap() {</span>
+		return map;
+	}
+
+<span class="nc" id="L949">	public void displaySearchItem(int index) {</span>
+		Place place = getPlace(index);
+		getFreeMindMapController().setCursorPosition(place);
+		if (mSingleSearch &amp;&amp; isSearchBarVisible()) {
+			toggleSearchBar();
+		}
+		mSingleSearch = false;
+	}
+
+<span class="nc" id="L958">	public Place getPlace(int index) {</span>
+		if (index &lt; 0) {
+			throw new IllegalArgumentException(&quot;Index &quot; + index
+					+ &quot; out of bounds.&quot;);
+		}
+		index = mResultTableSorter.modelIndex(index);
+		Place place = mResultTableModel.getPlace(index);
+		return place;
+	}
+
+<span class="nc" id="L968">	public JDialog getMapDialog() {</span>
+		return mMapDialog;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * plugins.map.Registration.NodeVisibilityListener#nodeVisibilityChanged
+	 * (boolean)
+	 */
+<span class="nc" id="L979">	public void nodeVisibilityChanged(</span>
+			MapNodePositionHolder pMapNodePositionHolder, boolean pVisible) {
+		changeVisibilityOfNode(pMapNodePositionHolder, pVisible);
+	}
+
+<span class="nc" id="L984">	public JLabel getStatusLabel() {</span>
+		return mStatusLabel;
+	}
+
+	public void search(String searchText, boolean pSelectFirstResult) {
+		if (!isSearchBarVisible()) {
+			toggleSearchBar();
+		}
+		mSearchTerm.setText(searchText);
+		boolean resultOk = getFreeMindMapController().search(mResultTableModel,
+				mResultTable, searchText, mTableOriginalBackgroundColor);
+		final int rowCount = mResultTableModel.getRowCount();
+		if (resultOk) {
+			if (mSingleSearch &amp;&amp; rowCount == 1) {
+				displaySearchItem(0);
+<span class="nc" id="L999">				this.map.requestFocus();</span>
+				return;
+			}
+			if (pSelectFirstResult) {
+				if (rowCount &gt; 0) {
+					displaySearchItem(0);
+				}
+			}
+			mResultTable.requestFocus();
+		} else {
+			mSearchTerm.requestFocus();
+		}
+
+	}
+
+	/**
+	 * 
+	 */
+<span class="nc" id="L1017">	public void setSingleSearch() {</span>
+		mSingleSearch = true;
+
+	}
+
+	/**
+	 * @return
+	 */
+<span class="nc" id="L1025">	public boolean isLimitSearchToRegion() {</span>
+		return mLimitSearchToRegion;
+	}
+
+	/**
+	 * 
+	 */
+<span class="nc" id="L1032">	public void toggleLimitSearchToRegion() {</span>
+		mLimitSearchToRegion = !mLimitSearchToRegion;
+		if (mLimitSearchToRegion) {
+			mSearchStringLabel.setText(mResourceSearchLocationString);
+		} else {
+			mSearchStringLabel.setText(mResourceSearchString);
+		}
+		mSearchStringLabel.validate();
+	}
+
+<span class="nc" id="L1042">	protected void addSearchResultsToMap() {</span>
+		int[] selectedRows = mResultTable.getSelectedRows();
+		logger.info(&quot;Add results to map.&quot;);
+		getFreeMindMapController().addSearchResultsToMap(selectedRows);
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

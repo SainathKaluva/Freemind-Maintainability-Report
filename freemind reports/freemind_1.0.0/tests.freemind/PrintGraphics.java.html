@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>PrintGraphics.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">PrintGraphics.java</span></div><h1>PrintGraphics.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2011 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package tests.freemind;
+
+import java.awt.Color;
+import java.awt.Composite;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.Image;
+import java.awt.Paint;
+import java.awt.Polygon;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.RenderingHints.Key;
+import java.awt.Shape;
+import java.awt.Stroke;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ImageObserver;
+import java.awt.image.RenderedImage;
+import java.awt.image.renderable.RenderableImage;
+import java.text.AttributedCharacterIterator;
+import java.util.Map;
+
+/**
+ * @author foltin
+ * @date 05.09.2011
+ */
+public class PrintGraphics extends Graphics2D {
+
+	private final Graphics2D mG;
+
+	/**
+	 * @param pG
+	 */
+<span class="nc" id="L60">	public PrintGraphics(Graphics pG) {</span>
+<span class="nc" id="L61">		mG = (Graphics2D) pG;</span>
+		// TODO Auto-generated constructor stub
+<span class="nc" id="L63">	}</span>
+
+	public Graphics create() {
+<span class="nc" id="L66">		return new PrintGraphics(mG.create());</span>
+	}
+
+	public Graphics create(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L70">		return new PrintGraphics(mG.create(pX, pY, pWidth, pHeight));</span>
+	}
+
+	public void drawRoundRect(int pX, int pY, int pWidth, int pHeight,
+			int pArcWidth, int pArcHeight) {
+<span class="nc" id="L75">		logMe(&quot;drawRoundRect&quot;, pX, pY, pWidth, pHeight);</span>
+<span class="nc" id="L76">		mG.drawRoundRect(pX, pY, pWidth, pHeight, pArcWidth, pArcHeight);</span>
+<span class="nc" id="L77">	}</span>
+
+	protected void logMe(String title, int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L80">		System.out.println(title + &quot;, &quot; + pX + &quot;, &quot; + pY + &quot;, &quot; + pWidth + &quot;, &quot;</span>
+<span class="nc" id="L81">				+ pHeight);</span>
+<span class="nc" id="L82">	}</span>
+
+	public void drawOval(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L85">		logMe(&quot;drawOval&quot;, pX, pY, pWidth, pHeight);</span>
+
+<span class="nc" id="L87">		mG.drawOval(pX, pY, pWidth, pHeight);</span>
+<span class="nc" id="L88">	}</span>
+
+	public int hashCode() {
+<span class="nc" id="L91">		return mG.hashCode();</span>
+	}
+
+	public boolean equals(Object pObj) {
+<span class="nc" id="L95">		return mG.equals(pObj);</span>
+	}
+
+	public Color getColor() {
+<span class="nc" id="L99">		return mG.getColor();</span>
+	}
+
+	public void setColor(Color pC) {
+<span class="nc" id="L103">		System.out.println(&quot;Color: &quot; + pC);</span>
+<span class="nc" id="L104">		mG.setColor(pC);</span>
+<span class="nc" id="L105">	}</span>
+
+	public void setPaintMode() {
+<span class="nc" id="L108">		mG.setPaintMode();</span>
+<span class="nc" id="L109">	}</span>
+
+	public void setXORMode(Color pC1) {
+<span class="nc" id="L112">		mG.setXORMode(pC1);</span>
+<span class="nc" id="L113">	}</span>
+
+	public Font getFont() {
+<span class="nc" id="L116">		return mG.getFont();</span>
+	}
+
+	public void setFont(Font pFont) {
+<span class="nc" id="L120">		mG.setFont(pFont);</span>
+<span class="nc" id="L121">	}</span>
+
+	public FontMetrics getFontMetrics() {
+<span class="nc" id="L124">		return mG.getFontMetrics();</span>
+	}
+
+	public FontMetrics getFontMetrics(Font pF) {
+<span class="nc" id="L128">		return mG.getFontMetrics(pF);</span>
+	}
+
+	public Rectangle getClipBounds() {
+<span class="nc" id="L132">		return mG.getClipBounds();</span>
+	}
+
+	public void clipRect(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L136">		mG.clipRect(pX, pY, pWidth, pHeight);</span>
+<span class="nc" id="L137">	}</span>
+
+	public void setClip(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L140">		mG.setClip(pX, pY, pWidth, pHeight);</span>
+<span class="nc" id="L141">	}</span>
+
+	public Shape getClip() {
+<span class="nc" id="L144">		return mG.getClip();</span>
+	}
+
+	public void setClip(Shape pClip) {
+<span class="nc" id="L148">		mG.setClip(pClip);</span>
+<span class="nc" id="L149">	}</span>
+
+	public void copyArea(int pX, int pY, int pWidth, int pHeight, int pDx,
+			int pDy) {
+<span class="nc" id="L153">		mG.copyArea(pX, pY, pWidth, pHeight, pDx, pDy);</span>
+<span class="nc" id="L154">	}</span>
+
+	public void drawLine(int pX1, int pY1, int pX2, int pY2) {
+<span class="nc" id="L157">		mG.drawLine(pX1, pY1, pX2, pY2);</span>
+<span class="nc" id="L158">	}</span>
+
+	public void fillRect(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L161">		mG.fillRect(pX, pY, pWidth, pHeight);</span>
+<span class="nc" id="L162">	}</span>
+
+	public void drawRect(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L165">		mG.drawRect(pX, pY, pWidth, pHeight);</span>
+<span class="nc" id="L166">	}</span>
+
+	public void draw3DRect(int pX, int pY, int pWidth, int pHeight,
+			boolean pRaised) {
+<span class="nc" id="L170">		mG.draw3DRect(pX, pY, pWidth, pHeight, pRaised);</span>
+<span class="nc" id="L171">	}</span>
+
+	public void clearRect(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L174">		mG.clearRect(pX, pY, pWidth, pHeight);</span>
+<span class="nc" id="L175">	}</span>
+
+	public void fill3DRect(int pX, int pY, int pWidth, int pHeight,
+			boolean pRaised) {
+<span class="nc" id="L179">		mG.fill3DRect(pX, pY, pWidth, pHeight, pRaised);</span>
+<span class="nc" id="L180">	}</span>
+
+	public void fillRoundRect(int pX, int pY, int pWidth, int pHeight,
+			int pArcWidth, int pArcHeight) {
+<span class="nc" id="L184">		mG.fillRoundRect(pX, pY, pWidth, pHeight, pArcWidth, pArcHeight);</span>
+<span class="nc" id="L185">	}</span>
+
+	public void draw(Shape pS) {
+<span class="nc" id="L188">		mG.draw(pS);</span>
+<span class="nc" id="L189">	}</span>
+
+	public boolean drawImage(Image pImg, AffineTransform pXform,
+			ImageObserver pObs) {
+<span class="nc" id="L193">		return mG.drawImage(pImg, pXform, pObs);</span>
+	}
+
+	public void drawImage(BufferedImage pImg, BufferedImageOp pOp, int pX,
+			int pY) {
+<span class="nc" id="L198">		mG.drawImage(pImg, pOp, pX, pY);</span>
+<span class="nc" id="L199">	}</span>
+
+	public void drawRenderedImage(RenderedImage pImg, AffineTransform pXform) {
+<span class="nc" id="L202">		mG.drawRenderedImage(pImg, pXform);</span>
+<span class="nc" id="L203">	}</span>
+
+	public void fillOval(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L206">		mG.fillOval(pX, pY, pWidth, pHeight);</span>
+<span class="nc" id="L207">	}</span>
+
+	public void drawArc(int pX, int pY, int pWidth, int pHeight,
+			int pStartAngle, int pArcAngle) {
+<span class="nc" id="L211">		mG.drawArc(pX, pY, pWidth, pHeight, pStartAngle, pArcAngle);</span>
+<span class="nc" id="L212">	}</span>
+
+	public void drawRenderableImage(RenderableImage pImg, AffineTransform pXform) {
+<span class="nc" id="L215">		mG.drawRenderableImage(pImg, pXform);</span>
+<span class="nc" id="L216">	}</span>
+
+	public void drawString(String pStr, int pX, int pY) {
+<span class="nc" id="L219">		mG.drawString(pStr, pX, pY);</span>
+<span class="nc" id="L220">	}</span>
+
+	public void fillArc(int pX, int pY, int pWidth, int pHeight,
+			int pStartAngle, int pArcAngle) {
+<span class="nc" id="L224">		mG.fillArc(pX, pY, pWidth, pHeight, pStartAngle, pArcAngle);</span>
+<span class="nc" id="L225">	}</span>
+
+	public void drawString(String pStr, float pX, float pY) {
+<span class="nc" id="L228">		mG.drawString(pStr, pX, pY);</span>
+<span class="nc" id="L229">	}</span>
+
+	public void drawPolyline(int[] pXPoints, int[] pYPoints, int pNPoints) {
+<span class="nc" id="L232">		mG.drawPolyline(pXPoints, pYPoints, pNPoints);</span>
+<span class="nc" id="L233">	}</span>
+
+	public void drawString(AttributedCharacterIterator pIterator, int pX, int pY) {
+<span class="nc" id="L236">		mG.drawString(pIterator, pX, pY);</span>
+<span class="nc" id="L237">	}</span>
+
+	public void drawPolygon(int[] pXPoints, int[] pYPoints, int pNPoints) {
+<span class="nc" id="L240">		mG.drawPolygon(pXPoints, pYPoints, pNPoints);</span>
+<span class="nc" id="L241">	}</span>
+
+	public void drawString(AttributedCharacterIterator pIterator, float pX,
+			float pY) {
+<span class="nc" id="L245">		mG.drawString(pIterator, pX, pY);</span>
+<span class="nc" id="L246">	}</span>
+
+	public void drawPolygon(Polygon pP) {
+<span class="nc" id="L249">		mG.drawPolygon(pP);</span>
+<span class="nc" id="L250">	}</span>
+
+	public void fillPolygon(int[] pXPoints, int[] pYPoints, int pNPoints) {
+<span class="nc" id="L253">		mG.fillPolygon(pXPoints, pYPoints, pNPoints);</span>
+<span class="nc" id="L254">	}</span>
+
+	public void drawGlyphVector(GlyphVector pG, float pX, float pY) {
+<span class="nc" id="L257">		mG.drawGlyphVector(pG, pX, pY);</span>
+<span class="nc" id="L258">	}</span>
+
+	public void fillPolygon(Polygon pP) {
+<span class="nc" id="L261">		mG.fillPolygon(pP);</span>
+<span class="nc" id="L262">	}</span>
+
+	public void fill(Shape pS) {
+<span class="nc" id="L265">		mG.fill(pS);</span>
+<span class="nc" id="L266">	}</span>
+
+	public boolean hit(Rectangle pRect, Shape pS, boolean pOnStroke) {
+<span class="nc" id="L269">		return mG.hit(pRect, pS, pOnStroke);</span>
+	}
+
+	public void drawChars(char[] pData, int pOffset, int pLength, int pX, int pY) {
+<span class="nc" id="L273">		mG.drawChars(pData, pOffset, pLength, pX, pY);</span>
+<span class="nc" id="L274">	}</span>
+
+	public GraphicsConfiguration getDeviceConfiguration() {
+<span class="nc" id="L277">		return mG.getDeviceConfiguration();</span>
+	}
+
+	public void setComposite(Composite pComp) {
+<span class="nc" id="L281">		mG.setComposite(pComp);</span>
+<span class="nc" id="L282">	}</span>
+
+	public void drawBytes(byte[] pData, int pOffset, int pLength, int pX, int pY) {
+<span class="nc" id="L285">		mG.drawBytes(pData, pOffset, pLength, pX, pY);</span>
+<span class="nc" id="L286">	}</span>
+
+	public void setPaint(Paint pPaint) {
+<span class="nc" id="L289">		mG.setPaint(pPaint);</span>
+<span class="nc" id="L290">	}</span>
+
+	public boolean drawImage(Image pImg, int pX, int pY, ImageObserver pObserver) {
+<span class="nc" id="L293">		return mG.drawImage(pImg, pX, pY, pObserver);</span>
+	}
+
+	public void setStroke(Stroke pS) {
+<span class="nc" id="L297">		mG.setStroke(pS);</span>
+<span class="nc" id="L298">	}</span>
+
+	public void setRenderingHint(Key pHintKey, Object pHintValue) {
+<span class="nc" id="L301">		mG.setRenderingHint(pHintKey, pHintValue);</span>
+<span class="nc" id="L302">	}</span>
+
+	public Object getRenderingHint(Key pHintKey) {
+<span class="nc" id="L305">		return mG.getRenderingHint(pHintKey);</span>
+	}
+
+	public boolean drawImage(Image pImg, int pX, int pY, int pWidth,
+			int pHeight, ImageObserver pObserver) {
+<span class="nc" id="L310">		return mG.drawImage(pImg, pX, pY, pWidth, pHeight, pObserver);</span>
+	}
+
+	public void setRenderingHints(Map pHints) {
+<span class="nc" id="L314">		mG.setRenderingHints(pHints);</span>
+<span class="nc" id="L315">	}</span>
+
+	public void addRenderingHints(Map pHints) {
+<span class="nc" id="L318">		mG.addRenderingHints(pHints);</span>
+<span class="nc" id="L319">	}</span>
+
+	public RenderingHints getRenderingHints() {
+<span class="nc" id="L322">		return mG.getRenderingHints();</span>
+	}
+
+	public boolean drawImage(Image pImg, int pX, int pY, Color pBgcolor,
+			ImageObserver pObserver) {
+<span class="nc" id="L327">		return mG.drawImage(pImg, pX, pY, pBgcolor, pObserver);</span>
+	}
+
+	public void translate(int pX, int pY) {
+<span class="nc" id="L331">		mG.translate(pX, pY);</span>
+<span class="nc" id="L332">	}</span>
+
+	public void translate(double pTx, double pTy) {
+<span class="nc" id="L335">		mG.translate(pTx, pTy);</span>
+<span class="nc" id="L336">	}</span>
+
+	public void rotate(double pTheta) {
+<span class="nc" id="L339">		mG.rotate(pTheta);</span>
+<span class="nc" id="L340">	}</span>
+
+	public boolean drawImage(Image pImg, int pX, int pY, int pWidth,
+			int pHeight, Color pBgcolor, ImageObserver pObserver) {
+<span class="nc" id="L344">		return mG.drawImage(pImg, pX, pY, pWidth, pHeight, pBgcolor, pObserver);</span>
+	}
+
+	public void rotate(double pTheta, double pX, double pY) {
+<span class="nc" id="L348">		mG.rotate(pTheta, pX, pY);</span>
+<span class="nc" id="L349">	}</span>
+
+	public void scale(double pSx, double pSy) {
+<span class="nc" id="L352">		mG.scale(pSx, pSy);</span>
+<span class="nc" id="L353">	}</span>
+
+	public void shear(double pShx, double pShy) {
+<span class="nc" id="L356">		mG.shear(pShx, pShy);</span>
+<span class="nc" id="L357">	}</span>
+
+	public boolean drawImage(Image pImg, int pDx1, int pDy1, int pDx2,
+			int pDy2, int pSx1, int pSy1, int pSx2, int pSy2,
+			ImageObserver pObserver) {
+<span class="nc" id="L362">		return mG.drawImage(pImg, pDx1, pDy1, pDx2, pDy2, pSx1, pSy1, pSx2,</span>
+<span class="nc" id="L363">				pSy2, pObserver);</span>
+	}
+
+	public void transform(AffineTransform Tx) {
+<span class="nc" id="L367">		mG.transform(Tx);</span>
+<span class="nc" id="L368">	}</span>
+
+	public void setTransform(AffineTransform Tx) {
+<span class="nc" id="L371">		mG.setTransform(Tx);</span>
+<span class="nc" id="L372">	}</span>
+
+	public AffineTransform getTransform() {
+<span class="nc" id="L375">		return mG.getTransform();</span>
+	}
+
+	public boolean drawImage(Image pImg, int pDx1, int pDy1, int pDx2,
+			int pDy2, int pSx1, int pSy1, int pSx2, int pSy2, Color pBgcolor,
+			ImageObserver pObserver) {
+<span class="nc" id="L381">		return mG.drawImage(pImg, pDx1, pDy1, pDx2, pDy2, pSx1, pSy1, pSx2,</span>
+<span class="nc" id="L382">				pSy2, pBgcolor, pObserver);</span>
+	}
+
+	public Paint getPaint() {
+<span class="nc" id="L386">		return mG.getPaint();</span>
+	}
+
+	public Composite getComposite() {
+<span class="nc" id="L390">		return mG.getComposite();</span>
+	}
+
+	public void setBackground(Color pColor) {
+<span class="nc" id="L394">		mG.setBackground(pColor);</span>
+<span class="nc" id="L395">	}</span>
+
+	public Color getBackground() {
+<span class="nc" id="L398">		return mG.getBackground();</span>
+	}
+
+	public Stroke getStroke() {
+<span class="nc" id="L402">		return mG.getStroke();</span>
+	}
+
+	public void clip(Shape pS) {
+<span class="nc" id="L406">		mG.clip(pS);</span>
+<span class="nc" id="L407">	}</span>
+
+	public FontRenderContext getFontRenderContext() {
+<span class="nc" id="L410">		return mG.getFontRenderContext();</span>
+	}
+
+	public void dispose() {
+<span class="nc" id="L414">		mG.dispose();</span>
+<span class="nc" id="L415">	}</span>
+
+	public void finalize() {
+<span class="nc" id="L418">		mG.finalize();</span>
+<span class="nc" id="L419">	}</span>
+
+	public String toString() {
+<span class="nc" id="L422">		return mG.toString();</span>
+	}
+
+	public Rectangle getClipRect() {
+<span class="nc" id="L426">		return mG.getClipRect();</span>
+	}
+
+	public boolean hitClip(int pX, int pY, int pWidth, int pHeight) {
+<span class="nc" id="L430">		return mG.hitClip(pX, pY, pWidth, pHeight);</span>
+	}
+
+	public Rectangle getClipBounds(Rectangle pR) {
+<span class="nc" id="L434">		return mG.getClipBounds(pR);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

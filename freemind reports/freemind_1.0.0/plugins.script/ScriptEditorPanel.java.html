@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ScriptEditorPanel.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.script</a> &gt; <span class="el_source">ScriptEditorPanel.java</span></div><h1>ScriptEditorPanel.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2007  Joerg Mueller, Daniel Polansky, Dimitri Polivaev, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 10.01.2007
+ */
+/*$Id: ScriptEditorPanel.java,v 1.1.2.18 2008/07/05 20:40:10 christianfoltin Exp $*/
+package plugins.script;
+
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+import javax.swing.DefaultListModel;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.WindowConstants;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Element;
+
+import plugins.script.ScriptingEngine.ErrorHandler;
+import freemind.controller.BlindIcon;
+import freemind.controller.StructuredMenuHolder;
+import freemind.controller.actions.generated.instance.ScriptEditorWindowConfigurationStorage;
+import freemind.main.FreeMindMain;
+import freemind.main.Resources;
+import freemind.main.Tools;
+
+/**
+ * @author foltin TODO:
+ *         &lt;ul&gt;
+ *         &lt;li&gt;&lt;/li&gt;
+ *         &lt;li&gt;new script/delete script buttons&lt;/li&gt;
+ *         &lt;li&gt;rename script button&lt;/li&gt;
+ *         &lt;li&gt;undo feature?&lt;/li&gt;
+ *         &lt;li&gt;show line/column numbers in status bar&lt;/li&gt;
+ *         &lt;/ul&gt;
+ */
+public class ScriptEditorPanel extends JDialog {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3221975191441136520L;
+
+	private static final String WINDOW_PREFERENCE_STORAGE_PROPERTY = &quot;plugins.script.ScriptEditorPanel/window_positions&quot;;
+
+	private final FreeMindMain mFrame;
+
+	private final ScriptModel mScriptModel;
+
+	private JList mScriptList;
+
+	private JTextArea mScriptTextField;
+
+	private DefaultListModel mListModel;
+
+<span class="nc" id="L93">	private Integer mLastSelected = null;</span>
+
+	private JTextArea mScriptResultField;
+
+	private JSplitPane mCentralUpperPanel;
+
+	private JSplitPane mCentralPanel;
+
+	private Logger logger;
+
+	private JLabel mStatus;
+
+	private AbstractAction mRunAction;
+
+	private SignAction mSignAction;
+
+<span class="nc" id="L109">	private final class ResultFieldStream extends OutputStream {</span>
+		public void write(int pByte) throws IOException {
+<span class="nc" id="L111">			mScriptResultField.append(new String(new byte[] { (byte) pByte }));</span>
+<span class="nc" id="L112">		}</span>
+
+		public void write(byte[] pB) throws IOException {
+<span class="nc" id="L115">			mScriptResultField.append(new String(pB));</span>
+<span class="nc" id="L116">		}</span>
+	}
+
+	private final class RunAction extends AbstractAction {
+<span class="nc" id="L120">		private RunAction(String pArg0) {</span>
+<span class="nc" id="L121">			super(pArg0);</span>
+<span class="nc" id="L122">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L125">			storeCurrent();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (!mScriptList.isSelectionEmpty()) {</span>
+<span class="nc" id="L127">				mScriptResultField.setText(&quot;&quot;);</span>
+<span class="nc" id="L128">				mScriptModel.executeScript(mScriptList.getSelectedIndex(),</span>
+<span class="nc" id="L129">						getPrintStream(), getErrorHandler());</span>
+			}
+<span class="nc" id="L131">		}</span>
+	}
+
+	private final class SignAction extends AbstractAction {
+<span class="nc" id="L135">		private SignAction(String pArg0) {</span>
+<span class="nc" id="L136">			super(pArg0);</span>
+<span class="nc" id="L137">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L140">			storeCurrent();</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (!mScriptList.isSelectionEmpty()) {</span>
+<span class="nc" id="L142">				int selectedIndex = mScriptList.getSelectedIndex();</span>
+<span class="nc" id="L143">				ScriptHolder script = mScriptModel.getScript(selectedIndex);</span>
+<span class="nc" id="L144">				String signedScript = new SignedScriptHandler().signScript(</span>
+<span class="nc" id="L145">						script.mScript, Resources.getInstance(), mFrame);</span>
+<span class="nc" id="L146">				script.setScript(signedScript);</span>
+<span class="nc" id="L147">				mScriptModel.setScript(selectedIndex, script);</span>
+<span class="nc" id="L148">				mScriptTextField.setText(signedScript);</span>
+			}
+<span class="nc" id="L150">		}</span>
+	}
+
+	private final class CancelAction extends AbstractAction {
+<span class="nc" id="L154">		private CancelAction(String pArg0) {</span>
+<span class="nc" id="L155">			super(pArg0);</span>
+<span class="nc" id="L156">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L159">			disposeDialog(true);</span>
+<span class="nc" id="L160">		}</span>
+	}
+
+	private final class ExitAction extends AbstractAction {
+<span class="nc" id="L164">		private ExitAction(String pArg0) {</span>
+<span class="nc" id="L165">			super(pArg0);</span>
+<span class="nc" id="L166">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L169">			storeCurrent();</span>
+<span class="nc" id="L170">			disposeDialog(false);</span>
+<span class="nc" id="L171">		}</span>
+	}
+
+	private final class NewScriptAction extends AbstractAction {
+<span class="nc" id="L175">		private NewScriptAction(String pArg0) {</span>
+<span class="nc" id="L176">			super(pArg0);</span>
+<span class="nc" id="L177">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L180">			storeCurrent();</span>
+<span class="nc" id="L181">			mLastSelected = null;</span>
+<span class="nc" id="L182">			int scriptIndex = mScriptModel.addNewScript();</span>
+<span class="nc" id="L183">			updateFields();</span>
+<span class="nc" id="L184">			select(scriptIndex);</span>
+<span class="nc" id="L185">		}</span>
+	}
+
+	public static class ScriptHolder {
+		String mScript;
+
+		String mScriptName;
+
+		/**
+		 * @param pScriptName
+		 *            script name (starting with &quot;script&quot;
+		 *            (ScriptingEngine.SCRIPT_PREFIX))
+		 * @param pScript
+		 *            script content
+		 */
+		public ScriptHolder(String pScriptName, String pScript) {
+<span class="nc" id="L201">			super();</span>
+<span class="nc" id="L202">			mScript = pScript;</span>
+<span class="nc" id="L203">			mScriptName = pScriptName;</span>
+<span class="nc" id="L204">		}</span>
+
+		public String getScript() {
+<span class="nc" id="L207">			return mScript;</span>
+		}
+
+		public String getScriptName() {
+<span class="nc" id="L211">			return mScriptName;</span>
+		}
+
+		public ScriptHolder setScript(String pScript) {
+<span class="nc" id="L215">			mScript = pScript;</span>
+<span class="nc" id="L216">			return this;</span>
+		}
+
+		public ScriptHolder setScriptName(String pScriptName) {
+<span class="nc" id="L220">			mScriptName = pScriptName;</span>
+<span class="nc" id="L221">			return this;</span>
+		}
+	}
+
+	public interface ScriptModel {
+		int getAmountOfScripts();
+
+		/**
+		 * @param pIndex
+		 *            zero-based
+		 * @return a script
+		 */
+		ScriptHolder getScript(int pIndex);
+
+		void setScript(int pIndex, ScriptHolder pScript);
+
+		boolean executeScript(int pIndex, PrintStream outStream,
+				ErrorHandler pErrorHandler);
+
+		void storeDialogPositions(ScriptEditorPanel pPanel,
+				ScriptEditorWindowConfigurationStorage pStorage,
+				String pWindow_preference_storage_property);
+
+		ScriptEditorWindowConfigurationStorage decorateDialog(
+				ScriptEditorPanel pPanel,
+				String pWindow_preference_storage_property);
+
+		void endDialog(boolean pIsCanceled);
+
+		boolean isDirty();
+
+		/**
+		 * 
+		 * @return the index of the new script.
+		 */
+		int addNewScript();
+	}
+
+	public ScriptEditorPanel(ScriptModel pScriptModel, FreeMindMain pFrame,
+			boolean pHasNewScriptFunctionality) {
+<span class="nc" id="L261">		super(pFrame.getJFrame(), true /* modal */);</span>
+<span class="nc" id="L262">		logger = pFrame.getLogger(this.getClass().getName());</span>
+<span class="nc" id="L263">		mScriptModel = pScriptModel;</span>
+<span class="nc" id="L264">		mFrame = pFrame;</span>
+		// build the panel:
+<span class="nc" id="L266">		this.setTitle(pFrame</span>
+<span class="nc" id="L267">				.getResourceString(&quot;plugins/ScriptEditor/window.title&quot;));</span>
+<span class="nc" id="L268">		this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L269">		this.addWindowListener(new WindowAdapter() {</span>
+			public void windowClosing(WindowEvent event) {
+<span class="nc" id="L271">				disposeDialog(true);</span>
+<span class="nc" id="L272">			}</span>
+		});
+<span class="nc" id="L274">		Tools.addEscapeActionToDialog(this, new AbstractAction() {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L276">				disposeDialog(true);</span>
+<span class="nc" id="L277">			}</span>
+		});
+
+<span class="nc" id="L280">		Container contentPane = this.getContentPane();</span>
+
+<span class="nc" id="L282">		contentPane.setLayout(new BorderLayout());</span>
+<span class="nc" id="L283">		mListModel = new DefaultListModel();</span>
+<span class="nc" id="L284">		mScriptList = new JList(mListModel);</span>
+<span class="nc" id="L285">		mScriptList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</span>
+<span class="nc" id="L286">		mScriptList.addListSelectionListener(new ListSelectionListener() {</span>
+
+			public void valueChanged(ListSelectionEvent pEvent) {
+<span class="nc bnc" id="L289" title="All 2 branches missed.">				if (pEvent.getValueIsAdjusting())</span>
+<span class="nc" id="L290">					return;</span>
+				// System.out.println(&quot;List selection:&quot; + pEvent);
+<span class="nc" id="L292">				select(mScriptList.getSelectedIndex());</span>
+<span class="nc" id="L293">			}</span>
+		});
+		// add(mScriptList, BorderLayout.WEST);
+<span class="nc" id="L296">		mScriptTextField = new JTextArea();</span>
+<span class="nc" id="L297">		mScriptTextField.setFont(new Font(&quot;Monospaced&quot;, Font.PLAIN, 12));</span>
+<span class="nc" id="L298">		mScriptTextField.setEnabled(false);</span>
+<span class="nc" id="L299">		mScriptTextField.setTabSize(2);</span>
+<span class="nc" id="L300">		mCentralUpperPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,</span>
+<span class="nc" id="L301">				mScriptList, new JScrollPane(mScriptTextField));</span>
+<span class="nc" id="L302">		mCentralUpperPanel.setContinuousLayout(true);</span>
+<span class="nc" id="L303">		mScriptResultField = new JTextArea();</span>
+<span class="nc" id="L304">		mScriptResultField.setEditable(false);</span>
+<span class="nc" id="L305">		mScriptResultField.setWrapStyleWord(true);</span>
+<span class="nc" id="L306">		mCentralPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT,</span>
+<span class="nc" id="L307">				mCentralUpperPanel, new JScrollPane(mScriptResultField));</span>
+<span class="nc" id="L308">		mCentralPanel.setDividerLocation(0.8);</span>
+<span class="nc" id="L309">		mCentralPanel.setContinuousLayout(true);</span>
+<span class="nc" id="L310">		contentPane.add(mCentralPanel, BorderLayout.CENTER);</span>
+<span class="nc" id="L311">		mStatus = new JLabel();</span>
+<span class="nc" id="L312">		contentPane.add(mStatus, BorderLayout.SOUTH);</span>
+<span class="nc" id="L313">		mScriptTextField.addCaretListener(new CaretListener() {</span>
+
+			public void caretUpdate(CaretEvent arg0) {
+<span class="nc" id="L316">				int caretPosition = mScriptTextField.getCaretPosition();</span>
+				try {
+<span class="nc" id="L318">					int lineOfOffset = mScriptTextField</span>
+<span class="nc" id="L319">							.getLineOfOffset(caretPosition);</span>
+<span class="nc" id="L320">					mStatus.setText(&quot;Line: &quot;</span>
+<span class="nc" id="L321">							+ (lineOfOffset + 1)</span>
+<span class="nc" id="L322">							+ &quot;, Column: &quot;</span>
+<span class="nc" id="L323">							+ (caretPosition</span>
+<span class="nc" id="L324">									- mScriptTextField</span>
+<span class="nc" id="L325">											.getLineStartOffset(lineOfOffset) + 1));</span>
+<span class="nc" id="L326">				} catch (BadLocationException e) {</span>
+<span class="nc" id="L327">					freemind.main.Resources.getInstance().logException(e);</span>
+				}
+
+<span class="nc" id="L330">			}</span>
+		});
+<span class="nc" id="L332">		updateFields();</span>
+<span class="nc" id="L333">		mScriptTextField.repaint();</span>
+		// menu:
+<span class="nc" id="L335">		JMenuBar menuBar = new JMenuBar();</span>
+<span class="nc" id="L336">		JMenu menu = new JMenu();</span>
+<span class="nc" id="L337">		Tools.setLabelAndMnemonic(menu,</span>
+<span class="nc" id="L338">				pFrame.getResourceString(&quot;plugins/ScriptEditor.menu_actions&quot;));</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">		if (pHasNewScriptFunctionality) {</span>
+<span class="nc" id="L340">			addAction(</span>
+<span class="nc" id="L341">					menu,</span>
+<span class="nc" id="L342">					new NewScriptAction(</span>
+<span class="nc" id="L343">							pFrame.getResourceString(&quot;plugins/ScriptEditor.new_script&quot;)));</span>
+		}
+<span class="nc" id="L345">		mRunAction = new RunAction(</span>
+<span class="nc" id="L346">				pFrame.getResourceString(&quot;plugins/ScriptEditor.run&quot;));</span>
+<span class="nc" id="L347">		mRunAction.setEnabled(false);</span>
+<span class="nc" id="L348">		addAction(menu, mRunAction);</span>
+<span class="nc" id="L349">		mSignAction = new SignAction(</span>
+<span class="nc" id="L350">				pFrame.getResourceString(&quot;plugins/ScriptEditor.sign&quot;));</span>
+<span class="nc" id="L351">		mSignAction.setEnabled(false);</span>
+<span class="nc" id="L352">		addAction(menu, mSignAction);</span>
+<span class="nc" id="L353">		AbstractAction cancelAction = new CancelAction(</span>
+<span class="nc" id="L354">				pFrame.getResourceString(&quot;plugins/ScriptEditor.cancel&quot;));</span>
+<span class="nc" id="L355">		addAction(menu, cancelAction);</span>
+<span class="nc" id="L356">		AbstractAction exitAction = new ExitAction(</span>
+<span class="nc" id="L357">				pFrame.getResourceString(&quot;plugins/ScriptEditor.exit&quot;));</span>
+<span class="nc" id="L358">		addAction(menu, exitAction);</span>
+<span class="nc" id="L359">		menuBar.add(menu);</span>
+<span class="nc" id="L360">		this.setJMenuBar(menuBar);</span>
+		// Retrieve window size and column positions.
+<span class="nc" id="L362">		ScriptEditorWindowConfigurationStorage storage = mScriptModel</span>
+<span class="nc" id="L363">				.decorateDialog(this, WINDOW_PREFERENCE_STORAGE_PROPERTY);</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">		if (storage != null) {</span>
+<span class="nc" id="L365">			mCentralUpperPanel.setDividerLocation(storage.getLeftRatio());</span>
+<span class="nc" id="L366">			mCentralPanel.setDividerLocation(storage.getTopRatio());</span>
+<span class="nc" id="L367">		} else {</span>
+			// bug fix: for new users, this is set to some reasonable values.
+<span class="nc" id="L369">			mCentralUpperPanel.setDividerLocation(100);</span>
+<span class="nc" id="L370">			mCentralPanel.setDividerLocation(240);</span>
+		}
+
+<span class="nc" id="L373">	}</span>
+
+	private void addAction(JMenu menu, AbstractAction action) {
+<span class="nc" id="L376">		JMenuItem item = menu.add(action);</span>
+<span class="nc" id="L377">		Tools.setLabelAndMnemonic(item,</span>
+<span class="nc" id="L378">				(String) action.getValue(AbstractAction.NAME));</span>
+<span class="nc" id="L379">		item.setIcon(new BlindIcon(StructuredMenuHolder.ICON_SIZE));</span>
+<span class="nc" id="L380">	}</span>
+
+	private void updateFields() {
+<span class="nc" id="L383">		mListModel.clear();</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">		for (int i = 0; i &lt; mScriptModel.getAmountOfScripts(); ++i) {</span>
+<span class="nc" id="L385">			ScriptHolder script = mScriptModel.getScript(i);</span>
+<span class="nc" id="L386">			mListModel.addElement(script.getScriptName());</span>
+		}
+<span class="nc" id="L388">	}</span>
+
+	private void select(int pIndex) {
+<span class="nc bnc" id="L391" title="All 2 branches missed.">		mScriptTextField.setEnabled(pIndex &gt;= 0);</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">		mRunAction.setEnabled(pIndex &gt;= 0);</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">		mSignAction.setEnabled(pIndex &gt;= 0);</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">		if (pIndex &lt; 0) {</span>
+<span class="nc" id="L395">			mScriptTextField.setText(&quot;&quot;);</span>
+<span class="nc" id="L396">			return;</span>
+		}
+<span class="nc" id="L398">		storeCurrent();</span>
+		// set new script
+<span class="nc" id="L400">		mScriptTextField.setText(mScriptModel.getScript(pIndex).getScript());</span>
+		// set last one:
+<span class="nc" id="L402">		mLastSelected = new Integer(pIndex);</span>
+<span class="nc bnc" id="L403" title="All 4 branches missed.">		if (pIndex &gt;= 0 &amp;&amp; mScriptList.getSelectedIndex() != pIndex) {</span>
+<span class="nc" id="L404">			mScriptList.setSelectedIndex(pIndex);</span>
+		}
+<span class="nc" id="L406">	}</span>
+
+	private void storeCurrent() {
+<span class="nc bnc" id="L409" title="All 2 branches missed.">		if (mLastSelected != null) {</span>
+			// store old value:
+<span class="nc" id="L411">			int oldIndex = mLastSelected.intValue();</span>
+<span class="nc" id="L412">			mScriptModel.setScript(oldIndex, mScriptModel.getScript(oldIndex)</span>
+<span class="nc" id="L413">					.setScript(mScriptTextField.getText()));</span>
+		}
+<span class="nc" id="L415">	}</span>
+
+	/**
+	 * @param pIsCanceled
+	 *            TODO
+	 * 
+	 */
+	private void disposeDialog(boolean pIsCanceled) {
+		// store current script:
+<span class="nc bnc" id="L424" title="All 2 branches missed.">		if (!mScriptList.isSelectionEmpty()) {</span>
+<span class="nc" id="L425">			select(mScriptList.getSelectedIndex());</span>
+		}
+<span class="nc bnc" id="L427" title="All 4 branches missed.">		if (pIsCanceled &amp;&amp; mScriptModel.isDirty()) {</span>
+			// ask if really cancel:
+<span class="nc" id="L429">			int action = JOptionPane.showConfirmDialog(this, mFrame</span>
+<span class="nc" id="L430">					.getResourceString(&quot;ScriptEditorPanel.changed_save&quot;),</span>
+<span class="nc" id="L431">					&quot;FreeMind&quot;, JOptionPane.YES_NO_CANCEL_OPTION);</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">			if (action == JOptionPane.CANCEL_OPTION)</span>
+<span class="nc" id="L433">				return;</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">			if(action == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L435">				pIsCanceled = false;</span>
+			}
+		}
+		// store window positions:
+<span class="nc" id="L439">		ScriptEditorWindowConfigurationStorage storage = new ScriptEditorWindowConfigurationStorage();</span>
+<span class="nc" id="L440">		storage.setLeftRatio(mCentralUpperPanel.getDividerLocation());</span>
+<span class="nc" id="L441">		storage.setTopRatio(mCentralPanel.getDividerLocation());</span>
+<span class="nc" id="L442">		mScriptModel.storeDialogPositions(this, storage,</span>
+<span class="nc" id="L443">				WINDOW_PREFERENCE_STORAGE_PROPERTY);</span>
+<span class="nc" id="L444">		this.setVisible(false);</span>
+<span class="nc" id="L445">		this.dispose();</span>
+<span class="nc" id="L446">		mScriptModel.endDialog(pIsCanceled);</span>
+<span class="nc" id="L447">	}</span>
+
+	PrintStream getPrintStream() {
+<span class="nc" id="L450">		return new PrintStream(new ResultFieldStream());</span>
+	}
+
+	ErrorHandler getErrorHandler() {
+<span class="nc" id="L454">		return new ErrorHandler() {</span>
+			public void gotoLine(int pLineNumber) {
+<span class="nc" id="L456">				logger.info(&quot;Line number: &quot; + pLineNumber);</span>
+<span class="nc bnc" id="L457" title="All 2 branches missed.">				if (pLineNumber &gt; 0</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">						&amp;&amp; pLineNumber &lt;= mScriptTextField.getLineCount()) {</span>
+<span class="nc" id="L459">					Element element3 = mScriptTextField.getDocument()</span>
+<span class="nc" id="L460">							.getDefaultRootElement();</span>
+<span class="nc" id="L461">					Element element4 = element3.getElement(pLineNumber - 1);</span>
+<span class="nc bnc" id="L462" title="All 2 branches missed.">					if (element4 != null) {</span>
+<span class="nc" id="L463">						mScriptTextField.select(</span>
+<span class="nc" id="L464">								((int) element4.getStartOffset()),</span>
+<span class="nc" id="L465">								element4.getEndOffset());</span>
+					}
+				}
+<span class="nc" id="L468">			}</span>
+		};
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

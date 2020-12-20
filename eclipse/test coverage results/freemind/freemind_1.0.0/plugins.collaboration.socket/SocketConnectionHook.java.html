@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>SocketConnectionHook.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.socket</a> &gt; <span class="el_source">SocketConnectionHook.java</span></div><h1>SocketConnectionHook.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2008  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *DatabaseGNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 28.12.2008
+ */
+
+
+package plugins.collaboration.socket;
+
+import java.io.IOException;
+import java.io.Writer;
+
+import freemind.controller.actions.generated.instance.CollaborationUserInformation;
+import freemind.extensions.DontSaveMarker;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.XMLElement;
+import freemind.modes.MindMapNode;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="nc" id="L40">public class SocketConnectionHook extends SocketBasics implements</span>
+		PermanentNodeHook, DontSaveMarker {
+
+	private ClientCommunication mClientCommunication;
+
+	/**
+     *
+     */
+
+	public void startupMapHook() {
+<span class="nc" id="L50">		super.startupMapHook();</span>
+		// this is the internal call. do nothing
+<span class="nc" id="L52">		logger.info(&quot;Startup of the permanent hook.&quot;);</span>
+<span class="nc" id="L53">		return;</span>
+	}
+
+	public void loadFrom(XMLElement pChild) {
+		// this plugin should not be saved.
+<span class="nc" id="L58">	}</span>
+
+	public void save(XMLElement pXml) {
+		// this plugin should not be saved.
+		// nothing to do.
+<span class="nc" id="L63">	}</span>
+
+	public void shutdownMapHook() {
+<span class="nc" id="L66">		deregisterFilter();</span>
+		// this is the internal call. shutdown
+<span class="nc" id="L68">		logger.info(&quot;Shut down of the permanent hook.&quot;);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (mClientCommunication != null) {</span>
+<span class="nc" id="L70">			mClientCommunication.shutdown();</span>
+		}
+<span class="nc" id="L72">		super.shutdownMapHook();</span>
+<span class="nc" id="L73">	}</span>
+
+	public void onAddChild(MindMapNode pAddedChildNode) {
+<span class="nc" id="L76">	}</span>
+
+	public void onAddChildren(MindMapNode pAddedChild) {
+<span class="nc" id="L79">	}</span>
+
+	public void onLostFocusNode(NodeView pNodeView) {
+<span class="nc" id="L82">	}</span>
+
+	public void onNewChild(MindMapNode pNewChildNode) {
+<span class="nc" id="L85">	}</span>
+
+	public void onRemoveChild(MindMapNode pOldChildNode) {
+<span class="nc" id="L88">	}</span>
+
+	public void onRemoveChildren(MindMapNode pOldChildNode, MindMapNode pOldDad) {
+<span class="nc" id="L91">	}</span>
+
+	public void onFocusNode(NodeView pNodeView) {
+<span class="nc" id="L94">	}</span>
+
+	public void onUpdateChildrenHook(MindMapNode pUpdatedNode) {
+<span class="nc" id="L97">	}</span>
+
+	public void onUpdateNodeHook() {
+<span class="nc" id="L100">	}</span>
+
+	public void onViewCreatedHook(NodeView pNodeView) {
+<span class="nc" id="L103">	}</span>
+
+	public void onViewRemovedHook(NodeView pNodeView) {
+<span class="nc" id="L106">	}</span>
+
+	public Integer getRole() {
+<span class="nc" id="L109">		return ROLE_SLAVE;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#getPort()
+	 */
+	public int getPort() {
+<span class="nc" id="L118">		return mClientCommunication.getPort();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#lock()
+	 */
+	protected String lock(String pUserName) throws UnableToGetLockException,
+			InterruptedException {
+<span class="nc" id="L128">		return mClientCommunication.sendLockRequest();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * plugins.collaboration.socket.SocketBasics#broadcastCommand(java.lang.
+	 * String, java.lang.String, java.lang.String)
+	 */
+	protected void broadcastCommand(String pDoAction, String pUndoAction,
+			String pLockId) throws Exception {
+<span class="nc" id="L140">		mClientCommunication.sendCommand(pDoAction, pUndoAction, pLockId);</span>
+<span class="nc" id="L141">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#unlock()
+	 */
+	protected void unlock() {
+<span class="nc" id="L149">	}</span>
+
+	/**
+	 * @param pClientCommunication
+	 */
+	public void setClientCommunication(ClientCommunication pClientCommunication) {
+<span class="nc" id="L155">		mClientCommunication = pClientCommunication;</span>
+
+<span class="nc" id="L157">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#shutdown()
+	 */
+	public void shutdown() {
+<span class="nc" id="L165">		mClientCommunication.shutdown();</span>
+<span class="nc" id="L166">	}</span>
+
+	public ClientCommunication getClientCommunication() {
+<span class="nc" id="L169">		return mClientCommunication;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#getMasterInformation()
+	 */
+	public CollaborationUserInformation getMasterInformation() {
+<span class="nc" id="L178">		return mClientCommunication.getUserInfo();</span>
+	}
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#processUnfinishedLinks()
+	 */
+	public void processUnfinishedLinks() {
+<span class="nc" id="L185">	}</span>
+
+	public void saveHtml(Writer pFileout) throws IOException {
+		// TODO Auto-generated method stub
+		
+<span class="nc" id="L190">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

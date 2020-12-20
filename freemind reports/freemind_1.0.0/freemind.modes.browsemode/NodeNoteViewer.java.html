@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeNoteViewer.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.browsemode</a> &gt; <span class="el_source">NodeNoteViewer.java</span></div><h1>NodeNoteViewer.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006  Christian Foltin and others
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.modes.browsemode;
+
+import java.awt.Color;
+import java.awt.Dimension;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+
+import freemind.modes.ControllerAdapter;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController.NodeSelectionListener;
+import freemind.modes.common.plugins.NodeNoteBase;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * 
+ */
+public class NodeNoteViewer extends NodeNoteBase implements
+		NodeSelectionListener {
+	private JComponent noteScrollPane;
+
+	private JLabel noteViewer;
+
+	private final ControllerAdapter mBrowseController;
+
+<span class="nc" id="L48">	private static ImageIcon noteIcon = null;</span>
+
+<span class="nc" id="L50">	public NodeNoteViewer(ControllerAdapter pBrowseController) {</span>
+<span class="nc" id="L51">		mBrowseController = pBrowseController;</span>
+<span class="nc" id="L52">	}</span>
+
+	protected JComponent getNoteViewerComponent(String text) {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (noteViewer == null) {</span>
+<span class="nc" id="L56">			noteViewer = new JLabel();</span>
+<span class="nc" id="L57">			noteViewer.setBackground(Color.WHITE);</span>
+<span class="nc" id="L58">			noteViewer.setVerticalAlignment(JLabel.TOP);</span>
+<span class="nc" id="L59">			noteViewer.setOpaque(true);</span>
+<span class="nc" id="L60">			noteScrollPane = new JScrollPane(noteViewer);</span>
+<span class="nc" id="L61">			noteScrollPane.setPreferredSize(new Dimension(1, 200));</span>
+		}
+<span class="nc" id="L63">		return noteScrollPane;</span>
+	}
+
+	public void onLostFocusNode(NodeView pNode) {
+<span class="nc" id="L67">		mBrowseController.getFrame().removeSplitPane();</span>
+<span class="nc" id="L68">	}</span>
+
+	public void onFocusNode(NodeView pNode) {
+<span class="nc" id="L71">		String noteText = pNode.getModel().getNoteText();</span>
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		if (noteText != null &amp;&amp; !noteText.equals(&quot;&quot;)) {</span>
+			// logger.info(&quot;Panel added&quot;);
+<span class="nc" id="L74">			mBrowseController.getFrame().insertComponentIntoSplitPane(</span>
+<span class="nc" id="L75">					getNoteViewerComponent(noteText));</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			noteViewer.setText(noteText != null ? noteText : &quot;&quot;);</span>
+		}
+<span class="nc" id="L78">	}</span>
+
+	public void onSaveNode(MindMapNode pNode) {
+<span class="nc" id="L81">	}</span>
+
+	public void onUpdateNodeHook(MindMapNode pNode) {
+<span class="nc" id="L84">		setStateIcon(pNode, true);</span>
+<span class="nc" id="L85">	}</span>
+
+	/** Copied from NodeNoteRegistration. */
+	protected void setStateIcon(MindMapNode node, boolean enabled) {
+		// icon
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (noteIcon == null) {</span>
+<span class="nc" id="L91">			noteIcon = new ImageIcon(</span>
+<span class="nc" id="L92">					mBrowseController.getResource(&quot;images/knotes.png&quot;));</span>
+		}
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		node.setStateIcon(NODE_NOTE_ICON, (enabled) ? noteIcon : null);</span>
+<span class="nc" id="L95">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.modes.ModeController.NodeSelectionListener#onSelectionChange(freemind.modes.MindMapNode, boolean)
+	 */
+	public void onSelectionChange(NodeView pNode, boolean pIsSelected) {
+<span class="nc" id="L101">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

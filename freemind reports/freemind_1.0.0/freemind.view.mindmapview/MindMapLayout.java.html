@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapLayout.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">MindMapLayout.java</span></div><h1>MindMapLayout.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: MindMapLayout.java,v 1.15.14.5.4.12 2007/04/21 15:11:23 dpolivaev Exp $*/
+
+package freemind.view.mindmapview;
+
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.LayoutManager;
+
+/**
+ * This class will Layout the Nodes and Edges of an MapView.
+ */
+public class MindMapLayout implements LayoutManager {
+
+	final static int BORDER = 30;// width of the border around the map.
+	// minimal width for input field of leaf or folded node (PN)
+	// the MINIMAL_LEAF_WIDTH is reserved by calculation of the map width
+	public final static int MINIMAL_LEAF_WIDTH = 150;
+<span class="nc" id="L37">	protected static java.util.logging.Logger logger = null;</span>
+
+<span class="nc" id="L39">	public MindMapLayout() {</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L41">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L42">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L44">	}</span>
+
+	public void addLayoutComponent(String name, Component comp) {
+<span class="nc" id="L47">	}</span>
+
+	public void removeLayoutComponent(Component comp) {
+<span class="nc" id="L50">	}</span>
+
+	public void layoutContainer(Container c) {
+<span class="nc" id="L53">		final MapView mapView = (MapView) c;</span>
+<span class="nc" id="L54">		final int calcXBorderSize = calcXBorderSize(mapView);</span>
+<span class="nc" id="L55">		final int calcYBorderSize = calcYBorderSize(mapView);</span>
+<span class="nc" id="L56">		getRoot(mapView).validate();</span>
+<span class="nc" id="L57">		getRoot(mapView).setLocation(calcXBorderSize, calcYBorderSize);</span>
+<span class="nc" id="L58">		mapView.setSize(calcXBorderSize * 2 + getRoot(mapView).getWidth(),</span>
+<span class="nc" id="L59">				calcYBorderSize * 2 + getRoot(mapView).getHeight());</span>
+<span class="nc" id="L60">		final int componentCount = mapView.getComponentCount();</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		for (int i = 0; i &lt; componentCount; i++) {</span>
+<span class="nc" id="L62">			final Component component = mapView.getComponent(i);</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">			if (!component.isValid()) {</span>
+<span class="nc" id="L64">				component.validate();</span>
+			}
+		}
+<span class="nc" id="L67">	}</span>
+
+	//
+	// Absolute positioning
+	//
+
+	//
+	// Get Methods
+	//
+
+	private NodeView getRoot(Container c) {
+<span class="nc" id="L78">		return ((MapView) c).getRoot();</span>
+	}
+
+	// This is actually never used.
+	public Dimension minimumLayoutSize(Container parent) {
+<span class="nc" id="L83">		return new Dimension(200, 200);</span>
+	} // For testing Purposes
+
+	public Dimension preferredLayoutSize(Container c) {
+<span class="nc" id="L87">		final MapView mapView = (MapView) c;</span>
+<span class="nc" id="L88">		final Dimension preferredSize = mapView.getRoot().getPreferredSize();</span>
+<span class="nc" id="L89">		return new Dimension(</span>
+<span class="nc" id="L90">				2 * calcXBorderSize(mapView) + preferredSize.width, 2</span>
+<span class="nc" id="L91">						* calcYBorderSize(mapView) + preferredSize.height);</span>
+	}
+
+	/**
+	 * @param map
+	 *            TODO
+	 */
+	private int calcYBorderSize(MapView map) {
+		int yBorderSize;
+<span class="nc" id="L100">		final int minBorderHeight = map.getZoomed(MindMapLayout.BORDER);</span>
+<span class="nc" id="L101">		Dimension visibleSize = map.getViewportSize();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (visibleSize != null) {</span>
+<span class="nc" id="L103">			yBorderSize = Math.max(visibleSize.height, minBorderHeight);</span>
+<span class="nc" id="L104">		} else {</span>
+<span class="nc" id="L105">			yBorderSize = minBorderHeight;</span>
+		}
+<span class="nc" id="L107">		return yBorderSize;</span>
+	}
+
+	private int calcXBorderSize(MapView map) {
+		int xBorderSize;
+<span class="nc" id="L112">		Dimension visibleSize = map.getViewportSize();</span>
+<span class="nc" id="L113">		final int minBorderWidth = map.getZoomed(MindMapLayout.BORDER</span>
+				+ MindMapLayout.MINIMAL_LEAF_WIDTH);
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (visibleSize != null) {</span>
+<span class="nc" id="L116">			xBorderSize = Math.max(visibleSize.width, minBorderWidth);</span>
+<span class="nc" id="L117">		} else {</span>
+<span class="nc" id="L118">			xBorderSize = minBorderWidth;</span>
+
+		}
+<span class="nc" id="L121">		return xBorderSize;</span>
+	}
+
+}// class MindMapLayout
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

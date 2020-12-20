@@ -1,0 +1,779 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>CompileXsdStart.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">de.foltin</a> &gt; <span class="el_source">CompileXsdStart.java</span></div><h1>CompileXsdStart.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2009 Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 16.06.2009
+ */
+/*$Id: CompileXsdStart.java,v 1.1.2.1 2009/07/17 19:17:41 christianfoltin Exp $*/
+
+package de.foltin;
+
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+/**
+ * @author foltin
+ * 
+ */
+public class CompileXsdStart extends DefaultHandler {
+	public static final String FREEMIND_PACKAGE = &quot;freemind.controller.actions.generated.instance&quot;;
+<span class="nc" id="L51">	private static final String DESTINATION_DIR = &quot;binding/src/&quot;</span>
+<span class="nc" id="L52">			+ FREEMIND_PACKAGE.replace('.', File.separatorChar);</span>
+	private static final String FREEMIND_ACTIONS_XSD = &quot;freemind_actions.xsd&quot;;
+	private static final String KEY_PACKAGE = &quot;000_KEY_PACKAGE&quot;;
+	private static final String FILE_START = &quot;010_start&quot;;
+	private static final String KEY_IMPORT_ARRAY_LIST = &quot;020_import_array_list&quot;;
+	private static final String KEY_CLASS_START = &quot;030_CLASS_START&quot;;
+	private static final String KEY_CLASS_EXTENSION = &quot;040_CLASS_EXTENSION&quot;;
+	private static final String KEY_CLASS_START2 = &quot;050_CLASS_START2&quot;;
+	private static final String KEY_CLASS_MIXED = &quot;055_CLASS_MIXED&quot;;
+	private static final String KEY_CLASS_PRIVATE_MEMBERS = &quot;060_PRIVATE_MEMBERS&quot;;
+	private static final String KEY_CLASS_GETTERS = &quot;070_Getters&quot;;
+	private static final String KEY_CLASS_SETTERS = &quot;080_setters&quot;;
+	private static final String KEY_CLASS_SINGLE_CHOICE = &quot;090_single_choice&quot;;
+	private static final String KEY_CLASS_MULTIPLE_CHOICES_MEMBERS = &quot;100_choice_members&quot;;
+	private static final String KEY_CLASS_MULTIPLE_CHOICES_SETGET = &quot;110_choice_setget&quot;;
+	private static final String KEY_CLASS_SEQUENCE = &quot;120_sequence&quot;;
+<span class="nc" id="L68">	private static final String KEY_CLASS_END = &quot;500_CLASS_END&quot;;</span>
+
+	private final InputStream mInputStream;
+	private XsdHandler mCurrentHandler;
+<span class="nc" id="L72">	private TreeSet/* &lt;String&gt; */mKeyOrder = new TreeSet/* &lt;String&gt; */();</span>
+<span class="nc" id="L73">	private HashMap/* &lt;String, HashMap&lt;String, String&gt; &gt; */mClassMap = new HashMap/*</span>
+																					 * &lt;
+																					 * String
+																					 * ,
+																					 * HashMap
+																					 * &lt;
+																					 * String
+																					 * ,
+																					 * String
+																					 * &gt;
+																					 * &gt;
+																					 */();
+<span class="nc" id="L85">	private StringBuffer mBindingXml = new StringBuffer();</span>
+
+<span class="nc" id="L87">	private HashMap/* &lt;String, ElementTypes&gt; */mElementMap = new HashMap/*</span>
+																		 * &lt;String
+																		 * ,
+																		 * ElementTypes
+																		 * &gt;
+																		 */();
+<span class="nc" id="L93">	private HashMap/* &lt;String, String&gt; */mTypeMap = new HashMap/*</span>
+																 * &lt;String,
+																 * String&gt;
+																 */();
+
+	private class ElementTypes {
+
+		private final int mEnumerationId;
+
+<span class="nc" id="L102">		public ElementTypes(int pEnumerationId) {</span>
+<span class="nc" id="L103">			mEnumerationId = pEnumerationId;</span>
+<span class="nc" id="L104">		}</span>
+
+		public int getId() {
+<span class="nc" id="L107">			return mEnumerationId;</span>
+		}
+	};
+
+<span class="nc" id="L111">	public final int Schema_Id = 0;</span>
+<span class="nc" id="L112">	public final int ComplexType_Id = 1;</span>
+<span class="nc" id="L113">	public final int Sequence_Id = 2;</span>
+<span class="nc" id="L114">	public final int Choice_Id = 3;</span>
+<span class="nc" id="L115">	public final int Attribute_Id = 4;</span>
+<span class="nc" id="L116">	public final int ComplexContent_Id = 5;</span>
+<span class="nc" id="L117">	public final int Element_Id = 6;</span>
+<span class="nc" id="L118">	public final int Extension_Id = 7;</span>
+<span class="nc" id="L119">	public final int SimpleType_Id = 8;</span>
+<span class="nc" id="L120">	public final int Restriction_Id = 9;</span>
+<span class="nc" id="L121">	public final int Enumeration_Id = 10;</span>
+<span class="nc" id="L122">	public final int Group_Id = 11;</span>
+<span class="nc" id="L123">	ElementTypes Schema = new ElementTypes(Schema_Id);</span>
+<span class="nc" id="L124">	ElementTypes ComplexType = new ElementTypes(ComplexType_Id);</span>
+<span class="nc" id="L125">	ElementTypes Sequence = new ElementTypes(Sequence_Id);</span>
+<span class="nc" id="L126">	ElementTypes Choice = new ElementTypes(Choice_Id);</span>
+<span class="nc" id="L127">	ElementTypes Attribute = new ElementTypes(Attribute_Id);</span>
+<span class="nc" id="L128">	ElementTypes ComplexContent = new ElementTypes(ComplexContent_Id);</span>
+<span class="nc" id="L129">	ElementTypes Element = new ElementTypes(Element_Id);</span>
+<span class="nc" id="L130">	ElementTypes Extension = new ElementTypes(Extension_Id);</span>
+<span class="nc" id="L131">	ElementTypes SimpleType = new ElementTypes(SimpleType_Id);</span>
+<span class="nc" id="L132">	ElementTypes Restriction = new ElementTypes(Restriction_Id);</span>
+<span class="nc" id="L133">	ElementTypes Enumeration = new ElementTypes(Enumeration_Id);</span>
+<span class="nc" id="L134">	ElementTypes Group = new ElementTypes(Group_Id);</span>
+
+<span class="nc" id="L136">	public CompileXsdStart(InputStream pInputStream) {</span>
+<span class="nc" id="L137">		mInputStream = pInputStream;</span>
+<span class="nc" id="L138">		mElementMap.put(&quot;xs:schema&quot;, /* ElementTypes. */Schema);</span>
+<span class="nc" id="L139">		mElementMap.put(&quot;xs:complexType&quot;, /* ElementTypes. */ComplexType);</span>
+<span class="nc" id="L140">		mElementMap.put(&quot;xs:complexContent&quot;, /* ElementTypes. */ComplexContent);</span>
+<span class="nc" id="L141">		mElementMap.put(&quot;xs:element&quot;, /* ElementTypes. */Element);</span>
+<span class="nc" id="L142">		mElementMap.put(&quot;xs:extension&quot;, /* ElementTypes. */Extension);</span>
+<span class="nc" id="L143">		mElementMap.put(&quot;xs:choice&quot;, /* ElementTypes. */Choice);</span>
+<span class="nc" id="L144">		mElementMap.put(&quot;xs:sequence&quot;, /* ElementTypes. */Sequence);</span>
+<span class="nc" id="L145">		mElementMap.put(&quot;xs:attribute&quot;, /* ElementTypes. */Attribute);</span>
+<span class="nc" id="L146">		mElementMap.put(&quot;xs:simpleType&quot;, /* ElementTypes. */SimpleType);</span>
+<span class="nc" id="L147">		mElementMap.put(&quot;xs:restriction&quot;, /* ElementTypes. */Restriction);</span>
+<span class="nc" id="L148">		mElementMap.put(&quot;xs:enumeration&quot;, /* ElementTypes. */Enumeration);</span>
+<span class="nc" id="L149">		mElementMap.put(&quot;xs:group&quot;, /* ElementTypes. */Group);</span>
+
+<span class="nc" id="L151">		mTypeMap.put(&quot;xs:long&quot;, &quot;long&quot;);</span>
+<span class="nc" id="L152">		mTypeMap.put(&quot;xs:int&quot;, &quot;int&quot;);</span>
+<span class="nc" id="L153">		mTypeMap.put(&quot;xs:string&quot;, &quot;String&quot;);</span>
+<span class="nc" id="L154">		mTypeMap.put(&quot;xs:boolean&quot;, &quot;boolean&quot;);</span>
+<span class="nc" id="L155">		mTypeMap.put(&quot;xs:float&quot;, &quot;float&quot;);</span>
+<span class="nc" id="L156">		mTypeMap.put(&quot;xs:double&quot;, &quot;double&quot;);</span>
+<span class="nc" id="L157">	}</span>
+
+	public static void main(String[] args) throws Exception {
+<span class="nc" id="L160">		CompileXsdStart cXS = new CompileXsdStart(new BufferedInputStream(</span>
+<span class="nc" id="L161">				new FileInputStream(FREEMIND_ACTIONS_XSD)));</span>
+<span class="nc" id="L162">		cXS.generate();</span>
+<span class="nc" id="L163">		cXS.print();</span>
+<span class="nc" id="L164">	}</span>
+
+	private void print() throws Exception {
+<span class="nc" id="L167">		File dir = new File(DESTINATION_DIR);</span>
+<span class="nc" id="L168">		dir.mkdirs();</span>
+		// for (String className : mClassMap.keySet()) {
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		for (Iterator it = mClassMap.keySet().iterator(); it.hasNext();) {</span>
+<span class="nc" id="L171">			String className = (String) it.next();</span>
+			// special handling for strange group tag.
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			if (className == null)</span>
+<span class="nc" id="L174">				continue;</span>
+<span class="nc" id="L175">			HashMap/* &lt;String, String&gt; */classMap = (HashMap) mClassMap</span>
+<span class="nc" id="L176">					.get(className);</span>
+			// System.out.println(&quot;\nClass:&quot; + keys);
+<span class="nc" id="L178">			FileOutputStream fs = new FileOutputStream(DESTINATION_DIR + &quot;/&quot;</span>
+<span class="nc" id="L179">					+ className + &quot;.java&quot;);</span>
+			// for (String orderString : mKeyOrder) {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			for (Iterator it2 = mKeyOrder.iterator(); it2.hasNext();) {</span>
+<span class="nc" id="L182">				String orderString = (String) it2.next();</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				if (classMap.containsKey(orderString)) {</span>
+<span class="nc" id="L184">					String string = (String) classMap.get(orderString);</span>
+<span class="nc" id="L185">					fs.write(string.getBytes());</span>
+					// System.out.print(string);
+				}
+			}
+<span class="nc" id="L189">			fs.close();</span>
+		}
+		// write binding to disk
+		if (true) {
+<span class="nc" id="L193">			FileOutputStream fs = new FileOutputStream(DESTINATION_DIR</span>
+<span class="nc" id="L194">					+ &quot;/binding.xml&quot;);</span>
+<span class="nc" id="L195">			fs.write(mBindingXml.toString().getBytes());</span>
+<span class="nc" id="L196">			fs.close();</span>
+		}
+<span class="nc" id="L198">	}</span>
+
+	public void generate() throws ParserConfigurationException, SAXException,
+			IOException {
+<span class="nc" id="L202">		SAXParserFactory factory = SAXParserFactory.newInstance();</span>
+<span class="nc" id="L203">		SAXParser saxParser = factory.newSAXParser();</span>
+<span class="nc" id="L204">		mCurrentHandler = new XsdHandler(null);</span>
+<span class="nc" id="L205">		mBindingXml.setLength(0);</span>
+<span class="nc" id="L206">		mBindingXml</span>
+<span class="nc" id="L207">				.append(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;&lt;binding&gt;\n&quot;);</span>
+		// introduce correct marshaling for newlines in strings:
+<span class="nc" id="L209">		mBindingXml</span>
+<span class="nc" id="L210">				.append(&quot;&lt;format type=\&quot;java.lang.String\&quot; serializer=\&quot;de.foltin.StringEncoder.encode\&quot; deserializer=\&quot;de.foltin.StringEncoder.decode\&quot;/&gt;\n&quot;);</span>
+<span class="nc" id="L211">		saxParser.parse(mInputStream, this);</span>
+<span class="nc" id="L212">		mBindingXml.append(&quot;&lt;/binding&gt;\n&quot;);</span>
+		// System.out.println(mBindingXml.toString());
+<span class="nc" id="L214">	}</span>
+
+	private class XsdHandler extends DefaultHandler {
+		XsdHandler mParent;
+<span class="nc" id="L218">		String mClassName = null;</span>
+<span class="nc" id="L219">		String mExtendsClassName = null;</span>
+
+<span class="nc" id="L221">		public XsdHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L222">			mParent = pParent;</span>
+<span class="nc" id="L223">		}</span>
+
+		String getClassName() {
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			if (mClassName != null) {</span>
+<span class="nc" id="L227">				return mClassName;</span>
+			}
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			if (mParent != null)</span>
+<span class="nc" id="L230">				return mParent.getClassName();</span>
+			else
+<span class="nc" id="L232">				return null;</span>
+		}
+
+		HashMap/* &lt;String, String&gt; */getClassMap() {
+<span class="nc" id="L236">			String className = getClassName();</span>
+<span class="nc" id="L237">			return createClass(className);</span>
+		}
+
+		protected void appendToClassMap(String key, String value) {
+<span class="nc" id="L241">			mKeyOrder.add(key);</span>
+<span class="nc" id="L242">			HashMap/* &lt;String, String&gt; */classMap = getClassMap();</span>
+
+<span class="nc bnc" id="L244" title="All 2 branches missed.">			if (classMap.containsKey(key)) {</span>
+<span class="nc" id="L245">				classMap.put(key, classMap.get(key) + value);</span>
+<span class="nc" id="L246">			} else {</span>
+<span class="nc" id="L247">				classMap.put(key, value);</span>
+			}
+<span class="nc" id="L249">		}</span>
+
+		protected void addArrayListImport() {
+<span class="nc" id="L252">			appendToClassMap(KEY_IMPORT_ARRAY_LIST,</span>
+<span class="nc" id="L253">					&quot;import java.util.ArrayList;\n&quot;);</span>
+<span class="nc" id="L254">		}</span>
+
+		String getExtendsClassName() {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">			if (mExtendsClassName != null) {</span>
+<span class="nc" id="L258">				return mExtendsClassName;</span>
+			}
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (mParent == null) {</span>
+<span class="nc" id="L261">				return null;</span>
+			}
+<span class="nc" id="L263">			return mParent.getExtendsClassName();</span>
+		}
+
+		public void startElement(String pName, Attributes pAttributes) {
+
+<span class="nc" id="L268">		}</span>
+
+		public void startElement(String pUri, String pLocalName, String pName,
+				Attributes pAttributes) throws SAXException {
+<span class="nc" id="L272">			super.startElement(pUri, pLocalName, pName, pAttributes);</span>
+			// System.out.print(&quot;[ &quot; + pName + &quot;, &quot;);
+			// for (int i = 0; i &lt; pAttributes.getLength(); ++i) {
+			// System.out.print(pAttributes.getLocalName(i) + &quot;=&quot;
+			// + pAttributes.getValue(i));
+			// }
+			// System.out.println(&quot;]&quot;);
+			ElementTypes defaultHandlerType;
+<span class="nc bnc" id="L280" title="All 2 branches missed.">			if (mElementMap.containsKey(pName)) {</span>
+<span class="nc" id="L281">				defaultHandlerType = (ElementTypes) mElementMap.get(pName);</span>
+<span class="nc" id="L282">			} else {</span>
+<span class="nc" id="L283">				throw new IllegalArgumentException(&quot;Element &quot; + pName</span>
+<span class="nc" id="L284">						+ &quot; is not matched.&quot;);</span>
+			}
+<span class="nc" id="L286">			XsdHandler nextHandler = null;</span>
+<span class="nc bnc" id="L287" title="All 10 branches missed.">			switch (defaultHandlerType.getId()) {</span>
+			case Element_Id:
+<span class="nc" id="L289">				nextHandler = createElementHandler();</span>
+<span class="nc" id="L290">				break;</span>
+			case ComplexType_Id:
+<span class="nc" id="L292">				nextHandler = new ComplexTypeHandler(this);</span>
+<span class="nc" id="L293">				break;</span>
+			case ComplexContent_Id:
+<span class="nc" id="L295">				nextHandler = new ComplexContentHandler(this);</span>
+<span class="nc" id="L296">				break;</span>
+			case Schema_Id:
+<span class="nc" id="L298">				nextHandler = new SchemaHandler(this);</span>
+<span class="nc" id="L299">				break;</span>
+
+			case Sequence_Id:
+<span class="nc" id="L302">				nextHandler = new SequenceHandler(this);</span>
+<span class="nc" id="L303">				break;</span>
+			case Choice_Id:
+<span class="nc" id="L305">				nextHandler = new ChoiceHandler(this);</span>
+<span class="nc" id="L306">				break;</span>
+			case Extension_Id:
+<span class="nc" id="L308">				nextHandler = new ExtensionHandler(this);</span>
+<span class="nc" id="L309">				break;</span>
+			case Attribute_Id:
+<span class="nc" id="L311">				nextHandler = new AttributeHandler(this);</span>
+<span class="nc" id="L312">				break;</span>
+			case Group_Id:
+<span class="nc" id="L314">				nextHandler = new GroupHandler(this);</span>
+<span class="nc" id="L315">				break;</span>
+			default:
+<span class="nc" id="L317">				nextHandler = new XsdHandler(this);</span>
+				// throw new IllegalArgumentException(&quot;Wrong type &quot; + pName);
+			}
+<span class="nc" id="L320">			mCurrentHandler = nextHandler;</span>
+<span class="nc" id="L321">			nextHandler.startElement(pName, pAttributes);</span>
+<span class="nc" id="L322">		}</span>
+
+		protected XsdHandler createElementHandler() {
+<span class="nc" id="L325">			return new ComplexTypeHandler(this);</span>
+		}
+
+		public void endElement(String pUri, String pLocalName, String pName)
+				throws SAXException {
+<span class="nc" id="L330">			super.endElement(pUri, pLocalName, pName);</span>
+<span class="nc" id="L331">			mCurrentHandler = mParent;</span>
+<span class="nc" id="L332">		}</span>
+
+	}
+
+	private class ExtensionHandler extends XsdHandler {
+
+<span class="nc" id="L338">		public ExtensionHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L339">			super(pParent);</span>
+<span class="nc" id="L340">		}</span>
+
+		public void startElement(String arg0, Attributes arg1) {
+<span class="nc" id="L343">			super.startElement(arg0, arg1);</span>
+<span class="nc" id="L344">			String base = arg1.getValue(&quot;base&quot;);</span>
+<span class="nc" id="L345">			mExtendsClassName = getNameFromXml(base);</span>
+<span class="nc" id="L346">			mKeyOrder.add(KEY_CLASS_EXTENSION);</span>
+<span class="nc" id="L347">			getClassMap().put(KEY_CLASS_EXTENSION,</span>
+<span class="nc" id="L348">					&quot; extends &quot; + mExtendsClassName);</span>
+<span class="nc" id="L349">			mBindingXml.append(&quot;    &lt;structure map-as=\&quot;&quot; + base</span>
+<span class="nc" id="L350">					+ &quot;_type\&quot;/&gt;\n&quot;);</span>
+			// inform parents:
+<span class="nc" id="L352">			XsdHandler xsdHandlerHierarchy = this;</span>
+			do {
+<span class="nc bnc" id="L354" title="All 2 branches missed.">				if (xsdHandlerHierarchy instanceof ComplexTypeHandler) {</span>
+<span class="nc" id="L355">					ComplexTypeHandler complexHandler = (ComplexTypeHandler) xsdHandlerHierarchy;</span>
+<span class="nc" id="L356">					complexHandler.mExtendsClassName = mExtendsClassName;</span>
+				}
+<span class="nc" id="L358">				xsdHandlerHierarchy = xsdHandlerHierarchy.mParent;</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">			} while (xsdHandlerHierarchy != null);</span>
+
+<span class="nc" id="L361">		}</span>
+	}
+
+	private class SchemaHandler extends XsdHandler {
+
+<span class="nc" id="L366">		public SchemaHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L367">			super(pParent);</span>
+<span class="nc" id="L368">		}</span>
+
+	}
+
+	private class ChoiceHandler extends XsdHandler {
+<span class="nc" id="L373">		private boolean isSingleChoice = false;</span>
+
+<span class="nc" id="L375">		public ChoiceHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L376">			super(pParent);</span>
+			// TODO Auto-generated constructor stub
+<span class="nc" id="L378">		}</span>
+
+		protected XsdHandler createElementHandler() {
+			// TODO Auto-generated method stub
+<span class="nc" id="L382">			return new ChoiceElementHandler(this);</span>
+		}
+
+		protected boolean isSingleChoice() {
+<span class="nc" id="L386">			return isSingleChoice;</span>
+		}
+
+		public void startElement(String arg0, Attributes arg1) {
+			// TODO Auto-generated method stub
+<span class="nc" id="L391">			super.startElement(arg0, arg1);</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">			if (arg1.getValue(&quot;maxOccurs&quot;) != null) {</span>
+				// single array list:
+<span class="nc" id="L394">				isSingleChoice = true;</span>
+<span class="nc" id="L395">				appendToClassMap(</span>
+<span class="nc" id="L396">						KEY_CLASS_SINGLE_CHOICE,</span>
+<span class="nc" id="L397">						&quot;  public void addChoice(Object choice) {\n&quot;</span>
+								+ &quot;    choiceList.add(choice);\n&quot;
+								+ &quot;  }\n&quot;
+								+ &quot;\n&quot;
+								+ &quot;  public void addAtChoice(int position, Object choice) {\n&quot;
+								+ &quot;    choiceList.add(position, choice);\n&quot;
+								+ &quot;  }\n&quot;
+								+ &quot;\n&quot;
+								+ &quot;  public void setAtChoice(int position, Object choice) {\n&quot;
+								+ &quot;    choiceList.set(position, choice);\n&quot;
+								+ &quot;  }\n&quot;
+								+ &quot;  public Object getChoice(int index) {\n&quot;
+								+ &quot;    return (Object)choiceList.get( index );\n&quot;
+								+ &quot;  }\n&quot;
+								+ &quot;\n&quot;
+								+ &quot;  public int sizeChoiceList() {\n&quot;
+								+ &quot;    return choiceList.size();\n&quot;
+								+ &quot;  }\n&quot;
+								+ &quot;\n&quot;
+								+ &quot;  public void clearChoiceList() {\n&quot;
+								+ &quot;    choiceList.clear();\n&quot;
+								+ &quot;  }\n&quot;
+								+ &quot;\n&quot;
+								+ &quot;  public java.util.List getListChoiceList() {\n&quot;
+								+ &quot;    return java.util.Collections.unmodifiableList(choiceList);\n&quot;
+								+ &quot;  }\n&quot;
+								+ &quot;\n&quot;
+								+ &quot;  protected ArrayList choiceList = new ArrayList();\n&quot;
+								+ &quot;\n&quot; + &quot;&quot;);
+<span class="nc" id="L426">				addArrayListImport();</span>
+<span class="nc" id="L427">				mBindingXml</span>
+<span class="nc" id="L428">						.append(&quot;    &lt;collection field='choiceList' ordered='false'&gt;\n&quot;);</span>
+			}
+<span class="nc" id="L430">		}</span>
+
+		public void endElement(String arg0, String arg1, String arg2)
+				throws SAXException {
+<span class="nc bnc" id="L434" title="All 2 branches missed.">			if (isSingleChoice) {</span>
+<span class="nc" id="L435">				mBindingXml.append(&quot;    &lt;/collection&gt;\n&quot;);</span>
+			}
+<span class="nc" id="L437">			super.endElement(arg0, arg1, arg2);</span>
+<span class="nc" id="L438">		}</span>
+	}
+
+	private class ChoiceElementHandler extends XsdHandler {
+		private boolean mIsSingle;
+
+<span class="nc" id="L444">		public ChoiceElementHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L445">			super(pParent);</span>
+			// TODO Auto-generated constructor stub
+<span class="nc bnc" id="L447" title="All 2 branches missed.">			if (pParent instanceof ChoiceHandler) {</span>
+<span class="nc" id="L448">				ChoiceHandler choiceParent = (ChoiceHandler) pParent;</span>
+<span class="nc" id="L449">				mIsSingle = choiceParent.isSingleChoice();</span>
+
+<span class="nc" id="L451">			} else {</span>
+<span class="nc" id="L452">				throw new IllegalArgumentException(</span>
+<span class="nc" id="L453">						&quot;Hmm, parent is not a choice.&quot;);</span>
+			}
+<span class="nc" id="L455">		}</span>
+
+		public void startElement(String arg0, Attributes arg1) {
+			// TODO Auto-generated method stub
+<span class="nc" id="L459">			super.startElement(arg0, arg1);</span>
+<span class="nc" id="L460">			String rawName = arg1.getValue(&quot;ref&quot;);</span>
+<span class="nc" id="L461">			String name = getNameFromXml(rawName);</span>
+<span class="nc" id="L462">			String memberName = name.substring(0, 1).toLowerCase()</span>
+<span class="nc" id="L463">					+ name.substring(1);</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">			if (mIsSingle) {</span>
+<span class="nc" id="L465">				mBindingXml</span>
+<span class="nc" id="L466">						.append(&quot;      &lt;structure usage=\&quot;optional\&quot; map-as=\&quot;&quot;</span>
+<span class="nc" id="L467">								+ FREEMIND_PACKAGE + &quot;.&quot; + name + &quot;\&quot;/&gt;\n&quot;);</span>
+<span class="nc" id="L468">				return;</span>
+			}
+			// do multiple choices.
+<span class="nc" id="L471">			appendToClassMap(KEY_CLASS_MULTIPLE_CHOICES_MEMBERS, &quot;  protected &quot;</span>
+<span class="nc" id="L472">					+ name + &quot; &quot; + memberName + &quot;;\n\n&quot;);</span>
+<span class="nc" id="L473">			appendToClassMap(KEY_CLASS_MULTIPLE_CHOICES_SETGET, &quot;  public &quot;</span>
+<span class="nc" id="L474">					+ name + &quot; get&quot; + name + &quot;() {\n    return this.&quot;</span>
+<span class="nc" id="L475">					+ memberName + &quot;;\n&quot; + &quot;  }\n\n&quot;);</span>
+<span class="nc" id="L476">			appendToClassMap(KEY_CLASS_MULTIPLE_CHOICES_SETGET,</span>
+<span class="nc" id="L477">					&quot;  public void set&quot; + name + &quot;(&quot; + name + &quot; value){\n&quot;</span>
+<span class="nc" id="L478">							+ &quot;    this.&quot; + memberName + &quot; = value;\n&quot;</span>
+<span class="nc" id="L479">							+ &quot;  }\n\n&quot;);</span>
+<span class="nc" id="L480">			mBindingXml.append(&quot;    &lt;structure field=\&quot;&quot; + memberName</span>
+<span class="nc" id="L481">					+ &quot;\&quot; usage=\&quot;&quot; + &quot;optional&quot; + &quot;\&quot; map-as=\&quot;&quot;</span>
+<span class="nc" id="L482">					+ FREEMIND_PACKAGE + &quot;.&quot; + name + &quot;\&quot;/&gt;\n&quot;);</span>
+<span class="nc" id="L483">		}</span>
+
+	}
+
+	private class GroupHandler extends XsdHandler {
+
+<span class="nc" id="L489">		public GroupHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L490">			super(pParent);</span>
+<span class="nc" id="L491">		}</span>
+
+		public void startElement(String arg0, String arg1, String arg2,
+				Attributes arg3) throws SAXException {
+			// super.startElement(arg0, arg1, arg2, arg3);
+			// omit the output.
+<span class="nc" id="L497">			mCurrentHandler = new GroupHandler(this);</span>
+<span class="nc" id="L498">		}</span>
+	}
+
+	private class SequenceHandler extends XsdHandler {
+
+<span class="nc" id="L503">		public SequenceHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L504">			super(pParent);</span>
+			// TODO Auto-generated constructor stub
+<span class="nc" id="L506">		}</span>
+
+		protected XsdHandler createElementHandler() {
+			// TODO Auto-generated method stub
+<span class="nc" id="L510">			return new SequenceElementHandler(this);</span>
+		}
+
+	}
+
+	private class SequenceElementHandler extends XsdHandler {
+
+<span class="nc" id="L517">		public SequenceElementHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L518">			super(pParent);</span>
+			// TODO Auto-generated constructor stub
+<span class="nc" id="L520">		}</span>
+
+		public void startElement(String arg0, Attributes arg1) {
+			// TODO Auto-generated method stub
+<span class="nc" id="L524">			super.startElement(arg0, arg1);</span>
+<span class="nc" id="L525">			String rawName = arg1.getValue(&quot;name&quot;);</span>
+<span class="nc" id="L526">			String type = arg1.getValue(&quot;type&quot;);</span>
+<span class="nc" id="L527">			boolean isRef = false;</span>
+<span class="nc bnc" id="L528" title="All 2 branches missed.">			if (rawName == null) {</span>
+<span class="nc" id="L529">				rawName = arg1.getValue(&quot;ref&quot;);</span>
+<span class="nc" id="L530">				isRef = true;</span>
+			}
+<span class="nc" id="L532">			String name = getNameFromXml(rawName);</span>
+<span class="nc" id="L533">			String memberName = name.substring(0, 1).toLowerCase()</span>
+<span class="nc" id="L534">					+ name.substring(1);</span>
+<span class="nc bnc" id="L535" title="All 2 branches missed.">			if (isRef) {</span>
+<span class="nc" id="L536">				type = name;</span>
+<span class="nc" id="L537">			} else {</span>
+<span class="nc" id="L538">				type = getType(type);</span>
+			}
+<span class="nc" id="L540">			String maxOccurs = arg1.getValue(&quot;maxOccurs&quot;);</span>
+<span class="nc" id="L541">			String minOccurs = arg1.getValue(&quot;minOccurs&quot;);</span>
+<span class="nc bnc" id="L542" title="All 4 branches missed.">			if (maxOccurs != null &amp;&amp; maxOccurs.trim().equals(&quot;1&quot;)) {</span>
+				// single ref:
+<span class="nc" id="L544">				appendToClassMap(KEY_CLASS_MULTIPLE_CHOICES_MEMBERS,</span>
+<span class="nc" id="L545">						&quot;  protected &quot; + type + &quot; &quot; + memberName + &quot;;\n\n&quot;);</span>
+<span class="nc" id="L546">				appendToClassMap(KEY_CLASS_MULTIPLE_CHOICES_SETGET, &quot;  public &quot;</span>
+<span class="nc" id="L547">						+ type + &quot; get&quot; + name + &quot;() {\n    return this.&quot;</span>
+<span class="nc" id="L548">						+ memberName + &quot;;\n&quot; + &quot;  }\n\n&quot;);</span>
+<span class="nc" id="L549">				appendToClassMap(KEY_CLASS_MULTIPLE_CHOICES_SETGET,</span>
+<span class="nc" id="L550">						&quot;  public void set&quot; + name + &quot;(&quot; + type + &quot; value){\n&quot;</span>
+<span class="nc" id="L551">								+ &quot;    this.&quot; + memberName + &quot; = value;\n&quot;</span>
+<span class="nc" id="L552">								+ &quot;  }\n\n&quot;);</span>
+<span class="nc" id="L553">				String optReq = &quot;optional&quot;;</span>
+<span class="nc bnc" id="L554" title="All 4 branches missed.">				if (minOccurs != null &amp;&amp; minOccurs.trim().equals(&quot;1&quot;)) {</span>
+<span class="nc" id="L555">					optReq = &quot;required&quot;;</span>
+				}
+<span class="nc bnc" id="L557" title="All 2 branches missed.">				if (isRef) {</span>
+<span class="nc" id="L558">					mBindingXml.append(&quot;      &lt;structure field=\&quot;&quot; + memberName</span>
+<span class="nc" id="L559">							+ &quot;\&quot; usage=\&quot;&quot; + optReq + &quot;\&quot; map-as=\&quot;&quot;</span>
+<span class="nc" id="L560">							+ FREEMIND_PACKAGE + &quot;.&quot; + type + &quot;\&quot;/&gt;\n&quot;);</span>
+<span class="nc" id="L561">				} else {</span>
+<span class="nc" id="L562">					mBindingXml.append(&quot;      &lt;value name=\&quot;&quot; + rawName</span>
+<span class="nc" id="L563">							+ &quot;\&quot; field=\&quot;&quot; + memberName + &quot;\&quot; usage=\&quot;&quot;</span>
+<span class="nc" id="L564">							+ optReq + &quot;\&quot;/&gt;\n&quot;);</span>
+					// whitespace='preserve' doesn't work
+				}
+<span class="nc" id="L567">			} else {</span>
+				// list ref:
+<span class="nc" id="L569">				appendToClassMap(KEY_CLASS_SEQUENCE, &quot;  public void add&quot; + name</span>
+<span class="nc" id="L570">						+ &quot;(&quot; + name + &quot; &quot; + memberName + &quot;) {\n&quot; + &quot;    &quot;</span>
+<span class="nc" id="L571">						+ memberName + &quot;List.add(&quot; + memberName + &quot;);\n&quot;</span>
+<span class="nc" id="L572">						+ &quot;  }\n&quot; + &quot;\n&quot; + &quot;  public void addAt&quot; + name</span>
+<span class="nc" id="L573">						+ &quot;(int position, &quot; + name + &quot; &quot; + memberName + &quot;) {\n&quot;</span>
+<span class="nc" id="L574">						+ &quot;    &quot; + memberName + &quot;List.add(position, &quot;</span>
+<span class="nc" id="L575">						+ memberName + &quot;);\n&quot; + &quot;  }\n&quot; + &quot;\n&quot; + &quot;  public &quot;</span>
+<span class="nc" id="L576">						+ name + &quot; get&quot; + name + &quot;(int index) {\n&quot;</span>
+<span class="nc" id="L577">						+ &quot;    return (&quot; + name + &quot;)&quot; + memberName</span>
+<span class="nc" id="L578">						+ &quot;List.get( index );\n&quot; + &quot;  }\n&quot; + &quot;\n&quot;</span>
+<span class="nc" id="L579">						+ &quot;  public void removeFrom&quot; + name</span>
+<span class="nc" id="L580">						+ &quot;ElementAt(int index) {\n&quot; + &quot;    &quot; + memberName</span>
+<span class="nc" id="L581">						+ &quot;List.remove( index );\n&quot; + &quot;  }\n&quot; + &quot;\n&quot;</span>
+<span class="nc" id="L582">						+ &quot;  public int size&quot; + name + &quot;List() {\n&quot;</span>
+<span class="nc" id="L583">						+ &quot;    return &quot; + memberName + &quot;List.size();\n&quot;</span>
+<span class="nc" id="L584">						+ &quot;  }\n&quot; + &quot;\n&quot; + &quot;  public void clear&quot; + name</span>
+<span class="nc" id="L585">						+ &quot;List() {\n&quot; + &quot;    &quot; + memberName</span>
+<span class="nc" id="L586">						+ &quot;List.clear();\n&quot; + &quot;  }\n&quot; + &quot;\n&quot;</span>
+<span class="nc" id="L587">						+ &quot;  public java.util.List getList&quot; + name</span>
+<span class="nc" id="L588">						+ &quot;List() {\n&quot;</span>
+<span class="nc" id="L589">						+ &quot;    return java.util.Collections.unmodifiableList(&quot;</span>
+<span class="nc" id="L590">						+ memberName + &quot;List);\n&quot; + &quot;  }\n&quot;</span>
+<span class="nc" id="L591">						+ &quot;    protected ArrayList &quot; + memberName</span>
+<span class="nc" id="L592">						+ &quot;List = new ArrayList();\n\n&quot;);</span>
+<span class="nc" id="L593">				addArrayListImport();</span>
+<span class="nc" id="L594">				mBindingXml.append(&quot;    &lt;collection field=\&quot;&quot; + memberName</span>
+<span class="nc" id="L595">						+ &quot;List\&quot;&gt;\n&quot; + &quot;      &lt;structure map-as=\&quot;&quot;</span>
+<span class="nc" id="L596">						+ FREEMIND_PACKAGE + &quot;.&quot; + name + &quot;\&quot;/&gt;\n&quot;</span>
+<span class="nc" id="L597">						+ &quot;    &lt;/collection&gt;\n&quot;);</span>
+			}
+<span class="nc" id="L599">		}</span>
+
+	}
+
+	private class ComplexTypeHandler extends XsdHandler {
+
+<span class="nc" id="L605">		private boolean mIsClassDefinedHere = false;</span>
+		private String mRawName;
+<span class="nc" id="L607">		private boolean mMixed = false;</span>
+
+<span class="nc" id="L609">		public ComplexTypeHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L610">			super(pParent);</span>
+<span class="nc" id="L611">		}</span>
+
+		public void startElement(String arg0, Attributes arg1) {
+<span class="nc" id="L614">			super.startElement(arg0, arg1);</span>
+
+<span class="nc" id="L616">			String mixed = arg1.getValue(&quot;mixed&quot;);</span>
+<span class="nc bnc" id="L617" title="All 2 branches missed.">			if (&quot;true&quot;.equals(mixed)) {</span>
+				// in case of mixed content (those with additional cdata
+				// content), we add a &quot;content&quot; field to the class
+<span class="nc" id="L620">				mMixed = true;</span>
+			}
+<span class="nc bnc" id="L622" title="All 2 branches missed.">			if (getClassName() == null) {</span>
+<span class="nc" id="L623">				mRawName = startClass(arg1);</span>
+				// make binding:
+<span class="nc" id="L625">				mBindingXml.append(&quot;  &lt;mapping class='&quot; + FREEMIND_PACKAGE</span>
+<span class="nc" id="L626">						+ &quot;.&quot; + mClassName + &quot;' type-name='&quot; + mRawName</span>
+<span class="nc" id="L627">						+ &quot;_type' abstract='true'&gt;\n&quot;);</span>
+<span class="nc" id="L628">				mIsClassDefinedHere = true;</span>
+			}
+<span class="nc" id="L630">		}</span>
+
+		/**
+		 * @param arg1
+		 * @return the class name
+		 */
+		protected String startClass(Attributes arg1) {
+<span class="nc" id="L637">			mKeyOrder.add(FILE_START);</span>
+<span class="nc" id="L638">			mKeyOrder.add(KEY_PACKAGE);</span>
+<span class="nc" id="L639">			mKeyOrder.add(KEY_CLASS_START);</span>
+<span class="nc" id="L640">			mKeyOrder.add(KEY_CLASS_END);</span>
+<span class="nc" id="L641">			String rawName = arg1.getValue(&quot;name&quot;);</span>
+<span class="nc" id="L642">			String name = getNameFromXml(rawName);</span>
+<span class="nc" id="L643">			HashMap/* &lt;String, String&gt; */class1 = createClass(name);</span>
+<span class="nc" id="L644">			mClassName = name;</span>
+<span class="nc" id="L645">			class1.put(FILE_START, &quot;/* &quot; + name + &quot;...*/\n&quot;);</span>
+<span class="nc" id="L646">			class1.put(KEY_PACKAGE, &quot;package &quot; + FREEMIND_PACKAGE + &quot;;\n&quot;);</span>
+<span class="nc" id="L647">			class1.put(KEY_CLASS_START, &quot;public class &quot; + name);</span>
+<span class="nc" id="L648">			mKeyOrder.add(KEY_CLASS_START2);</span>
+<span class="nc" id="L649">			class1.put(KEY_CLASS_START2, &quot; {\n&quot;);</span>
+<span class="nc bnc" id="L650" title="All 2 branches missed.">			if (mMixed) {</span>
+<span class="nc" id="L651">				mKeyOrder.add(KEY_CLASS_MIXED);</span>
+<span class="nc" id="L652">				class1.put(</span>
+<span class="nc" id="L653">						KEY_CLASS_MIXED,</span>
+<span class="nc" id="L654">						&quot; public String content; public String getContent(){return content;} public void setContent(String content){this.content = content;}\n&quot;);</span>
+			}
+<span class="nc" id="L656">			class1.put(KEY_CLASS_END, &quot;} /* &quot; + name + &quot;*/\n&quot;);</span>
+<span class="nc" id="L657">			return rawName;</span>
+		}
+
+		public void endElement(String arg0, String arg1, String arg2)
+				throws SAXException {
+<span class="nc bnc" id="L662" title="All 2 branches missed.">			if (mIsClassDefinedHere) {</span>
+<span class="nc" id="L663">				String extendString = &quot;&quot;;</span>
+<span class="nc bnc" id="L664" title="All 2 branches missed.">				if (getExtendsClassName() != null) {</span>
+<span class="nc" id="L665">					extendString = &quot; extends=\&quot;&quot; + FREEMIND_PACKAGE + &quot;.&quot;</span>
+<span class="nc" id="L666">							+ getExtendsClassName() + &quot;\&quot;&quot;;</span>
+				}
+<span class="nc bnc" id="L668" title="All 2 branches missed.">				if (mMixed) {</span>
+<span class="nc" id="L669">					mBindingXml</span>
+<span class="nc" id="L670">							.append(&quot;     &lt;value field='content' style='text'/&gt;\n&quot;);</span>
+				}
+<span class="nc" id="L672">				mBindingXml.append(&quot;  &lt;/mapping&gt;\n&quot; + &quot;  &lt;mapping name=\&quot;&quot;</span>
+<span class="nc" id="L673">						+ mRawName + &quot;\&quot;&quot; + extendString + &quot; class=\&quot;&quot;</span>
+<span class="nc" id="L674">						+ FREEMIND_PACKAGE + &quot;.&quot; + mClassName</span>
+<span class="nc" id="L675">						+ &quot;\&quot;&gt;&lt;structure map-as=\&quot;&quot; + mRawName</span>
+<span class="nc" id="L676">						+ &quot;_type\&quot;/&gt;&lt;/mapping&gt;\n&quot; + &quot;\n&quot;);</span>
+			}
+<span class="nc" id="L678">			super.endElement(arg0, arg1, arg2);</span>
+<span class="nc" id="L679">		}</span>
+	}
+
+	private class ComplexContentHandler extends XsdHandler {
+
+<span class="nc" id="L684">		public ComplexContentHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L685">			super(pParent);</span>
+<span class="nc" id="L686">		}</span>
+
+	}
+
+	private class AttributeHandler extends XsdHandler {
+
+<span class="nc" id="L692">		public AttributeHandler(XsdHandler pParent) {</span>
+<span class="nc" id="L693">			super(pParent);</span>
+<span class="nc" id="L694">		}</span>
+
+		public void startElement(String arg0, Attributes arg1) {
+<span class="nc" id="L697">			super.startElement(arg0, arg1);</span>
+<span class="nc" id="L698">			String type = arg1.getValue(&quot;type&quot;);</span>
+<span class="nc" id="L699">			type = getType(type);</span>
+<span class="nc" id="L700">			String rawName = arg1.getValue(&quot;name&quot;);</span>
+<span class="nc" id="L701">			String usage = arg1.getValue(&quot;use&quot;);</span>
+<span class="nc" id="L702">			String minOccurs = arg1.getValue(&quot;minOccurs&quot;);</span>
+<span class="nc" id="L703">			String name = arg1.getValue(&quot;id&quot;);</span>
+<span class="nc bnc" id="L704" title="All 2 branches missed.">			if (name == null) {</span>
+<span class="nc" id="L705">				name = getNameFromXml(rawName);</span>
+			}
+<span class="nc" id="L707">			String memberName = decapitalizeFirstLetter(name);</span>
+<span class="nc" id="L708">			appendToClassMap(KEY_CLASS_PRIVATE_MEMBERS, &quot;  protected &quot; + type</span>
+<span class="nc" id="L709">					+ &quot; &quot; + memberName + &quot;;\n&quot;);</span>
+<span class="nc" id="L710">			appendToClassMap(KEY_CLASS_GETTERS, &quot;  public &quot; + type + &quot; get&quot;</span>
+<span class="nc" id="L711">					+ name + &quot;(){\n&quot; + &quot;    return &quot; + memberName + &quot;;\n&quot;</span>
+<span class="nc" id="L712">					+ &quot;  }\n&quot;);</span>
+<span class="nc" id="L713">			appendToClassMap(KEY_CLASS_SETTERS, &quot;  public void set&quot; + name</span>
+<span class="nc" id="L714">					+ &quot;(&quot; + type + &quot; value){\n&quot; + &quot;    this.&quot; + memberName</span>
+<span class="nc" id="L715">					+ &quot; = value;\n&quot; + &quot;  }\n&quot;);</span>
+<span class="nc" id="L716">			mBindingXml.append(&quot;    &lt;value name='&quot; + rawName + &quot;' field='&quot;</span>
+<span class="nc" id="L717">					+ memberName + &quot;' &quot; + &quot;usage='&quot;</span>
+<span class="nc bnc" id="L718" title="All 2 branches missed.">					+ ((&quot;required&quot;.equals(usage)) ? &quot;required&quot; : &quot;optional&quot;)</span>
+<span class="nc" id="L719">					+ &quot;' &quot;</span>
+<span class="nc bnc" id="L720" title="All 2 branches missed.">					+ ((&quot;0&quot;.equals(minOccurs)) ? &quot;&quot; : &quot;style='attribute'&quot;)</span>
+<span class="nc" id="L721">					+ &quot;/&gt;\n&quot;);</span>
+			// whitespace='preserve' doesn't work
+<span class="nc" id="L723">		}</span>
+
+		public String decapitalizeFirstLetter(String name) {
+<span class="nc" id="L726">			return name.substring(0, 1).toLowerCase() + name.substring(1);</span>
+		}
+
+	}
+
+	public void endElement(String pUri, String pLocalName, String pName)
+			throws SAXException {
+<span class="nc" id="L733">		mCurrentHandler.endElement(pUri, pLocalName, pName);</span>
+<span class="nc" id="L734">	}</span>
+
+	public HashMap/* &lt;String, String&gt; */createClass(String pName) {
+<span class="nc bnc" id="L737" title="All 2 branches missed.">		if (mClassMap.containsKey(pName)) {</span>
+<span class="nc" id="L738">			return (HashMap) mClassMap.get(pName);</span>
+		}
+<span class="nc" id="L740">		HashMap/* &lt;String, String&gt; */newValue = new HashMap/* &lt;String, String&gt; */();</span>
+<span class="nc" id="L741">		mClassMap.put(pName, newValue);</span>
+<span class="nc" id="L742">		return newValue;</span>
+	}
+
+	public void startElement(String pUri, String pLocalName, String pName,
+			Attributes pAttributes) throws SAXException {
+<span class="nc" id="L747">		mCurrentHandler.startElement(pUri, pLocalName, pName, pAttributes);</span>
+<span class="nc" id="L748">	}</span>
+
+	public String firstLetterCapitalized(String text) {
+<span class="nc bnc" id="L751" title="All 4 branches missed.">		if (text == null || text.length() == 0) {</span>
+<span class="nc" id="L752">			return text;</span>
+		}
+<span class="nc" id="L754">		return text.substring(0, 1).toUpperCase()</span>
+<span class="nc" id="L755">				+ text.substring(1, text.length());</span>
+	}
+
+	private String getNameFromXml(String pXmlString) {
+<span class="nc" id="L759">		StringTokenizer st = new StringTokenizer(pXmlString, &quot;_&quot;);</span>
+<span class="nc" id="L760">		String result = &quot;&quot;;</span>
+<span class="nc bnc" id="L761" title="All 2 branches missed.">		while (st.hasMoreTokens()) {</span>
+<span class="nc" id="L762">			result += firstLetterCapitalized(st.nextToken());</span>
+		}
+<span class="nc" id="L764">		return result;</span>
+	}
+
+	private String getType(String type) {
+<span class="nc bnc" id="L768" title="All 2 branches missed.">		if (mTypeMap.containsKey(type)) {</span>
+<span class="nc" id="L769">			type = (String) mTypeMap.get(type);</span>
+<span class="nc" id="L770">		} else {</span>
+			// FIXME: Bad hack for tokens:
+<span class="nc" id="L772">			type = &quot;String&quot;;</span>
+			// throw new IllegalArgumentException(&quot;Unknown type &quot; + type);
+		}
+<span class="nc" id="L775">		return type;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

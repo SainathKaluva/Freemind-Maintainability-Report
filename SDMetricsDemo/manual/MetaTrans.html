@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - SDMetrics Metamodel and XMI Transformation Files</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Prediction.html">Prev</a> - <a href="MetaModel.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > 7 SDMetrics Metamodel and XMI Transformation Files
+<hr>
+<h1><a name="MetaTrans"></a>7 SDMetrics Metamodel and XMI Transformation Files</h1>
+
+To define and calculate design metrics, SDMetrics needs to know what types
+of design elements are present in a UML design, and what are their
+interrelationships. The UML, standardized by the Object Management
+Group (OMG), has a well-defined metamodel, based on the Meta Object
+Facility (MOF&trade;), also a standard of the OMG.<p>
+
+XMI (the XML Metadata Interchange format), yet another standard of the
+OMG, is a mechanism to create a textual (XML) representation of
+models based on the MOF, such as the UML. XMI defines a
+set of production rules that prescribe how to serialize the elements
+of a model to XML, and how to generate a DTD or schema for the XML
+files thus generated. However, this standard is not immediately
+suitable for the definition of design metrics for a number of reasons:
+
+<ul>
+
+<li> Different versions of the XMI exist, which yield different
+representations of UML models. At the time of this writing, XMI
+versions 1.2, 2.0, and 2.1 are widely used, and XMI 1.0 and 1.1
+are still around, too, though less frequently used.
+
+<li>The XMI DTDs or schemas for UML are huge (e.g., the XMI 1.2 DTD
+for UML1.4 has over 110 pages), which is too unwieldy for the purpose
+of defining metrics.
+
+<li> In practice, tool vendors do not always fully adhere to the UML
+and XMI standards, they often deviate in minor (and sometimes not so
+minor) ways. This is one cause why, in practice, tool interoperability
+via XMI exchange does not always work as intended.  </ul>
+
+SDMetrics therefore uses a reduced and simplified 'metamodel for the
+UML'. This metamodel defines the UML elements that SDMetrics knows
+about, and contains all the relevant information to calculate
+metrics. This simplified metamodel also abstracts from the various
+versions of the XMI that are used to represent UML designs. To support
+a specific version of the XMI, we need to define a mapping of
+SDMetrics metamodel elements onto the XMI elements for the given
+version of the XMI. SDMetrics stores these mappings in &quot;XMI
+transformation files&quot;.<p>
+
+<b>When would I need to worry about all this?</b><p>
+
+Knowledge of the SDMetrics metamodel is needed if you want to define
+new metrics or rules of your own (see <a href="MetricDef.html">Section&nbsp;8 "Defining Custom Design Metrics and Rules"</a>). The metric and
+rule definitions make copious references to the elements and
+relationships defined in the metamodel.<p>
+
+In addition, knowledge of XMI transformation files is needed if
+
+<ul>
+
+<li>an XMI exporter you use does not fully comply with the XMI
+standard or official UML metamodels, and you need to modify the XMI
+transformations files to account for this,
+
+<li>you want to define new metrics that take proprietary and/or
+tool-specific XMI extensions into account. For instance, the
+representation of UML diagram layout information is not standardized
+in UML 1.x, and tool vendors usually define proprietary extensions
+to store this information. You can extend the SDMetrics metamodel and
+modify the XMI transformation files for such XMI extensions, and
+define metrics for them.<br> 
+(Note: since XMI is not limited to the representation of UML models,
+but any models based on the MOF, it is possible to write SDMetrics
+metamodels and XMI transformation files for other MOF-based
+metamodels, and define metrics to perform measurements on these
+models.)
+</ul>
+
+<hr>
+<a href="MetaModel.html">7.1&nbsp;SDMetrics Metamodel</a><br>
+<a href="TransFile.html">7.2&nbsp;XMI Transformation Files</a><br>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Prediction.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="index.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="MetaModel.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;6.3.5 "Prediction Models"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;7.1 "SDMetrics Metamodel"</td></tr></table>
+
+</body>
+</html>

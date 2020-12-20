@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Definition of Relation Matrices</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="RuleExAttr.html">Prev</a> - <a href="ExpTerms.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > 8.4 Definition of Relation Matrices
+<hr>
+<h2><a name="DefRelMat"></a>8.4 Definition of Relation Matrices</h2>
+
+The metric definition file also hosts the definition of SDMetrics'
+relation matrices (see <a href="RelMat.html">Section&nbsp;4.10 "The View 'Relation Matrices'"</a>). The SDMetricsML defines a 
+relation matrix with an XML element as follows:
+
+<pre>
+&lt;matrix name="matrixname" from_row_type="rowtype" to_col_type="columtype" 
+        row_condition="..." col_condition="..." &gt; 
+  &lt;description&gt;Description of the matrix.&lt;/description&gt;
+  &lt;'matrix definition' ...&gt;
+&lt;/matrix&gt;
+</pre>
+
+The attributes in the opening "matrix" tag are:
+<ul>
+<li><tt>name</tt> (required): the name of the matrix, used in the dropdown list
+of the relation matrix view, and as filename when saving the
+relation matrix to files.
+
+<li><tt>from_row_type</tt> (required): the type of the source elements that will
+make up the rows of the matrix (e.g., package, class, operation).
+
+<li><tt>to_col_type</tt> (required): the type of target elements that will make
+up the columns of the matrix. This can be the same type as the row
+elements, or a different type.
+
+<li><tt>row_condition</tt> (optional): a condition expression (see <a href="DefCondExp.html">Section&nbsp;8.5.4 "Condition Expressions"</a>)
+that must be true for a source element to be included in the matrix rows.
+If the attribute is not specified, all source elements will be included.
+
+<li><tt>col_condition</tt> (optional): a condition expression that must
+be true for a target element to be included in the matrix columns.
+If the attribute is not specified, all target elements will be included.
+
+</ul>
+
+Following the matrix tag is an optional description of the matrix,
+enclosed in <tt>&lt;description&gt;</tt> tags. The description is
+shown in the measurement catalog (see <a href="MetCat.html">Section&nbsp;4.13 "The View 'Catalog'"</a>).
+
+<a href="WriteDesc.html">Section&nbsp;8.6 "Writing Descriptions"</a> explains how to write descriptions for matrices.<p>
+
+The matrix definition is an XML element that defines the calculation
+procedure establishing the relationship from source elements to target
+elements in the matrix. The available procedures are the same ones
+that are available for set definitions (see <a href="DefSets.html">Section&nbsp;8.2 "Definition of Sets"</a>).<p>
+
+The definition below calculates a relation matrix showing UML
+abstractions for classes, i.e., which classes implement which
+interfaces:
+
+<pre>
+&lt;matrix name="UMLAbstr" from_row_type="class" to_col_type="interface"&gt;
+  &lt;description&gt;UML abstractions: implementation of interfaces.&lt;/description&gt; 
+  &lt;projection relation="client" target="abstraction" element="supplier" /&gt; 
+&lt;/matrix&gt;
+</pre>
+
+The evaluation procedure for this matrix definition is as follows.
+For a source element in a given matrix row, the projection is
+evaluated, as described in <a href="SetProjection.html">Section&nbsp;8.2.1 "Projection"</a>. The number of
+occurrences of each target element in that projection is counted, and
+entered in the respective column of the relation matrix. This
+procedure is repeated for all rows of the matrix. Thus, we obtain in
+every table cell, a count of the number of relationship links from the
+source element to the target element.<p>
+
+In the context of a relation matrix definition, the set projection
+attribute <tt>recurse</tt> is not allowed.<p>
+
+As another example, assume we have defined, for a class, the set
+&quot;AssEl_out&quot; of elements associated with the class by
+bidirectional or navigable outgoing associations. We can then simply
+create a relation matrix showing these associations as follows:
+
+<pre>
+&lt;matrix name="ICAssoc_Cls" from_row_type="class" to_col_type="class"&gt;
+  &lt;description&gt;Import coupling via associations between classes.&lt;/description&gt; 
+  &lt;projection relset="AssEl_out" /&gt; 
+&lt;/matrix&gt;
+</pre>
+
+The evaluation procedure for this matrix definition is
+straightforward. For a source element in a given matrix row, the
+specified set expression &quot;relset&quot; is evaluated, as described
+in <a href="SetProjection.html">Section&nbsp;8.2.1 "Projection"</a>. For each target element, the value of the
+respective column of the relation matrix is the cardinality of the
+target element in the set. This procedure is repeated for all rows of
+the matrix.<p>
+
+Continuing the association matrix example from above, we may want 
+to reduce the size of the matrix by dropping empty rows 
+(classes without outgoing associations), and empty columns 
+(classes without incoming associations). Assume we have defined
+two helper metrics "Num_AssEl_out" and "Num_AssEl_in", to 
+count for a class the number of outgoing and incoming associations, 
+respectively. We add row and column conditions to the matrix 
+definition as follows:
+
+<pre>
+&lt;matrix name="ICAssoc_Cls" from_row_type="class" to_col_type="class"
+        row_condition="Num_AssEl_out&gt;0" col_condition="Num_AssEl_in&gt;0"&gt;
+  &lt;description&gt;Import coupling via associations between classes.&lt;/description&gt; 
+  &lt;projection relset="AssEl_out" /&gt; 
+&lt;/matrix&gt;
+</pre>
+
+Then, only classes with one ore more outgoing associations 
+(<tt>Num_AssEl_out&gt;0</tt>) will be included in the rows of the matrix, 
+which eliminates empty rows. Likewise, the column condition <tt>Num_AssEl_in&gt;0</tt>
+eliminates empty columns.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="RuleExAttr.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="MetricDef.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ExpTerms.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.3.6 "Exempting Approved Rule Violations"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.5 "Expression Terms"</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+SDMetrics Demo Version - Product License Information
+====================================================
+
+Notice to users: carefully read the following license agreement. Use
+of the software "SDMetrics Demo Version" provided with this agreement
+(the "SOFTWARE") constitutes your acceptance of these terms.  If you
+do not agree to the terms of this agreement, do not install and/or use
+this SOFTWARE.  User's use of this SOFTWARE is conditioned upon
+compliance by user with the terms of this agreement.
+
+Notice: The software "SDMetrics Demo Version" is not to be confused
+with "SDMetrics", the regular full product version of SDMetrics, for
+which a separate license agreement applies.
+
+1. LICENSE GRANT.  Juergen Wuest grants you a license to use this
+   SOFTWARE on any number of systems. You are expected to use the 
+   SOFTWARE on your systems and to thoroughly evaluate its usefulness
+   and functionality before making a purchase. You agree that you will
+   not redistribute the SOFTWARE as part of other software products 
+   that use the SOFTWARE. 
+
+2. OWNERSHIP. The SOFTWARE is owned and copyrighted by Juergen Wuest.
+   Your license confers no title or ownership in the SOFTWARE and
+   should not be construed as a sale of any right in the SOFTWARE.
+
+3. COPYRIGHT.  You acknowledge that no title to the intellectual
+   property in the SOFTWARE is transferred to you. You further
+   acknowledge that title and full ownership rights to the SOFTWARE
+   will remain the exclusive property of Juergen Wuest and you will
+   not acquire any rights to the SOFTWARE except as expressly set
+   forth in this license. You agree that any copies of the SOFTWARE
+   will contain the same proprietary notices which appear on and in
+   the SOFTWARE.
+
+4. REVERSE ENGINEERING. You agree that you will not attempt to
+   decompile, modify, translate, or disassemble the SOFTWARE in whole
+   or in part.
+
+5. NO OTHER WARRANTIES. The SOFTWARE is provided "as is" without
+   warranty of any kind, either express or implied, including, but not
+   limited to, the implied warranties of merchantability or fitness
+   for a particular purpose, or the warranty of non-infringement.
+   Some jurisdictions do not allow the exclusion of implied warranties
+   or limitations on how long an implied warranty may last, or the
+   exclusion or limitation of incidental or consequential damages, so
+   the above limitations or exclusions may not apply to you. This
+   warranty gives you specific legal rights and you may also have
+   other rights which vary from jurisdiction to jurisdiction.
+
+6. NO LIABILITY FOR CONSEQUENTIAL DAMAGES.  In no event shall Juergen
+   Wuest be liable to you for any consequential, special, incidental
+   or indirect damages of any kind arising out of the delivery,
+   performance or use of the SOFTWARE. In no event will Juergen
+   Wuest's liability for any claim, whether in contract, tort or any
+   other theory of liability, exceed the license fee paid by you, if
+   any.
+
+7. SUPPORT.  Juergen Wuest is not obligated to provide any technical 
+   support services for your use of the SOFTWARE under this License. 
+   Juergen Wuest may choose to provide technical support services at
+   his own discretion.
+
+8. GOVERNING LAW.  This license will be governed by the laws of the
+   Federal Republic of Germany.
+
+

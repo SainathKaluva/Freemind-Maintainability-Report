@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>TransformTest.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">TransformTest.java</span></div><h1>TransformTest.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Dimitri Polivaev, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 06.09.2006
+ */
+/*$Id: TransformTest.java,v 1.1.2.3 2009/03/01 20:16:29 christianfoltin Exp $*/
+package tests.freemind;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.Properties;
+
+import org.jibx.runtime.IUnmarshallingContext;
+
+import accessories.plugins.ExportToOoWriter;
+import accessories.plugins.ExportWithXSLT;
+import freemind.common.XmlBindingTools;
+import freemind.controller.actions.generated.instance.Plugin;
+import freemind.controller.actions.generated.instance.PluginAction;
+import freemind.controller.actions.generated.instance.PluginProperty;
+import freemind.main.Tools;
+
+public class TransformTest extends FreeMindTestBase {
+
+	private static final String TESTMAP_MM = &quot;tests/freemind/testmap.mm&quot;;
+	private static final String EXPORT_WITH_XSLT_XML = &quot;accessories/plugins/ExportWithXSLT.xml&quot;;
+	private static final String EXPORT_TO_OOO = &quot;accessories/plugins/ExportToOoWriter.xml&quot;;
+
+<span class="fc" id="L49">	public TransformTest() throws IOException {</span>
+<span class="fc" id="L50">	}</span>
+
+	public void testExportHtml() throws Exception {
+<span class="fc" id="L53">		String mapFileToBeExported = TESTMAP_MM;</span>
+<span class="fc" id="L54">		String destinationFileName = &quot;/tmp/test1.html&quot;;</span>
+<span class="fc" id="L55">		Properties properties = getProperties(EXPORT_WITH_XSLT_XML,</span>
+<span class="fc" id="L56">				&quot;accessories/plugins/ExportWithXSLT_HTML.properties&quot;);</span>
+<span class="pc" id="L57">		doExportWithExportPlugin(mapFileToBeExported, destinationFileName,</span>
+<span class="fc" id="L58">				properties);</span>
+<span class="nc" id="L59">	}</span>
+
+	public void testExportHtmlWithImage() throws Exception {
+<span class="fc" id="L62">		String mapFileToBeExported = TESTMAP_MM;</span>
+<span class="fc" id="L63">		String destinationFileName = &quot;/tmp/test2.html&quot;;</span>
+<span class="fc" id="L64">		Properties properties = getProperties(EXPORT_WITH_XSLT_XML,</span>
+<span class="fc" id="L65">				&quot;accessories/plugins/ExportWithXSLT_HTML3.properties&quot;);</span>
+<span class="pc" id="L66">		doExportWithExportPlugin(mapFileToBeExported, destinationFileName,</span>
+<span class="fc" id="L67">				properties);</span>
+<span class="nc" id="L68">	}</span>
+
+	public void testExportHtmlApplet() throws Exception {
+<span class="fc" id="L71">		String mapFileToBeExported = TESTMAP_MM;</span>
+<span class="fc" id="L72">		String destinationFileName = &quot;/tmp/test_applet.html&quot;;</span>
+<span class="fc" id="L73">		Properties properties = getProperties(EXPORT_WITH_XSLT_XML,</span>
+<span class="fc" id="L74">				&quot;accessories/plugins/ExportWithXSLT_Applet.properties&quot;);</span>
+<span class="pc" id="L75">		doExportWithExportPlugin(mapFileToBeExported, destinationFileName,</span>
+<span class="fc" id="L76">				properties);</span>
+<span class="nc" id="L77">	}</span>
+
+	public void testExportHtmlFlash() throws Exception {
+<span class="fc" id="L80">		String mapFileToBeExported = TESTMAP_MM;</span>
+<span class="fc" id="L81">		String destinationFileName = &quot;/tmp/test_flash.html&quot;;</span>
+<span class="fc" id="L82">		Properties properties = getProperties(EXPORT_WITH_XSLT_XML,</span>
+<span class="fc" id="L83">				&quot;accessories/plugins/ExportWithXSLT_Flash.properties&quot;);</span>
+<span class="pc" id="L84">		doExportWithExportPlugin(mapFileToBeExported, destinationFileName,</span>
+<span class="fc" id="L85">				properties);</span>
+<span class="nc" id="L86">	}</span>
+
+	public void testExportOoo() throws Exception {
+<span class="fc" id="L89">		String mapFileToBeExported = TESTMAP_MM;</span>
+<span class="fc" id="L90">		String destinationFileName = &quot;/tmp/test_ooo.odt&quot;;</span>
+<span class="fc" id="L91">		Properties properties = getProperties(EXPORT_TO_OOO,</span>
+<span class="fc" id="L92">				&quot;accessories/plugins/ExportToOoWriter.properties&quot;);</span>
+
+<span class="pc" id="L94">		doExportWithOooPlugin(mapFileToBeExported, destinationFileName,</span>
+<span class="fc" id="L95">				properties);</span>
+<span class="nc" id="L96">	}</span>
+
+	private Properties getProperties(String xmlPluginFile, String pluginLabel)
+			throws Exception {
+<span class="fc" id="L100">		Properties properties = new Properties();</span>
+<span class="fc" id="L101">		IUnmarshallingContext unmarshaller = XmlBindingTools.getInstance()</span>
+<span class="fc" id="L102">				.createUnmarshaller();</span>
+
+<span class="fc" id="L104">		URL pluginURL = ClassLoader.getSystemResource(xmlPluginFile);</span>
+<span class="fc" id="L105">		assertNotNull(&quot;file &quot; + xmlPluginFile + &quot; found&quot;, pluginURL);</span>
+		// unmarshal xml:
+<span class="fc" id="L107">		Plugin plugin = null;</span>
+<span class="fc" id="L108">		InputStream in = pluginURL.openStream();</span>
+<span class="fc" id="L109">		plugin = (Plugin) unmarshaller.unmarshalDocument(in, null);</span>
+<span class="fc" id="L110">		for (Iterator iter = plugin.getListChoiceList().iterator(); iter</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">				.hasNext();) {</span>
+
+<span class="fc" id="L113">			Object p = iter.next();</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">			if (p instanceof PluginAction) {</span>
+<span class="fc" id="L115">				PluginAction pl = (PluginAction) p;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">				if (!pluginLabel.equals(pl.getLabel()))</span>
+<span class="fc" id="L117">					continue;</span>
+<span class="fc" id="L118">				for (Iterator iterator = pl.getListChoiceList().iterator(); iterator</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">						.hasNext();) {</span>
+<span class="fc" id="L120">					Object plObject = (Object) iterator.next();</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">					if (plObject instanceof PluginProperty) {</span>
+<span class="fc" id="L122">						PluginProperty property = (PluginProperty) plObject;</span>
+<span class="fc" id="L123">						properties.put(property.getName(), property.getValue());</span>
+					}
+				}
+<span class="fc" id="L126">				break;</span>
+			}
+		}
+<span class="fc" id="L129">		return properties;</span>
+	}
+
+	private void doExportWithExportPlugin(String mapFileToBeExported,
+			String destinationFileName, Properties properties) throws Exception {
+<span class="fc" id="L134">		InputStream xmlSource = ClassLoader.getSystemResource(</span>
+<span class="fc" id="L135">				mapFileToBeExported).openStream();</span>
+<span class="fc" id="L136">		ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="nc" id="L137">		Tools.copyStream(xmlSource, out, true);</span>
+<span class="nc" id="L138">		ExportWithXSLT exportHook = new ExportWithXSLT();</span>
+<span class="nc" id="L139">		MindMapControllerMock controller = new MindMapControllerMock(</span>
+<span class="nc" id="L140">				mFreeMindMain, out.toString());</span>
+<span class="nc" id="L141">		exportHook.setController(controller);</span>
+
+<span class="nc" id="L143">		exportHook.setProperties(properties);</span>
+<span class="nc" id="L144">		File destinationFile = new File(destinationFileName);</span>
+<span class="nc" id="L145">		exportHook.transform(destinationFile);</span>
+<span class="nc" id="L146">		assertTrue(&quot;File &quot; + destinationFile + &quot; exists?&quot;,</span>
+<span class="nc" id="L147">				destinationFile.exists());</span>
+<span class="nc" id="L148">	}</span>
+
+	private void doExportWithOooPlugin(String mapFileToBeExported,
+			String destinationFileName, Properties properties)
+			throws IOException {
+<span class="fc" id="L153">		InputStream xmlSource = ClassLoader.getSystemResource(</span>
+<span class="fc" id="L154">				mapFileToBeExported).openStream();</span>
+<span class="fc" id="L155">		ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="nc" id="L156">		Tools.copyStream(xmlSource, out, true);</span>
+<span class="nc" id="L157">		ExportToOoWriter exportHook = new ExportToOoWriter();</span>
+<span class="nc" id="L158">		exportHook.setController(new MindMapControllerMock(mFreeMindMain, out</span>
+<span class="nc" id="L159">				.toString()));</span>
+
+<span class="nc" id="L161">		exportHook.setProperties(properties);</span>
+<span class="nc" id="L162">		File destinationFile = new File(destinationFileName);</span>
+<span class="nc" id="L163">		boolean result = exportHook.exportToOoWriter(destinationFile);</span>
+<span class="nc" id="L164">		assertTrue(&quot;File &quot; + destinationFile + &quot; exists?&quot;,</span>
+<span class="nc" id="L165">				destinationFile.exists());</span>
+<span class="nc" id="L166">		assertTrue(&quot;No error during export&quot;, result);</span>
+<span class="nc" id="L167">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

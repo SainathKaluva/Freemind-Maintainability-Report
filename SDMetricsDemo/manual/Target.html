@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Filter Attribute "target"</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProjSetAttr.html">Prev</a> - <a href="Element.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > <a href="Projection.html">8.1.1 Projection</a> > 8.1.1.3 Filter Attribute "target"
+<hr>
+<h4><a name="Target"></a>8.1.1.3 Filter Attribute "target"</h4>
+
+To count only elements of a certain type in a relation or set, you can
+specify the optional "target" attribute:
+
+<pre>
+&lt;metric name="NumOps" domain="class"&gt; 
+  &lt;description&gt;The number of operations in the class.&lt;/description&gt;
+  &lt;projection relation="context" target="operation" /&gt;
+&lt;/metric&gt;
+</pre>
+
+This only counts elements of type "operation" whose "context" is the
+given class, i.e., the number of operations of the class.<p>
+
+<b>Filtering for several types</b><p>
+
+If you want to count elements of several types, specify the additional
+types separated by a "|". For example, to count the classes,
+interfaces, and data types in a package, we write:
+
+<pre>&lt;metric name="NumEl" domain="package"&gt; 
+  &lt;projection relation="context" target="class|interface|datatype" /&gt;
+&lt;/metric&gt;
+</pre>
+
+<b>Filtering for subtypes</b><p>
+
+In SDMetrics' metamodel for UML2, type "class" is the parent type of
+several subtypes such as "usecase", "actor", "component". The target 
+filter <tt>target="class"</tt>, however, only accepts elements of type 
+"class". Elements whose type is a subtype of type "class" will not be
+accepted. Thus, the following metric "NumCls" only counts the classes
+in the package, not including actors, use cases, and so forth:
+
+<pre>&lt;metric name="NumCls" domain="package"&gt; 
+  &lt;projection relation="context" target="class" /&gt;
+&lt;/metric&gt;
+</pre>
+
+To also accept elements of direct or indirect subtypes of the type, 
+put a "+" prefix in front of the type name: 
+
+<pre>&lt;metric name="NumClsTypeEl" domain="package"&gt; 
+  &lt;projection relation="context" target="+class" /&gt;
+&lt;/metric&gt;
+</pre>
+
+This will count all classes, actors, usecases, components, and other
+elements in the package whose type is a direct or indirect subtype of
+"class".<p>
+
+You can combine subtype filtering with filtering for several types.
+For example, <tt>target="+class|interface|+datatype"</tt> will accept
+classes and datatypes as well as their subtypes, and interfaces, but
+not any subtypes of "interface".<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProjSetAttr.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Projection.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Element.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.1.2 "Attribute "relset""</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.1.1.4 "Filter Attributes "element" and "eltype""</td></tr></table>
+
+</body>
+</html>

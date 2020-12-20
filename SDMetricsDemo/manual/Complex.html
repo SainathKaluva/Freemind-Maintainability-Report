@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Complexity</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Inheritance.html">Prev</a> - <a href="Cohesion.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="DesignMsmt.html">6 Design Measurement</a> > <a href="SProp.html">6.2 Structural Design Properties</a> > 6.2.4 Complexity
+<hr>
+<h3><a name="Complex"></a>6.2.4 Complexity</h3>
+<a name="Glossary_Complexity"></a>
+<i>Definition</i><p> 
+
+Complexity measures the degree of connectivity between elements of a
+design unit. Whereas size counts the elements in a design unit,
+and coupling the relationships/dependencies leaving the design unit
+boundary, complexity is concerned with the relationships/dependencies between
+the elements in the design unit. For instance, counting the number
+method invocations among the methods within one class can be
+considered a measure of class complexity, or the number of transitions
+between the states in a state diagram.<p>
+
+<i>Impact on quality</i><p>
+
+High complexity of interactions between the elements of a design unit
+can lead to decreased understandability and therefore increased
+fault-proneness. Also, testing such design units is more difficult.<p>
+
+<i>Empirical results</i><p>
+
+In practice, complexity metrics are often strongly correlated with
+size measures. Large design units that contain many design elements
+within are also more likely to have a large number of connections
+between the design elements.<p>
+
+Thus, while complexity metrics are good indicators of qualities such
+as fault-proneness, they provide no new insights in addition to size
+metrics.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Inheritance.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="SProp.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Cohesion.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;6.2.3 "Inheritance"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;6.2.5 "Cohesion"</td></tr></table>
+
+</body>
+</html>

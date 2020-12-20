@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Activity Metrics</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Metrics_statemachine.html">Prev</a> - <a href="Metrics_component.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LOMetrics.html">B: List of Design Metrics</a> > B.7 Activity Metrics
+<hr>
+<h2><a name="Metrics_activity"></a>B.7 Activity Metrics</h2>
+<a name="Metrics_activity_Actions"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Actions</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of actions of the activity.<p> Includes actions in all activity groups (partitions, interruptible regions, expansion regions, structured activities including conditional, loop, and sequence nodes), and their subgroups, sub-subgroups, etc. 
+</td></tr></table><hr><p>
+<a name="Metrics_activity_ObjectNodes"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>ObjectNodes</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of object nodes of the activity.<p> Counts data store, central buffer, and activity parameter nodes in all activity groups and their subgroups etc. (see <a href="Metrics_activity.html#Metrics_activity_Actions">Actions</a>). 
+</td></tr></table><hr><p>
+<a name="Metrics_activity_Pins"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Pins</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of pins on nodes of the activity.<p> Counts all input, output, and value pins on all nodes and groups of the activity. 
+</td></tr></table><hr><p>
+<a name="Metrics_activity_ControlNodes"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>ControlNodes</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of control nodes of the activity.<p> Control nodes are initial, activity final, flow final, join, fork, decision, and merge nodes. The metric also counts control nodes in all activity groups and their subgroups etc. (see <a href="Metrics_activity.html#Metrics_activity_Actions">Actions</a>). 
+</td></tr></table><hr><p>
+<a name="Metrics_activity_Partitions"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Partitions</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of activity partitions in the activity.
+</td></tr></table><hr><p>
+<a name="Metrics_activity_Groups"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Groups</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of activity groups or regions of the activity.<p> Counts interruptible and expansion regions, structured activities, conditional, loop, and sequence nodes, at all levels of nesting. 
+</td></tr></table><hr><p>
+<a name="Metrics_activity_ControlFlows"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>ControlFlows</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of control flows of the activity.<p> Includes contained edges in all activity groups and their subgroups etc. (see <a href="Metrics_activity.html#Metrics_activity_Actions">Actions</a>) 
+</td></tr></table><hr><p>
+<a name="Metrics_activity_ObjectFlows"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>ObjectFlows</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of object flows of the activity.<p> Includes contained edges in all activity groups and their subgroups etc. (see <a href="Metrics_activity.html#Metrics_activity_Actions">Actions</a>) 
+</td></tr></table><hr><p>
+<a name="Metrics_activity_Guards"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Guards</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of guards defined on object and control flows of the activity.<p> Includes contained edges in all activity groups and their subgroups etc. (see <a href="Metrics_activity.html#Metrics_activity_Actions">Actions</a>). 
+</td></tr></table><hr><p>
+<a name="Metrics_activity_ExcHandlers"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>ExcHandlers</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of exception handlers of the activity.<p> Includes exception handlers for all nodes in all activity groups and their subgroups etc. (see <a href="Metrics_activity.html#Metrics_activity_Actions">Actions</a>). 
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Metrics_statemachine.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LOMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Metrics_component.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;B.6 "Statemachine Metrics"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;B.8 "Component Metrics"</td></tr></table>
+
+</body>
+</html>

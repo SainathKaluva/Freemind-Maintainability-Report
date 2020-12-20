@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>XmlBindingTools.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.common</a> &gt; <span class="el_source">XmlBindingTools.java</span></div><h1>XmlBindingTools.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 23.06.2004
+ */
+/*$Id: XmlBindingTools.java,v 1.1.2.2.2.5 2009/05/20 19:19:11 christianfoltin Exp $*/
+
+package freemind.common;
+
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.Toolkit;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+
+import org.jibx.runtime.BindingDirectory;
+import org.jibx.runtime.IBindingFactory;
+import org.jibx.runtime.IMarshallingContext;
+import org.jibx.runtime.IUnmarshallingContext;
+import org.jibx.runtime.JiBXException;
+
+import freemind.controller.Controller;
+import freemind.controller.actions.generated.instance.WindowConfigurationStorage;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Resources;
+
+/**
+ * @author foltin Singleton
+ */
+public class XmlBindingTools {
+
+	private static XmlBindingTools instance;
+	private static IBindingFactory mBindingFactory;
+
+<span class="fc" id="L55">	private XmlBindingTools() {</span>
+<span class="fc" id="L56">	}</span>
+
+	public static XmlBindingTools getInstance() {
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		if (instance == null) {</span>
+<span class="fc" id="L60">			instance = new XmlBindingTools();</span>
+			try {
+<span class="fc" id="L62">				mBindingFactory = BindingDirectory.getFactory(XmlAction.class);</span>
+<span class="pc" id="L63">			} catch (JiBXException e) {</span>
+<span class="nc" id="L64">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+
+		}
+<span class="fc" id="L68">		return instance;</span>
+	}
+
+	public IMarshallingContext createMarshaller() {
+		try {
+<span class="fc" id="L73">			return mBindingFactory.createMarshallingContext();</span>
+<span class="nc" id="L74">		} catch (JiBXException e) {</span>
+<span class="nc" id="L75">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L76">			return null;</span>
+		}
+	}
+
+	public IUnmarshallingContext createUnmarshaller() {
+		try {
+<span class="fc" id="L82">			return mBindingFactory.createUnmarshallingContext();</span>
+<span class="nc" id="L83">		} catch (JiBXException e) {</span>
+<span class="nc" id="L84">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L85">			return null;</span>
+		}
+	}
+
+	public void storeDialogPositions(Controller controller, JDialog dialog,
+			WindowConfigurationStorage storage,
+			String window_preference_storage_property) {
+<span class="nc" id="L92">		String result = storeDialogPositions(storage, dialog);</span>
+<span class="nc" id="L93">		controller.setProperty(window_preference_storage_property, result);</span>
+<span class="nc" id="L94">	}</span>
+
+	protected String storeDialogPositions(WindowConfigurationStorage storage,
+			JDialog dialog) {
+<span class="nc" id="L98">		storage.setX((dialog.getX()));</span>
+<span class="nc" id="L99">		storage.setY((dialog.getY()));</span>
+<span class="nc" id="L100">		storage.setWidth((dialog.getWidth()));</span>
+<span class="nc" id="L101">		storage.setHeight((dialog.getHeight()));</span>
+<span class="nc" id="L102">		String marshalled = marshall(storage);</span>
+<span class="nc" id="L103">		String result = marshalled;</span>
+<span class="nc" id="L104">		return result;</span>
+	}
+
+	public WindowConfigurationStorage decorateDialog(Controller controller,
+			JDialog dialog, String window_preference_storage_property) {
+<span class="nc" id="L109">		String marshalled = controller</span>
+<span class="nc" id="L110">				.getProperty(window_preference_storage_property);</span>
+<span class="nc" id="L111">		WindowConfigurationStorage result = decorateDialog(marshalled, dialog);</span>
+<span class="nc" id="L112">		return result;</span>
+	}
+
+	public WindowConfigurationStorage decorateDialog(String marshalled,
+			JDialog dialog) {
+		// String unmarshalled = controller.getProperty(
+		// propertyName);
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (marshalled != null) {</span>
+<span class="nc" id="L120">			WindowConfigurationStorage storage = (WindowConfigurationStorage) unMarshall(marshalled);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if (storage != null) {</span>
+				// Check that location is on current screen.
+				Dimension screenSize;
+<span class="nc" id="L124">				if (Resources.getInstance().getBoolProperty(</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">						&quot;place_dialogs_on_first_screen&quot;)) {</span>
+<span class="nc" id="L126">					Toolkit defaultToolkit = Toolkit.getDefaultToolkit();</span>
+<span class="nc" id="L127">					screenSize = defaultToolkit.getScreenSize();</span>
+<span class="nc" id="L128">				} else {</span>
+<span class="nc" id="L129">					screenSize = new Dimension();</span>
+<span class="nc" id="L130">					screenSize.height = Integer.MAX_VALUE;</span>
+<span class="nc" id="L131">					screenSize.width = Integer.MAX_VALUE;</span>
+				}
+<span class="nc" id="L133">				int delta = 20;</span>
+<span class="nc" id="L134">				dialog.setLocation(</span>
+<span class="nc" id="L135">						Math.min(storage.getX(), screenSize.width - delta),</span>
+<span class="nc" id="L136">						Math.min(storage.getY(), screenSize.height - delta));</span>
+<span class="nc" id="L137">				dialog.setSize(new Dimension(storage.getWidth(), storage</span>
+<span class="nc" id="L138">						.getHeight()));</span>
+<span class="nc" id="L139">				return storage;</span>
+			}
+		}
+
+		// set standard dialog size of no size is stored
+<span class="nc" id="L144">		final Frame rootFrame = JOptionPane.getFrameForComponent(dialog);</span>
+<span class="nc" id="L145">		final Dimension prefSize = rootFrame.getSize();</span>
+<span class="nc" id="L146">		prefSize.width = prefSize.width * 3 / 4;</span>
+<span class="nc" id="L147">		prefSize.height = prefSize.height * 3 / 4;</span>
+<span class="nc" id="L148">		dialog.setSize(prefSize);</span>
+<span class="nc" id="L149">		return null;</span>
+	}
+
+	public String marshall(XmlAction action) {
+		// marshall:
+		// marshal to StringBuffer:
+<span class="fc" id="L155">		StringWriter writer = new StringWriter();</span>
+<span class="fc" id="L156">		IMarshallingContext m = XmlBindingTools.getInstance()</span>
+<span class="fc" id="L157">				.createMarshaller();</span>
+		try {
+<span class="fc" id="L159">			m.marshalDocument(action, &quot;UTF-8&quot;, null, writer);</span>
+<span class="pc" id="L160">		} catch (JiBXException e) {</span>
+<span class="nc" id="L161">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L162">			return null;</span>
+		}
+<span class="fc" id="L164">		String result = writer.toString();</span>
+<span class="fc" id="L165">		return result;</span>
+
+	}
+
+	public XmlAction unMarshall(String inputString) {
+<span class="fc" id="L170">		return unMarshall(new StringReader(inputString));</span>
+	}
+
+	/**
+     */
+	public XmlAction unMarshall(Reader reader) {
+		try {
+			// unmarshall:
+<span class="fc" id="L178">			IUnmarshallingContext u = XmlBindingTools.getInstance()</span>
+<span class="fc" id="L179">					.createUnmarshaller();</span>
+<span class="fc" id="L180">			XmlAction doAction = (XmlAction) u.unmarshalDocument(reader, null);</span>
+<span class="fc" id="L181">			return doAction;</span>
+<span class="nc" id="L182">		} catch (JiBXException e) {</span>
+<span class="nc" id="L183">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L184">			return null;</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

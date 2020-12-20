@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>SchemeMapModel.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.schememode</a> &gt; <span class="el_source">SchemeMapModel.java</span></div><h1>SchemeMapModel.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.schememode;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StreamTokenizer;
+import java.io.Writer;
+import java.net.URL;
+
+import freemind.main.FreeMindMain;
+import freemind.modes.MapAdapter;
+import freemind.modes.ModeController;
+
+public class SchemeMapModel extends MapAdapter {
+
+	//
+	// Constructors
+	//
+
+	public SchemeMapModel(FreeMindMain frame, ModeController modeController) {
+<span class="nc" id="L47">		super(frame, modeController);</span>
+<span class="nc" id="L48">		setRoot(new SchemeNodeModel(getFrame(), this));</span>
+<span class="nc" id="L49">	}</span>
+
+	//
+	// Other methods
+	//
+	public boolean save(File file) {
+		try {
+<span class="nc" id="L56">			setFile(file);</span>
+<span class="nc" id="L57">			setSaved(true);</span>
+
+			// Generating output Stream
+<span class="nc" id="L60">			BufferedWriter fileout = new BufferedWriter(new OutputStreamWriter(</span>
+<span class="nc" id="L61">					new FileOutputStream(file)));</span>
+
+<span class="nc" id="L63">			fileout.write(getCode());</span>
+<span class="nc" id="L64">			fileout.close();</span>
+<span class="nc" id="L65">			return true;</span>
+
+<span class="nc" id="L67">		} catch (Exception e) {</span>
+<span class="nc" id="L68">			System.err.println(&quot;Error in SchemeMapModel.save: &quot;);</span>
+<span class="nc" id="L69">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L70">			return false;</span>
+		}
+	}
+
+	public void load(URL url) throws FileNotFoundException {
+<span class="nc" id="L75">		File file = new File(url.getFile());</span>
+<span class="nc" id="L76">		setFile(file);</span>
+<span class="nc" id="L77">		setRoot(new SchemeNodeModel(getFrame(), this));</span>
+
+		try {
+<span class="nc" id="L80">			loadMathStyle(new InputStreamReader(new FileInputStream(file)));</span>
+<span class="nc" id="L81">		} catch (IOException ex) {</span>
+		}
+<span class="nc" id="L83">	}</span>
+
+	public void loadMathStyle(Reader re) throws IOException {
+<span class="nc" id="L86">		StreamTokenizer tok = new StreamTokenizer(re);</span>
+<span class="nc" id="L87">		tok.resetSyntax();</span>
+<span class="nc" id="L88">		tok.whitespaceChars(0, 32);</span>
+<span class="nc" id="L89">		tok.wordChars(33, 255);</span>
+<span class="nc" id="L90">		tok.ordinaryChars('(', ')');</span>
+
+		// commentChar('/');
+<span class="nc" id="L93">		tok.commentChar(';');// 59 is ';'</span>
+		// tok.quoteChar('&quot;');
+		// quoteChar('\''); // tok.eolIsSignificant(true);
+
+<span class="nc" id="L97">		SchemeNodeModel node = (SchemeNodeModel) getRoot();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">		while (tok.nextToken() != StreamTokenizer.TT_EOF) {</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			if (tok.ttype == 40) { // &quot;(&quot;</span>
+				// System.out.println(&quot;Token starts with (&quot;);
+<span class="nc" id="L101">				SchemeNodeModel newNode = new SchemeNodeModel(getFrame(), this);</span>
+<span class="nc" id="L102">				insertNodeInto(newNode, node, node.getChildCount());</span>
+<span class="nc" id="L103">				node = newNode;</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			} else if (tok.ttype == 41) { // &quot;)&quot;</span>
+				// System.out.println(&quot;Token starts with )&quot;);
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				if (node.getParent() != null) {// this should not be necessary,</span>
+												// if this happens, the code is
+												// wrong
+<span class="nc" id="L109">					node = (SchemeNodeModel) node.getParent();</span>
+				}
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			} else if (tok.ttype == StreamTokenizer.TT_WORD) {</span>
+<span class="nc" id="L112">				String token = tok.sval.trim();</span>
+
+<span class="nc bnc" id="L114" title="All 4 branches missed.">				if (node.toString().equals(&quot; &quot;) &amp;&amp; node.getChildCount() == 0) {</span>
+<span class="nc" id="L115">					node.setUserObject(token);</span>
+<span class="nc" id="L116">				} else {</span>
+<span class="nc" id="L117">					SchemeNodeModel newNode = new SchemeNodeModel(getFrame(),</span>
+<span class="nc" id="L118">							this);</span>
+<span class="nc" id="L119">					insertNodeInto(newNode, node, node.getChildCount());</span>
+<span class="nc" id="L120">					newNode.setUserObject(token);</span>
+				}
+			}/*
+			 * else if (tok.ttype == tok.TT_NUMBER) { String token =
+			 * Double.toString(tok.nval);
+			 * 
+			 * if (node.toString().equals(&quot;&quot;)) { node.setUserObject(token); }
+			 * else { SchemeNodeModel newNode = new SchemeNodeModel(getFrame());
+			 * insertNodeInto(newNode,node,node.getChildCount());
+			 * newNode.setUserObject(token); } }
+			 */
+		}
+<span class="nc" id="L132">	}</span>
+
+	/**
+	 * This method returns the scheme code that is represented by this map as a
+	 * plain string.
+	 */
+	public String getCode() {
+<span class="nc" id="L139">		return ((SchemeNodeModel) getRoot()).getCodeMathStyle();</span>
+	}
+
+	// public boolean isSaved() {
+	// return true;
+	// }
+
+	public String toString() {
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (getFile() == null) {</span>
+<span class="nc" id="L148">			return null;</span>
+		} else {
+<span class="nc" id="L150">			return getFile().getName();</span>
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMap#getXml(java.io.Writer)
+	 */
+	public void getXml(Writer fileout) throws IOException {
+<span class="nc" id="L160">		fileout.write(getCode());</span>
+<span class="nc" id="L161">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMap#getFilteredXml(java.io.Writer)
+	 */
+	public void getFilteredXml(Writer fileout) throws IOException {
+		// nothing.
+		// FIXME: Implement me if you need me.
+<span class="nc" id="L171">		throw new RuntimeException(&quot;Unimplemented method called.&quot;);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

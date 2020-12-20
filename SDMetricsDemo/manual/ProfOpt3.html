@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Extension References with Inheritance</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProfOpt2.html">Prev</a> - <a href="ProfTips.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="Profiles.html">8.7 Defining Metrics for Profiles</a> > 8.7.6 Extension References with Inheritance
+<hr>
+<h3><a name="ProfOpt3"></a>8.7.6 Extension References with Inheritance</h3>
+
+For the purpose of defining design metrics and rules, it is still
+cumbersome to have two model elements in the model to logically represent a single 
+element. Consider for example metric "NumCls" for packages to count the number
+of classes in the package. This is the definition of the metric that ships with
+SDMetrics ever since its first release in 2002:
+
+<pre>
+&lt;metric name="NumCls" domain="package"&gt;
+  &lt;projection relation="context" target="class" /&gt;
+&lt;/metric&gt;
+</pre>
+
+Applied to our sample package with four requirements, this metric will include the 
+class elements to represent the requirements in its class count. Depending
+on our measurement goals, this may not be what we want. We could of course adjust 
+the definition of the metric to only count classes that do not represent 
+requirements:
+
+<pre>
+&lt;metric name="NumClsExceptRequirements" domain="package"&gt;
+  &lt;projection relation="context" target="class" condition="Reqmt=''"/&gt;
+&lt;/metric&gt;
+</pre>
+
+This approach is possible, but ugly. If we add support for SysML blocks or other
+types that also extend "class", we would need to adjust the definition of metric
+again to exclude classes representing blocks, etc.<p>
+
+To better deal with these issues, SDMetrics provides a mechanism to merge the extended
+element with its extending element to form a single model element that combines
+all the information from both elements. To enable this mechanism, we have to define
+the type of the extending element as a subtype of the extended element.<p>
+
+In our SysML requirements example, we therefore change the definition of 
+type "requirement" by declaring its parent to be type "class":
+
+<pre>
+&lt;modelelement name="requirement" <b>parent="class"</b>&gt;
+  &lt;attribute name="base" <b>type="extref"</b> /&gt;
+  &lt;attribute name="text" /&gt;
+  &lt;attribute name="reqid" /&gt;
+&lt;/modelelement&gt;
+</pre>
+
+If SDMetrics finds a model element of type <i>t</i> ("requirement" 
+in our example) with an extension reference,
+and the type of the extended element is a supertype of <i>t</i>
+("class" in our example),
+then SDMetrics will merge the two elements into one element
+of type <i>t</i>. The merged element copies all attribute values of
+the extended element, and the extended element is removed from
+the model. We are left with one element of type <i>t</i>
+that assumes the place of the extended element.<p>
+
+Applied to our sample model and XMI file, we end up with a model
+that contains four requirement elements, no classes, and maintains 
+the expected containment hierarchy:
+
+<pre>
+Model "Sample"
+  Package "Specifications"
+    Requirement "XZY" with Id "R1"
+    Requirement "ABC" with Id "R2"
+      Requirement "A" with Id "R2.1"
+      Requirement "B" with Id "R2.2"
+</pre>
+
+The package "Specification" no longer contains elements of type "class",
+and metric NumCls will yield 0. Model element type "requirement" has become
+a full, first-class citizen. We can identify requirements simply by
+the type of the model element, the need for helper metrics is eliminated.<p>
+
+Using reference extensions with inheritance, it is very easy to define
+metrics that take more complex relationships into account. 
+For example, the SysML defines a relationship "satisfy" to identify 
+the model elements that fulfill a given requirement. The more elements
+are needed to satisfy a requirement, the more difficult the requirement
+will be to change. We are therefore going to define a metric that counts the 
+number of elements that satisfy a requirement.<p>
+
+Technically, the SysML defines the "satisfy" relationship as a stereotype 
+that extends the meta-class "abstraction". We therefore create a new model 
+element type "satisfy" with an extension reference as a subtype of "abstraction" 
+(see <a href="Meta2.html">Appendix&nbsp;A.2 "Metamodel for UML 2.x"</a>):
+
+<pre>
+&lt;modelelement name="satisfy" parent="abstraction"&gt;
+  &lt;attribute name="base" type="extref" /&gt;
+&lt;/modelelement&gt;
+</pre>
+
+The type "satisfy" inherits the multi-valued reference attributes
+"client" and "supplier" from "abstraction". For the XMI transformation,
+we only have to provide a trigger for the new extension reference "base":
+<pre>
+&lt;xmitransformation modelelement="satisfy" xmipattern="sysml:Satisfy"&gt;
+  &lt;trigger name="base" type="attrval" attr="base_Abstraction" /&gt;
+&lt;/xmitransformation&gt;
+</pre>
+
+We can then define our metric to count the number of elements that 
+satisfy a requirement: 
+
+<pre>
+&lt;metric name="Satisfiers" domain="requirement" category="Coupling (export)"&gt;
+  &lt;description&gt;The number of elements that satisfy this requirement.&lt;/description&gt;
+  &lt;projection relation="supplier" target="satisfy" sum="size(client)"/&gt;
+&lt;/metric&gt;
+</pre>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProfOpt2.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Profiles.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ProfTips.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.7.5 "Extension References without Inheritance"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.7.7 "Tips on Creating Metrics and Rules for Profile Extensions"</td></tr></table>
+
+</body>
+</html>

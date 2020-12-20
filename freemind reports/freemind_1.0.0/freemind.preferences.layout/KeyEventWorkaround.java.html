@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>KeyEventWorkaround.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.preferences.layout</a> &gt; <span class="el_source">KeyEventWorkaround.java</span></div><h1>KeyEventWorkaround.java</h1><pre class="source lang-java linenums">/*
+ * KeyEventWorkaround.java - Works around bugs in Java event handling
+ * :tabSize=8:indentSize=8:noTabs=false:
+ * :folding=explicit:collapseFolds=1:
+ *
+ * Copyright (C) 2000, 2004 Slava Pestov
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.preferences.layout;
+
+//{{{ Imports
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+
+/**
+ * Various hacks to get keyboard event handling to behave in a consistent manner
+ * across Java implementations.
+ * 
+ * @author Slava Pestov
+ * @version $Id: KeyEventWorkaround.java,v 1.1.2.1 2005/05/10 20:55:31
+ *          christianfoltin Exp $
+ */
+<span class="nc" id="L37">public class KeyEventWorkaround {</span>
+	public static final boolean ALT_KEY_PRESSED_DISABLED = false;
+	public static final boolean ALTERNATIVE_DISPATCHER = false;
+
+	// {{{ processKeyEvent() method
+	public static KeyEvent processKeyEvent(KeyEvent evt) {
+<span class="nc" id="L43">		int keyCode = evt.getKeyCode();</span>
+<span class="nc" id="L44">		char ch = evt.getKeyChar();</span>
+
+<span class="nc bnc" id="L46" title="All 4 branches missed.">		switch (evt.getID()) {</span>
+		// {{{ KEY_PRESSED...
+		case KeyEvent.KEY_PRESSED:
+<span class="nc" id="L49">			lastKeyTime = evt.getWhen();</span>
+			// get rid of keys we never need to handle
+<span class="nc bnc" id="L51" title="All 7 branches missed.">			switch (keyCode) {</span>
+			case KeyEvent.VK_DEAD_GRAVE:
+			case KeyEvent.VK_DEAD_ACUTE:
+			case KeyEvent.VK_DEAD_CIRCUMFLEX:
+			case KeyEvent.VK_DEAD_TILDE:
+			case KeyEvent.VK_DEAD_MACRON:
+			case KeyEvent.VK_DEAD_BREVE:
+			case KeyEvent.VK_DEAD_ABOVEDOT:
+			case KeyEvent.VK_DEAD_DIAERESIS:
+			case KeyEvent.VK_DEAD_ABOVERING:
+			case KeyEvent.VK_DEAD_DOUBLEACUTE:
+			case KeyEvent.VK_DEAD_CARON:
+			case KeyEvent.VK_DEAD_CEDILLA:
+			case KeyEvent.VK_DEAD_OGONEK:
+			case KeyEvent.VK_DEAD_IOTA:
+			case KeyEvent.VK_DEAD_VOICED_SOUND:
+			case KeyEvent.VK_DEAD_SEMIVOICED_SOUND:
+			case '\0':
+<span class="nc" id="L69">				return null;</span>
+			case KeyEvent.VK_ALT:
+<span class="nc" id="L71">				modifiers |= InputEvent.ALT_MASK;</span>
+<span class="nc" id="L72">				return null;</span>
+			case KeyEvent.VK_ALT_GRAPH:
+<span class="nc" id="L74">				modifiers |= InputEvent.ALT_GRAPH_MASK;</span>
+<span class="nc" id="L75">				return null;</span>
+			case KeyEvent.VK_CONTROL:
+<span class="nc" id="L77">				modifiers |= InputEvent.CTRL_MASK;</span>
+<span class="nc" id="L78">				return null;</span>
+			case KeyEvent.VK_SHIFT:
+<span class="nc" id="L80">				modifiers |= InputEvent.SHIFT_MASK;</span>
+<span class="nc" id="L81">				return null;</span>
+			case KeyEvent.VK_META:
+<span class="nc" id="L83">				modifiers |= InputEvent.META_MASK;</span>
+<span class="nc" id="L84">				return null;</span>
+			default:
+<span class="nc bnc" id="L86" title="All 2 branches missed.">				if (!evt.isMetaDown()) {</span>
+<span class="nc bnc" id="L87" title="All 4 branches missed.">					if (evt.isControlDown() &amp;&amp; evt.isAltDown()) {</span>
+<span class="nc" id="L88">						lastKeyTime = 0L;</span>
+<span class="nc bnc" id="L89" title="All 4 branches missed.">					} else if (!evt.isControlDown() &amp;&amp; !evt.isAltDown()) {</span>
+<span class="nc" id="L90">						lastKeyTime = 0L;</span>
+
+<span class="nc bnc" id="L92" title="All 2 branches missed.">						if (keyCode &gt;= KeyEvent.VK_0</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">								&amp;&amp; keyCode &lt;= KeyEvent.VK_9) {</span>
+<span class="nc" id="L94">							return null;</span>
+						}
+
+<span class="nc bnc" id="L97" title="All 2 branches missed.">						if (keyCode &gt;= KeyEvent.VK_A</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">								&amp;&amp; keyCode &lt;= KeyEvent.VK_Z) {</span>
+<span class="nc" id="L99">							return null;</span>
+						}
+					}
+				}
+
+				if (ALT_KEY_PRESSED_DISABLED) {
+					/* we don't handle key pressed A+ */
+					/* they're too troublesome */
+					if ((modifiers &amp; InputEvent.ALT_MASK) != 0)
+						return null;
+				}
+
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				switch (keyCode) {</span>
+				case KeyEvent.VK_NUMPAD0:
+				case KeyEvent.VK_NUMPAD1:
+				case KeyEvent.VK_NUMPAD2:
+				case KeyEvent.VK_NUMPAD3:
+				case KeyEvent.VK_NUMPAD4:
+				case KeyEvent.VK_NUMPAD5:
+				case KeyEvent.VK_NUMPAD6:
+				case KeyEvent.VK_NUMPAD7:
+				case KeyEvent.VK_NUMPAD8:
+				case KeyEvent.VK_NUMPAD9:
+				case KeyEvent.VK_MULTIPLY:
+				case KeyEvent.VK_ADD:
+					/* case KeyEvent.VK_SEPARATOR: */
+				case KeyEvent.VK_SUBTRACT:
+				case KeyEvent.VK_DECIMAL:
+				case KeyEvent.VK_DIVIDE:
+<span class="nc" id="L128">					last = LAST_NUMKEYPAD;</span>
+<span class="nc" id="L129">					break;</span>
+				default:
+<span class="nc" id="L131">					last = LAST_NOTHING;</span>
+					break;
+				}
+
+<span class="nc" id="L135">				return evt;</span>
+			}
+			// }}}
+			// {{{ KEY_TYPED...
+		case KeyEvent.KEY_TYPED:
+			// need to let \b through so that backspace will work
+			// in HistoryTextFields
+<span class="nc bnc" id="L142" title="All 8 branches missed.">			if ((ch &lt; 0x20 || ch == 0x7f || ch == 0xff) &amp;&amp; ch != '\b'</span>
+<span class="nc bnc" id="L143" title="All 4 branches missed.">					&amp;&amp; ch != '\t' &amp;&amp; ch != '\n') {</span>
+<span class="nc" id="L144">				return null;</span>
+			}
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (evt.getWhen() - lastKeyTime &lt; 750) {</span>
+				if (!ALTERNATIVE_DISPATCHER) {
+<span class="nc bnc" id="L149" title="All 6 branches missed.">					if (((modifiers &amp; InputEvent.CTRL_MASK) != 0 ^ (modifiers &amp; InputEvent.ALT_MASK) != 0)</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">							|| (modifiers &amp; InputEvent.META_MASK) != 0) {</span>
+<span class="nc" id="L151">						return null;</span>
+					}
+				}
+
+				// if the last key was a numeric keypad key
+				// and NumLock is off, filter it out
+<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (last == LAST_NUMKEYPAD) {</span>
+<span class="nc" id="L158">					last = LAST_NOTHING;</span>
+<span class="nc bnc" id="L159" title="All 8 branches missed.">					if ((ch &gt;= '0' &amp;&amp; ch &lt;= '9') || ch == '.' || ch == '/'</span>
+<span class="nc bnc" id="L160" title="All 6 branches missed.">							|| ch == '*' || ch == '-' || ch == '+') {</span>
+<span class="nc" id="L161">						return null;</span>
+					}
+				}
+				// Windows JDK workaround
+<span class="nc bnc" id="L165" title="All 2 branches missed.">				else if (last == LAST_ALT) {</span>
+<span class="nc" id="L166">					last = LAST_NOTHING;</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">					switch (ch) {</span>
+					case 'B':
+					case 'M':
+					case 'X':
+					case 'c':
+					case '!':
+					case ',':
+					case '?':
+<span class="nc" id="L175">						return null;</span>
+					}
+				}
+<span class="nc" id="L178">			} else {</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">				if ((modifiers &amp; InputEvent.SHIFT_MASK) != 0) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">					switch (ch) {</span>
+					case '\n':
+					case '\t':
+<span class="nc" id="L183">						return null;</span>
+					}
+				}
+<span class="nc" id="L186">				modifiers = 0;</span>
+			}
+
+<span class="nc" id="L189">			return evt;</span>
+			// }}}
+			// {{{ KEY_RELEASED...
+		case KeyEvent.KEY_RELEASED:
+<span class="nc bnc" id="L193" title="All 7 branches missed.">			switch (keyCode) {</span>
+			case KeyEvent.VK_ALT:
+<span class="nc" id="L195">				modifiers &amp;= ~InputEvent.ALT_MASK;</span>
+<span class="nc" id="L196">				lastKeyTime = evt.getWhen();</span>
+				// we consume this to work around the bug
+				// where A+TAB window switching activates
+				// the menu bar on Windows.
+<span class="nc" id="L200">				evt.consume();</span>
+<span class="nc" id="L201">				return null;</span>
+			case KeyEvent.VK_ALT_GRAPH:
+<span class="nc" id="L203">				modifiers &amp;= ~InputEvent.ALT_GRAPH_MASK;</span>
+<span class="nc" id="L204">				return null;</span>
+			case KeyEvent.VK_CONTROL:
+<span class="nc" id="L206">				modifiers &amp;= ~InputEvent.CTRL_MASK;</span>
+<span class="nc" id="L207">				return null;</span>
+			case KeyEvent.VK_SHIFT:
+<span class="nc" id="L209">				modifiers &amp;= ~InputEvent.SHIFT_MASK;</span>
+<span class="nc" id="L210">				return null;</span>
+			case KeyEvent.VK_META:
+<span class="nc" id="L212">				modifiers &amp;= ~InputEvent.META_MASK;</span>
+<span class="nc" id="L213">				return null;</span>
+			case KeyEvent.VK_LEFT:
+			case KeyEvent.VK_RIGHT:
+			case KeyEvent.VK_UP:
+			case KeyEvent.VK_DOWN:
+			case KeyEvent.VK_PAGE_UP:
+			case KeyEvent.VK_PAGE_DOWN:
+			case KeyEvent.VK_END:
+			case KeyEvent.VK_HOME:
+				/*
+				 * workaround for A+keys producing garbage on Windows
+				 */
+<span class="nc bnc" id="L225" title="All 2 branches missed.">				if (modifiers == InputEvent.ALT_MASK)</span>
+<span class="nc" id="L226">					last = LAST_ALT;</span>
+				break;
+			}
+<span class="nc" id="L229">			return evt;</span>
+			// }}}
+		default:
+<span class="nc" id="L232">			return evt;</span>
+		}
+	} // }}}
+
+	// {{{ numericKeypadKey() method
+	/**
+	 * A workaround for non-working NumLock status in some Java versions.
+	 * 
+	 * @since jEdit 4.0pre8
+	 */
+	public static void numericKeypadKey() {
+<span class="nc" id="L243">		last = LAST_NOTHING;</span>
+<span class="nc" id="L244">	} // }}}</span>
+
+	// {{{ Package-private members
+	static long lastKeyTime;
+	static int modifiers;
+	// }}}
+
+	// {{{ Private members
+	private static int last;
+	private static final int LAST_NOTHING = 0;
+	private static final int LAST_NUMKEYPAD = 1;
+	private static final int LAST_ALT = 2;
+	// }}}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

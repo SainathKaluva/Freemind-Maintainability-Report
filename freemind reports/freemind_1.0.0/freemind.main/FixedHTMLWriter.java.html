@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FixedHTMLWriter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">FixedHTMLWriter.java</span></div><h1>FixedHTMLWriter.java</h1><pre class="source lang-java linenums">package freemind.main;
+
+/*
+ * XHTMLWriter -- A simple XHTML document writer
+ * 
+ * (C) 2004 Richard &quot;Shred&quot; Koerber
+ *   http://www.shredzone.net/
+ *
+ * This is free software. You can modify and use it at will.
+ */
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Enumeration;
+
+import javax.swing.text.AttributeSet;
+import javax.swing.text.Element;
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.html.CSS;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLWriter;
+
+/**
+ * Create a new XHTMLWriter which is able to save a HTMLDocument as XHTML.
+ * &lt;p&gt;
+ * The result will be a valid XML file, but it is not granted that the file will
+ * really be XHTML 1.0 transitional conformous. The basic purpose of this class
+ * is to give an XSL processor access to plain HTML files.
+ * 
+ * @author Richard &quot;Shred&quot; Kï¿½rber
+ */
+public class FixedHTMLWriter extends HTMLWriter {
+<span class="fc" id="L36">	final private MutableAttributeSet convAttr = new SimpleAttributeSet();</span>
+
+	/**
+	 * Create a new XHTMLWriter that will write the entire HTMLDocument.
+	 * 
+	 * @param writer
+	 *            Writer to write to
+	 * @param doc
+	 *            Source document
+	 */
+	public FixedHTMLWriter(Writer writer, HTMLDocument doc) {
+<span class="nc" id="L47">		this(writer, doc, 0, doc.getLength());</span>
+<span class="nc" id="L48">	}</span>
+
+	/**
+	 * Create a new XHTMLWriter that will write a part of a HTMLDocument.
+	 * 
+	 * @param writer
+	 *            Writer to write to
+	 * @param doc
+	 *            Source document
+	 * @param pos
+	 *            Starting position
+	 * @param len
+	 *            Length
+	 */
+	public FixedHTMLWriter(Writer writer, HTMLDocument doc, int pos, int len) {
+<span class="fc" id="L63">		super(writer, doc, pos, len);</span>
+<span class="fc" id="L64">	}</span>
+
+	/**
+	 * Create an older style of HTML attributes. This will convert character
+	 * level attributes that have a StyleConstants mapping over to an HTML
+	 * tag/attribute. Other CSS attributes will be placed in an HTML style
+	 * attribute.
+	 */
+	private static void convertToHTML(AttributeSet from, MutableAttributeSet to) {
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		if (from == null) {</span>
+<span class="nc" id="L74">			return;</span>
+		}
+<span class="fc" id="L76">		Enumeration keys = from.getAttributeNames();</span>
+<span class="fc" id="L77">		String value = &quot;&quot;;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		while (keys.hasMoreElements()) {</span>
+<span class="fc" id="L79">			Object key = keys.nextElement();</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">			if (key instanceof CSS.Attribute) {</span>
+				// default is to store in a HTML style attribute
+<span class="nc bnc" id="L82" title="All 2 branches missed.">				if (value.length() &gt; 0) {</span>
+<span class="nc" id="L83">					value = value + &quot;; &quot;;</span>
+				}
+<span class="nc" id="L85">				value = value + key + &quot;: &quot; + from.getAttribute(key);</span>
+<span class="nc" id="L86">			} else {</span>
+<span class="fc" id="L87">				to.addAttribute(key, from.getAttribute(key));</span>
+			}
+		}
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">		if (value.length() &gt; 0) {</span>
+<span class="nc" id="L91">			to.addAttribute(HTML.Attribute.STYLE, value);</span>
+		}
+<span class="fc" id="L93">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.text.html.HTMLWriter#writeAttributes(javax.swing.text.
+	 * AttributeSet)
+	 */
+	protected void writeAttributes(AttributeSet attr) throws IOException {
+		// translate css attributes to html
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">		if (attr instanceof Element) {</span>
+<span class="fc" id="L104">			Element elem = (Element) attr;</span>
+<span class="pc bpc" id="L105" title="2 of 4 branches missed.">			if (elem.isLeaf() || elem.getName().equalsIgnoreCase(&quot;p-implied&quot;)) {</span>
+<span class="nc" id="L106">				super.writeAttributes(attr);</span>
+<span class="nc" id="L107">				return;</span>
+			}
+		}
+<span class="fc" id="L110">		convAttr.removeAttributes(convAttr);</span>
+<span class="fc" id="L111">		convertToHTML(attr, convAttr);</span>
+
+<span class="fc" id="L113">		Enumeration names = convAttr.getAttributeNames();</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		while (names.hasMoreElements()) {</span>
+<span class="fc" id="L115">			Object name = names.nextElement();</span>
+<span class="pc bpc" id="L116" title="2 of 4 branches missed.">			if (name instanceof HTML.Tag || name instanceof StyleConstants</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">					|| name == HTML.Attribute.ENDTAG) {</span>
+<span class="nc" id="L118">				continue;</span>
+			}
+<span class="nc" id="L120">			write(&quot; &quot; + name + &quot;=\&quot;&quot; + convAttr.getAttribute(name) + &quot;\&quot;&quot;);</span>
+		}
+<span class="fc" id="L122">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

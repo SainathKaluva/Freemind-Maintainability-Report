@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>OptionalDontShowMeAgainDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.common</a> &gt; <span class="el_source">OptionalDontShowMeAgainDialog.java</span></div><h1>OptionalDontShowMeAgainDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2007  Christian Foltin, Dimitry Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 31.07.2007
+ */
+/*$Id: OptionalDontShowMeAgainDialog.java,v 1.1.2.6 2009/12/09 21:57:39 christianfoltin Exp $*/
+
+package freemind.common;
+
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import freemind.controller.Controller;
+import freemind.main.Resources;
+import freemind.main.Tools;
+
+/**
+ * Dialog with a decision that can be disabled.
+ * 
+ * @author foltin
+ * 
+ */
+public class OptionalDontShowMeAgainDialog {
+	public final static int ONLY_OK_SELECTION_IS_STORED = 0;
+	public final static int BOTH_OK_AND_CANCEL_OPTIONS_ARE_STORED = 1;
+	private final String mTitleId;
+	private final String mMessageId;
+	private final TextTranslator mTextTranslator;
+	private final JFrame mParent;
+<span class="nc" id="L60">	private int mResult = JOptionPane.CANCEL_OPTION;</span>
+	private JDialog mDialog;
+	private JCheckBox mDontShowAgainBox;
+	private final DontShowPropertyHandler mDontShowPropertyHandler;
+	private final int mMessageType;
+	private final Component mComponent;
+
+<span class="nc" id="L67">	protected static java.util.logging.Logger logger = null;</span>
+	
+	public interface DontShowPropertyHandler {
+		/**
+		 * @return accepted are the following values as return values: * &quot;&quot;
+		 *         (means: show this dialog) * &quot;true&quot; (means: the answer was ok
+		 *         and I want to remember that). * &quot;false&quot; (means: the answer
+		 *         was cancel and I want to remember that).
+		 */
+		String getProperty();
+
+		void setProperty(String pValue);
+	}
+
+	/**
+	 * Standard property handler, if you have a controller and a property.
+	 * 
+	 */
+	public static class StandardPropertyHandler implements
+			DontShowPropertyHandler {
+		private final Controller mController;
+		private String mPropertyName;
+
+<span class="nc" id="L90">		public StandardPropertyHandler(Controller pController,</span>
+				String pPropertyName) {
+<span class="nc" id="L92">			mController = pController;</span>
+<span class="nc" id="L93">			mPropertyName = pPropertyName;</span>
+
+<span class="nc" id="L95">		}</span>
+
+		public String getProperty() {
+<span class="nc" id="L98">			return mController.getProperty(mPropertyName);</span>
+		}
+
+		public void setProperty(String pValue) {
+<span class="nc" id="L102">			mController.setProperty(mPropertyName, pValue);</span>
+<span class="nc" id="L103">		}</span>
+	}
+
+<span class="nc" id="L106">	public OptionalDontShowMeAgainDialog(JFrame pFrame, Component pComponent,</span>
+			String pMessageId, String pTitleId, TextTranslator pTextTranslator,
+			DontShowPropertyHandler pDontShowPropertyHandler, int pMessageType) {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L110">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L111">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L113">		mComponent = pComponent;</span>
+<span class="nc" id="L114">		mParent = pFrame;</span>
+<span class="nc" id="L115">		mMessageId = pMessageId;</span>
+<span class="nc" id="L116">		mTitleId = pTitleId;</span>
+<span class="nc" id="L117">		mTextTranslator = pTextTranslator;</span>
+<span class="nc" id="L118">		mDontShowPropertyHandler = pDontShowPropertyHandler;</span>
+<span class="nc" id="L119">		mMessageType = pMessageType;</span>
+<span class="nc" id="L120">	}</span>
+
+	/**
+	 * @return an int from JOptionPane (eg. JOptionPane.OK_OPTION).
+	 */
+	public int getResult() {
+<span class="nc" id="L126">		return mResult;</span>
+	}
+
+	public OptionalDontShowMeAgainDialog show() {
+<span class="nc" id="L130">		String property = mDontShowPropertyHandler.getProperty();</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (Tools.safeEquals(property, &quot;true&quot;)) {</span>
+<span class="nc" id="L132">			mResult = JOptionPane.OK_OPTION;</span>
+<span class="nc" id="L133">			return this;</span>
+		}
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (Tools.safeEquals(property, &quot;false&quot;)) {</span>
+<span class="nc" id="L136">			mResult = JOptionPane.CANCEL_OPTION;</span>
+<span class="nc" id="L137">			return this;</span>
+		}
+<span class="nc" id="L139">		mDialog = null;</span>
+<span class="nc" id="L140">		mDialog = new JDialog(mParent, mTextTranslator.getText(mTitleId));</span>
+<span class="nc" id="L141">		mDialog.setModal(true);</span>
+<span class="nc" id="L142">		mDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L143">		AbstractAction cancelAction = new AbstractAction() {</span>
+
+			public void actionPerformed(ActionEvent pE) {
+<span class="nc" id="L146">				close(JOptionPane.CANCEL_OPTION);</span>
+<span class="nc" id="L147">			}</span>
+		};
+<span class="nc" id="L149">		AbstractAction okAction = new AbstractAction() {</span>
+
+			public void actionPerformed(ActionEvent pE) {
+<span class="nc" id="L152">				close(JOptionPane.OK_OPTION);</span>
+<span class="nc" id="L153">			}</span>
+		};
+<span class="nc" id="L155">		Tools.addEscapeActionToDialog(mDialog, cancelAction);</span>
+<span class="nc" id="L156">		mDialog.addWindowListener(new WindowAdapter() {</span>
+			public void windowClosing(WindowEvent pE) {
+<span class="nc" id="L158">				close(JOptionPane.CANCEL_OPTION);</span>
+<span class="nc" id="L159">			}</span>
+		});
+<span class="nc" id="L161">		mDialog.getContentPane().setLayout(new GridBagLayout());</span>
+<span class="nc" id="L162">		mDialog.getContentPane().add(</span>
+<span class="nc" id="L163">				new JLabel(mTextTranslator.getText(mMessageId)),</span>
+<span class="nc" id="L164">				new GridBagConstraints(1, 0, 1, 1, 10.0, 4.0,</span>
+<span class="nc" id="L165">						GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L166">						new Insets(5, 5, 0, 0), 0, 10));</span>
+		// TODO: Replace by usual java question mark.
+<span class="nc" id="L168">		ImageIcon questionMark = new ImageIcon(Resources.getInstance()</span>
+<span class="nc" id="L169">				.getResource(&quot;images/icons/help.png&quot;));</span>
+<span class="nc" id="L170">		mDialog.getContentPane().add(</span>
+<span class="nc" id="L171">				new JLabel(questionMark),</span>
+<span class="nc" id="L172">				new GridBagConstraints(0, 0, 1, 2, 1.0, 2.0,</span>
+<span class="nc" id="L173">						GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L174">						new Insets(5, 5, 0, 0), 0, 0));</span>
+		String boxString;
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (mMessageType == ONLY_OK_SELECTION_IS_STORED) {</span>
+<span class="nc" id="L177">			boxString = &quot;OptionalDontShowMeAgainDialog.dontShowAgain&quot;;</span>
+<span class="nc" id="L178">		} else {</span>
+<span class="nc" id="L179">			boxString = &quot;OptionalDontShowMeAgainDialog.rememberMyDescision&quot;;</span>
+		}
+<span class="nc" id="L181">		mDontShowAgainBox = new JCheckBox(mTextTranslator.getText(boxString));</span>
+<span class="nc" id="L182">		Tools.setLabelAndMnemonic(mDontShowAgainBox, null);</span>
+<span class="nc" id="L183">		mDialog.getContentPane().add(</span>
+<span class="nc" id="L184">				mDontShowAgainBox,</span>
+<span class="nc" id="L185">				new GridBagConstraints(0, 2, 3, 1, 1.0, 1.0,</span>
+<span class="nc" id="L186">						GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L187">						new Insets(5, 5, 0, 0), 0, 0));</span>
+<span class="nc" id="L188">		JButton okButton = new JButton(</span>
+<span class="nc" id="L189">				mTextTranslator.getText(&quot;OptionalDontShowMeAgainDialog.ok&quot;));</span>
+<span class="nc" id="L190">		Tools.setLabelAndMnemonic(okButton, null);</span>
+<span class="nc" id="L191">		okButton.addActionListener(okAction);</span>
+<span class="nc" id="L192">		mDialog.getContentPane().add(</span>
+<span class="nc" id="L193">				okButton,</span>
+<span class="nc" id="L194">				new GridBagConstraints(2, 3, 1, 1, 1.0, 1.0,</span>
+<span class="nc" id="L195">						GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L196">						new Insets(5, 5, 0, 0), 0, 0));</span>
+<span class="nc" id="L197">		JButton cancelButton = new JButton(</span>
+<span class="nc" id="L198">				mTextTranslator.getText(&quot;OptionalDontShowMeAgainDialog.cancel&quot;));</span>
+<span class="nc" id="L199">		Tools.setLabelAndMnemonic(cancelButton, null);</span>
+<span class="nc" id="L200">		cancelButton.addActionListener(cancelAction);</span>
+<span class="nc" id="L201">		mDialog.getContentPane().add(</span>
+<span class="nc" id="L202">				cancelButton,</span>
+<span class="nc" id="L203">				new GridBagConstraints(3, 3, 1, 1, 1.0, 1.0,</span>
+<span class="nc" id="L204">						GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L205">						new Insets(5, 5, 0, 0), 0, 0));</span>
+<span class="nc" id="L206">		mDialog.getRootPane().setDefaultButton(okButton);</span>
+<span class="nc" id="L207">		mDialog.pack();</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if(mComponent != null) {</span>
+<span class="nc" id="L209">			Tools.setDialogLocationRelativeTo(mDialog, mComponent);</span>
+		}
+<span class="nc" id="L211">		mDialog.setVisible(true);</span>
+<span class="nc" id="L212">		return this;</span>
+	}
+
+	private void close(int pResult) {
+<span class="nc" id="L216">		mResult = pResult;</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (mDontShowAgainBox.isSelected()) {</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			if (mMessageType == ONLY_OK_SELECTION_IS_STORED) {</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">				if (mResult == JOptionPane.OK_OPTION) {</span>
+<span class="nc" id="L220">					mDontShowPropertyHandler.setProperty(&quot;true&quot;);</span>
+				}
+<span class="nc" id="L222">			} else {</span>
+<span class="nc" id="L223">				mDontShowPropertyHandler</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">						.setProperty((mResult == JOptionPane.OK_OPTION) ? &quot;true&quot;</span>
+<span class="nc" id="L225">								: &quot;false&quot;);</span>
+			}
+<span class="nc" id="L227">		} else {</span>
+<span class="nc" id="L228">			mDontShowPropertyHandler.setProperty(&quot;&quot;);</span>
+		}
+<span class="nc" id="L230">		mDialog.setVisible(false);</span>
+<span class="nc" id="L231">		mDialog.dispose();</span>
+<span class="nc" id="L232">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

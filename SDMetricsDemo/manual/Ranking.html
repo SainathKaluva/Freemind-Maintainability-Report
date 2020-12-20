@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Rankings</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="PCA.html">Prev</a> - <a href="Benchmarks.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="DesignMsmt.html">6 Design Measurement</a> > <a href="Techniques.html">6.3 Data Analysis Techniques</a> > 6.3.3 Rankings
+<hr>
+<h3><a name="Ranking"></a>6.3.3 Rankings</h3>
+
+Most metrics have an underlying hypothesis of the form: the higher the
+measurement value (e.g., size, import coupling), the stronger the
+negative impact on quality (fault-proneness, effort, maintainability).
+Therefore, when considered in isolation, design metrics only allow
+relative statements about the system quality, e.g. "package A displays
+stronger coupling than package B, therefore, package A is more likely
+to suffer from quality problems than package B."<p>
+
+An admissible interpretation is therefore to sort the model elements
+by a metric, and review the design of the model elements with the
+highest values: Are those high values justified, should the model
+element be considered critical?<p>
+
+There is no definitive answer to the question how many elements to
+choose for review from the top of the sorted list. One strategy could
+be to select so-called "outliers". Another strategy could be to select
+a certain number or percentage of model elements from the top, based
+on available resources for reviewing.<p>
+
+SDMetrics supports this kind of interpretation of measurement data.
+The histograms in the metric view allow you to visually identify
+outliers (<a href="BrowseMet.html">Section&nbsp;4.5 "The View 'Histograms'"</a>). In the table view, you can sort the
+elements by a metric, and highlight elements in the upper percentiles
+for a metric (<a href="TableView.html">Section&nbsp;4.4 "The View 'Metric Data Tables'"</a>).<p>
+
+<b>What about thresholds?</b><p>
+
+One recurring suggested use of design metrics is that they can be
+used to build simple quality benchmarks based on thresholds. If a
+design metric exceeds a certain threshold, the design element is
+either rejected and must be redesigned, or at least flagged as
+"critical". It is difficult to imagine why a threshold effect would
+exist between, for example, size metrics and fault-proneness. This
+would imply a sudden, steep increase in fault-proneness in a certain
+size value range, something that would be difficult to explain. Also,
+empirical data does not support this idea
+[<a href="References.html#References_BEGR00">BEGR00</a>].
+
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="PCA.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Techniques.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Benchmarks.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;6.3.2 "Dimensional Analysis"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;6.3.4 "Quality Benchmarks"</td></tr></table>
+
+</body>
+</html>

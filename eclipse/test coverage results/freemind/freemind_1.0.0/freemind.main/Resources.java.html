@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>Resources.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">Resources.java</span></div><h1>Resources.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 12.07.2005
+ * Copyright (C) 2005-2008 Dimitri Polivaev, Christian Foltin
+ */
+package freemind.main;
+
+import java.net.URL;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import tests.freemind.FreeMindMainMock;
+import freemind.common.NamedObject;
+import freemind.common.TextTranslator;
+import freemind.main.FreeMindMain.VersionInformation;
+
+/**
+ * @author Dimitri Polivaev 12.07.2005
+ */
+public class Resources implements TextTranslator {
+	private FreeMindMain main;
+<span class="fc" id="L44">	static Resources resourcesInstance = null;</span>
+	private HashMap countryMap;
+<span class="fc" id="L46">	private Logger logger = null;</span>
+
+<span class="fc" id="L48">	private Resources(FreeMindMain frame) {</span>
+<span class="fc" id="L49">		this.main = frame;</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">		if (logger == null) {</span>
+<span class="fc" id="L51">			logger = main.getLogger(this.getClass().getName());</span>
+		}
+<span class="fc" id="L53">	}</span>
+
+	static public void createInstance(FreeMindMain frame) {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">		if (resourcesInstance == null) {</span>
+<span class="fc" id="L57">			resourcesInstance = new Resources(frame);</span>
+		}
+<span class="fc" id="L59">	}</span>
+
+	public URL getResource(String resource) {
+<span class="nc" id="L62">		return main.getResource(resource);</span>
+	}
+
+	public String getResourceString(String resource) {
+<span class="fc" id="L66">		return main.getResourceString(resource);</span>
+	}
+
+	public String getResourceString(String key, String resource) {
+<span class="nc" id="L70">		return main.getResourceString(key, resource);</span>
+	}
+
+	static public Resources getInstance() {
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">		if(resourcesInstance == null) {</span>
+<span class="nc" id="L75">			createInstance(new FreeMindMainMock());</span>
+<span class="nc" id="L76">			System.err.println(&quot;Resources without FreeMind called.&quot;);</span>
+		}
+<span class="fc" id="L78">		return resourcesInstance;</span>
+	}
+
+	public String getFreemindDirectory() {
+<span class="nc" id="L82">		return main.getFreemindDirectory();</span>
+	}
+
+	public VersionInformation getFreemindVersion() {
+<span class="nc" id="L86">		return main.getFreemindVersion();</span>
+	}
+
+	public int getIntProperty(String key, int defaultValue) {
+<span class="nc" id="L90">		return main.getIntProperty(key, defaultValue);</span>
+	}
+	
+	public long getLongProperty(String key, long defaultValue) {
+		try {
+<span class="nc" id="L95">			return Long.parseLong(getProperty(key));</span>
+<span class="nc" id="L96">		} catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L97">			return defaultValue;</span>
+		}
+	}
+
+
+
+	/**
+	 * @param key
+	 *            Property key
+	 * @return the boolean value of the property resp. the default.
+	 */
+	public boolean getBoolProperty(String key) {
+<span class="fc" id="L109">		String boolProperty = getProperty(key);</span>
+<span class="nc" id="L110">		return Tools.safeEquals(&quot;true&quot;, boolProperty);</span>
+	}
+
+	public Properties getProperties() {
+<span class="nc" id="L114">		return main.getProperties();</span>
+	}
+
+	public String getProperty(String key) {
+<span class="fc" id="L118">		return main.getProperty(key);</span>
+	}
+
+	public ResourceBundle getResources() {
+<span class="nc" id="L122">		return main.getResources();</span>
+	}
+
+	public HashMap getCountryMap() {
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (countryMap == null) {</span>
+<span class="nc" id="L127">			String[] countryMapArray = new String[] { &quot;de&quot;, &quot;DE&quot;, &quot;en&quot;, &quot;UK&quot;,</span>
+<span class="nc" id="L128">					&quot;en&quot;, &quot;US&quot;, &quot;es&quot;, &quot;ES&quot;, &quot;es&quot;, &quot;MX&quot;, &quot;fi&quot;, &quot;FI&quot;, &quot;fr&quot;, &quot;FR&quot;,</span>
+<span class="nc" id="L129">					&quot;hu&quot;, &quot;HU&quot;, &quot;it&quot;, &quot;CH&quot;, &quot;it&quot;, &quot;IT&quot;, &quot;nl&quot;, &quot;NL&quot;, &quot;no&quot;, &quot;NO&quot;,</span>
+<span class="nc" id="L130">					&quot;pt&quot;, &quot;PT&quot;, &quot;ru&quot;, &quot;RU&quot;, &quot;sl&quot;, &quot;SI&quot;, &quot;uk&quot;, &quot;UA&quot;, &quot;zh&quot;, &quot;CN&quot; };</span>
+
+<span class="nc" id="L132">			countryMap = new HashMap();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">			for (int i = 0; i &lt; countryMapArray.length; i = i + 2) {</span>
+<span class="nc" id="L134">				countryMap.put(countryMapArray[i], countryMapArray[i + 1]);</span>
+			}
+		}
+<span class="nc" id="L137">		return countryMap;</span>
+	}
+
+	/* To obtain a logging element, ask here. */
+	public java.util.logging.Logger getLogger(String forClass) {
+<span class="fc" id="L142">		return main.getLogger(forClass);</span>
+	}
+
+	public void logException(Throwable e) {
+<span class="nc" id="L146">		logException(e, &quot;&quot;);</span>
+<span class="nc" id="L147">	}</span>
+
+	public void logException(Throwable e, String comment) {
+<span class="nc" id="L150">		logger.log(Level.SEVERE, &quot;An exception occured: &quot; + comment, e);</span>
+<span class="nc" id="L151">	}</span>
+
+	public String format(String resourceKey, Object[] messageArguments) {
+<span class="nc" id="L154">		MessageFormat formatter =</span>
+<span class="nc" id="L155">			new MessageFormat(getResourceString(resourceKey));</span>
+<span class="nc" id="L156">		String stringResult = formatter.format(messageArguments);</span>
+<span class="nc" id="L157">		return stringResult;</span>
+	}
+
+	public NamedObject createTranslatedString(String key) {
+<span class="nc" id="L161">		String fs = getResourceString(key);</span>
+<span class="nc" id="L162">		return new NamedObject(key, fs);</span>
+	}
+
+	public String getText(String pKey) {
+<span class="nc" id="L166">		return getResourceString(pKey);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

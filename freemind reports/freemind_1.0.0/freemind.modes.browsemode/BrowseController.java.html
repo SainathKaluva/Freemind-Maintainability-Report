@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>BrowseController.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.browsemode</a> &gt; <span class="el_source">BrowseController.java</span></div><h1>BrowseController.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.browsemode;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.ListIterator;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JToolBar;
+
+import freemind.controller.MenuBar;
+import freemind.controller.MenuItemEnabledListener;
+import freemind.controller.StructuredMenuHolder;
+import freemind.extensions.HookFactory;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.main.XMLParseException;
+import freemind.modes.MapAdapter;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.Mode;
+import freemind.modes.ModeController;
+import freemind.modes.NodeAdapter;
+import freemind.modes.common.GotoLinkNodeAction;
+import freemind.modes.common.plugins.MapNodePositionHolderBase;
+import freemind.modes.common.plugins.NodeNoteBase;
+import freemind.modes.viewmodes.ViewControllerAdapter;
+import freemind.view.mindmapview.MainView;
+
+public class BrowseController extends ViewControllerAdapter {
+
+	private JPopupMenu popupmenu;
+	private JToolBar toolbar;
+
+	Action followLink;
+
+	Action nodeUp;
+
+	Action nodeDown;
+
+	private HookFactory mBrowseHookFactory;
+	private ImageIcon noteIcon;
+	public FollowMapLink followMapLink;
+
+	public static class FollowMapLink extends AbstractAction implements MenuItemEnabledListener {
+
+		private ViewControllerAdapter modeController;
+
+		private Logger logger;
+
+		public FollowMapLink(ViewControllerAdapter controller) {
+<span class="nc" id="L84">			super(controller.getText(&quot;follow_map_link&quot;), MapNodePositionHolderBase.getMapLocationIcon());</span>
+<span class="nc" id="L85">			this.modeController = controller;</span>
+<span class="nc" id="L86">			logger = modeController.getFrame().getLogger(</span>
+<span class="nc" id="L87">					this.getClass().getName());</span>
+<span class="nc" id="L88">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+
+<span class="nc" id="L92">			MapNodePositionHolderBase hook = getHook();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (hook != null) {</span>
+<span class="nc" id="L94">				String[] barePositions = hook.getBarePosition();</span>
+				try {
+					// GRR, this is doubled code :-(
+<span class="nc" id="L97">					HashMap tileSources = new HashMap();</span>
+<span class="nc" id="L98">					tileSources.put(</span>
+<span class="nc" id="L99">							MapNodePositionHolderBase.TILE_SOURCE_MAPNIK,</span>
+<span class="nc" id="L100">							MapNodePositionHolderBase.SHORT_MAPNIK);</span>
+<span class="nc" id="L101">					tileSources.put(</span>
+<span class="nc" id="L102">							MapNodePositionHolderBase.TILE_SOURCE_CYCLE_MAP,</span>
+<span class="nc" id="L103">							MapNodePositionHolderBase.SHORT_CYCLE_MAP);</span>
+<span class="nc" id="L104">					tileSources</span>
+<span class="nc" id="L105">							.put(MapNodePositionHolderBase.TILE_SOURCE_TRANSPORT_MAP,</span>
+<span class="nc" id="L106">									MapNodePositionHolderBase.SHORT_TRANSPORT_MAP);</span>
+<span class="nc" id="L107">					tileSources</span>
+<span class="nc" id="L108">							.put(MapNodePositionHolderBase.TILE_SOURCE_MAP_QUEST_OPEN_MAP,</span>
+<span class="nc" id="L109">									MapNodePositionHolderBase.SHORT_MAP_QUEST_OPEN_MAP);</span>
+<span class="nc" id="L110">					String link = &quot;http://www.openstreetmap.org/?&quot; + &quot;mlat=&quot;</span>
+<span class="nc" id="L111">							+ barePositions[0] + &quot;&amp;mlon=&quot; + barePositions[1]</span>
+<span class="nc" id="L112">							+ &quot;&amp;lat=&quot; + barePositions[2] + &quot;&amp;lon=&quot;</span>
+<span class="nc" id="L113">							+ barePositions[3] + &quot;&amp;zoom=&quot; + barePositions[4]</span>
+<span class="nc" id="L114">							+ &quot;&amp;layers=&quot; + tileSources.get(barePositions[5]);</span>
+<span class="nc" id="L115">					logger.fine(&quot;Try to open link &quot; + link);</span>
+<span class="nc" id="L116">					modeController.getFrame().openDocument(new URL(link));</span>
+<span class="nc" id="L117">				} catch (MalformedURLException e1) {</span>
+<span class="nc" id="L118">					freemind.main.Resources.getInstance().logException(e1);</span>
+
+<span class="nc" id="L120">				} catch (Exception e1) {</span>
+<span class="nc" id="L121">					freemind.main.Resources.getInstance().logException(e1);</span>
+				}
+			}
+<span class="nc" id="L124">		}</span>
+
+		protected MapNodePositionHolderBase getHook() {
+<span class="nc" id="L127">			MindMapNode selected = modeController.getSelected();</span>
+<span class="nc" id="L128">			MapNodePositionHolderBase hook = MapNodePositionHolderBase</span>
+<span class="nc" id="L129">					.getBaseHook(selected);</span>
+<span class="nc" id="L130">			return hook;</span>
+		}
+
+		/* (non-Javadoc)
+		 * @see freemind.controller.MenuItemEnabledListener#isEnabled(javax.swing.JMenuItem, javax.swing.Action)
+		 */
+		public boolean isEnabled(JMenuItem pItem, Action pAction) {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">			return getHook() != null;</span>
+		}
+
+	}
+
+	public BrowseController(Mode mode) {
+<span class="nc" id="L143">		super(mode);</span>
+<span class="nc" id="L144">		mBrowseHookFactory = new BrowseHookFactory();</span>
+		// Daniel: Actions are initialized here and not above because of
+		// some error it would produce. Not studied in more detail.
+<span class="nc" id="L147">		followLink = new FollowLinkAction();</span>
+
+<span class="nc" id="L149">		followMapLink = new FollowMapLink(this);</span>
+<span class="nc" id="L150">		popupmenu = new BrowsePopupMenu(this);</span>
+<span class="nc" id="L151">		toolbar = new BrowseToolBar(this);</span>
+<span class="nc" id="L152">		setAllActions(false);</span>
+		// for displaying notes.
+<span class="nc" id="L154">		registerNodeSelectionListener(new NodeNoteViewer(this), false);</span>
+<span class="nc" id="L155">	}</span>
+
+	public void startupController() {
+<span class="nc" id="L158">		super.startupController();</span>
+<span class="nc" id="L159">		invokeHooksRecursively((NodeAdapter) getRootNode(), getMap());</span>
+<span class="nc" id="L160">	}</span>
+
+	protected void restoreMapsLastState(ModeController pNewModeController,
+			MapAdapter pModel) {
+		// intentionally do nothing.
+<span class="nc" id="L165">	}</span>
+
+	public MapAdapter newModel(ModeController modeController) {
+<span class="nc" id="L168">		return new BrowseMapModel(getFrame(), modeController);</span>
+	}
+
+	public void plainClick(MouseEvent e) {
+		/* perform action only if one selected node. */
+<span class="nc bnc" id="L173" title="All 2 branches missed.">		if (getSelecteds().size() != 1)</span>
+<span class="nc" id="L174">			return;</span>
+<span class="nc" id="L175">		final MainView component = (MainView) e.getComponent();</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (component.isInFollowLinkRegion(e.getX())) {</span>
+<span class="nc" id="L177">			loadURL();</span>
+<span class="nc" id="L178">		} else {</span>
+<span class="nc" id="L179">			MindMapNode node = (component).getNodeView().getModel();</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			if (!node.hasChildren()) {</span>
+				// the emulate the plain click.
+<span class="nc" id="L182">				doubleClick(e);</span>
+<span class="nc" id="L183">				return;</span>
+			}
+<span class="nc" id="L185">			toggleFolded.toggleFolded(getSelecteds().listIterator());</span>
+		}
+
+<span class="nc" id="L188">	}</span>
+
+	public void doubleClick() {
+		/* If the link exists, follow the link; toggle folded otherwise */
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		if (getSelected().getLink() == null) {</span>
+<span class="nc" id="L193">			toggleFolded.toggleFolded();</span>
+<span class="nc" id="L194">		} else {</span>
+<span class="nc" id="L195">			loadURL();</span>
+		}
+<span class="nc" id="L197">	}</span>
+
+	// public void anotherNodeSelected(MindMapNode n) {
+	// super.anotherNodeSelected(n);
+	// if(n.isRoot()){
+	// return;
+	// }
+	// //Presentation:
+	// setFolded(n, false);
+	// foldOthers(n);
+	// }
+	//
+	//
+	// private void foldOthers(MindMapNode n) {
+	// if(n.isRoot()){
+	// return;
+	// }
+	// MindMapNode parent = n.getParentNode();
+	// for (Iterator iter = parent.childrenUnfolded(); iter.hasNext();) {
+	// MindMapNode element = (MindMapNode) iter.next();
+	// if(element != n){
+	// setFolded(element, true);
+	// }
+	// }
+	// foldOthers(parent);
+	// }
+
+	public MindMapNode newNode(Object userObject, MindMap map) {
+<span class="nc" id="L225">		return new BrowseNodeModel(userObject, getFrame(), map);</span>
+	}
+
+	public JPopupMenu getPopupMenu() {
+<span class="nc" id="L229">		return popupmenu;</span>
+	}
+
+	/**
+	 * Link implementation: If this is a link, we want to make a popup with at
+	 * least removelink available.
+	 */
+	public JPopupMenu getPopupForModel(java.lang.Object obj) {
+<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (obj instanceof BrowseArrowLinkModel) {</span>
+			// yes, this is a link.
+<span class="nc" id="L239">			BrowseArrowLinkModel link = (BrowseArrowLinkModel) obj;</span>
+<span class="nc" id="L240">			JPopupMenu arrowLinkPopup = new JPopupMenu();</span>
+
+<span class="nc" id="L242">			arrowLinkPopup.add(getGotoLinkNodeAction(link.getSource()));</span>
+<span class="nc" id="L243">			arrowLinkPopup.add(getGotoLinkNodeAction(link.getTarget()));</span>
+
+<span class="nc" id="L245">			arrowLinkPopup.addSeparator();</span>
+			// add all links from target and from source:
+<span class="nc" id="L247">			HashSet nodeAlreadyVisited = new HashSet();</span>
+<span class="nc" id="L248">			nodeAlreadyVisited.add(link.getSource());</span>
+<span class="nc" id="L249">			nodeAlreadyVisited.add(link.getTarget());</span>
+<span class="nc" id="L250">			Vector links = getModel().getLinkRegistry().getAllLinks(</span>
+<span class="nc" id="L251">					link.getSource());</span>
+<span class="nc" id="L252">			links.addAll(getModel().getLinkRegistry().getAllLinks(</span>
+<span class="nc" id="L253">					link.getTarget()));</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			for (int i = 0; i &lt; links.size(); ++i) {</span>
+<span class="nc" id="L255">				BrowseArrowLinkModel foreign_link = (BrowseArrowLinkModel) links</span>
+<span class="nc" id="L256">						.get(i);</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">				if (nodeAlreadyVisited.add(foreign_link.getTarget())) {</span>
+<span class="nc" id="L258">					arrowLinkPopup.add(getGotoLinkNodeAction(foreign_link</span>
+<span class="nc" id="L259">							.getTarget()));</span>
+				}
+<span class="nc bnc" id="L261" title="All 2 branches missed.">				if (nodeAlreadyVisited.add(foreign_link.getSource())) {</span>
+<span class="nc" id="L262">					arrowLinkPopup.add(getGotoLinkNodeAction(foreign_link</span>
+<span class="nc" id="L263">							.getSource()));</span>
+				}
+			}
+<span class="nc" id="L266">			return arrowLinkPopup;</span>
+		}
+<span class="nc" id="L268">		return null;</span>
+	}
+
+	/**
+	 */
+	private GotoLinkNodeAction getGotoLinkNodeAction(MindMapNode destination) {
+<span class="nc" id="L274">		return new GotoLinkNodeAction(this, destination);</span>
+	}
+
+	public JToolBar getModeToolBar() {
+<span class="nc" id="L278">		return getToolBar();</span>
+	}
+
+	BrowseToolBar getToolBar() {
+<span class="nc" id="L282">		return (BrowseToolBar) toolbar;</span>
+	}
+
+	// public void loadURL(String relative) {
+	// // copy from mind map controller:
+	// if (relative.startsWith(&quot;#&quot;)) {
+	// // inner map link, fc, 12.10.2004
+	// String target = relative.substring(1);
+	// try {
+	// MindMapNode node = getNodeFromID(target);
+	// centerNode(node);
+	// return;
+	// } catch (Exception e) {
+	// // bad luck.
+	// getFrame().out(Tools.expandPlaceholders(getText(&quot;link_not_found&quot;),
+	// target));
+	// return;
+	// }
+	// }
+	//
+	// URL absolute = null;
+	// try {
+	// absolute = new URL(getMap().getURL(), relative);
+	// getFrame().out(absolute.toString());
+	// } catch (MalformedURLException ex) {
+	// freemind.main.Resources.getInstance().logExecption(ex);
+	// getController().errorMessage(
+	// getText(&quot;url_error&quot;) + &quot; &quot; + ex.getMessage());
+	// // getFrame().err(getText(&quot;url_error&quot;));
+	// return;
+	// }
+	//
+	// String type = Tools.getExtension(absolute.getFile());
+	// try {
+	// if
+	// (type.equals(freemind.main.FreeMindCommon.FREEMIND_FILE_EXTENSION_WITHOUT_DOT))
+	// {
+	// getFrame().setWaitingCursor(true);
+	// load(absolute);
+	// } else {
+	// getFrame().openDocument(absolute);
+	// }
+	// } catch (Exception ex) {
+	// getController().errorMessage(getText(&quot;url_load_error&quot;) + absolute);
+	// freemind.main.Resources.getInstance().logExecption( ex);
+	// // for some reason, this exception is thrown anytime...
+	// } finally {
+	// getFrame().setWaitingCursor(false);
+	// }
+	//
+	// }
+
+	public ModeController load(URL url) throws IOException, XMLParseException,
+			URISyntaxException {
+<span class="nc" id="L336">		ModeController newModeController = super.load(url);</span>
+		// decorator pattern.
+<span class="nc" id="L338">		((BrowseToolBar) newModeController.getModeToolBar()).setURLField(url</span>
+<span class="nc" id="L339">				.toString());</span>
+<span class="nc" id="L340">		return newModeController;</span>
+	}
+
+	public ModeController load(File url) throws IOException {
+<span class="nc" id="L344">		ModeController newModeController = super.load(url);</span>
+		// decorator pattern.
+<span class="nc" id="L346">		((BrowseToolBar) newModeController.getModeToolBar()).setURLField(Tools</span>
+<span class="nc" id="L347">				.fileToUrl(url).toString());</span>
+<span class="nc" id="L348">		return newModeController;</span>
+	}
+
+	public void newMap(MindMap mapModel) {
+<span class="nc" id="L352">		setNoteIcon(mapModel.getRootNode());</span>
+<span class="nc" id="L353">		super.newMap(mapModel);</span>
+<span class="nc" id="L354">	}</span>
+
+	private void setNoteIcon(MindMapNode node) {
+<span class="nc" id="L357">		String noteText = node.getNoteText();</span>
+<span class="nc bnc" id="L358" title="All 4 branches missed.">		if (noteText != null &amp;&amp; !noteText.equals(&quot;&quot;)) {</span>
+			// icon
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			if (noteIcon == null) {</span>
+<span class="nc" id="L361">				noteIcon = new ImageIcon(getController().getResource(</span>
+<span class="nc" id="L362">						&quot;images/knotes.png&quot;));</span>
+			}
+<span class="nc" id="L364">			node.setStateIcon(NodeNoteBase.NODE_NOTE_ICON, noteIcon);</span>
+		}
+<span class="nc" id="L366">		ListIterator children = node.childrenUnfolded();</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">		while (children.hasNext()) {</span>
+<span class="nc" id="L368">			setNoteIcon((MindMapNode) children.next());</span>
+		}
+
+<span class="nc" id="L371">	}</span>
+
+	/**
+	 * Enabled/Disabled all actions that are dependent on whether there is a map
+	 * open or not.
+	 */
+	protected void setAllActions(boolean enabled) {
+<span class="nc" id="L378">		super.setAllActions(enabled);</span>
+<span class="nc" id="L379">		toggleFolded.setEnabled(enabled);</span>
+<span class="nc" id="L380">		toggleChildrenFolded.setEnabled(enabled);</span>
+<span class="nc" id="L381">		followLink.setEnabled(enabled);</span>
+<span class="nc" id="L382">	}</span>
+
+	// ////////
+	// Actions
+	// ///////
+
+	private class FollowLinkAction extends AbstractAction {
+<span class="nc" id="L389">		FollowLinkAction() {</span>
+<span class="nc" id="L390">			super(getText(&quot;follow_link&quot;));</span>
+<span class="nc" id="L391">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L394">			loadURL();</span>
+<span class="nc" id="L395">		}</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.ModeController#updateMenus(freemind.controller.
+	 * StructuredMenuHolder)
+	 */
+	public void updateMenus(StructuredMenuHolder holder) {
+<span class="nc" id="L405">		add(holder, MenuBar.EDIT_MENU + &quot;/find/find&quot;, find, &quot;keystroke_find&quot;);</span>
+<span class="nc" id="L406">		add(holder, MenuBar.EDIT_MENU + &quot;/find/findNext&quot;, findNext,</span>
+<span class="nc" id="L407">				&quot;keystroke_find_next&quot;);</span>
+<span class="nc" id="L408">		add(holder, MenuBar.EDIT_MENU + &quot;/find/followLink&quot;, followLink,</span>
+<span class="nc" id="L409">				&quot;keystroke_follow_link&quot;);</span>
+<span class="nc" id="L410">		holder.addSeparator(MenuBar.EDIT_MENU + &quot;/find&quot;);</span>
+<span class="nc" id="L411">		add(holder, MenuBar.EDIT_MENU + &quot;/find/toggleFolded&quot;, toggleFolded,</span>
+<span class="nc" id="L412">				&quot;keystroke_toggle_folded&quot;);</span>
+<span class="nc" id="L413">		add(holder, MenuBar.EDIT_MENU + &quot;/find/toggleChildrenFolded&quot;,</span>
+<span class="nc" id="L414">				toggleChildrenFolded, &quot;keystroke_toggle_children_folded&quot;);</span>
+<span class="nc" id="L415">	}</span>
+
+	public HookFactory getHookFactory() {
+<span class="nc" id="L418">		return mBrowseHookFactory;</span>
+	}
+
+	public XMLElement createXMLElement() {
+<span class="nc" id="L422">		return new BrowseXMLElement(this);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

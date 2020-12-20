@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>TestMindMapNode.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind.findreplace</a> &gt; <span class="el_source">TestMindMapNode.java</span></div><h1>TestMindMapNode.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2006  Christian Foltin &lt;christianfoltin@users.sourceforge.net&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: TestMindMapNode.java,v 1.1.2.17 2008/05/26 19:25:09 christianfoltin Exp $*/
+
+package tests.freemind.findreplace;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.SortedMap;
+
+import javax.swing.ImageIcon;
+import javax.swing.event.EventListenerList;
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import freemind.controller.filter.FilterInfo;
+import freemind.extensions.NodeHook;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.XMLElement;
+import freemind.modes.HistoryInformation;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapCloud;
+import freemind.modes.MindMapEdge;
+import freemind.modes.MindMapLinkRegistry;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.attributes.Attribute;
+import freemind.modes.attributes.NodeAttributeTableModel;
+import freemind.view.mindmapview.NodeView;
+import freemind.view.mindmapview.NodeViewVisitor;
+
+<span class="fc" id="L58">final class TestMindMapNode implements MindMapNode {</span>
+<span class="fc" id="L59">	private String text = &quot;&quot;;</span>
+
+	public String getText() {
+<span class="fc" id="L62">		return text;</span>
+	}
+
+	public void setText(String text) {
+<span class="fc" id="L66">		this.text = text;</span>
+<span class="fc" id="L67">	}</span>
+
+	public boolean hasFoldedParents() {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if(isRoot())</span>
+<span class="nc" id="L71">			return false;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if(getParentNode().isFolded()) {</span>
+<span class="nc" id="L73">			return true;</span>
+		}
+<span class="nc" id="L75">		return getParentNode().hasFoldedParents();</span>
+	}
+
+	public String getObjectId(ModeController controller) {
+<span class="nc" id="L79">		return null;</span>
+	}
+
+	public ListIterator childrenFolded() {
+<span class="nc" id="L83">		return null;</span>
+	}
+
+	public ListIterator childrenUnfolded() {
+<span class="nc" id="L87">		return null;</span>
+	}
+
+	public boolean hasChildren() {
+<span class="nc" id="L91">		return false;</span>
+	}
+
+	public FilterInfo getFilterInfo() {
+<span class="nc" id="L95">		return null;</span>
+	}
+
+	public int getChildPosition(MindMapNode childNode) {
+<span class="nc" id="L99">		return 0;</span>
+	}
+
+	public MindMapNode getPreferredChild() {
+<span class="nc" id="L103">		return null;</span>
+	}
+
+	public void setPreferredChild(MindMapNode node) {
+<span class="nc" id="L107">	}</span>
+
+	public int getNodeLevel() {
+<span class="nc" id="L110">		return 0;</span>
+	}
+
+	public String getLink() {
+<span class="nc" id="L114">		return null;</span>
+	}
+
+	public String getShortText(ModeController controller) {
+<span class="nc" id="L118">		return null;</span>
+	}
+
+	public MindMapEdge getEdge() {
+<span class="nc" id="L122">		return null;</span>
+	}
+
+	public Color getColor() {
+<span class="nc" id="L126">		return null;</span>
+	}
+
+	public String getStyle() {
+<span class="nc" id="L130">		return null;</span>
+	}
+
+	public void setStyle(String style) {
+<span class="nc" id="L134">	}</span>
+
+	public boolean hasStyle() {
+<span class="nc" id="L137">		return false;</span>
+	}
+
+	public MindMapNode getParentNode() {
+<span class="nc" id="L141">		return null;</span>
+	}
+
+	public boolean isBold() {
+<span class="nc" id="L145">		return false;</span>
+	}
+
+	public boolean isItalic() {
+<span class="nc" id="L149">		return false;</span>
+	}
+
+	public boolean isUnderlined() {
+<span class="nc" id="L153">		return false;</span>
+	}
+
+	public Font getFont() {
+<span class="nc" id="L157">		return null;</span>
+	}
+
+	public String getFontSize() {
+<span class="nc" id="L161">		return null;</span>
+	}
+
+	public String getFontFamilyName() {
+<span class="nc" id="L165">		return null;</span>
+	}
+
+	public Collection getViewers() {
+<span class="nc" id="L169">		return null;</span>
+	}
+
+	public void addViewer(NodeView viewer) {
+<span class="nc" id="L173">	}</span>
+
+	public String getPlainTextContent() {
+<span class="nc" id="L176">		return null;</span>
+	}
+
+	public TreePath getPath() {
+<span class="nc" id="L180">		return null;</span>
+	}
+
+	public boolean isDescendantOf(MindMapNode node) {
+<span class="nc" id="L184">		return false;</span>
+	}
+
+	public boolean isRoot() {
+<span class="nc" id="L188">		return false;</span>
+	}
+
+	public boolean isFolded() {
+<span class="nc" id="L192">		return false;</span>
+	}
+
+	public boolean isLeft() {
+<span class="nc" id="L196">		return false;</span>
+	}
+
+	public boolean isOnLeftSideOfRoot() {
+<span class="nc" id="L200">		return false;</span>
+	}
+
+	public void setLeft(boolean isLeft) {
+<span class="nc" id="L204">	}</span>
+
+	public void setFolded(boolean folded) {
+<span class="nc" id="L207">	}</span>
+
+	public void setFont(Font font) {
+<span class="nc" id="L210">	}</span>
+
+	public void setShiftY(int y) {
+<span class="nc" id="L213">	}</span>
+
+	public int getShiftY() {
+<span class="nc" id="L216">		return 0;</span>
+	}
+
+	public int calcShiftY() {
+<span class="nc" id="L220">		return 0;</span>
+	}
+
+	public void setVGap(int i) {
+<span class="nc" id="L224">	}</span>
+
+	public int getVGap() {
+<span class="nc" id="L227">		return 0;</span>
+	}
+
+	public int calcVGap() {
+<span class="nc" id="L231">		return 0;</span>
+	}
+
+	public void setHGap(int i) {
+<span class="nc" id="L235">	}</span>
+
+	public int getHGap() {
+<span class="nc" id="L238">		return 0;</span>
+	}
+
+	public void setLink(String link) {
+<span class="nc" id="L242">	}</span>
+
+	public void setFontSize(int fontSize) {
+<span class="nc" id="L245">	}</span>
+
+	public void setColor(Color color) {
+<span class="nc" id="L248">	}</span>
+
+	public List getIcons() {
+<span class="nc" id="L251">		return null;</span>
+	}
+
+	public void addIcon(MindIcon icon, int position) {
+<span class="nc" id="L255">	}</span>
+
+	public int removeIcon(int position) {
+<span class="nc" id="L258">		return 0;</span>
+	}
+
+	public MindMapCloud getCloud() {
+<span class="nc" id="L262">		return null;</span>
+	}
+
+	public void setCloud(MindMapCloud cloud) {
+<span class="nc" id="L266">	}</span>
+
+	public Color getBackgroundColor() {
+<span class="nc" id="L269">		return null;</span>
+	}
+
+	public void setBackgroundColor(Color color) {
+<span class="nc" id="L273">	}</span>
+
+	public List getHooks() {
+<span class="nc" id="L276">		return null;</span>
+	}
+
+	public Collection getActivatedHooks() {
+<span class="nc" id="L280">		return null;</span>
+	}
+
+	public PermanentNodeHook addHook(PermanentNodeHook hook) {
+<span class="nc" id="L284">		return null;</span>
+	}
+
+	public void invokeHook(NodeHook hook) {
+<span class="nc" id="L288">	}</span>
+
+	public void removeHook(PermanentNodeHook hook) {
+<span class="nc" id="L291">	}</span>
+
+	public void setToolTip(String key, String tip) {
+<span class="nc" id="L294">	}</span>
+
+	public SortedMap getToolTip() {
+<span class="nc" id="L297">		return null;</span>
+	}
+
+	public void setAdditionalInfo(String info) {
+<span class="nc" id="L301">	}</span>
+
+	public String getAdditionalInfo() {
+<span class="nc" id="L304">		return null;</span>
+	}
+
+	public MindMapNode shallowCopy() {
+<span class="nc" id="L308">		return null;</span>
+	}
+
+	public XMLElement save(Writer writer, MindMapLinkRegistry registry,
+			boolean saveHidden, boolean saveChildren) throws IOException {
+<span class="nc" id="L313">		return null;</span>
+	}
+
+	public Map getStateIcons() {
+<span class="nc" id="L317">		return null;</span>
+	}
+
+	public void setStateIcon(String key, ImageIcon icon) {
+<span class="nc" id="L321">	}</span>
+
+	public HistoryInformation getHistoryInformation() {
+<span class="nc" id="L324">		return null;</span>
+	}
+
+	public void setHistoryInformation(HistoryInformation historyInformation) {
+<span class="nc" id="L328">	}</span>
+
+	public boolean isVisible() {
+<span class="nc" id="L331">		return false;</span>
+	}
+
+	public boolean hasExactlyOneVisibleChild() {
+<span class="nc" id="L335">		return false;</span>
+	}
+
+	public MindMap getMap() {
+<span class="nc" id="L339">		return null;</span>
+	}
+
+	public NodeAttributeTableModel getAttributes() {
+<span class="nc" id="L343">		return null;</span>
+	}
+
+	public void addTreeModelListener(TreeModelListener l) {
+<span class="nc" id="L347">	}</span>
+
+	public void removeTreeModelListener(TreeModelListener l) {
+<span class="nc" id="L350">	}</span>
+
+	public void insert(MutableTreeNode child, int index) {
+<span class="nc" id="L353">	}</span>
+
+	public void remove(int index) {
+<span class="nc" id="L356">	}</span>
+
+	public void remove(MutableTreeNode node) {
+<span class="nc" id="L359">	}</span>
+
+	public void setUserObject(Object object) {
+<span class="nc" id="L362">	}</span>
+
+	public void removeFromParent() {
+<span class="nc" id="L365">	}</span>
+
+	public void setParent(MutableTreeNode newParent) {
+<span class="nc" id="L368">	}</span>
+
+	public TreeNode getChildAt(int childIndex) {
+<span class="nc" id="L371">		return null;</span>
+	}
+
+	public int getChildCount() {
+<span class="nc" id="L375">		return 0;</span>
+	}
+
+	public TreeNode getParent() {
+<span class="nc" id="L379">		return null;</span>
+	}
+
+	public int getIndex(TreeNode node) {
+<span class="nc" id="L383">		return 0;</span>
+	}
+
+	public boolean getAllowsChildren() {
+<span class="nc" id="L387">		return false;</span>
+	}
+
+	public boolean isLeaf() {
+<span class="nc" id="L391">		return false;</span>
+	}
+
+	public Enumeration children() {
+<span class="nc" id="L395">		return null;</span>
+	}
+
+	public String getXmlText() {
+<span class="nc" id="L399">		return null;</span>
+	}
+
+	public void setXmlText(String structuredText) {
+<span class="nc" id="L403">	}</span>
+
+	public String getXmlNoteText() {
+		// TODO Auto-generated method stub
+<span class="nc" id="L407">		return null;</span>
+	}
+
+	public void setXmlNoteText(String structuredNoteText) {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L413">	}</span>
+
+	public List getChildren() {
+<span class="nc" id="L416">		return null;</span>
+	}
+
+	public String getNoteText() {
+<span class="fc" id="L420">		return null;</span>
+	}
+
+	public void setNoteText(String noteText) {
+<span class="nc" id="L424">	}</span>
+
+	public Attribute getAttribute(int pPosition) {
+<span class="nc" id="L427">		return null;</span>
+	}
+
+	public List getAttributeKeyList() {
+<span class="nc" id="L431">		return null;</span>
+	}
+
+	public int getAttributePosition(String key) {
+<span class="nc" id="L435">		return 0;</span>
+	}
+
+	public void setAttribute(int pPosition, Attribute pAttribute) {
+<span class="nc" id="L439">	}</span>
+
+	public int getAttributeTableLength() {
+<span class="nc" id="L442">		return 0;</span>
+	}
+
+	public void removeViewer(NodeView viewer) {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L448">	}</span>
+
+	public void acceptViewVisitor(NodeViewVisitor visitor) {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L453">	}</span>
+
+	public EventListenerList getListeners() {
+		// TODO Auto-generated method stub
+<span class="nc" id="L457">		return null;</span>
+	}
+
+	public boolean isNewChildLeft() {
+		// TODO Auto-generated method stub
+<span class="nc" id="L462">		return false;</span>
+	}
+
+	public void createAttributeTableModel() {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L468">	}</span>
+
+	public String getAttribute(String key) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L472">		return null;</span>
+	}
+
+	public boolean isWriteable() {
+<span class="nc" id="L476">		return true;</span>
+	}
+
+	public boolean isDescendantOfOrEqual(MindMapNode pParentNode) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L481">		return false;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMapNode#removeAllHooks()
+	 */
+	public void removeAllHooks() {
+<span class="nc" id="L490">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.modes.MindMapNode#sortedChildrenUnfolded()
+	 */
+	public ListIterator sortedChildrenUnfolded() {
+<span class="nc" id="L496">		return null;</span>
+	}
+
+	/* (non-Javadoc)
+	 * @see freemind.modes.MindMapNode#hasVisibleChilds()
+	 */
+	public boolean hasVisibleChilds() {
+<span class="nc" id="L503">		return false;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

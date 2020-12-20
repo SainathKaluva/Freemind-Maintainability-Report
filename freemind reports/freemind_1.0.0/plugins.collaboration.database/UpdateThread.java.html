@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>UpdateThread.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.database</a> &gt; <span class="el_source">UpdateThread.java</span></div><h1>UpdateThread.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2009 Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 03.02.2009
+ */
+/*$Id: UpdateThread.java,v 1.1.2.1 2009/02/04 19:31:21 christianfoltin Exp $*/
+
+package plugins.collaboration.database;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Vector;
+
+import javax.swing.SwingUtilities;
+
+import plugins.collaboration.database.DatabaseBasics.ResultHandler;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.Tools;
+import freemind.modes.MapAdapter;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+import freemind.modes.mindmapmode.actions.xml.ActionFilter.FinalActionFilter;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+public class UpdateThread extends Thread implements ResultHandler,
+		FinalActionFilter {
+	private static final String QUERY_GET_USERS = &quot;SELECT * FROM &quot;
+			+ DatabaseBasics.TABLE_USERS;
+	private static final String QUERY = &quot;SELECT * FROM &quot;
+			+ DatabaseBasics.TABLE_XML_ACTIONS + &quot; WHERE &quot;
+			+ DatabaseBasics.ROW_PK + &quot; &gt;= ?&quot;;
+<span class="nc" id="L62">	private boolean mShouldTerminate = false;</span>
+<span class="nc" id="L63">	private boolean mIsTerminated = false;</span>
+<span class="nc" id="L64">	protected Connection mConnection = null;</span>
+<span class="nc" id="L65">	protected BigInteger mPrimaryKeyMutex = BigInteger.valueOf(0);</span>
+<span class="nc" id="L66">	protected long mPrimaryKey = 1l;</span>
+	protected MindMapController mController;
+<span class="nc" id="L68">	protected boolean mFilterEnabled = true;</span>
+<span class="nc" id="L69">	private static java.util.logging.Logger logger = null;</span>
+	private PreparedStatement mPrepareStatement;
+<span class="nc" id="L71">	private PreparedStatement mPrepareStatementUsers = null;</span>
+	protected String mPort;
+
+	public String getPort() {
+<span class="nc" id="L75">		return mPort;</span>
+	}
+
+	public void setPort(String pPort) {
+<span class="nc" id="L79">		mPort = pPort;</span>
+<span class="nc" id="L80">	}</span>
+
+	public String getHost() {
+<span class="nc" id="L83">		return mHost;</span>
+	}
+
+	public void setHost(String pHost) {
+<span class="nc" id="L87">		mHost = pHost;</span>
+<span class="nc" id="L88">	}</span>
+
+	protected String mHost;
+
+	public UpdateThread(Connection pConnection, MindMapController pController)
+			throws SQLException {
+<span class="nc" id="L94">		super();</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L96">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L97">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L99">		mConnection = pConnection;</span>
+<span class="nc" id="L100">		mController = pController;</span>
+<span class="nc" id="L101">	}</span>
+
+	public void run() {
+		try {
+<span class="nc" id="L105">			mPrepareStatement = mConnection.prepareStatement(QUERY);</span>
+<span class="nc" id="L106">		} catch (SQLException e1) {</span>
+<span class="nc" id="L107">			freemind.main.Resources.getInstance().logException(e1);</span>
+<span class="nc" id="L108">			return;</span>
+		}
+<span class="nc" id="L110">		int counter = 1;</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		while (!mShouldTerminate) {</span>
+			try {
+<span class="nc" id="L113">				logger.fine(&quot;Looking for updates...&quot;);</span>
+<span class="nc" id="L114">				synchronized (mPrimaryKeyMutex) {</span>
+<span class="nc" id="L115">					mPrepareStatement.setLong(1, mPrimaryKey);</span>
+<span class="nc" id="L116">					logger.fine(&quot;Looking for updates... Query&quot;);</span>
+<span class="nc" id="L117">					query(mPrepareStatement, this);</span>
+				}
+<span class="nc" id="L119">				logger.fine(&quot;Looking for updates... Done.&quot;);</span>
+<span class="nc" id="L120">				Thread.sleep(1000);</span>
+<span class="nc" id="L121">				counter--;</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (counter &lt;= 0) {</span>
+<span class="nc" id="L123">					counter = 10;</span>
+<span class="nc" id="L124">					mController.getController().setTitle();</span>
+				}
+<span class="nc" id="L126">			} catch (Exception e) {</span>
+<span class="nc" id="L127">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+		}
+<span class="nc" id="L130">		mIsTerminated = true;</span>
+<span class="nc" id="L131">	}</span>
+
+	public void commitSuicide() {
+<span class="nc" id="L134">		mShouldTerminate = true;</span>
+<span class="nc" id="L135">		int timeout = 100;</span>
+<span class="nc" id="L136">		logger.info(&quot;Shutting down update thread.&quot;);</span>
+<span class="nc bnc" id="L137" title="All 4 branches missed.">		while (!mIsTerminated &amp;&amp; timeout-- &gt; 0) {</span>
+			try {
+<span class="nc" id="L139">				Thread.sleep(100);</span>
+<span class="nc" id="L140">			} catch (InterruptedException e) {</span>
+<span class="nc" id="L141">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+		}
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (timeout == 0) {</span>
+<span class="nc" id="L145">			logger.warning(&quot;Can't stop update thread!&quot;);</span>
+<span class="nc" id="L146">		} else {</span>
+<span class="nc" id="L147">			logger.info(&quot;Shutting down update thread complete.&quot;);</span>
+		}
+<span class="nc" id="L149">	}</span>
+
+	public void shutdown(boolean pWithShutdown) {
+		try {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			if (pWithShutdown) {</span>
+<span class="nc" id="L154">				Statement st = mConnection.createStatement();</span>
+<span class="nc" id="L155">				st.execute(&quot;SHUTDOWN&quot;);</span>
+			}
+<span class="nc" id="L157">			mConnection.close();</span>
+<span class="nc" id="L158">			mConnection = null;</span>
+<span class="nc" id="L159">		} catch (Exception e) {</span>
+<span class="nc" id="L160">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L162">	}</span>
+
+	public void processResults(ResultSet rs) {
+		try {
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			while (rs.next()) {</span>
+<span class="nc" id="L167">				long nextPk = rs.getLong(DatabaseBasics.ROW_PK);</span>
+<span class="nc" id="L168">				mPrimaryKey = nextPk + 1;</span>
+<span class="nc" id="L169">				String doAction = rs.getString(DatabaseBasics.ROW_ACTION);</span>
+<span class="nc" id="L170">				String undoAction = rs.getString(DatabaseBasics.ROW_UNDOACTION);</span>
+<span class="nc" id="L171">				String map = rs.getString(DatabaseBasics.ROW_MAP);</span>
+<span class="nc" id="L172">				logger.info(&quot;Got the following from database: &quot; + nextPk + &quot;, &quot;</span>
+<span class="nc" id="L173">						+ doAction + &quot;, &quot; + undoAction + &quot;, &quot; + map);</span>
+<span class="nc bnc" id="L174" title="All 4 branches missed.">				if (doAction != null &amp;&amp; undoAction != null) {</span>
+<span class="nc" id="L175">					XmlAction xmlDoAction = mController.unMarshall(doAction);</span>
+<span class="nc" id="L176">					XmlAction xmlUndoAction = mController</span>
+<span class="nc" id="L177">							.unMarshall(undoAction);</span>
+<span class="nc" id="L178">					ActionPair pair = new ActionPair(xmlDoAction, xmlUndoAction);</span>
+<span class="nc" id="L179">					executeTransaction(pair);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				} else if (map != null) {</span>
+<span class="nc" id="L181">					createNewMap(map);</span>
+<span class="nc" id="L182">				} else {</span>
+<span class="nc" id="L183">					logger.info(&quot;Shutting down was signalled.&quot;);</span>
+<span class="nc" id="L184">					rs.close();</span>
+					// session has ended.
+<span class="nc" id="L186">					DatabaseBasics.togglePermanentHook(mController);</span>
+					// and end.
+<span class="nc" id="L188">					return;</span>
+				}
+			}
+<span class="nc" id="L191">			rs.close();</span>
+<span class="nc" id="L192">		} catch (Exception e) {</span>
+<span class="nc" id="L193">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L195">	}</span>
+
+	private void createNewMap(String map) throws IOException {
+		{
+			// deregister from old controller:
+<span class="nc" id="L200">			deregisterFilter();</span>
+<span class="nc" id="L201">			logger.info(&quot;Restoring the map...&quot;);</span>
+<span class="nc" id="L202">			MindMapController newModeController = (MindMapController) mController</span>
+<span class="nc" id="L203">					.getMode().createModeController();</span>
+<span class="nc" id="L204">			MapAdapter newModel = new MindMapMapModel(mController.getFrame(),</span>
+<span class="nc" id="L205">					newModeController);</span>
+<span class="nc" id="L206">			HashMap IDToTarget = new HashMap();</span>
+<span class="nc" id="L207">			StringReader reader = new StringReader(map);</span>
+<span class="nc" id="L208">			MindMapNodeModel rootNode = (MindMapNodeModel) newModeController</span>
+<span class="nc" id="L209">					.createNodeTreeFromXml(reader, IDToTarget);</span>
+<span class="nc" id="L210">			reader.close();</span>
+<span class="nc" id="L211">			newModel.setRoot(rootNode);</span>
+<span class="nc" id="L212">			rootNode.setMap(newModel);</span>
+<span class="nc" id="L213">			mController.newMap(newModel);</span>
+<span class="nc" id="L214">			newModeController.invokeHooksRecursively((NodeAdapter) rootNode,</span>
+<span class="nc" id="L215">					newModel);</span>
+<span class="nc" id="L216">			mController = newModeController;</span>
+			// add new hook
+<span class="nc" id="L218">			DatabaseBasics.togglePermanentHook(mController);</span>
+			// tell him about this thread.
+<span class="nc" id="L220">			Collection activatedHooks = mController.getRootNode()</span>
+<span class="nc" id="L221">					.getActivatedHooks();</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">			for (Iterator it = activatedHooks.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L223">				PermanentNodeHook hook = (PermanentNodeHook) it.next();</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">				if (hook instanceof DatabaseConnectionHook) {</span>
+<span class="nc" id="L225">					DatabaseConnectionHook connHook = (DatabaseConnectionHook) hook;</span>
+<span class="nc" id="L226">					connHook.setUpdateThread(this);</span>
+<span class="nc" id="L227">					break;</span>
+				}
+			}
+			/* register as listener, as I am a slave. */
+<span class="nc" id="L231">			registerFilter();</span>
+		}
+<span class="nc" id="L233">	}</span>
+
+	private void executeTransaction(final ActionPair pair)
+			throws InterruptedException, InvocationTargetException {
+<span class="nc" id="L237">		SwingUtilities.invokeLater(new Runnable() {</span>
+			public void run() {
+<span class="nc" id="L239">				mFilterEnabled = false;</span>
+				try {
+<span class="nc" id="L241">					mController.doTransaction(&quot;update&quot;, pair);</span>
+<span class="nc" id="L242">				} finally {</span>
+<span class="nc" id="L243">					mFilterEnabled = true;</span>
+<span class="nc" id="L244">				}</span>
+<span class="nc" id="L245">			}</span>
+		});
+<span class="nc" id="L247">	}</span>
+
+	protected void insertIntoActionTable(String expression) throws SQLException {
+<span class="nc" id="L250">		synchronized (mPrimaryKeyMutex) {</span>
+<span class="nc" id="L251">			update(expression);</span>
+<span class="nc" id="L252">			mPrimaryKey++;</span>
+		}
+<span class="nc" id="L254">	}</span>
+
+	public synchronized void query(PreparedStatement preparedStatement,
+			ResultHandler pHandler) throws SQLException {
+
+<span class="nc" id="L259">		Statement st = null;</span>
+<span class="nc" id="L260">		ResultSet rs = null;</span>
+
+<span class="nc" id="L262">		boolean execute = preparedStatement.execute();</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		if (execute) {</span>
+<span class="nc" id="L264">			rs = preparedStatement.getResultSet();</span>
+<span class="nc" id="L265">			pHandler.processResults(rs);</span>
+		}
+<span class="nc" id="L267">	}</span>
+
+	public synchronized boolean update(String expression) throws SQLException {
+<span class="nc" id="L270">		logger.info(&quot;Executing &quot; + expression);</span>
+<span class="nc" id="L271">		Statement st = null;</span>
+<span class="nc" id="L272">		st = mConnection.createStatement(); // statements</span>
+<span class="nc" id="L273">		int i = st.executeUpdate(expression); // run the query</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">		if (i == -1) {</span>
+<span class="nc" id="L275">			logger.severe(&quot;db error : &quot; + expression);</span>
+		}
+<span class="nc" id="L277">		st.close();</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">		return i != -1;</span>
+	}
+
+	public ActionPair filterAction(ActionPair pPair) {
+<span class="nc bnc" id="L282" title="All 4 branches missed.">		if (pPair == null || !mFilterEnabled)</span>
+<span class="nc" id="L283">			return pPair;</span>
+<span class="nc" id="L284">		String doAction = mController.marshall(pPair.getDoAction());</span>
+<span class="nc" id="L285">		String undoAction = mController.marshall(pPair.getUndoAction());</span>
+<span class="nc" id="L286">		String expression = &quot;INSERT INTO &quot; + DatabaseBasics.TABLE_XML_ACTIONS</span>
+				+ &quot;(&quot; + DatabaseBasics.ROW_PK + &quot;,&quot; + DatabaseBasics.ROW_ACTION
+				+ &quot;,&quot; + DatabaseBasics.ROW_UNDOACTION + &quot;) VALUES(&quot;
+<span class="nc" id="L289">				+ mPrimaryKey + &quot;, '&quot; + escapeQuotations(doAction) + &quot;', '&quot;</span>
+<span class="nc" id="L290">				+ escapeQuotations(undoAction) + &quot;')&quot;;</span>
+		try {
+<span class="nc" id="L292">			insertIntoActionTable(expression);</span>
+<span class="nc" id="L293">		} catch (SQLException e) {</span>
+<span class="nc" id="L294">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L296">		return pPair;</span>
+	}
+
+	protected String escapeQuotations(String pInput) {
+<span class="nc" id="L300">		return pInput.replaceAll(&quot;'&quot;, &quot;''&quot;);</span>
+	}
+
+	protected void deregisterFilter() {
+<span class="nc" id="L304">		logger.info(&quot;Deregistering filter&quot;);</span>
+<span class="nc" id="L305">		mController.getActionFactory().deregisterFilter(this);</span>
+<span class="nc" id="L306">	}</span>
+
+	protected void registerFilter() {
+<span class="nc" id="L309">		logger.info(&quot;Registering filter&quot;);</span>
+<span class="nc" id="L310">		mController.getActionFactory().registerFilter(this);</span>
+<span class="nc" id="L311">	}</span>
+
+	public void setupTables(String password) throws Exception {
+		// create tables
+<span class="nc" id="L315">		logger.info(&quot;Create tables...&quot;);</span>
+<span class="nc" id="L316">		createTables(password);</span>
+<span class="nc" id="L317">		insertUser();</span>
+		// register as listener:
+<span class="nc" id="L319">		registerFilter();</span>
+		// send first action:
+<span class="nc" id="L321">		logger.info(&quot;Store map in database...&quot;);</span>
+<span class="nc" id="L322">		StringWriter writer = new StringWriter();</span>
+<span class="nc" id="L323">		mController.getMap().getXml(writer);</span>
+<span class="nc" id="L324">		String expression = &quot;INSERT INTO &quot; + DatabaseBasics.TABLE_XML_ACTIONS</span>
+				+ &quot;(&quot; + DatabaseBasics.ROW_PK + &quot;,&quot; + DatabaseBasics.ROW_MAP
+<span class="nc" id="L326">				+ &quot;) VALUES(&quot; + mPrimaryKey + &quot;, '&quot;</span>
+<span class="nc" id="L327">				+ escapeQuotations(writer.toString()) + &quot;')&quot;;</span>
+<span class="nc" id="L328">		insertIntoActionTable(expression);</span>
+<span class="nc" id="L329">	}</span>
+
+	void insertUser() throws SQLException {
+<span class="nc" id="L332">		update(&quot;INSERT INTO &quot; + DatabaseBasics.TABLE_USERS + &quot;(&quot;</span>
+				+ DatabaseBasics.ROW_USER + &quot;) VALUES('&quot;
+<span class="nc" id="L334">				+ escapeQuotations(getUserName()) + &quot;')&quot;);</span>
+<span class="nc" id="L335">	}</span>
+
+	public void removeUser() throws SQLException {
+<span class="nc" id="L338">		update(&quot;DELETE FROM &quot; + DatabaseBasics.TABLE_USERS + &quot; WHERE &quot;</span>
+				+ DatabaseBasics.ROW_USER + &quot; = '&quot;
+<span class="nc" id="L340">				+ escapeQuotations(getUserName()) + &quot;'&quot;);</span>
+
+<span class="nc" id="L342">	}</span>
+
+	private String getUserName() {
+		// Get host name
+<span class="nc" id="L346">		String hostname = Tools.getHostName();</span>
+
+<span class="nc" id="L348">		return System.getProperty(&quot;user.name&quot;) + &quot;@&quot; + hostname;</span>
+	}
+
+	protected void createTables(String pPassword) throws SQLException {
+<span class="nc" id="L352">		update(&quot;ALTER USER sa SET PASSWORD \&quot;&quot; + pPassword + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L353">		dropTable(DatabaseBasics.TABLE_XML_ACTIONS);</span>
+<span class="nc" id="L354">		dropTable(DatabaseBasics.TABLE_USERS);</span>
+<span class="nc" id="L355">		update(&quot;CREATE TABLE &quot; + DatabaseBasics.TABLE_XML_ACTIONS + &quot; (&quot;</span>
+				+ DatabaseBasics.ROW_PK + &quot; IDENTITY, &quot;
+				+ DatabaseBasics.ROW_ACTION + &quot; VARCHAR, &quot;
+				+ DatabaseBasics.ROW_UNDOACTION + &quot; VARCHAR, &quot;
+				+ DatabaseBasics.ROW_MAP + &quot; VARCHAR)&quot;);
+<span class="nc" id="L360">		update(&quot;CREATE TABLE &quot; + DatabaseBasics.TABLE_USERS + &quot; (&quot;</span>
+				+ DatabaseBasics.ROW_USER + &quot; VARCHAR)&quot;);
+<span class="nc" id="L362">	}</span>
+
+	private boolean dropTable(String tableName) throws SQLException {
+<span class="nc" id="L365">		return update(&quot;DROP TABLE &quot; + tableName + &quot; IF EXISTS&quot;);</span>
+	}
+
+	public void signalEndOfSession() {
+		// signal end of session:
+<span class="nc" id="L370">		String expression = &quot;INSERT INTO &quot; + DatabaseBasics.TABLE_XML_ACTIONS</span>
+<span class="nc" id="L371">				+ &quot;(&quot; + DatabaseBasics.ROW_PK + &quot;) VALUES(&quot; + mPrimaryKey + &quot;)&quot;;</span>
+		try {
+<span class="nc" id="L373">			insertIntoActionTable(expression);</span>
+			// and wait until the others should have shut down.
+<span class="nc" id="L375">			Thread.sleep(2000);</span>
+<span class="nc" id="L376">		} catch (Exception e) {</span>
+<span class="nc" id="L377">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L379">	}</span>
+
+	public Vector getUsers() throws SQLException {
+<span class="nc bnc" id="L382" title="All 2 branches missed.">		if (mPrepareStatementUsers == null) {</span>
+<span class="nc" id="L383">			mPrepareStatementUsers = mConnection</span>
+<span class="nc" id="L384">					.prepareStatement(QUERY_GET_USERS);</span>
+		}
+<span class="nc" id="L386">		Vector result = new Vector();</span>
+
+<span class="nc" id="L388">		boolean execute = mPrepareStatementUsers.execute();</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">		if (!execute) {</span>
+<span class="nc" id="L390">			return result;</span>
+		}
+<span class="nc" id="L392">		ResultSet rs = mPrepareStatementUsers.getResultSet();</span>
+		try {
+<span class="nc bnc" id="L394" title="All 2 branches missed.">			while (rs.next()) {</span>
+<span class="nc" id="L395">				result.add(rs.getString(DatabaseBasics.ROW_USER));</span>
+			}
+<span class="nc" id="L397">			rs.close();</span>
+<span class="nc" id="L398">		} catch (Exception e) {</span>
+<span class="nc" id="L399">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L401">		return result;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

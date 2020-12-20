@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Package Metrics</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Metrics_interface.html">Prev</a> - <a href="Metrics_interaction.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LOMetrics.html">B: List of Design Metrics</a> > B.3 Package Metrics
+<hr>
+<h2><a name="Metrics_package"></a>B.3 Package Metrics</h2>
+<a name="Metrics_package_NumCls"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumCls</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of classes in the package.<p> Counts all classes, regardless of their visibility (public, protected, private, or package), or abstractness.
+</td></tr></table><hr><p>
+<a name="Metrics_package_NumCls_tc"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumCls_tc</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of classes in the package, its subpackages, and so on.<p> This is the sum of metric <a href="Metrics_package.html#Metrics_package_NumCls">NumCls</a> for this package, and all its direct and indirect subpackages. 
+</td></tr></table><hr><p>
+<a name="Metrics_package_NumOpsCls"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumOpsCls</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of operations in the classes of the package.<p> This is the sum of metric <a href="Metrics_class.html#Metrics_class_NumOps">NumOps</a>, taken over all classes in this package, and more fine-grained measure of the size of the package. 
+</td></tr></table><hr><p>
+<a name="Metrics_package_NumInterf"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumInterf</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of interfaces in the package.<p> Like metric <a href="Metrics_package.html#Metrics_package_NumCls">NumCls</a>, this counts all interfaces, regardless of their visibility. 
+</td></tr></table><hr><p>
+<a name="Metrics_package_R"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>R</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of relationships between classes and interfaces in the package. There is a dependency from class or interface <i>C</i> to class or interface <i>D</i> if <ul> <li><i>C</i> has an attribute of type <i>D</i> <li><i>C</i> has an operation with a parameter of type <i>D</i> <li><i>C</i> has an association, aggregation, or composition with navigability to <i>D</i> <li><i>C</i> has a UML dependency or usage dependency to <i>D</i><br> UML dependencies are shown as dashed arrows in the diagrams (usage with stereotype 'use'). <li><i>C</i> is a child of <i>D</i> <li><i>C</i> implements interface <i>D</i> </ul> The metric counts all such dependencies between classes and interfaces in the package. Bidirectional associations are counted twice, because <i>C</i> knows <i>D</i> and vice versa. By convention, associations that indicate no navigability at either end are considered to be bidirectional. <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_H"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>H</b></td><td class="mthead" width="66%">Category: <a href="Cohesion.html#Glossary_Cohesion">Cohesion</a></td></tr><tr><td colspan="2">Relational cohesion.<p> This is the average number of internal relationships per class/interface, and is calculated as the ratio of <a href="Metrics_package.html#Metrics_package_R">R</a>+1 to the number of classes and interfaces in the package. <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_Ca"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Ca</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (export)">Coupling (export)</a></td></tr><tr><td colspan="2">Afferent coupling.<p> The number of elements outside this package that depend on classes or interfaces in this package. The dependencies considered are the same ones listed with metric <a href="Metrics_package.html#Metrics_package_R">R</a>. <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_Ce"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Ce</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">Efferent coupling.<p> The number of elements outside this package that classes or interfaces in this package depend on. The dependencies considered are the same ones listed with metric <a href="Metrics_package.html#Metrics_package_R">R</a>. <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_I"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>I</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">Instability or ease of change.<p> This is the ratio of efferent coupling (metric <a href="Metrics_package.html#Metrics_package_Ce">Ce</a>) to total coupling (<a href="Metrics_package.html#Metrics_package_Ce">Ce</a>+<a href="Metrics_package.html#Metrics_package_Ce">Ce</a>).  Values of metric I range between 0 and 1.<p> A value close to 0 indicates a package that does not rely much on other packages, but is heavily relied upon by other packages. Such a package should be stable, because it is hard to change: changes to the package potentially have a large impact on the model ("ripple effects").<p> A value close to 1 indicates a package that mostly relies on other packages, but that itself is not much relied upon. Such a package can be unstable, because it is easy to change: changes to the package are not likely to have a large impact on the model.  <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>]. <li>See also: rule <a href="Rules_package.html#Rules_package_SDP1">SDP1</a>. </ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_A"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>A</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">Abstractness (or generality) of the package.<p> This is the ratio of abstract classes and interfaces in the package to the total number of interfaces and classes in the package.<p>  Values range from 0 to 1. Zero indicates packages without interfaces or abstract classes, 1 indicates a package consisting only interfaces and abstract classes.  <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_D"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>D</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">Distance from the main sequence.  Package design should aim to strike a balance between instability and abstractness of the packages. A stable package should be abstract, so that changes to the package are merely extensions that do not affect existing clients of the package. An unstable package is easy to change and can therefore be concrete.<p>  The Stable-Abstractions-Principle (SAP) says that a package should be as abstract as it is stable. With abstractness measured by metric <a href="Metrics_package.html#Metrics_package_A">A</a>, and stability measured by metric <a href="Metrics_package.html#Metrics_package_I">I</a>, the SAP demands that A+I be close to 1.<p>  If you plot A vs. I in a graph, the "main sequence" is the theoretical optimal line where A+I=1. Metric D is the distance of the package from the main sequence, and is calculated as (A+I-1)*sqrt(2).<p>  Values range from -sqrt(2) to +sqrt(2). Values close to zero indicate packages that adhere to the SAP. A large negative value indicates a package that is concrete and stable (A and I close to 0). Such a package can be "painful" because it is not extensible and prone to change. A large positive value indicates a package that is abstract and unstable. Such a package is extensible but has few dependents, and is therefore useless.  <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_DN"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>DN</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">Normalized distance D' from the main sequence.<p> This is a variation of metric <a href="Metrics_package.html#Metrics_package_D">D</a> that has been normalized to range between 0 and 1. It is calculated as |<a href="Metrics_package.html#Metrics_package_A">A</a>+<a href="Metrics_package.html#Metrics_package_I">I</a>-1|. Values close to zero indicate packages that adhere to the SAP (see metric <a href="Metrics_package.html#Metrics_package_D">D</a>).  <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_Nesting"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Nesting</b></td><td class="mthead" width="66%">Category: Nesting</td></tr><tr><td colspan="2">Nesting level of the package in the package hierarchy.<p> Top level packages have nesting level 0, their subpackages are at level 1, and so on. 
+</td></tr></table><hr><p>
+<a name="Metrics_package_ConnComp"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>ConnComp</b></td><td class="mthead" width="66%">Category: <a href="Cohesion.html#Glossary_Cohesion">Cohesion</a></td></tr><tr><td colspan="2">The connected components formed by the classes and interfaces of the package.<p> The classes and interfaces of a package, and their dependencies, form a graph. This metric counts the number of connected components of that graph.<p> Ideally, all classes and interfaces of the package should be related directly or indirectly, so that there is only one connected component. If there are two or more connected components, you may consider moving some classes or interfaces to other packages, or splitting up the package. <ul> <li>See metric <a href="Metrics_package.html#Metrics_package_R">R</a> for the list of dependencies considered between the classes and interfaces. <li>The graph considered is an undirected graph, directions of dependencies are ignored. <li>You can view the connected components in the Graph Structures View. </ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_package_Dep_Out"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Dep_Out</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of UML dependencies where the package is the client.<p> See also <a href="Metrics_class.html#Metrics_class_Dep_Out">Dep_Out</a> for classes.
+</td></tr></table><hr><p>
+<a name="Metrics_package_Dep_In"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Dep_In</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (export)">Coupling (export)</a></td></tr><tr><td colspan="2">The number of UML dependencies where the package is the supplier.<p> See also <a href="Metrics_class.html#Metrics_class_Dep_In">Dep_In</a> for classes.
+</td></tr></table><hr><p>
+<a name="Metrics_package_DepPack"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>DepPack</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of packages on which classes and interfaces of this package depend.<p> A package <i>P</i> depends on a package <i>P'</i> if <ul> <li>a class or interface in <i>P</i> depends on a class or interface in <i>P'</i> (see metric <a href="Metrics_package.html#Metrics_package_R">R</a> for a description of these dependencies). <li>there is a UML dependency (dashed arrow) from <i>P</i> to <i>P'</i>. </ul> The more packages <i>P</i> depends on, the more difficult it is to reuse <i>P</i> in a different context.<p> This metric is similar to metric <a href="Metrics_package.html#Metrics_package_Ce">Ce</a>, the difference is that Ce counts the individual classes or interfaces that are depended upon. 
+</td></tr></table><hr><p>
+<a name="Metrics_package_MsgSent_Outside"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>MsgSent_Outside</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of messages sent to instances of classes outside the package.<p> The metric counts, for instances of classes of this package, the messages they send to instances of classes from other packages. That is, outgoing messages that cross the package boundary. Note that messages to unclassified instances are not counted here. 
+</td></tr></table><hr><p>
+<a name="Metrics_package_MsgRecv_Outside"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>MsgRecv_Outside</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (export)">Coupling (export)</a></td></tr><tr><td colspan="2">The number of messages received by classifier instances of classes outside the package.<p> The metric counts, for instances of classes of this package, the messages they receive from instances of classes from other packages. That is, incoming messages that cross the package boundary. Note that messages from unclassified instances are not counted here. 
+</td></tr></table><hr><p>
+<a name="Metrics_package_MsgSent_within"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>MsgSent_within</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of messages sent between classifier instances of classes in the package.<p> The metric counts, for instances of classes of this package, the number of messages they send to themselves or other instances of classes from this package. Note that messages to unclassified instances are not counted here. 
+</td></tr></table><hr><p>
+<a name="Metrics_package_Diags"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Diags</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Diagram">Diagram</a></td></tr><tr><td colspan="2">The number of times the package appears on a diagram.
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Metrics_interface.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LOMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Metrics_interaction.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;B.2 "Interface Metrics"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;B.4 "Interaction Metrics"</td></tr></table>
+
+</body>
+</html>

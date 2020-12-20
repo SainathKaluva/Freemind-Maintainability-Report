@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Glossary</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProjFileFormats.html">Prev</a> - <a href="References.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > F: Glossary
+<hr>
+<h1><a name="Glossary"></a>F: Glossary</h1>
+<dl>
+<dt><a name="Glossary_Completeness">Completeness</a></dt>
+<dd>Design rules of the "Completeness" category raise issues that hint at incomplete design. This highlights model elements that still need some work. For example, empty packages, unused classes, unnamed attributes, parameters without a type, etc.</dd>
+<dt><a name="Glossary_Correctness">Correctness</a></dt>
+<dd>Design rules of the "Correctness" category raise issues that constitute illegal design. For example, violation of well-formedness rules (<a href="Glossary.html#Glossary_WFR">WFR</a>) of the UML.</dd>
+<dt><a name="Glossary_Diagram">Diagram</a></dt>
+<dd>Diagram metrics pertain to the diagrams of the UML model. There are two types of diagram metrics: <ol> <li>Diagram metrics that count how often a class, package, etc. appears on the diagrams in the model. Similar to <a href="CoupM.html#Glossary_Coupling (export)">export coupling</a>, the more often a model element appears on diagrams, the more important is the role of the model element.<br> You may also look out for elements which do not appear on any diagrams. This could indicate that the diagrams are not complete, or they may be the result of an incomplete delete operation. <li>Metrics that count the number of model elements on a diagram. These measure the size of the diagram. You may consider reorganizing large diagrams into several smaller ones, e.g., based on the 7 +/-2 rule of the amount of information that people can deal with at a time [<a href="References.html#References_Amb03">Amb03</a>]. </ol> On a technical note, many UML modeling tools use a proprietary solution to store diagram layout information in the XMI file. If you do not obtain diagram metrics for your model, you need a special XMI transformation file. Check the SDMetrics website if there is one available for your UML tool. </dd>
+<dt><a name="Glossary_Naming">Naming</a></dt>
+<dd>Design rules of the "Naming" category raise issues concerning the names assigned to model elements. For example, adherence to naming conventions for capitalization, use of keywords in element names. </dd>
+<dt><a name="Glossary_Severity">Severity</a></dt>
+<dd>The severity of a design rule indicates how critical a violation is. The rules distinguish three levels of severity: <ul> <li>1-high - violation of the rule constitutes illegal design, or poor design practices with a strong negative impact on system quality. The issue should be resolved under all circumstances. <li>2-med - violation of the rule may negatively impact system quality. The issue should be resolved if there is no justification for the violation. <li>3-low - violation of the rule is not likely to have severe consequences, but perfectionists will still want to address the issue. </ul> </dd>
+<dt><a name="Glossary_Style">Style</a></dt>
+<dd>Design rules of the "Style" category raise design issues that are considered bad practice. While these issues do not indicate illegal design, they may be detrimental to system quality in the long run. For example, circular dependencies among packages, a class referencing one of its subclasses, long parameter lists, etc.</dd>
+<dt><a name="Glossary_WFR">WFR</a></dt>
+<dd>Well-formedness rules. The UML standards [<a href="References.html#References_OMG03">OMG03</a>] [<a href="References.html#References_OMG05">OMG05</a>] define a set of well-formedness rules, or constraints, that any valid UML model must comply with. </dd>
+</dl>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProjFileFormats.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="index.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="References.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;E: "Project File Format Definitions"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;G: "References"</td></tr></table>
+
+</body>
+</html>

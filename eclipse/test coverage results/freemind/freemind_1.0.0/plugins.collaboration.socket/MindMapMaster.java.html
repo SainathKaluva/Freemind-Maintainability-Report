@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapMaster.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.socket</a> &gt; <span class="el_source">MindMapMaster.java</span></div><h1>MindMapMaster.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2008  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 28.12.2008
+ */
+
+
+package plugins.collaboration.socket;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.Vector;
+
+import javax.swing.SwingUtilities;
+
+import freemind.common.NumberProperty;
+import freemind.common.StringProperty;
+import freemind.controller.actions.generated.instance.CollaborationGoodbye;
+import freemind.controller.actions.generated.instance.CollaborationUserInformation;
+import freemind.extensions.DontSaveMarker;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="nc" id="L52">public class MindMapMaster extends SocketBasics implements PermanentNodeHook,</span>
+		DontSaveMarker {
+
+	/**
+	 * 
+	 */
+	public static final int SOCKET_TIMEOUT_IN_MILLIES = 500;
+<span class="nc" id="L59">	MasterThread mListener = null;</span>
+	ServerSocket mServer;
+<span class="nc" id="L61">	Vector mConnections = new Vector();</span>
+<span class="nc" id="L62">	protected boolean mLockEnabled = false;</span>
+<span class="nc" id="L63">	private String mLockMutex = &quot;&quot;;</span>
+	private int mPort;
+	private String mLockId;
+	private long mLockedAt;
+	private String mLockUserName;
+	private boolean mMasterStarted;
+
+	private class MasterThread extends TerminateableThread {
+
+		private static final long TIME_BETWEEN_USER_INFORMATION_IN_MILLIES = 5000;
+		private static final long TIME_FOR_ORPHANED_LOCK = 5000;
+<span class="nc" id="L74">		private long mLastTimeUserInformationSent = 0;</span>
+
+		/**
+		 * @param pName
+		 */
+<span class="nc" id="L79">		public MasterThread() {</span>
+<span class="nc" id="L80">			super(&quot;Master&quot;);</span>
+<span class="nc" id="L81">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see plugins.collaboration.socket.TerminateableThread#processAction()
+		 */
+		public boolean processAction() throws Exception {
+			try {
+<span class="nc" id="L90">				logger.finest(&quot;Waiting for message&quot;);</span>
+<span class="nc" id="L91">				Socket client = mServer.accept();</span>
+<span class="nc" id="L92">				logger.info(&quot;Received new client.&quot;);</span>
+<span class="nc" id="L93">				client.setSoTimeout(SOCKET_TIMEOUT_IN_MILLIES);</span>
+<span class="nc" id="L94">				ServerCommunication c = new ServerCommunication(</span>
+<span class="nc" id="L95">						MindMapMaster.this, client, getMindMapController());</span>
+<span class="nc" id="L96">				c.start();</span>
+<span class="nc" id="L97">				synchronized (mConnections) {</span>
+<span class="nc" id="L98">					mConnections.addElement(c);</span>
+				}
+<span class="nc" id="L100">			} catch (SocketTimeoutException e) {</span>
+			}
+<span class="nc" id="L102">			final long now = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (now - mLastTimeUserInformationSent &gt; TIME_BETWEEN_USER_INFORMATION_IN_MILLIES) {</span>
+<span class="nc" id="L104">				mLastTimeUserInformationSent = now;</span>
+<span class="nc" id="L105">				CollaborationUserInformation userInfo = getMasterInformation();</span>
+<span class="nc" id="L106">				synchronized (mConnections) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">					for (int i = 0; i &lt; mConnections.size(); i++) {</span>
+						try {
+<span class="nc" id="L109">							final ServerCommunication connection = (ServerCommunication) mConnections</span>
+<span class="nc" id="L110">									.elementAt(i);</span>
+							/* to each server, the IP address is chosen that belongs to this connection.
+							 * E.g. if the connection is routed over one of several network interfaces,
+							 * the address of this interface is reported.
+							 */
+<span class="nc" id="L115">							userInfo.setMasterIp(connection.getIpToSocket());</span>
+<span class="nc" id="L116">							connection.send(userInfo);</span>
+<span class="nc" id="L117">						} catch (Exception e) {</span>
+<span class="nc" id="L118">							freemind.main.Resources.getInstance().logException(</span>
+<span class="nc" id="L119">									e);</span>
+						}
+					}
+				}
+			}
+			// timeout such that lock can't be held forever
+<span class="nc" id="L125">			synchronized (mLockMutex) {</span>
+<span class="nc bnc" id="L126" title="All 4 branches missed.">				if (mLockEnabled &amp;&amp; now - mLockedAt &gt; TIME_FOR_ORPHANED_LOCK) {</span>
+<span class="nc" id="L127">					logger.warning(&quot;Release lock &quot; + mLockId + &quot; held by &quot;</span>
+<span class="nc" id="L128">							+ mLockUserName);</span>
+<span class="nc" id="L129">					clearLock();</span>
+				}
+			}
+<span class="nc" id="L132">			return true;</span>
+		}
+
+	}
+
+	public synchronized void removeConnection(ServerCommunication client) {
+<span class="nc" id="L138">		synchronized (mConnections) {</span>
+<span class="nc" id="L139">			mConnections.remove(client);</span>
+		}
+		// correct the map title, as we probably don't have clients anymore
+<span class="nc" id="L142">		setTitle();</span>
+<span class="nc" id="L143">	}</span>
+
+	protected void setTitle() {
+<span class="nc" id="L146">		getMindMapController().getController().setTitle();</span>
+<span class="nc" id="L147">	}</span>
+
+	public void startupMapHook() {
+<span class="nc" id="L150">		super.startupMapHook();</span>
+		// Restart check, as the startup command is given, even if the mindmap
+		// is changed via
+		// the tab bar. So, this method must be idempotent...
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (mMasterStarted) {</span>
+			// we were already here, so
+<span class="nc" id="L156">			return;</span>
+		}
+<span class="nc" id="L158">		MindMapController controller = getMindMapController();</span>
+<span class="nc" id="L159">		final StringProperty passwordProperty = new StringProperty(</span>
+<span class="nc" id="L160">				PASSWORD_DESCRIPTION, PASSWORD);</span>
+<span class="nc" id="L161">		final StringProperty passwordProperty2 = new StringProperty(</span>
+<span class="nc" id="L162">				PASSWORD_VERIFICATION_DESCRIPTION, PASSWORD_VERIFICATION);</span>
+		// StringProperty bindProperty = new StringProperty(
+		// &quot;IP address of the local machine, or 0.0.0.0 if &quot;, &quot;Host&quot;);
+<span class="nc" id="L165">		final NumberProperty portProperty = getPortProperty();</span>
+<span class="nc" id="L166">		Vector controls = new Vector();</span>
+<span class="nc" id="L167">		controls.add(passwordProperty);</span>
+<span class="nc" id="L168">		controls.add(passwordProperty2);</span>
+		// controls.add(bindProperty);
+<span class="nc" id="L170">		controls.add(portProperty);</span>
+<span class="nc" id="L171">		FormDialog dialog = new FormDialog(controller);</span>
+<span class="nc" id="L172">		dialog.setUp(controls, new FormDialogValidator() {</span>
+			public boolean isValid() {
+<span class="nc" id="L174">				logger.finest(&quot;Output valid?&quot;);</span>
+<span class="nc" id="L175">				return Tools.safeEquals(passwordProperty.getValue(),</span>
+<span class="nc" id="L176">						passwordProperty2.getValue());</span>
+			}
+		});
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (!dialog.isSuccess()) {</span>
+<span class="nc" id="L180">			switchMeOff();</span>
+<span class="nc" id="L181">			return;</span>
+		}
+		/* Store port value in preferences. */
+<span class="nc" id="L184">		setPortProperty(portProperty);</span>
+<span class="nc" id="L185">		mPassword = passwordProperty.getValue();</span>
+		// start server:
+<span class="nc" id="L187">		logger.info(&quot;Start server...&quot;);</span>
+<span class="nc" id="L188">		mMasterStarted = true;</span>
+		try {
+<span class="nc" id="L190">			mPort = getPortProperty().getIntValue();</span>
+<span class="nc" id="L191">			mServer = new ServerSocket(mPort);</span>
+<span class="nc" id="L192">			mServer.setSoTimeout(SOCKET_TIMEOUT_IN_MILLIES);</span>
+<span class="nc" id="L193">			mListener = new MasterThread();</span>
+<span class="nc" id="L194">			mListener.start();</span>
+<span class="nc" id="L195">		} catch (Exception e) {</span>
+<span class="nc" id="L196">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L197">			controller.getController().errorMessage(</span>
+<span class="nc" id="L198">					Resources.getInstance().format(</span>
+<span class="nc" id="L199">							SOCKET_CREATION_EXCEPTION_MESSAGE,</span>
+<span class="nc" id="L200">							new Object[] { portProperty.getValue(),</span>
+<span class="nc" id="L201">									e.getMessage() }));</span>
+<span class="nc" id="L202">			switchMeOff();</span>
+<span class="nc" id="L203">			return;</span>
+		}
+<span class="nc" id="L205">		registerFilter();</span>
+<span class="nc" id="L206">		logger.info(&quot;Starting server. Done.&quot;);</span>
+<span class="nc" id="L207">		setTitle();</span>
+<span class="nc" id="L208">	}</span>
+
+	public void switchMeOff() {
+<span class="nc" id="L211">		final MindMapController mindMapController = getMindMapController();</span>
+		// this is not nice, but in the starting phase of the hook, it can't be switched off.
+<span class="nc" id="L213">		SwingUtilities.invokeLater(new Runnable() {</span>
+
+			public void run() {
+<span class="nc" id="L216">				togglePermanentHook(mindMapController, MASTER_HOOK_LABEL);</span>
+				
+<span class="nc" id="L218">			}});</span>
+<span class="nc" id="L219">	}</span>
+
+	public void loadFrom(XMLElement pChild) {
+		// this plugin should not be saved.
+<span class="nc" id="L223">	}</span>
+
+	public void save(XMLElement pXml) {
+		// this plugin should not be saved.
+		// nothing to do.
+<span class="nc" id="L228">	}</span>
+
+	public void shutdownMapHook() {
+<span class="nc" id="L231">		deregisterFilter();</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">		if (mListener != null) {</span>
+<span class="nc" id="L233">			signalEndOfSession();</span>
+<span class="nc" id="L234">			mListener.commitSuicide();</span>
+		}
+		try {
+<span class="nc bnc" id="L237" title="All 2 branches missed.">			if (mServer != null) {</span>
+<span class="nc" id="L238">				mServer.close();</span>
+			}
+<span class="nc" id="L240">		} catch (IOException e) {</span>
+<span class="nc" id="L241">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L243">		mMasterStarted = false;</span>
+<span class="nc" id="L244">		super.shutdownMapHook();</span>
+<span class="nc" id="L245">	}</span>
+
+	/**
+	 * 
+	 */
+	private void signalEndOfSession() {
+<span class="nc" id="L251">		CollaborationGoodbye goodbye = new CollaborationGoodbye();</span>
+<span class="nc" id="L252">		goodbye.setUserId(Tools.getUserName());</span>
+<span class="nc" id="L253">		synchronized (mConnections) {</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			for (int i = 0; i &lt; mConnections.size(); i++) {</span>
+<span class="nc" id="L255">				final ServerCommunication serverCommunication = (ServerCommunication) mConnections</span>
+<span class="nc" id="L256">						.elementAt(i);</span>
+				try {
+<span class="nc" id="L258">					serverCommunication.send(goodbye);</span>
+<span class="nc" id="L259">					serverCommunication.commitSuicide();</span>
+<span class="nc" id="L260">					serverCommunication.close();</span>
+<span class="nc" id="L261">				} catch (IOException e) {</span>
+<span class="nc" id="L262">					freemind.main.Resources.getInstance().logException(e);</span>
+				}
+			}
+<span class="nc" id="L265">			mConnections.clear();</span>
+		}
+<span class="nc" id="L267">	}</span>
+
+	public void onAddChild(MindMapNode pAddedChildNode) {
+<span class="nc" id="L270">	}</span>
+
+	public void onAddChildren(MindMapNode pAddedChild) {
+<span class="nc" id="L273">	}</span>
+
+	public void onLostFocusNode(NodeView pNodeView) {
+<span class="nc" id="L276">	}</span>
+
+	public void onNewChild(MindMapNode pNewChildNode) {
+<span class="nc" id="L279">	}</span>
+
+	public void onRemoveChild(MindMapNode pOldChildNode) {
+<span class="nc" id="L282">	}</span>
+
+	public void onRemoveChildren(MindMapNode pOldChildNode, MindMapNode pOldDad) {
+<span class="nc" id="L285">	}</span>
+
+	public void onFocusNode(NodeView pNodeView) {
+<span class="nc" id="L288">	}</span>
+
+	public void onUpdateChildrenHook(MindMapNode pUpdatedNode) {
+<span class="nc" id="L291">	}</span>
+
+	public void onUpdateNodeHook() {
+<span class="nc" id="L294">	}</span>
+
+	public void onViewCreatedHook(NodeView pNodeView) {
+<span class="nc" id="L297">	}</span>
+
+	public void onViewRemovedHook(NodeView pNodeView) {
+<span class="nc" id="L300">	}</span>
+
+	public Integer getRole() {
+<span class="nc" id="L303">		return ROLE_MASTER;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#getPort()
+	 */
+	public int getPort() {
+<span class="nc" id="L312">		return mPort;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#lock()
+	 */
+	protected String lock(String pUserName) throws UnableToGetLockException,
+			InterruptedException {
+<span class="nc" id="L322">		synchronized (mLockMutex) {</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			if (mLockEnabled) {</span>
+<span class="nc" id="L324">				throw new UnableToGetLockException();</span>
+			}
+<span class="nc" id="L326">			mLockEnabled = true;</span>
+<span class="nc" id="L327">			String lockId = &quot;Lock_&quot; + Math.random();</span>
+<span class="nc" id="L328">			mLockId = lockId;</span>
+<span class="nc" id="L329">			mLockedAt = System.currentTimeMillis();</span>
+<span class="nc" id="L330">			mLockUserName = pUserName;</span>
+<span class="nc" id="L331">			logger.info(&quot;New lock &quot; + lockId + &quot; by &quot; + mLockUserName);</span>
+<span class="nc" id="L332">			return lockId;</span>
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * plugins.collaboration.socket.SocketBasics#sendCommand(java.lang.String,
+	 * java.lang.String, java.lang.String)
+	 */
+	protected void broadcastCommand(String pDoAction, String pUndoAction,
+			String pLockId) throws Exception {
+<span class="nc" id="L345">		synchronized (mConnections) {</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">			for (int i = 0; i &lt; mConnections.size(); i++) {</span>
+<span class="nc" id="L347">				((ServerCommunication) mConnections.elementAt(i)).sendCommand(</span>
+<span class="nc" id="L348">						pDoAction, pUndoAction, pLockId);</span>
+			}
+		}
+<span class="nc" id="L351">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#unlock()
+	 */
+	protected void unlock() {
+<span class="nc" id="L359">		synchronized (mLockMutex) {</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			if (!mLockEnabled) {</span>
+<span class="nc" id="L361">				throw new IllegalStateException();</span>
+			}
+<span class="nc" id="L363">			logger.fine(&quot;Release lock &quot; + mLockId + &quot; held by &quot; + mLockUserName);</span>
+<span class="nc" id="L364">			clearLock();</span>
+		}
+<span class="nc" id="L366">	}</span>
+
+	public void clearLock() {
+<span class="nc" id="L369">		mLockEnabled = false;</span>
+<span class="nc" id="L370">		mLockId = &quot;none&quot;;</span>
+<span class="nc" id="L371">		mLockUserName = null;</span>
+<span class="nc" id="L372">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#shutdown()
+	 */
+	public void shutdown() {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L382">	}</span>
+
+	public String getLockId() {
+<span class="nc" id="L385">		synchronized (mLockMutex) {</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			if (!mLockEnabled) {</span>
+<span class="nc" id="L387">				throw new IllegalStateException();</span>
+			}
+<span class="nc" id="L389">			return mLockId;</span>
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#getUsers()
+	 */
+	public String getUsers() {
+<span class="nc" id="L399">		StringBuffer users = new StringBuffer(Tools.getUserName());</span>
+<span class="nc" id="L400">		synchronized (mConnections) {</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">			for (int i = 0; i &lt; mConnections.size(); i++) {</span>
+<span class="nc" id="L402">				users.append(',');</span>
+<span class="nc" id="L403">				users.append(' ');</span>
+<span class="nc" id="L404">				users.append(((ServerCommunication) mConnections.elementAt(i))</span>
+<span class="nc" id="L405">						.getName());</span>
+			}
+		}
+<span class="nc" id="L408">		return users.toString();</span>
+	}
+
+	public CollaborationUserInformation getMasterInformation() {
+<span class="nc" id="L412">		CollaborationUserInformation userInfo = new CollaborationUserInformation();</span>
+<span class="nc" id="L413">		userInfo.setUserIds(getUsers());</span>
+<span class="nc" id="L414">		userInfo.setMasterHostname(Tools.getHostName());</span>
+<span class="nc" id="L415">		userInfo.setMasterPort(getPort());</span>
+<span class="nc" id="L416">		userInfo.setMasterIp(Tools.getHostIpAsString());</span>
+<span class="nc" id="L417">		return userInfo;</span>
+	}
+	public void processUnfinishedLinks() {
+<span class="nc" id="L420">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#saveHtml(java.io.Writer)
+	 */
+	public void saveHtml(Writer pFileout) {
+<span class="nc" id="L426">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

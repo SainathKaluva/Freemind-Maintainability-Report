@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>HookDescriptorBase.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.extensions</a> &gt; <span class="el_source">HookDescriptorBase.java</span></div><h1>HookDescriptorBase.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Dimitri Polivaev, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 18.08.2006
+ */
+/*$Id: HookDescriptorBase.java,v 1.1.2.7 2008/07/09 20:01:00 christianfoltin Exp $*/
+package freemind.extensions;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import freemind.controller.actions.generated.instance.Plugin;
+import freemind.controller.actions.generated.instance.PluginClasspath;
+import freemind.main.FreeMindMain;
+import freemind.main.Tools;
+
+/**
+ * @author foltin
+ * 
+ */
+public class HookDescriptorBase {
+	public static final String FREEMIND_BASE_DIR_STRING = &quot;${freemind.base.dir}&quot;;
+
+	// Logging:
+<span class="nc" id="L47">	private static java.util.logging.Logger logger = null;</span>
+
+	protected final Plugin pluginBase;
+
+	protected final FreeMindMain frame;
+
+	protected final String mXmlPluginFile;
+
+	/**
+	 * @param pluginBase
+	 * @param frame
+	 * @param xmlPluginFile
+	 */
+	public HookDescriptorBase(final Plugin pluginBase,
+			final FreeMindMain frame, final String xmlPluginFile) {
+<span class="nc" id="L62">		super();</span>
+<span class="nc" id="L63">		this.pluginBase = pluginBase;</span>
+<span class="nc" id="L64">		this.frame = frame;</span>
+<span class="nc" id="L65">		mXmlPluginFile = xmlPluginFile;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L67">			logger = frame.getLogger(this.getClass().getName());</span>
+		}
+<span class="nc" id="L69">	}</span>
+
+	/**
+	 */
+	protected String getFromResourceIfNecessary(String string) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (string == null) {</span>
+<span class="nc" id="L75">			return string;</span>
+		}
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (string.startsWith(&quot;%&quot;)) {</span>
+<span class="nc" id="L78">			return frame.getController().getResourceString(string.substring(1));</span>
+		}
+<span class="nc" id="L80">		return string;</span>
+	}
+
+	protected String getFromPropertiesIfNecessary(String string) {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (string == null) {</span>
+<span class="nc" id="L85">			return string;</span>
+		}
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (string.startsWith(&quot;%&quot;)) {</span>
+<span class="nc" id="L88">			return frame.getProperty(string.substring(1));</span>
+		}
+<span class="nc" id="L90">		return string;</span>
+	}
+
+	/**
+	 * @return the relative/absolute(?) position of the plugin xml file.
+	 */
+	private String getPluginDirectory() {
+<span class="nc" id="L97">		return frame.getFreemindBaseDir() + &quot;/&quot;</span>
+<span class="nc" id="L98">				+ new File(mXmlPluginFile).getParent();</span>
+	}
+
+	public Plugin getPluginBase() {
+<span class="nc" id="L102">		return pluginBase;</span>
+	}
+
+	public List getPluginClasspath() {
+<span class="nc" id="L106">		Vector returnValue = new Vector();</span>
+<span class="nc" id="L107">		for (Iterator i = pluginBase.getListChoiceList().iterator(); i</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L109">			Object obj = (Object) i.next();</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (obj instanceof PluginClasspath) {</span>
+<span class="nc" id="L111">				PluginClasspath pluginClasspath = (PluginClasspath) obj;</span>
+<span class="nc" id="L112">				returnValue.add(pluginClasspath);</span>
+			}
+		}
+<span class="nc" id="L115">		return returnValue;</span>
+	}
+
+	public ClassLoader getPluginClassLoader() {
+		// construct class loader:
+<span class="nc" id="L120">		List pluginClasspathList = getPluginClasspath();</span>
+<span class="nc" id="L121">		ClassLoader loader = getClassLoader(pluginClasspathList);</span>
+<span class="nc" id="L122">		return loader;</span>
+	}
+
+<span class="nc" id="L125">	private static HashMap classLoaderCache = new HashMap();</span>
+
+	/**
+	 * This string is used to identify known classloaders as they are cached.
+	 * 
+	 */
+	private String createPluginClasspathString(List pluginClasspathList) {
+<span class="nc" id="L132">		String result = &quot;&quot;;</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		for (Iterator i = pluginClasspathList.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L134">			PluginClasspath type = (PluginClasspath) i.next();</span>
+<span class="nc" id="L135">			result += type.getJar() + &quot;,&quot;;</span>
+		}
+<span class="nc" id="L137">		return result;</span>
+	}
+
+	/**
+	 * @throws MalformedURLException
+	 */
+	private ClassLoader getClassLoader(List pluginClasspathList) {
+<span class="nc" id="L144">		String key = createPluginClasspathString(pluginClasspathList);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (classLoaderCache.containsKey(key))</span>
+<span class="nc" id="L146">			return (ClassLoader) classLoaderCache.get(key);</span>
+		try {
+<span class="nc" id="L148">			URL[] urls = new URL[pluginClasspathList.size()];</span>
+<span class="nc" id="L149">			int j = 0;</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			for (Iterator i = pluginClasspathList.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L151">				PluginClasspath classPath = (PluginClasspath) i.next();</span>
+<span class="nc" id="L152">				String jarString = classPath.getJar();</span>
+				// if(jarString.startsWith(FREEMIND_BASE_DIR_STRING)){
+				// jarString = frame.getFreemindBaseDir() +
+				// jarString.substring(FREEMIND_BASE_DIR_STRING.length());
+				// }
+				// new version of classpath resolution suggested by ewl under
+				// patch [ 1154510 ] Be able to give absolute classpath entries
+				// in plugin.xml
+<span class="nc" id="L160">				File file = new File(jarString);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				if (!file.isAbsolute()) {</span>
+<span class="nc" id="L162">					file = new File(getPluginDirectory(), jarString);</span>
+				}
+				// end new version by ewl.
+<span class="nc" id="L165">				logger.info(&quot;file &quot; + Tools.fileToUrl(file) + &quot; exists = &quot;</span>
+<span class="nc" id="L166">						+ file.exists());</span>
+<span class="nc" id="L167">				urls[j++] = Tools.fileToUrl(file);</span>
+			}
+<span class="nc" id="L169">			ClassLoader loader = new URLClassLoader(urls,</span>
+<span class="nc" id="L170">					frame.getFreeMindClassLoader());</span>
+<span class="nc" id="L171">			classLoaderCache.put(key, loader);</span>
+<span class="nc" id="L172">			return loader;</span>
+<span class="nc" id="L173">		} catch (MalformedURLException e) {</span>
+<span class="nc" id="L174">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L175">			return this.getClass().getClassLoader();</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

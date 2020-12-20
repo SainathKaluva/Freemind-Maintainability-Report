@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Mapping Design Elements</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="DSDeltas.html">Prev</a> - <a href="CompExport.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="CompDes.html">4.9 The View 'Design Comparison'</a> > 4.9.4 Mapping Design Elements
+<hr>
+<h3><a name="CompMap"></a>4.9.4 Mapping Design Elements</h3>
+
+To calculate metric deltas, SDMetrics matches the design elements of
+the first design with the elements of the second design. Matches are
+based on the fully qualified names of the design elements (see
+<a href="QualNames.html">Section&nbsp;4.2.2.1 "Qualified Element Names"</a>). This causes problems if a model element such as
+package has been renamed between designs. Because of the name change,
+the package and all of its contents can no longer be matched between
+designs. The package under its old name is considered to be deleted,
+and newly added under its new name.<p>
+
+To improve the element matching for renamed elements, you can define
+explicit element mappings. Click the <img src="images/mapping.gif"
+alt="Mapping Button"> button to open the element mappings dialog.<p>
+
+<img src="images/mappingdlg.png" alt="Mappings Dialog"><br>
+<b>Figure 16:&nbsp;Element Mappings</b><p>
+
+Enter the old name of the renamed element in the first design in the
+upper left text field. Enter the new name of the element in the second
+design in the upper right text field. Press "Add" to add the mapping
+to the list of mappings below.<p>
+
+To remove a mapping from the list, select the mapping on the list and
+then press the "Delete" button. To remove all mappings, press the
+"Clear all" button. Click the <img src="images/save.gif" alt="Save
+Button"> button to save the current list of mappings to a file, and
+the <img src="images/open.gif" alt="Open Button"> button to load a
+previously saved list. Or drag and drop the mapping file anywhere into
+the mappings dialog or the design comparison view.<p>
+
+
+<b>Mapping Examples</b>
+
+<ul>
+
+<li>The model names of the designs to compare may differ.<br> 
+If the name of your first model is <i>firstmodel</i>, and the name of
+your second model is <i>secondmodel</i>, all qualified element names
+start with "firstmodel." and "secondmodel.", respectively.<br> 
+Define the mapping <i>firstmodel &lt;-&gt; secondmodel</i> so that the
+elements are properly matched.
+
+<li>An element has been renamed and/or moved.<br>
+A package <i>model.mypackage</i> of the first design has been renamed
+to <i>myotherpackage</i> and moved to be a subpackage of a third
+package <i>model.mythirdpackage</i> in the second design.<br>
+Define the mapping <i>model.mypackage &lt;-&gt;
+model.mythirdpackage.myotherpackage</i> to match the package and all
+elements within.
+
+<li>An element has been split, or joined with another element.<br>
+
+A package <i>model.bigpackage</i> has been split into two packages
+<i>model.smallpackage1</i> and <i>model.smallpackage2</i>.<br>
+
+Define two mappings: <i>model.bigpackage &lt;-&gt;
+model.smallpackage1</i> and <i>model.bigpackage &lt;-&gt;
+model.smallpackage2</i>. That way, elements in
+<i>model.smallpackage1</i> and <i>model.smallpackage2</i> will be
+mapped to elements in <i>model.bigpackage</i>.
+
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="DSDeltas.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="CompDes.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="CompExport.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.9.3 "Comparative Descriptive Statistics Table"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.9.5 "Exporting Metric Deltas"</td></tr></table>
+
+</body>
+</html>

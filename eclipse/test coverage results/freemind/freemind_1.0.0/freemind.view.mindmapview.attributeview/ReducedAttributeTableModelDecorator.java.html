@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ReducedAttributeTableModelDecorator.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview.attributeview</a> &gt; <span class="el_source">ReducedAttributeTableModelDecorator.java</span></div><h1>ReducedAttributeTableModelDecorator.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 10.07.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.view.mindmapview.attributeview;
+
+import java.util.Vector;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.TableModelEvent;
+
+import freemind.modes.attributes.Attribute;
+
+/**
+ * @author Dimitri Polivaev 10.07.2005
+ */
+class ReducedAttributeTableModelDecorator extends
+		AttributeTableModelDecoratorAdapter {
+<span class="nc" id="L38">	private Vector index = null;</span>
+	private int visibleRowCount;
+
+	ReducedAttributeTableModelDecorator(AttributeView attrView) {
+<span class="nc" id="L42">		super(attrView);</span>
+<span class="nc" id="L43">		rebuildTableModel();</span>
+<span class="nc" id="L44">	}</span>
+
+	private Vector getIndex() {
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		if (index == null</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">				&amp;&amp; this.attributeRegistry.getVisibleElementsNumber() &gt; 0)</span>
+<span class="nc" id="L49">			index = new Vector(this.nodeAttributeModel.getRowCount(), 10);</span>
+<span class="nc" id="L50">		return index;</span>
+	}
+
+	public int getRowCount() {
+<span class="nc" id="L54">		return visibleRowCount;</span>
+	}
+
+	public Object getValueAt(int row, int col) {
+<span class="nc" id="L58">		return nodeAttributeModel.getValueAt(calcRow(row), col);</span>
+	}
+
+	public boolean isCellEditable(int row, int col) {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (nodeAttributeModel.isCellEditable(row, col)) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">			return col == 1;</span>
+		}
+<span class="nc" id="L65">		return false;</span>
+	}
+
+	private int calcRow(int row) {
+<span class="nc" id="L69">		return ((Integer) index.get(row)).intValue();</span>
+	}
+
+	public void setValueAt(Object o, int row, int col) {
+<span class="nc" id="L73">		nodeAttributeModel.setValueAt(o, calcRow(row), col);</span>
+<span class="nc" id="L74">		fireTableCellUpdated(row, col);</span>
+<span class="nc" id="L75">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.attributes.AttributeTableModel#insertRow(int,
+	 * freemind.modes.attributes.Attribute)
+	 */
+	public void insertRow(int index, Attribute newAttribute) {
+<span class="nc" id="L84">		throw new Error();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.attributes.AttributeTableModel#addRow(freemind.modes.
+	 * attributes.Attribute)
+	 */
+	public void addRow(Attribute newAttribute) {
+<span class="nc" id="L94">		throw new Error();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.attributes.AttributeTableModel#removeRow(int)
+	 */
+	public Object removeRow(int index) {
+<span class="nc" id="L103">		throw new Error();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.swing.event.ChangeListener#stateChanged(javax.swing.event.ChangeEvent
+	 * )
+	 */
+	public void stateChanged(ChangeEvent e) {
+<span class="nc" id="L114">		rebuildTableModel();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if (index != null) {</span>
+<span class="nc" id="L116">			fireTableDataChanged();</span>
+		}
+
+<span class="nc" id="L119">	}</span>
+
+	private void rebuildTableModel() {
+<span class="nc" id="L122">		getIndex();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (index != null) {</span>
+<span class="nc" id="L124">			visibleRowCount = 0;</span>
+<span class="nc" id="L125">			index.clear();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			for (int i = 0; i &lt; nodeAttributeModel.getRowCount(); i++) {</span>
+<span class="nc" id="L127">				String name = (String) nodeAttributeModel.getValueAt(i, 0);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				if (attributeRegistry.getElement(name).isVisible()) {</span>
+<span class="nc" id="L129">					index.add(new Integer(i));</span>
+<span class="nc" id="L130">					visibleRowCount++;</span>
+				}
+			}
+		}
+<span class="nc" id="L134">	}</span>
+
+	public void tableChanged(TableModelEvent e) {
+<span class="nc" id="L137">		super.tableChanged(e);</span>
+<span class="nc bnc" id="L138" title="All 4 branches missed.">		if (e.getType() != TableModelEvent.UPDATE || e.getColumn() != 0) {</span>
+<span class="nc" id="L139">			rebuildTableModel();</span>
+<span class="nc" id="L140">			fireTableDataChanged();</span>
+		}
+<span class="nc" id="L142">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.view.mindmapview.attributeview.AttributeTableModelDecoratorAdapter
+	 * #areAttributesVisible()
+	 */
+	public boolean areAttributesVisible() {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		return getRowCount() != 0;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

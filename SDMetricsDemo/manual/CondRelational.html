@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Relational Operators</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="DefCondExp.html">Prev</a> - <a href="BoolFct.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="ExpTerms.html">8.5 Expression Terms</a> > <a href="DefCondExp.html">8.5.4 Condition Expressions</a> > 8.5.4.1 Relational Operators
+<hr>
+<h4><a name="CondRelational"></a>8.5.4.1 Relational Operators</h4>
+
+The relational operators to compare metric expressions (as in
+<a href="DefMetExp.html">Section&nbsp;8.5.2 "Metric Expressions"</a>) are:
+<ul>
+<li> <tt>a=b&nbsp;</tt> (equals)
+<li> <tt>a!=b</tt> (not equals)
+<li> <tt>a&lt;b&nbsp;</tt> or <tt>a lt b</tt> (less than; the alternate
+notation <tt>lt</tt> can be used to avoid conflicts with the special
+XML character &lt;, see <a href="ExprXML.html">Section&nbsp;8.5.5 "Expression Terms and XML"</a>)
+<li> <tt>a&lt;=b</tt> or <tt>a le b</tt> (less or equal)
+<li> <tt>a&gt;b&nbsp;</tt> or <tt>a gt b</tt> (greater than)
+<li> <tt>a&gt;=b</tt> or <tt>a ge b</tt> (greater or equal)
+</ul>
+These operators apply to numbers (numerical ordering) 
+and string values (lexicographical ordering).<p>
+
+In addition, you can use the following operators on the indicated types:  
+<ul>
+<li> <tt>a startswith b</tt> (true if string <tt>a</tt> starts with string <tt>b</tt>)
+<li> <tt>a endswith b</tt> (true if string <tt>a</tt> ends with string <tt>b</tt>)
+<li> <tt>a onlist b</tt> (true if string <tt>a</tt> is on word list <tt>b</tt>)
+<li> <tt>a-&gt;b</tt> or <tt>a in b</tt> (true if element or value 
+<tt>a</tt> is contained in set <tt>b</tt>)
+</ul>
+
+Examples of condition expressions are:
+<ul>
+<li>visibility!='public'
+<li>(NumOps+NumAttr)<=40
+<li>(NumOps+NumAtrt) le 40
+<li>name startswith 'get'
+<li>'getID' in OperationNameSet
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="DefCondExp.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefCondExp.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="BoolFct.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.5.4 "Condition Expressions"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.5.4.2 "Boolean Functions"</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,360 @@
+File,Total Time,Coding %,Debugging %,Testing %,FC% Flow Complexity,OV% Object Vocabulary,OC% Object Conjuration,AI% Arithmetic Intricacy,DT% Data Transfer,ID% Inline Data,CS% Code Structure,CM% Comments,CCR Code to Comment Ratio,ECF Essential Comment Factor,CSM Code Structure Modularity,LD Logic Density,SDE Source Divergence Entropy,IDF Information Diversity Factor,OCF Object Convolution Factor,LLOC Logical Lines of Code,Multi Line Comments,Single Line Comments,High Quality Comments,Strings,Numeric Constants,Code Nature,Quality Notes Count,Quality Notes Detail,
+C:\Users\sainath\Desktop\freemind\common\BooleanProperty.java,14,43,32,25,21,48,16,2,6,0,7,1,6,14,176,45,38,200,26,32,3,0,2,6,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\ColorProperty.java,21,44,31,25,15,51,18,0,7,0,8,1,10,25,180,27,42,213,24,58,5,3,6,1,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\ComboProperty.java,22,43,31,26,15,46,20,1,9,0,8,1,6,16,174,29,42,267,28,60,6,0,4,3,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\DontShowNotificationProperty.java,2,52,27,22,0,69,12,0,4,0,9,5,28,66,147,28,27,100,14,6,2,0,2,2,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\common\FontProperty.java,16,44,31,25,17,54,13,1,8,0,7,1,7,17,167,33,41,149,19,41,3,0,3,1,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\IconProperty.java,20,44,30,25,16,51,18,0,8,0,7,1,5,14,135,36,40,209,23,56,3,0,3,0,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\NamedObject.java,6,43,32,25,18,38,25,0,6,0,11,2,13,30,180,30,30,373,24,22,3,0,3,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\NextLineProperty.java,4,48,29,23,5,66,11,0,4,0,11,3,16,28,255,0,29,100,14,11,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\common\NumberProperty.java,17,43,32,25,19,49,17,2,5,0,7,1,13,37,160,44,37,209,25,42,3,4,6,2,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\OptionalDontShowMeAgainDialog.java,34,43,32,25,17,44,22,0,7,1,8,1,7,21,140,33,46,308,28,97,6,1,7,11,62,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\PropertyBean.java,7,47,29,25,11,58,16,0,7,0,7,2,16,37,146,27,35,161,23,17,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\common\PropertyControl.java,2,51,27,22,0,82,6,0,3,0,5,4,28,100,78,0,23,40,8,6,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\common\RemindValueProperty.java,6,45,31,24,0,61,14,0,16,1,6,2,25,80,104,43,42,141,21,15,4,1,4,10,1,Data I/O Oriented,0,
+C:\Users\sainath\Desktop\freemind\common\ScriptEditorProperty.java,21,44,31,25,19,53,14,0,6,0,7,1,9,23,165,40,37,159,21,51,4,6,5,3,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\SeparatorProperty.java,4,47,29,23,5,64,14,0,5,0,10,3,14,28,221,7,28,131,17,13,2,0,2,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\common\StringProperty.java,9,47,29,24,3,63,17,0,6,0,9,2,17,41,188,14,35,158,20,27,3,6,5,0,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\common\TextTranslator.java,1,54,26,21,0,73,8,0,2,0,9,8,50,100,135,0,9,57,10,3,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\common\ThreeCheckBoxProperty.java,25,41,33,26,25,41,18,1,9,0,6,1,7,21,141,49,40,266,25,66,4,3,5,9,8,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\UnicodeReader.java,31,33,39,28,54,15,11,2,12,1,4,0,16,42,153,90,59,440,26,49,5,3,8,5,38,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\common\XmlBindingTools.java,31,42,33,25,24,42,18,2,7,0,8,1,12,31,178,46,45,256,26,79,4,7,10,2,5,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\BlindIcon.java,3,48,29,23,5,63,15,0,3,0,10,4,54,100,231,9,26,137,20,10,6,0,6,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\controller\ColorSwatch.java,6,46,30,24,5,55,16,6,6,1,9,2,5,11,204,33,50,172,21,17,1,0,1,0,6,Algorithmic Oriented,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\controller\Controller.java,298,40,33,27,29,31,23,0,9,0,9,0,10,26,177,36,44,456,28,891,33,120,97,140,26,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\AttributeCompareCondition.java,17,43,32,25,21,50,16,1,5,0,6,1,11,30,138,44,41,194,29,35,5,0,4,4,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\AttributeExistsCondition.java,12,45,31,24,17,58,13,1,5,0,6,1,14,40,143,40,39,134,21,26,5,0,4,2,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\AttributeNotExistsCondition.java,12,45,31,24,17,58,13,1,5,0,6,1,14,40,143,40,39,134,21,26,5,0,4,2,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\CompareConditionAdapter.java,19,41,33,26,33,43,13,1,4,0,5,1,5,15,141,56,38,180,24,38,2,0,2,2,6,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\Condition.java,3,51,27,22,0,85,4,0,2,0,5,4,33,100,108,0,18,29,8,5,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\ConditionFactory.java,66,35,37,28,51,16,19,2,8,0,4,0,6,19,139,80,64,741,51,92,4,3,6,20,24,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\ConditionNotSatisfiedDecorator.java,11,47,29,23,3,66,16,1,7,0,6,1,17,55,121,35,34,146,23,27,6,0,5,3,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\ConditionRenderer.java,11,43,33,25,27,50,10,0,5,0,6,1,19,44,182,42,41,122,20,20,4,0,4,1,3,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\ConjunctConditions.java,21,41,33,26,25,38,17,3,11,0,5,1,9,27,104,66,44,264,24,52,6,0,5,6,5,Data I/O Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\DisjunctConditions.java,21,41,33,26,25,38,17,3,11,0,5,1,9,27,104,66,44,264,24,52,6,0,5,6,5,Data I/O Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\IconContainedCondition.java,23,43,32,26,24,46,14,3,7,0,6,1,6,15,149,58,47,185,25,47,3,0,3,6,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\IgnoreCaseNodeContainsCondition.java,9,47,29,23,3,66,15,1,6,0,7,1,8,25,147,30,36,139,24,22,2,0,2,2,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\JCondition.java,2,51,27,22,0,69,12,0,5,0,9,5,42,100,159,0,27,100,15,6,4,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\NodeCompareCondition.java,13,46,30,24,9,62,16,0,5,0,6,1,6,18,146,30,37,157,27,29,2,0,2,4,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\NodeCondition.java,6,42,33,25,29,46,11,0,4,0,8,2,18,37,225,25,34,147,17,15,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\NodeContainsCondition.java,9,47,29,23,3,67,15,1,6,0,7,1,8,25,145,30,35,140,24,22,2,0,2,2,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\NoFilteringCondition.java,9,41,33,25,31,45,12,0,4,0,8,1,13,25,222,26,35,155,18,22,2,1,3,1,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\condition\SelectedViewCondition.java,11,42,33,25,31,47,11,0,4,0,7,1,12,25,217,33,37,136,18,23,2,1,3,1,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\DefaultFilter.java,39,40,34,26,36,33,15,3,6,0,6,0,12,29,179,56,55,277,26,84,12,0,11,0,7,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\Filter.java,5,49,28,23,0,75,13,0,5,1,4,2,17,100,32,35,23,103,15,16,3,0,3,0,6,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\filter\FilterComposerDialog.java,146,40,34,27,31,30,21,1,9,0,7,0,3,11,132,36,46,433,27,427,13,4,15,22,49,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\FilterController.java,38,42,32,26,26,45,16,1,6,0,6,0,7,19,160,41,43,215,25,89,7,3,7,7,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\FilterInfo.java,8,44,31,24,14,45,15,8,6,0,10,1,12,23,241,20,38,200,19,23,6,0,3,0,3,Algorithmic Oriented,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\controller\filter\FilterToolbar.java,55,42,32,26,26,42,15,1,8,0,8,0,3,8,176,32,49,226,22,144,9,0,5,12,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\util\ExtendedComboBoxModel.java,31,39,35,27,37,28,16,5,6,0,7,1,9,19,213,64,54,355,29,64,8,0,6,0,8,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\util\SortedComboBoxModel.java,3,49,29,22,3,65,12,6,2,0,8,4,55,125,175,33,31,100,16,8,5,0,5,0,2,Algorithmic Oriented,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\controller\filter\util\SortedListModel.java,3,50,28,22,0,78,11,0,3,0,4,3,33,150,64,0,20,84,17,8,7,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\filter\util\SortedMapListModel.java,20,41,33,26,30,40,13,2,7,0,7,1,8,17,216,43,53,192,21,45,5,0,4,0,9,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\filter\util\SortedMapVector.java,34,36,37,27,44,18,18,6,7,0,6,0,3,9,172,50,53,612,29,80,3,0,3,0,23,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\FreeMindPopupMenu.java,9,44,30,26,24,41,17,0,8,0,8,1,20,42,169,34,36,246,22,28,3,3,6,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\FreeMindToolBar.java,9,46,29,24,7,59,17,0,7,0,8,1,19,55,150,15,38,171,23,25,8,1,5,5,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\LastOpenedList.java,26,41,33,26,36,41,10,1,6,0,5,1,27,57,186,63,53,151,22,43,7,6,12,5,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\MainToolBar.java,33,41,33,26,29,38,14,4,7,0,6,1,15,40,155,58,47,226,22,76,2,10,12,6,19,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\MapModuleManager.java,76,39,34,27,38,25,20,2,8,0,7,1,19,42,172,52,52,500,30,188,16,21,36,7,14,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\MapMouseMotionListener.java,18,41,33,26,29,39,17,0,6,0,8,1,31,63,227,31,38,263,27,43,3,16,14,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\MapMouseWheelListener.java,4,44,31,25,19,46,19,0,4,0,9,3,23,50,195,30,22,238,23,12,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\MenuBar.java,90,43,31,26,15,35,25,8,10,1,7,0,15,56,99,66,45,443,34,245,7,33,38,101,12,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\MenuItemEnabledListener.java,1,53,26,21,0,81,5,0,1,0,7,6,50,100,137,0,15,30,7,3,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\MenuItemSelectedListener.java,1,53,26,21,0,81,5,0,1,0,7,6,50,100,137,0,15,30,7,3,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\MindMapNodesSelection.java,30,36,37,27,51,23,15,0,5,0,5,0,8,22,151,66,45,406,30,58,3,3,5,5,1,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\NodeDragListener.java,17,44,32,25,22,54,9,1,6,0,7,1,30,66,218,42,41,106,19,32,2,8,10,4,2,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\NodeDropListener.java,10,39,34,27,40,30,17,0,5,0,7,1,19,36,219,38,30,325,30,20,1,3,4,0,0,Data Manipulation Oriented,0,
+C:\Users\sainath\Desktop\freemind\controller\NodeKeyListener.java,7,40,33,26,35,32,18,0,5,0,8,2,17,37,210,35,28,326,28,16,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\NodeMotionListener.java,13,38,35,27,43,26,19,0,5,0,7,1,11,21,235,38,30,436,36,25,3,0,3,0,0,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\NodeMouseMotionListener.java,14,38,35,27,46,24,18,0,5,0,7,1,10,20,228,37,33,454,34,28,3,0,3,0,0,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\printpreview\BrowseAction.java,7,48,29,23,1,63,17,3,6,0,9,1,4,11,154,24,36,158,19,24,1,0,1,2,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\printpreview\Preview.java,24,42,33,25,24,39,17,5,7,0,6,0,1,4,150,70,50,265,27,56,1,0,1,0,18,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\printpreview\PreviewDialog.java,21,43,32,25,18,49,20,1,7,0,5,1,4,16,81,42,47,245,32,48,1,1,2,10,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\printpreview\ZoomAction.java,3,49,28,23,0,66,18,0,4,0,9,3,8,25,137,16,21,153,19,11,1,0,1,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\controller\StructuredMenuHolder.java,93,40,33,27,28,29,24,2,8,0,9,0,13,31,188,47,42,507,30,271,16,33,38,29,7,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\controller\StructuredMenuItemHolder.java,8,43,32,25,20,41,22,0,6,0,11,1,6,14,203,26,26,314,22,29,2,0,2,0,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\extensions\ExportHook.java,45,41,33,26,28,42,14,3,6,0,6,1,37,103,158,64,49,211,27,86,6,30,33,19,1,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\HookAdapter.java,14,43,32,25,21,47,16,0,5,0,9,1,28,57,216,30,35,202,22,38,14,2,11,1,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\extensions\HookDescriptorBase.java,33,41,33,26,29,40,14,2,8,0,6,1,19,48,157,59,47,213,23,75,8,9,15,8,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\extensions\HookDescriptorPluginAction.java,24,42,33,26,28,43,13,1,7,0,7,1,8,18,194,37,48,185,20,57,5,1,5,3,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\extensions\HookDescriptorRegistration.java,4,47,30,23,7,63,14,0,4,0,9,3,38,83,199,7,38,131,19,12,3,3,5,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\extensions\HookFactory.java,7,50,28,23,0,72,16,0,3,0,4,4,52,200,80,0,16,136,25,18,11,0,10,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\HookFactoryAdapter.java,9,45,31,25,23,55,8,0,5,0,7,2,47,90,232,26,38,87,15,18,7,3,9,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\HookInstanciationMethod.java,23,42,32,26,15,37,31,0,7,0,8,1,9,23,164,26,41,512,39,71,11,0,7,5,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\extensions\HookRegistration.java,1,54,25,21,0,60,14,0,4,0,11,11,60,150,107,0,18,120,12,4,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\ImportWizard.java,40,41,33,26,35,34,14,3,7,0,6,1,32,73,183,73,51,249,24,85,8,25,28,18,9,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\MindMapHook.java,4,51,27,22,0,76,9,0,4,0,5,6,78,275,73,0,25,66,11,13,11,0,11,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\ModeControllerHook.java,1,57,24,19,0,64,11,0,0,0,11,14,100,150,176,0,0,80,13,2,3,0,3,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\extensions\ModeControllerHookAdapter.java,1,55,25,21,0,57,15,0,3,0,13,12,140,233,205,0,14,133,16,4,4,4,7,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\extensions\NodeHook.java,2,51,27,22,0,77,10,0,3,0,6,5,66,200,88,0,14,75,15,5,4,0,4,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\NodeHookAdapter.java,5,47,29,24,4,58,20,0,5,0,11,2,20,40,205,10,23,200,21,19,10,0,4,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\extensions\PermanentNodeHook.java,6,50,27,22,0,75,13,0,5,0,3,4,56,300,32,0,22,103,19,15,12,0,9,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\PermanentNodeHookAdapter.java,20,45,30,25,15,50,17,0,7,0,8,1,32,66,201,25,34,211,24,54,16,5,18,12,1,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\PermanentNodeHookSubstituteUnknown.java,6,46,29,25,14,54,16,0,6,0,8,2,15,33,161,25,29,177,19,19,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\StatefulMindMapNodeHookAdapter.java,4,46,29,24,3,63,19,0,6,0,10,0,0,0,231,0,38,176,27,10,0,0,0,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\extensions\StatefulNodeHook.java,2,47,29,24,0,68,22,0,5,0,6,0,0,0,64,0,22,181,25,7,0,0,0,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\extensions\UndoEventReceiver.java,0,60,22,18,0,57,10,0,0,0,13,20,100,150,179,0,0,75,10,2,3,0,3,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\main\Base64Coding.java,52,34,39,27,44,12,10,11,18,1,4,1,10,23,170,128,73,521,23,84,4,7,9,21,78,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\ExampleFileFilter.java,31,38,35,27,48,20,14,2,6,0,6,2,26,58,191,73,53,417,24,66,16,2,18,8,5,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\FeedBack.java,2,51,27,22,0,74,12,0,4,0,6,5,28,100,75,0,21,91,15,6,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\main\FixedHTMLWriter.java,22,40,33,26,39,36,11,2,5,0,6,1,21,42,216,70,49,190,25,36,6,2,8,7,3,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\FreeMind.java,232,41,33,26,30,35,17,2,8,1,7,0,24,64,162,53,46,301,25,584,10,151,146,155,42,Normal,0,
+C:\Users\sainath\Desktop\freemind\main\FreeMindApplet.java,76,40,34,26,31,39,15,0,6,0,8,0,15,34,208,28,46,231,21,197,8,24,31,34,6,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\FreeMindCommon.java,64,39,34,26,37,29,17,3,7,1,7,1,33,82,182,64,47,355,26,150,13,41,51,52,7,Normal,0,
+C:\Users\sainath\Desktop\freemind\main\FreeMindMain.java,36,43,32,25,18,50,18,0,9,1,4,1,17,85,54,35,36,221,23,104,15,3,18,16,20,Normal,0,
+C:\Users\sainath\Desktop\freemind\main\FreeMindSecurityManager.java,55,34,38,27,58,18,14,0,4,0,5,0,3,8,176,34,53,466,27,107,4,0,4,1,0,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\FreeMindSplash.java,43,45,31,24,10,50,18,8,8,1,5,0,9,35,100,70,46,220,27,107,3,7,10,17,50,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\FreeMindSplashModern.java,41,45,31,24,10,52,17,6,7,1,6,0,17,64,103,64,44,200,25,104,3,16,18,17,38,Algorithmic Oriented,0,
+C:\Users\sainath\Desktop\freemind\main\FreeMindStarter.java,29,42,33,26,23,38,19,2,9,1,8,1,11,32,155,44,44,298,24,84,5,5,10,21,10,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\HtmlTools.java,140,37,35,27,45,19,18,2,7,1,7,1,25,63,163,63,51,597,27,349,19,75,89,154,68,Data Manipulation Oriented,0,
+C:\Users\sainath\Desktop\freemind\main\IFreeMindSplash.java,2,51,27,22,0,69,16,0,4,0,6,5,42,150,74,0,16,127,20,6,2,1,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\main\LoggingOutputStream.java,6,43,32,25,23,48,15,0,5,0,7,1,20,57,137,30,37,190,19,19,3,1,4,3,1,Normal,0,
+C:\Users\sainath\Desktop\freemind\main\Resources.java,24,41,33,25,21,44,18,1,8,1,8,1,8,17,207,31,50,246,27,59,5,0,5,37,3,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\main\StdFormatter.java,9,45,30,24,14,53,16,2,7,0,6,2,36,100,149,47,41,175,29,18,5,2,7,4,2,Normal,0,
+C:\Users\sainath\Desktop\freemind\main\Tools.java,326,38,35,27,40,25,17,2,7,0,7,0,17,37,199,66,48,424,31,683,43,86,119,135,87,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\XHTMLWriter.java,40,37,35,27,48,23,14,1,7,0,6,1,47,105,193,69,51,372,28,77,12,25,37,28,10,Data Manipulation Oriented,0,
+C:\Users\sainath\Desktop\freemind\main\XMLElement.java,262,37,36,27,49,12,20,1,7,0,8,3,20,42,201,46,49,1020,27,704,108,37,141,170,65,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\main\XMLParseException.java,6,45,31,24,28,26,18,10,5,1,6,7,100,260,159,84,33,390,33,12,8,5,13,11,1,Algorithmic Oriented,0,
+C:\Users\sainath\Desktop\freemind\modes\ArrowLinkAdapter.java,36,36,36,27,50,23,14,0,6,0,6,0,9,23,181,49,53,369,26,72,4,3,7,22,0,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\attributes\Attribute.java,5,45,30,24,6,39,30,4,6,0,13,2,16,36,197,41,27,442,25,23,5,0,4,4,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\attributes\AttributeController.java,9,48,28,23,0,77,16,0,3,0,2,1,11,66,30,0,31,127,32,16,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\attributes\AttributeRegistry.java,79,39,34,27,34,29,19,2,8,0,8,0,5,13,174,50,50,395,25,221,16,8,13,5,17,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\attributes\AttributeRegistryComboBoxColumnModel.java,18,43,32,25,22,47,14,2,6,0,8,1,29,60,223,24,49,183,24,40,12,0,12,1,3,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\attributes\AttributeRegistryElement.java,27,43,32,26,17,42,23,0,8,0,10,0,3,7,177,25,40,327,24,92,4,0,3,6,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\attributes\AttributeRegistryTableModel.java,32,38,36,26,43,26,15,5,5,1,6,0,8,21,169,59,49,335,25,70,8,0,6,5,39,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\attributes\AttributeTableLayoutModel.java,16,39,34,26,27,33,17,2,13,0,7,1,34,72,190,60,44,305,28,37,5,8,13,3,5,Data I/O Oriented,0,
+C:\Users\sainath\Desktop\freemind\modes\attributes\AttributeTableModel.java,4,50,28,23,0,76,13,0,4,0,4,3,30,150,54,0,27,100,20,9,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\attributes\ColumnWidthChangeEvent.java,2,49,29,23,4,61,18,0,3,0,10,5,33,75,174,11,20,163,20,8,4,0,3,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\attributes\ColumnWidthChangeListener.java,1,53,26,21,0,73,10,0,1,0,8,8,75,150,139,0,7,75,15,3,4,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\attributes\NodeAttributeTableModel.java,48,39,34,27,33,32,19,0,7,0,7,0,9,21,192,36,46,359,29,116,11,0,11,8,14,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseArrowLinkModel.java,6,48,30,23,5,71,10,2,3,0,7,2,33,57,256,8,41,81,18,11,4,0,4,2,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseCloudModel.java,2,49,29,22,4,69,11,0,3,0,9,4,28,50,222,0,26,91,15,6,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseController.java,47,43,32,25,22,47,14,2,7,0,7,1,58,145,169,33,50,182,22,108,8,81,64,14,2,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseEdgeModel.java,4,48,29,23,3,68,14,0,4,0,10,3,18,33,236,0,25,116,19,10,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseHookFactory.java,9,44,32,24,16,54,13,0,5,0,9,3,62,128,213,10,38,150,16,28,12,7,18,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseMapModel.java,23,41,33,25,26,43,15,1,6,0,8,1,25,55,202,25,47,220,21,63,7,13,16,7,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseMode.java,10,44,31,25,16,53,14,1,5,0,9,1,12,26,220,25,34,162,18,30,3,1,4,4,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseNodeModel.java,5,47,29,24,4,62,17,0,6,0,8,3,40,100,169,13,47,161,22,14,3,7,6,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowsePopupMenu.java,5,49,28,23,0,73,13,0,5,1,6,2,13,40,120,13,35,103,18,14,2,0,2,5,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseReminderHook.java,3,50,27,23,0,65,16,0,5,0,9,5,60,120,209,0,30,140,21,9,6,1,6,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseToolBar.java,10,45,31,25,18,57,12,0,6,0,7,1,12,33,162,33,34,129,20,23,2,1,3,4,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\BrowseXMLElement.java,12,45,31,24,13,58,17,0,5,0,6,1,13,33,175,17,43,173,26,28,3,1,4,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\EncryptedBrowseNode.java,29,41,33,26,32,43,13,1,6,0,5,1,16,50,127,54,46,179,22,61,6,7,10,5,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\browsemode\NodeNoteViewer.java,16,42,32,26,28,48,13,0,5,0,6,1,15,35,182,37,36,161,24,31,4,2,5,3,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\CloudAdapter.java,28,40,34,26,35,37,14,2,5,0,7,1,9,18,215,53,43,223,22,64,5,3,6,5,7,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\common\actions\FindAction.java,67,38,35,27,44,25,15,1,7,0,6,0,21,53,160,66,53,375,26,145,6,27,32,26,12,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\common\actions\NewMapAction.java,3,50,27,22,0,68,15,0,5,0,8,4,66,150,183,11,23,125,22,8,2,6,6,2,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\common\CommonNodeKeyListener.java,35,39,35,26,40,34,15,0,5,0,6,1,28,86,148,57,45,265,29,65,3,18,19,8,0,Data Manipulation Oriented,0,
+C:\Users\sainath\Desktop\freemind\modes\common\CommonToggleFoldedAction.java,19,41,33,26,35,39,12,0,6,0,7,1,15,33,184,47,47,189,19,43,6,1,7,1,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\common\dialogs\EnterPasswordDialog.java,45,41,33,26,24,36,21,0,9,1,8,0,14,45,131,53,44,358,24,149,15,9,22,9,43,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\common\dialogs\IconSelectionPopupDialog.java,78,40,34,26,31,32,17,5,8,0,6,0,8,22,142,60,52,330,29,169,12,2,14,6,31,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\common\dialogs\PersistentEditableComboBox.java,22,41,33,27,33,36,14,2,8,0,6,1,7,17,152,57,50,244,21,55,2,2,4,3,5,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\common\GotoLinkNodeAction.java,6,46,30,24,12,58,14,2,5,0,6,2,40,100,149,33,34,144,24,14,3,3,6,3,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\common\listeners\CommonMouseMotionManager.java,13,43,32,25,26,44,12,5,6,0,6,1,20,50,177,84,48,163,23,24,4,2,5,0,7,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\common\listeners\CommonNodeMouseMotionListener.java,40,41,33,26,32,37,14,1,7,0,7,1,48,118,183,44,44,236,26,80,13,28,39,11,6,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\common\listeners\MindMapMouseWheelEventHandler.java,28,43,32,25,25,48,10,5,6,0,5,1,22,55,180,84,49,125,23,44,5,6,10,1,15,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\common\plugins\NodeNoteBase.java,1,53,26,21,0,72,12,0,1,0,8,7,75,150,143,25,6,87,17,3,4,0,3,1,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\common\plugins\ReminderHookBase.java,45,41,33,26,27,38,18,1,8,0,7,0,10,26,179,45,49,287,25,118,7,15,13,10,9,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\ControllerAdapter.java,256,39,34,27,34,30,18,1,9,0,8,0,19,42,192,41,51,383,27,651,42,102,128,46,15,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\EdgeAdapter.java,34,38,35,26,41,33,14,0,5,0,7,0,6,13,213,44,47,258,23,77,2,7,5,10,2,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\filemode\FileController.java,25,43,32,25,22,50,12,1,7,0,7,1,16,33,224,40,52,150,23,48,6,4,8,10,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\filemode\FileEdgeModel.java,2,51,27,22,0,72,12,0,2,0,9,5,40,66,210,0,21,90,18,4,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\filemode\FileMapModel.java,11,47,29,23,6,63,15,0,5,0,8,3,139,260,236,3,38,141,21,27,7,48,39,3,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\filemode\FileMode.java,8,45,31,24,13,54,17,0,5,0,10,1,10,23,201,25,32,182,18,27,3,0,3,1,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\filemode\FileNodeModel.java,30,40,34,26,38,39,9,0,6,0,6,1,40,80,222,45,58,147,17,59,6,26,24,2,1,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\filemode\FilePopupMenu.java,5,49,28,23,0,71,15,0,5,0,7,2,23,75,138,15,29,120,22,12,2,1,3,2,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\filemode\FileToolBar.java,3,50,28,22,0,70,14,0,5,0,8,3,18,66,108,27,22,118,17,10,2,0,2,1,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\HistoryInformation.java,4,46,29,24,4,43,28,0,9,0,12,3,20,44,184,45,38,371,26,19,4,0,4,0,2,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\IconInformation.java,1,49,28,23,0,83,5,0,4,0,7,0,0,0,81,0,26,36,5,6,0,0,0,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\LineAdapter.java,25,39,35,26,37,33,16,0,5,0,7,1,17,40,192,35,43,284,22,66,7,12,12,1,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\LinkAdapter.java,16,43,32,25,17,46,21,0,5,0,10,1,15,32,204,35,30,278,24,52,4,7,8,1,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\LinkRegistryAdapter.java,81,39,34,27,36,23,22,2,8,0,7,1,38,89,164,54,43,583,30,222,39,57,85,12,12,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\MapAdapter.java,70,38,35,27,29,28,20,2,13,0,6,1,21,47,184,55,54,438,34,155,11,32,34,2,26,Data I/O Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\MapRegistry.java,17,42,32,26,26,44,15,1,6,0,7,1,8,18,178,38,40,204,20,46,5,0,4,0,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\MindIcon.java,40,39,35,26,37,31,16,2,6,0,6,1,26,61,175,55,47,322,24,99,13,18,26,11,5,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\MindMap.java,9,49,28,23,0,78,10,0,6,0,3,3,60,375,21,0,28,80,14,24,14,4,15,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\MindMapArrowLink.java,5,50,28,22,0,78,12,0,4,0,3,3,115,500,39,0,25,89,20,12,6,9,15,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\MindMapCloud.java,2,52,26,21,0,74,10,0,3,0,5,7,142,500,75,0,17,76,14,6,5,5,10,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\MindMapEdge.java,1,53,26,21,0,74,8,0,3,0,7,8,180,450,108,0,14,55,10,4,2,7,9,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\MindMapLine.java,3,50,28,22,0,78,10,0,4,0,4,3,30,150,53,0,21,77,14,9,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\MindMapLink.java,2,52,27,21,0,75,8,0,5,0,6,6,112,450,68,0,26,58,8,7,3,6,9,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\MindMapLinkRegistry.java,8,49,28,23,0,69,20,0,5,0,3,3,100,700,25,0,18,172,30,20,18,3,21,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\AddArrowLinkAction.java,31,42,32,26,25,45,14,0,8,0,6,1,17,44,171,37,49,195,27,61,7,6,11,3,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\AddLocalLinkAction.java,8,44,31,25,22,52,11,1,6,0,6,2,21,50,149,52,39,127,19,18,4,1,4,4,3,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ApplyPatternAction.java,59,38,35,27,46,28,12,0,7,0,6,0,12,22,230,56,65,255,26,99,7,7,12,4,2,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\BoldAction.java,13,44,31,25,14,55,16,0,6,0,7,1,9,23,186,25,44,180,27,30,3,1,3,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ChangeArrowLinkEndPoints.java,15,46,30,24,6,61,17,0,8,0,7,1,24,61,168,15,43,165,30,32,8,2,8,2,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ChangeArrowsInArrowLinkAction.java,18,44,31,25,12,52,20,0,8,0,7,1,4,13,142,23,42,232,32,41,4,0,2,5,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\CloudAction.java,23,42,33,25,24,47,14,0,7,0,7,1,6,15,197,32,51,186,27,45,3,0,3,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\CloudColorAction.java,27,41,33,26,31,42,14,0,7,0,6,0,6,15,174,50,52,201,29,47,3,2,3,3,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ColorArrowLinkAction.java,16,45,31,25,12,57,17,0,8,0,6,1,5,15,153,25,43,177,29,35,4,0,2,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\CompoundActionHandler.java,9,44,31,25,18,52,13,1,8,0,7,2,28,60,181,52,35,146,22,20,6,0,6,0,1,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\CopyAction.java,6,43,32,25,26,49,12,0,5,0,7,2,15,33,207,30,34,140,21,12,2,0,2,2,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\CopySingleAction.java,6,43,32,25,27,48,11,0,4,0,7,2,15,33,207,30,31,131,19,12,2,0,2,1,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\CutAction.java,30,44,31,25,17,57,12,0,7,0,6,1,17,55,128,41,47,134,24,57,4,6,10,7,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\DeleteChildAction.java,27,45,31,25,17,55,13,1,7,0,6,1,21,60,138,50,48,147,24,55,5,8,12,7,4,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\EdgeColorAction.java,20,44,31,25,19,51,14,0,8,0,6,1,10,26,160,41,46,172,28,38,4,0,4,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\EdgeStyleAction.java,17,44,31,25,16,54,16,0,7,0,6,1,7,21,156,36,43,184,28,37,3,0,3,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\EdgeWidthAction.java,19,43,32,25,19,50,16,0,7,0,7,1,6,17,169,34,43,195,27,43,3,0,3,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\EditAction.java,59,41,33,26,29,37,19,0,7,0,7,0,13,37,163,44,49,307,29,142,4,18,20,15,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ExportBranchAction.java,33,42,33,26,29,44,13,1,7,0,6,1,35,91,175,53,51,175,26,59,4,18,21,6,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\FontFamilyAction.java,16,45,30,25,9,58,17,0,8,0,7,1,13,35,162,27,43,177,29,36,7,1,5,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\FontSizeAction.java,16,44,31,25,14,55,16,0,7,0,7,1,12,31,178,28,42,182,26,38,7,1,5,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\FreemindAction.java,7,46,30,24,12,57,18,0,4,0,7,2,43,100,165,18,32,185,31,15,6,1,7,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\HookAction.java,1,54,26,20,0,77,6,0,1,0,9,7,75,150,162,0,9,37,7,3,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\IconAction.java,50,41,33,26,28,34,20,2,8,0,7,0,3,8,167,37,51,361,33,115,5,1,4,0,7,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ImportExplorerFavoritesAction.java,27,40,33,26,32,39,12,1,9,0,6,1,22,48,183,61,51,194,24,53,3,11,12,6,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ImportFolderStructureAction.java,26,41,33,26,27,43,14,1,9,0,6,1,22,52,168,48,50,192,27,49,3,9,11,5,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ItalicAction.java,13,45,31,24,10,57,18,0,7,0,7,1,9,23,166,25,42,191,28,31,3,1,3,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\JoinNodesAction.java,25,41,33,26,31,37,14,3,9,0,5,0,3,10,147,84,50,237,26,51,1,2,2,13,7,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\MindMapActions.java,35,48,28,24,0,70,22,0,4,0,2,2,47,377,14,5,28,195,40,71,27,8,34,0,4,Normal,1,* May need breaking down into functions or classes. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\MindMapControllerHookAction.java,5,49,29,23,2,70,14,0,4,0,8,2,18,50,139,25,25,120,18,15,2,1,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ModeControllerActionHandler.java,4,50,27,23,0,69,14,0,4,0,9,4,63,116,239,18,18,120,21,10,6,1,7,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\MoveNodeAction.java,19,42,32,25,22,47,18,0,7,0,6,1,8,25,135,29,49,228,35,36,3,1,3,1,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NewChildAction.java,38,43,32,25,20,48,17,1,7,0,6,0,15,44,142,52,47,223,31,79,4,8,12,13,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NewPreviousSiblingAction.java,3,50,28,23,0,68,16,0,4,0,9,3,22,50,184,11,23,131,23,8,2,0,2,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NewSiblingAction.java,3,50,28,23,0,68,16,0,4,0,9,3,22,50,184,11,23,131,23,8,2,0,2,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NodeActorXml.java,2,53,26,21,0,83,5,0,1,0,6,6,100,200,155,0,11,30,10,3,4,0,4,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NodeBackgroundColorAction.java,21,45,30,25,14,55,16,0,7,0,7,1,4,10,171,33,42,180,27,47,2,1,2,3,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NodeColorAction.java,18,44,31,25,16,54,15,0,8,0,6,1,5,13,159,38,46,168,27,38,2,1,2,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NodeColorBlendAction.java,3,50,27,23,0,72,12,0,3,0,10,3,37,60,262,0,28,93,18,7,4,0,3,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NodeGeneralAction.java,29,41,33,26,29,40,17,0,6,0,7,1,18,40,186,39,43,258,30,60,7,6,11,0,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NodeHookAction.java,65,41,33,27,31,34,20,0,8,0,7,1,19,47,152,51,52,357,30,155,9,25,30,3,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NodeStyleAction.java,19,43,32,25,21,48,17,0,7,0,6,1,6,18,162,41,46,215,29,42,2,1,3,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\NodeUpAction.java,54,42,32,26,27,39,17,1,8,0,6,0,9,26,133,62,48,267,28,123,5,8,12,4,10,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\PasteAction.java,161,39,34,27,35,27,20,2,9,0,7,0,15,35,169,60,50,453,31,379,12,52,57,67,30,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\RedoAction.java,4,49,28,23,0,68,16,0,5,0,8,3,20,50,173,10,27,142,27,9,3,0,2,2,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\RemoveAllIconsAction.java,20,45,31,25,16,58,12,0,7,0,7,1,7,15,187,24,43,132,22,40,4,0,3,3,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\RemoveArrowLinkAction.java,22,44,31,25,16,52,16,0,8,0,7,1,11,30,166,22,42,188,25,52,7,1,6,4,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\RemoveIconAction.java,20,45,31,24,11,60,14,0,7,0,7,1,9,25,180,24,40,146,27,40,6,0,4,3,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\RevertAction.java,31,43,32,25,21,46,18,0,8,0,7,1,13,34,162,37,48,235,30,68,8,2,9,4,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\SelectAllAction.java,3,50,28,23,0,73,11,0,4,0,9,3,25,40,267,0,34,88,20,7,4,0,2,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\SelectBranchAction.java,3,50,27,23,0,72,11,0,5,0,8,3,42,75,230,0,32,87,20,6,5,0,3,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\SetLinkByTextFieldAction.java,15,44,31,25,15,53,17,0,8,0,7,1,9,21,180,27,43,190,29,32,2,1,3,3,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\SingleNodeOperation.java,2,53,26,21,0,79,7,0,1,0,7,6,75,150,150,0,12,45,12,3,2,2,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ToggleChildrenFoldedAction.java,5,49,28,23,0,72,13,0,6,0,7,2,15,50,140,23,28,108,20,12,2,0,2,1,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\ToggleFoldedAction.java,32,41,33,26,29,41,15,0,7,0,6,0,9,24,164,50,49,225,29,62,4,3,6,5,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\UnderlinedAction.java,13,45,31,24,10,57,18,0,6,0,7,1,9,23,166,25,42,189,27,31,3,1,3,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\UndoAction.java,42,42,32,26,26,39,18,1,8,0,7,0,11,30,153,49,44,278,27,104,7,7,12,6,17,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\UsePlainTextAction.java,5,48,29,23,11,64,9,0,4,0,8,4,160,266,267,20,35,86,19,9,2,19,16,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\UseRichFormattingAction.java,5,48,29,23,11,64,9,0,4,0,8,4,160,266,267,20,35,86,19,9,2,19,16,1,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\AbstractActorXml.java,7,46,30,23,7,66,11,0,5,0,9,2,11,25,225,5,37,103,18,16,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\AbstractXmlAction.java,9,45,31,24,12,56,16,0,6,0,8,2,21,50,184,13,36,175,24,22,8,1,5,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\ActionFactory.java,35,41,32,26,31,39,15,0,7,0,7,1,18,40,190,45,40,236,23,84,13,8,16,1,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\ActionFilter.java,2,53,26,21,0,73,9,0,1,0,9,8,100,166,222,0,5,72,16,4,5,0,5,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\ActionHandler.java,2,51,27,22,0,79,8,0,2,0,6,4,50,150,105,0,13,57,13,5,5,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\ActionPair.java,3,46,30,24,8,52,21,0,5,0,11,3,21,50,188,14,32,230,21,13,6,0,3,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\ActorXml.java,2,52,27,21,0,80,6,0,2,0,7,5,60,150,133,0,11,41,10,4,4,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\NodeHookUndoableContentActor.java,23,43,31,26,20,48,18,0,7,0,6,1,6,15,158,35,49,232,32,47,2,1,3,2,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\PrintActionHandler.java,7,47,30,24,11,63,12,0,4,0,7,2,57,133,199,28,25,113,23,13,7,2,8,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\actions\xml\UndoActionHandler.java,7,45,30,25,15,56,15,0,5,0,8,2,15,33,198,26,24,159,22,18,3,1,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\AssignAttributeDialog.java,111,41,32,27,26,33,24,1,9,0,8,0,0,1,126,38,45,444,29,333,2,0,2,22,38,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\AttributeManagerDialog.java,40,46,30,25,5,54,23,0,9,0,9,1,13,37,158,21,41,260,28,123,7,14,17,18,5,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\AttributeRegistryTable.java,41,41,33,26,28,40,17,1,6,0,7,0,6,14,178,40,45,267,28,94,6,0,6,8,19,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\AttributesListener.java,1,53,27,21,0,78,7,0,1,0,7,6,50,100,150,0,6,50,12,3,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\ImportAttributesDialog.java,82,41,33,26,30,36,19,1,8,0,7,0,0,2,139,48,47,325,27,212,2,0,2,8,18,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\InsertAttributeActor.java,12,46,30,24,7,60,19,0,7,0,7,1,7,20,165,19,44,188,32,25,2,0,2,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\ListDialog.java,66,42,32,26,24,41,18,2,8,0,6,0,13,40,133,41,47,268,27,162,7,16,22,6,40,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\MindMapModeAttributeController.java,96,40,33,27,30,26,26,1,9,0,7,0,2,6,126,53,46,603,32,285,7,0,6,36,15,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\RegistryAttributeActor.java,9,46,30,24,9,61,15,0,7,0,7,1,8,20,184,30,37,144,23,22,2,0,2,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\RegistryAttributeValueActor.java,9,46,30,24,9,59,16,0,7,0,7,1,9,20,191,22,37,165,26,21,2,0,2,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\RemoveAttributeActor.java,11,46,30,24,8,60,17,0,7,0,7,1,8,20,173,24,42,169,28,24,2,0,2,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\ReplaceAttributeValueActor.java,9,45,30,25,10,56,19,0,6,0,8,1,9,20,190,18,41,206,30,21,2,0,2,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\SetAttributeColumnWidthActor.java,10,45,30,24,9,58,19,0,7,0,7,1,8,20,183,21,42,197,31,22,2,0,2,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\SetAttributeFontSizeActor.java,7,45,30,24,11,56,16,0,6,0,8,1,9,20,198,23,35,175,23,20,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\SetAttributeNameActor.java,10,45,30,25,9,57,20,0,7,0,7,1,8,20,177,20,42,208,32,23,2,0,2,0,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\SetAttributeRestrictedActor.java,12,43,32,25,23,47,15,0,6,0,8,1,6,14,217,27,44,197,24,28,2,0,2,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\SetAttributeValueActor.java,10,45,30,25,9,57,20,0,7,0,7,1,8,20,177,20,42,208,32,23,2,0,2,0,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\SetAttributeVisibleActor.java,9,45,30,24,9,57,17,0,7,0,8,1,8,20,183,21,40,182,26,22,2,0,2,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\UnregistryAttributeActor.java,14,45,31,25,14,55,15,1,7,0,7,1,6,14,162,42,39,161,23,32,2,0,2,0,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\attributeactors\UnregistryAttributeValueActor.java,9,46,30,24,10,58,17,0,7,0,8,1,9,20,200,19,37,172,27,20,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\dialogs\StylePatternFrame.java,118,42,32,26,15,37,28,3,10,0,6,0,6,24,84,48,45,458,35,347,17,13,22,82,17,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\EncryptedMindMapNode.java,69,39,34,27,37,31,16,1,7,0,8,1,16,35,192,45,53,312,21,185,21,18,30,16,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\hooks\MindMapHookAdapter.java,2,49,29,22,5,64,11,0,5,0,11,5,28,50,229,0,26,90,12,6,4,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\hooks\MindMapHookFactory.java,70,41,33,26,29,38,18,0,8,0,7,1,17,45,154,55,47,291,27,169,20,16,30,12,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\hooks\MindMapNodeHookAdapter.java,2,49,29,22,5,64,11,0,5,0,11,5,28,50,229,0,26,90,12,6,4,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\hooks\PermanentMindMapNodeHookAdapter.java,6,48,29,24,3,64,15,0,7,0,8,2,33,71,208,6,45,144,24,14,6,1,5,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\JAutoScrollBarPane.java,13,41,33,26,36,40,9,2,6,0,6,1,14,36,178,70,59,133,16,26,5,0,4,0,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\listeners\MindMapMouseMotionManager.java,19,42,32,25,24,39,16,5,8,0,6,1,14,46,133,74,52,254,25,46,4,5,7,0,5,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\listeners\MindMapNodeDropListener.java,53,41,33,26,35,38,13,0,7,0,6,1,50,119,188,58,51,207,25,99,2,50,50,9,1,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\listeners\MindMapNodeMotionListener.java,50,41,33,26,25,38,19,3,9,0,7,0,6,19,150,60,51,300,29,117,9,4,8,4,7,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapArrowLinkModel.java,26,39,35,26,41,32,12,4,5,0,5,1,10,23,186,97,57,221,28,39,4,0,4,3,14,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapCloudModel.java,2,51,27,22,0,72,12,0,2,0,9,5,40,66,210,0,21,90,18,4,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapController.java,474,40,33,27,30,31,21,1,9,0,7,0,9,25,147,52,50,415,30,1227,37,106,119,112,57,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapEdgeModel.java,2,51,27,22,0,72,12,0,2,0,9,5,40,66,210,0,21,90,18,4,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapHTMLWriter.java,105,40,34,26,37,17,17,15,6,2,6,0,20,53,153,118,51,602,28,233,11,45,49,232,26,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapMapModel.java,152,39,34,27,34,29,20,1,8,0,8,0,18,44,175,47,48,419,27,401,23,58,73,60,17,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapMode.java,11,44,31,25,16,54,14,0,6,0,8,1,9,21,196,31,38,157,19,31,3,0,3,3,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapNodeModel.java,46,39,34,27,39,27,14,5,7,1,7,1,16,35,189,64,55,317,21,114,3,20,19,41,10,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapPopupMenu.java,6,46,30,24,13,57,15,2,5,0,7,2,12,33,139,37,34,156,22,15,3,0,2,2,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapToolBar.java,24,43,32,25,21,46,17,0,7,0,7,1,22,68,131,32,40,227,20,76,2,17,17,9,3,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\mindmapmode\MindMapXMLElement.java,20,44,32,25,15,57,14,0,7,0,6,1,20,47,191,27,48,150,25,43,4,6,9,1,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\MindMapNode.java,34,48,28,23,0,77,12,0,7,0,2,2,47,400,9,4,33,96,15,100,35,13,48,4,0,Normal,1,* May need breaking down into functions or classes. 
+C:\Users\sainath\Desktop\freemind\modes\Mode.java,5,48,29,23,2,71,15,0,5,0,5,2,33,133,86,0,30,126,24,11,4,0,4,1,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\ModeController.java,29,49,28,23,0,76,14,0,6,0,2,2,51,381,19,1,28,117,20,80,40,4,42,1,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\ModesCreator.java,17,42,32,26,27,44,14,1,7,0,6,1,14,40,150,43,42,193,22,40,6,0,6,8,0,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\NodeAdapter.java,279,38,35,27,44,24,17,1,7,0,7,0,19,42,196,49,52,434,26,669,35,132,131,46,49,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\NodeDownAction.java,3,50,27,23,0,68,15,0,5,0,9,3,22,50,181,11,27,126,21,8,2,0,2,1,1,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\NodeViewEvent.java,1,52,26,22,0,55,20,0,4,0,13,8,42,100,150,14,17,183,15,6,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\NodeViewEventListener.java,1,52,26,22,0,70,14,0,2,0,7,7,60,150,104,0,10,111,20,4,5,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\schememode\SchemeController.java,24,44,31,24,17,55,12,3,7,0,6,1,44,115,163,48,50,134,21,49,3,22,22,10,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\schememode\SchemeEdgeModel.java,2,51,27,22,0,72,12,0,2,0,9,5,40,66,210,0,21,90,18,4,2,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\schememode\SchemeMapModel.java,28,41,33,26,31,43,12,0,7,0,6,1,31,70,193,31,51,173,21,60,6,21,19,6,7,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\schememode\SchemeMode.java,9,44,31,24,13,54,16,0,5,0,10,1,10,21,206,23,34,180,18,29,3,0,3,1,0,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\modes\schememode\SchemeNodeModel.java,23,38,35,27,48,22,11,4,7,0,7,1,7,13,235,82,67,296,18,50,3,3,4,13,1,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\schememode\SchemePopupMenu.java,2,51,27,22,0,66,17,0,3,0,10,5,42,100,159,14,12,140,20,6,2,1,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\schememode\SchemeToolBar.java,4,49,28,23,0,67,17,0,6,0,7,3,15,50,92,46,28,150,20,12,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\StylePattern.java,74,39,34,27,38,28,17,1,7,0,8,1,27,55,209,51,45,376,27,173,36,14,47,52,2,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\StylePatternFactory.java,68,40,33,27,32,31,20,1,9,0,6,0,4,13,144,59,57,387,34,144,6,1,7,27,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\modes\viewmodes\CommonToggleChildrenFoldedAction.java,6,49,28,23,0,74,11,0,6,0,7,2,21,60,138,21,33,89,18,13,3,0,3,1,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\viewmodes\ViewControllerAdapter.java,26,42,32,26,25,46,14,0,8,0,6,1,28,77,157,47,49,189,24,58,5,15,17,2,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\modes\XMLElementAdapter.java,169,37,35,28,47,21,16,1,8,0,7,0,16,36,202,63,53,456,27,363,15,46,60,91,9,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\preferences\FreemindPropertyContributor.java,1,54,26,21,0,75,7,0,1,0,8,8,75,150,135,0,8,50,10,3,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\preferences\FreemindPropertyListener.java,1,53,26,21,0,75,9,0,1,0,7,8,75,150,132,0,20,66,15,3,3,0,3,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\preferences\layout\GrabKeyDialog.java,100,37,36,27,44,25,16,1,6,0,6,1,34,98,143,53,51,402,28,215,19,82,74,39,22,Data Manipulation Oriented,0,
+C:\Users\sainath\Desktop\freemind\preferences\layout\KeyEventTranslator.java,89,36,37,27,53,17,13,5,5,0,5,1,23,57,178,68,60,464,29,149,16,33,35,31,33,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\preferences\layout\KeyEventWorkaround.java,58,36,37,27,54,25,10,3,3,0,4,0,29,83,161,79,43,257,27,83,7,26,25,20,15,Data Manipulation Oriented,0,
+C:\Users\sainath\Desktop\freemind\preferences\layout\OptionPanel.java,151,42,31,27,14,28,35,1,13,2,7,1,40,168,82,24,49,782,38,516,22,340,210,314,29,Data I/O Oriented,0,
+C:\Users\sainath\Desktop\freemind\preferences\layout\VariableSizeCardLayout.java,12,43,32,25,26,45,10,7,5,0,6,1,12,25,203,95,50,133,20,23,3,0,3,0,5,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\MapModule.java,11,42,33,25,22,41,19,2,6,0,10,1,15,33,194,35,40,273,20,39,5,1,6,1,1,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\ArrowLinkView.java,75,38,35,27,41,26,15,4,8,0,5,0,24,64,159,89,60,365,33,128,23,12,31,2,36,Data Manipulation Oriented,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\attributeview\AttributePopupMenu.java,49,40,34,26,35,34,15,2,7,0,8,0,8,18,216,48,49,264,21,122,12,0,11,6,11,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\attributeview\AttributeTable.java,148,39,34,27,39,30,15,3,7,0,5,0,5,13,157,74,57,304,28,292,14,8,15,2,45,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\attributeview\AttributeTableCellRenderer.java,15,41,33,25,31,43,11,3,5,0,6,1,18,40,193,51,46,161,20,32,4,2,6,1,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\attributeview\AttributeTableModelDecoratorAdapter.java,11,46,30,24,4,63,16,0,6,0,9,1,14,31,198,8,34,158,20,34,5,0,5,0,1,Normal,2,* Needs more comments. * Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\attributeview\AttributeView.java,56,39,34,27,39,33,13,0,8,0,7,0,5,12,187,33,59,241,20,135,11,1,7,1,4,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\attributeview\AttributeViewScrollPane.java,4,47,30,23,7,65,9,0,6,0,10,2,14,33,199,0,45,84,11,13,3,0,2,0,0,Normal,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\attributeview\ExtendedAttributeTableModelDecorator.java,26,38,36,27,44,27,15,2,5,0,6,1,7,16,202,53,52,340,27,53,6,0,4,2,12,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\attributeview\ReducedAttributeTableModelDecorator.java,23,40,34,26,34,37,14,1,6,0,7,1,15,30,206,33,50,223,23,52,8,0,8,0,8,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\BezierEdgeView.java,14,45,31,25,17,51,14,6,6,0,6,1,19,60,130,70,47,163,24,30,3,3,6,0,7,Algorithmic Oriented,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\BubbleMainView.java,25,43,32,25,17,46,14,7,8,1,7,1,19,52,163,62,63,181,21,60,7,5,12,0,32,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\CloudView.java,42,42,33,25,23,34,20,10,7,0,5,1,22,74,107,93,56,357,27,114,21,6,26,0,23,Algorithmic Oriented,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\ConvexHull.java,47,38,35,27,43,19,16,10,8,1,4,0,15,48,97,123,55,514,34,85,3,12,13,0,41,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\EdgeView.java,17,43,32,25,15,49,18,1,7,0,8,1,11,30,170,31,48,225,22,50,6,0,6,0,5,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\EditNodeBase.java,49,42,33,26,24,44,17,0,6,0,9,0,10,21,207,25,39,238,23,137,19,6,14,6,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\EditNodeDialog.java,49,43,31,26,17,46,18,0,9,0,8,1,15,38,174,23,50,248,25,137,8,13,21,14,5,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\EditNodeExternalApplication.java,16,44,31,25,18,57,11,0,6,0,7,1,45,112,177,40,43,118,17,39,3,16,18,3,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\EditNodeTextField.java,55,42,32,26,25,44,15,3,7,0,6,1,25,74,143,59,47,202,23,126,3,29,32,0,18,Normal,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\EditNodeWYSIWYG.java,52,43,31,25,17,46,17,3,9,0,8,0,10,28,165,45,52,224,24,135,8,7,14,27,4,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\ForkMainView.java,26,41,33,25,28,35,13,9,8,0,6,1,8,20,171,88,70,232,21,59,4,1,5,0,21,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\LeftNodeViewLayout.java,16,45,31,24,11,56,15,4,7,0,6,1,8,27,122,64,52,167,26,36,3,0,3,0,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\LinearEdgeView.java,13,42,32,25,20,41,18,4,8,0,8,1,11,30,162,45,51,260,26,34,3,1,4,0,5,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\MainView.java,83,40,34,26,31,34,15,6,7,0,6,0,11,27,190,72,61,267,28,161,15,4,19,3,63,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\MapView.java,340,38,35,27,41,23,17,3,8,0,7,0,18,44,165,66,55,458,27,808,42,122,147,28,70,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\MindMapLayout.java,22,43,32,25,20,43,18,5,7,0,7,1,23,54,172,69,42,250,28,51,4,12,12,0,9,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\MultipleImage.java,23,41,33,26,31,38,14,3,7,0,5,1,43,120,127,72,52,229,22,54,2,28,24,0,9,Normal,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\NodeMotionListenerView.java,14,46,30,24,12,58,12,3,7,0,7,1,17,53,147,38,47,129,17,38,3,4,7,1,9,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\NodeView.java,342,37,36,28,45,20,16,3,9,0,7,0,15,35,176,69,62,487,25,794,42,103,123,45,103,Data Manipulation Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\NodeViewFactory.java,46,40,34,26,35,35,15,1,6,0,8,0,3,7,213,46,50,255,23,108,3,1,4,2,6,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\NodeViewLayout.java,2,51,27,22,0,77,11,0,2,0,5,4,33,100,90,0,19,85,20,5,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\NodeViewLayoutAdapter.java,68,39,34,27,35,22,18,10,8,0,6,0,6,17,144,104,64,517,28,167,11,0,11,0,37,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\NodeViewVisitor.java,1,54,26,21,0,71,10,0,2,0,9,8,50,100,141,0,8,71,12,3,2,0,2,0,0,Normal,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\PathBBox.java,48,38,36,26,22,20,20,17,16,1,4,0,18,62,89,157,68,618,38,98,2,16,18,0,64,Algorithmic Oriented,0,
+C:\Users\sainath\Desktop\freemind\view\mindmapview\RightNodeViewLayout.java,17,45,31,24,11,54,16,5,7,0,6,1,7,27,118,73,53,185,27,37,3,0,3,0,3,Normal,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\RootMainView.java,28,43,32,24,18,45,13,10,7,1,6,1,13,33,182,71,66,170,22,59,7,1,8,0,38,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\SharpBezierEdgeView.java,28,44,31,24,11,40,21,15,7,0,6,0,7,26,112,116,51,311,33,65,3,2,5,0,16,Algorithmic Oriented,1,* Needs more comments. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\SharpLinearEdgeView.java,7,47,30,23,1,63,12,6,9,0,8,2,23,50,197,41,50,110,18,16,3,1,4,0,3,Algorithmic Oriented,1,* Code structure may be too fragmented. 
+C:\Users\sainath\Desktop\freemind\view\mindmapview\VerticalRootNodeViewLayout.java,30,44,31,25,14,46,19,7,8,0,5,0,7,27,105,95,53,243,32,64,3,2,5,1,8,Algorithmic Oriented,1,* Needs more comments. 
+
+Entire Project Totals,11642,41,33,26,30,35,17,2,8,0,7,1,17,44,166,50,48,307,27,27579,2403,3324,4827,3449,2521,Normal,256,
+

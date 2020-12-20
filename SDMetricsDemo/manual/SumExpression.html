@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Attributes "sum" and "stat"</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Scope.html">Prev</a> - <a href="Recurse.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > <a href="Projection.html">8.1.1 Projection</a> > 8.1.1.7 Attributes "sum" and "stat"
+<hr>
+<h4><a name="SumExpression"></a>8.1.1.7 Attributes "sum" and "stat"</h4>
+
+You are not restricted to just counting elements in a relation. You
+can evaluate a metric expression (see <a href="DefMetExp.html">Section&nbsp;8.5.2 "Metric Expressions"</a>) for the elements
+in a relation, and add up the values, or return the maximum or minimum
+value. For example:
+
+<pre>
+&lt;metric name="NumOps" domain="package"&gt; 
+  &lt;projection relation="context" target="class" sum="NumOps" /&gt;
+&lt;/metric&gt;
+</pre>
+
+The expression "NumOps" is evaluated for each class in the package.
+This metric returns the number of operations in the classes in
+a package.<p>
+
+To return the maximum or minimum of the values evaluated for the
+sum expression, specify the additional attribute "stat". The stat
+attribute can take values "max", "min" or "sum" (default value). For
+example:
+
+<pre>
+&lt;metric name="MaxNumOps" domain="package"&gt; 
+  &lt;description&gt;The maximum number of operations in a class
+    of the package.&lt;/description&gt;
+  &lt;projection relation="context" target="class" 
+              sum="NumOps" stat="max" /&gt;
+&lt;/metric&gt;
+</pre>
+
+When you combine "sum" with the "element" and "eltype" attributes, the
+sum will be taken over the elements returned by those attributes. For
+example:
+
+<pre>
+&lt;metric name="SupplierOperations" domain="class"&gt; 
+  &lt;description&gt;The number of public operations in the supplier
+  classes of a client class.&lt;/description&gt;
+  &lt;projection relation="depclient" target="dependency"
+    element="depsupplier" eltype="class" sum="NumPubOps"/&gt;
+&lt;/metric&gt;
+</pre>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Scope.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Projection.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Recurse.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.1.6 "Filter Attribute "scope""</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.1.1.8 "Attribute "recurse""</td></tr></table>
+
+</body>
+</html>

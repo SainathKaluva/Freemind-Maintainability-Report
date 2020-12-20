@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>LoggingOutputStream.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">LoggingOutputStream.java</span></div><h1>LoggingOutputStream.java</h1><pre class="source lang-java linenums">package freemind.main;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * An OutputStream that writes contents to a Logger upon each call to flush()
+ * 
+ * See http://blogs.sun.com/nickstephen/entry/java_redirecting_system_out_and
+ */
+class LoggingOutputStream extends ByteArrayOutputStream {
+
+	private String lineSeparator;
+
+	private Logger logger;
+	private Level level;
+
+	/**
+	 * Constructor
+	 * 
+	 * @param logger
+	 *            Logger to write to
+	 * @param level
+	 *            Level at which to write the log message
+	 */
+	public LoggingOutputStream(Logger logger, Level level) {
+<span class="nc" id="L29">		super();</span>
+<span class="nc" id="L30">		this.logger = logger;</span>
+<span class="nc" id="L31">		this.level = level;</span>
+<span class="nc" id="L32">		lineSeparator = System.getProperty(&quot;line.separator&quot;);</span>
+<span class="nc" id="L33">	}</span>
+
+	/**
+	 * upon flush() write the existing contents of the OutputStream to the
+	 * logger as a log record.
+	 * 
+	 * @throws java.io.IOException
+	 *             in case of error
+	 */
+	public void flush() throws IOException {
+
+		String record;
+<span class="nc" id="L45">		synchronized (this) {</span>
+<span class="nc" id="L46">			super.flush();</span>
+<span class="nc" id="L47">			record = this.toString();</span>
+<span class="nc" id="L48">			super.reset();</span>
+		}
+
+<span class="nc bnc" id="L51" title="All 4 branches missed.">		if (record.length() == 0 || record.equals(lineSeparator)) {</span>
+			// avoid empty records
+<span class="nc" id="L53">			return;</span>
+		}
+
+<span class="nc" id="L56">		logger.logp(level, &quot;&quot;, &quot;&quot;, record);</span>
+<span class="nc" id="L57">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

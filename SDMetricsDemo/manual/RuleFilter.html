@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Filtering Design Rules</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Rules.html">Prev</a> - <a href="RuleAccepting.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="Rules.html">4.7 The View 'Rule Checker'</a> > 4.7.1 Filtering Design Rules
+<hr>
+<h3><a name="RuleFilter"></a>4.7.1 Filtering Design Rules</h3>
+
+Some design rules only apply to certain types of UML models, e.g.,
+models at a particular development phase (e.g., requirements, analysis,
+design), models of a particular application domain
+(e.g., embedded systems, real time systems), etc.<p>
+
+The measurement catalog indicates the applicable types of models for
+each rule. With the design rule filter, you can instruct
+SDMetrics to only check and report design rules that apply to your
+model at hand.<p>
+
+<b>Writing Rule Filters</b><p>
+
+Table&nbsp;3 shows some example filters and explains their
+function. For the example, we assume we have four application areas
+defined: 
+<ul>
+<li><code>analysis</code> (rules for analysis models) 
+<li><code>design</code> (rules for design models)
+<li><code>realtime</code> (rules for models of real-time systems)
+<li><code>pedantic</code> (rules about obsessive details)
+</ul>
+
+
+<table>
+<tr><th>Example Filter</th><th>Explanation</th></tr>
+<tr><td><code>design</code></td><td>
+
+To only check the rules of one application area, simply specify the
+name of that application area.<br>
+The example filter only checks rules that are applicable at the design
+phase.<br>
+
+</td></tr>
+<tr><td><code>design&amp;realtime</code></td><td>
+
+To check rules applicable to all of several areas, combine the areas
+with the &amp; operator.<br>
+The example filter only checks rules that are applicable to real-time
+systems at the design phase.
+
+</td></tr>
+<tr><td><code>analysis|design</code></td><td>
+
+To check rules applicable to at least one of several areas, combine
+the areas with the | operator.<br>
+The example filter only checks rules that are applicable at the
+analysis phase or at the design phase.<br>
+
+</td></tr>
+<tr><td><code>!analysis</code></td><td>
+
+To check rules that do not apply to a particular area, precede the
+name of the area with the ! operator.<br> 
+The example filter only checks rules that do not apply to the analysis
+phase.<br>
+
+</td></tr>
+<tr><td> <code>'design'</code></td><td>
+
+Some rules do not explicitly define an application area. Such rules
+are implied to apply to all areas. Therefore, the
+filter <code>design</code> will also check rules that do not specify
+any application area at all.<br>
+
+To instruct SDMetrics to only check rules that <i>explicitly</i> are
+defined for an application area, put the application area in single
+quotes.<br>
+The example filter only checks design rules which explicitly list
+"design" among their application areas.
+
+</td></tr>
+<tr><td><code>design&amp;<br>
+(!'realtime'|pedantic)</code></td><td>
+
+Using parentheses, you can define arbitrarily complex rule filters.
+The example filter checks all rules applicable to the design phase
+that are also not explicitly defined for real-time systems or are
+pedantic.
+
+</td></tr> </table>
+<b>Table 3:&nbsp;Rule filter examples.</b><p>
+
+<b>Applying Rule Filters</b><p>
+
+To apply a filter, specify it in the "filter" text field at the top of
+the rule checker view, and press return or click the "Apply" button.
+To clear the filter, and show all design rule violations regardless of
+their application area, click the "Clear" button.<p>
+
+If your filter contains a syntax error (illegal operation, unmatched
+parentheses etc.) you will get an error message and the rules will not
+be checked. If your filter specifies an application area that is not
+defined explicitly by at least one rule, SDMetrics will warn you about
+this, but will check the rules anyway.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Rules.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Rules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="RuleAccepting.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.7 "The View 'Rule Checker'"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.7.2 "Accepting Design Rule Violations"</td></tr></table>
+
+</body>
+</html>

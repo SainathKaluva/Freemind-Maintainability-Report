@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>BezierEdgeView.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">BezierEdgeView.java</span></div><h1>BezierEdgeView.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: BezierEdgeView.java,v 1.13.18.1.2.6 2008/06/09 21:01:15 dpolivaev Exp $*/
+
+package freemind.view.mindmapview;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Stroke;
+import java.awt.geom.CubicCurve2D;
+
+/**
+ * This class represents a single Edge of a MindMap.
+ */
+public class BezierEdgeView extends EdgeView {
+
+<span class="nc" id="L33">	CubicCurve2D.Float graph = new CubicCurve2D.Float();</span>
+	private static final int XCTRL = 12;// the distance between endpoint and
+										// controlpoint
+	private static final int CHILD_XCTRL = 20; // -||- at the child's end
+
+	public BezierEdgeView() {
+<span class="nc" id="L39">		super();</span>
+<span class="nc" id="L40">	}</span>
+
+	private void update() {
+
+		// YCTRL could be implemented but then we had to check whether target is
+		// above or below source.
+<span class="nc bnc" id="L46" title="All 2 branches missed.">		int sign = (getTarget().isLeft()) ? -1 : 1;</span>
+<span class="nc" id="L47">		int sourceSign = 1;</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		if (getSource().isRoot()</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">				&amp;&amp; !VerticalRootNodeViewLayout.USE_COMMON_OUT_POINT_FOR_ROOT_NODE) {</span>
+<span class="nc" id="L50">			sourceSign = 0;</span>
+		}
+<span class="nc" id="L52">		int xctrl = getMap().getZoomed(sourceSign * sign * XCTRL);</span>
+<span class="nc" id="L53">		int childXctrl = getMap().getZoomed(-1 * sign * CHILD_XCTRL);</span>
+
+<span class="nc" id="L55">		graph.setCurve(start.x, start.y, start.x + xctrl, start.y, end.x</span>
+<span class="nc" id="L56">				+ childXctrl, end.y, end.x, end.y);</span>
+<span class="nc" id="L57">	}</span>
+
+	protected void paint(Graphics2D g) {
+<span class="nc" id="L60">		update();</span>
+<span class="nc" id="L61">		final Color color = getColor();</span>
+<span class="nc" id="L62">		g.setColor(color);</span>
+<span class="nc" id="L63">		final Stroke stroke = getStroke();</span>
+<span class="nc" id="L64">		g.setStroke(stroke);</span>
+<span class="nc" id="L65">		g.draw(graph);</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (isTargetEclipsed()) {</span>
+<span class="nc" id="L68">			g.setColor(g.getBackground());</span>
+<span class="nc" id="L69">			g.setStroke(getEclipsedStroke());</span>
+<span class="nc" id="L70">			g.draw(graph);</span>
+<span class="nc" id="L71">			g.setStroke(stroke);</span>
+<span class="nc" id="L72">			g.setColor(color);</span>
+		}
+<span class="nc" id="L74">	}</span>
+
+	public Color getColor() {
+<span class="nc" id="L77">		return getModel().getColor();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

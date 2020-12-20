@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>KeyEventTranslator.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.preferences.layout</a> &gt; <span class="el_source">KeyEventTranslator.java</span></div><h1>KeyEventTranslator.java</h1><pre class="source lang-java linenums">/*
+ * KeyEventTranslator.java - Hides some warts of AWT event API
+ * :tabSize=8:indentSize=8:noTabs=false:
+ * :folding=explicit:collapseFolds=1:
+ *
+ * Copyright (C) 2003 Slava Pestov
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.preferences.layout;
+
+//{{{ Imports
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * In conjunction with the &lt;code&gt;KeyEventWorkaround&lt;/code&gt;, hides some warts in
+ * the AWT key event API.
+ * 
+ * @author Slava Pestov
+ * @version $Id: KeyEventTranslator.java,v 1.1.2.2 2005/05/12 21:56:57
+ *          christianfoltin Exp $
+ */
+<span class="nc" id="L39">public class KeyEventTranslator {</span>
+	// {{{ addTranslation() method
+	/**
+	 * Adds a keyboard translation.
+	 * 
+	 * @param key1
+	 *            Translate this key
+	 * @param key2
+	 *            Into this key
+	 * @since jEdit 4.2pre3
+	 */
+	public static void addTranslation(Key key1, Key key2) {
+<span class="nc" id="L51">		transMap.put(key1, key2);</span>
+<span class="nc" id="L52">	} // }}}</span>
+
+	// {{{ translateKeyEvent() method
+	/**
+	 * Pass this an event from
+	 * {@link KeyEventWorkaround#processKeyEvent(java.awt.event.KeyEvent)}.
+	 * 
+	 * @since jEdit 4.2pre3
+	 */
+	public static Key translateKeyEvent(KeyEvent evt) {
+<span class="nc" id="L62">		int modifiers = evt.getModifiers();</span>
+<span class="nc" id="L63">		Key returnValue = null;</span>
+
+<span class="nc bnc" id="L65" title="All 3 branches missed.">		switch (evt.getID()) {</span>
+		case KeyEvent.KEY_PRESSED:
+<span class="nc" id="L67">			int keyCode = evt.getKeyCode();</span>
+<span class="nc bnc" id="L68" title="All 4 branches missed.">			if ((keyCode &gt;= KeyEvent.VK_0 &amp;&amp; keyCode &lt;= KeyEvent.VK_9)</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">					|| (keyCode &gt;= KeyEvent.VK_A &amp;&amp; keyCode &lt;= KeyEvent.VK_Z)) {</span>
+				if (KeyEventWorkaround.ALTERNATIVE_DISPATCHER)
+					return null;
+				else {
+<span class="nc" id="L73">					returnValue = new Key(modifiersToString(modifiers),</span>
+					// fc, 12.5.2005: changed to upper case as Freemind seems to
+					// need this.
+<span class="nc" id="L76">							'\0', Character.toUpperCase((char) keyCode));</span>
+				}
+<span class="nc" id="L78">			} else {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">				if (keyCode == KeyEvent.VK_TAB) {</span>
+<span class="nc" id="L80">					evt.consume();</span>
+<span class="nc" id="L81">					returnValue = new Key(modifiersToString(modifiers),</span>
+<span class="nc" id="L82">							keyCode, '\0');</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				} else if (keyCode == KeyEvent.VK_SPACE) {</span>
+					// for SPACE or S+SPACE we pass the
+					// key typed since international
+					// keyboards sometimes produce a
+					// KEY_PRESSED SPACE but not a
+					// KEY_TYPED SPACE, eg if you have to
+					// do a &quot;&lt;space&gt; to insert &quot;.
+<span class="nc bnc" id="L90" title="All 2 branches missed.">					if ((modifiers &amp; ~InputEvent.SHIFT_MASK) == 0)</span>
+<span class="nc" id="L91">						returnValue = null;</span>
+					else {
+<span class="nc" id="L93">						returnValue = new Key(modifiersToString(modifiers), 0,</span>
+<span class="nc" id="L94">								' ');</span>
+					}
+<span class="nc" id="L96">				} else {</span>
+<span class="nc" id="L97">					returnValue = new Key(modifiersToString(modifiers),</span>
+<span class="nc" id="L98">							keyCode, '\0');</span>
+				}
+			}
+<span class="nc" id="L101">			break;</span>
+		case KeyEvent.KEY_TYPED:
+<span class="nc" id="L103">			char ch = evt.getKeyChar();</span>
+
+<span class="nc bnc" id="L105" title="All 3 branches missed.">			switch (ch) {</span>
+			case '\n':
+			case '\t':
+			case '\b':
+<span class="nc" id="L109">				return null;</span>
+			case ' ':
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if ((modifiers &amp; ~InputEvent.SHIFT_MASK) != 0)</span>
+<span class="nc" id="L112">					return null;</span>
+			}
+
+			int ignoreMods;
+			if (KeyEventWorkaround.ALT_KEY_PRESSED_DISABLED) {
+				/* on MacOS, A+ can be user input */
+				ignoreMods = (InputEvent.SHIFT_MASK | InputEvent.ALT_GRAPH_MASK | InputEvent.ALT_MASK);
+			} else {
+				/* on MacOS, A+ can be user input */
+<span class="nc" id="L121">				ignoreMods = (InputEvent.SHIFT_MASK | InputEvent.ALT_GRAPH_MASK);</span>
+			}
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if ((modifiers &amp; InputEvent.ALT_GRAPH_MASK) == 0</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">					&amp;&amp; evt.getWhen() - KeyEventWorkaround.lastKeyTime &lt; 750</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">					&amp;&amp; (KeyEventWorkaround.modifiers &amp; ~ignoreMods) != 0) {</span>
+				if (KeyEventWorkaround.ALTERNATIVE_DISPATCHER) {
+					returnValue = new Key(modifiersToString(modifiers), 0, ch);
+				} else
+<span class="nc" id="L130">					return null;</span>
+			} else {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (ch == ' ') {</span>
+<span class="nc" id="L133">					returnValue = new Key(modifiersToString(modifiers), 0, ch);</span>
+<span class="nc" id="L134">				} else</span>
+<span class="nc" id="L135">					returnValue = new Key(null, 0, ch);</span>
+			}
+<span class="nc" id="L137">			break;</span>
+		default:
+<span class="nc" id="L139">			return null;</span>
+		}
+
+		/*
+		 * I guess translated events do not have the 'evt' field set so
+		 * consuming won't work. I don't think this is a problem as nothing uses
+		 * translation anyway
+		 */
+<span class="nc" id="L147">		Key trans = (Key) transMap.get(returnValue);</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		if (trans == null)</span>
+<span class="nc" id="L149">			return returnValue;</span>
+		else
+<span class="nc" id="L151">			return trans;</span>
+	} // }}}
+
+	// {{{ parseKey() method
+	/**
+	 * Converts a string to a keystroke. The string should be of the form
+	 * &lt;i&gt;modifiers&lt;/i&gt;+&lt;i&gt;shortcut&lt;/i&gt; where &lt;i&gt;modifiers&lt;/i&gt; is any
+	 * combination of A for Alt, C for Control, S for Shift or M for Meta, and
+	 * &lt;i&gt;shortcut&lt;/i&gt; is either a single character, or a keycode name from the
+	 * &lt;code&gt;KeyEvent&lt;/code&gt; class, without the &lt;code&gt;VK_&lt;/code&gt; prefix.
+	 * 
+	 * @param keyStroke
+	 *            A string description of the key stroke
+	 * @since jEdit 4.2pre3
+	 */
+	public static Key parseKey(String keyStroke) {
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (keyStroke == null)</span>
+<span class="nc" id="L168">			return null;</span>
+<span class="nc" id="L169">		int index = keyStroke.indexOf('+');</span>
+<span class="nc" id="L170">		int modifiers = 0;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (index != -1) {</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">			for (int i = 0; i &lt; index; i++) {</span>
+<span class="nc bnc" id="L173" title="All 5 branches missed.">				switch (Character.toUpperCase(keyStroke.charAt(i))) {</span>
+				case 'A':
+<span class="nc" id="L175">					modifiers |= a;</span>
+<span class="nc" id="L176">					break;</span>
+				case 'C':
+<span class="nc" id="L178">					modifiers |= c;</span>
+<span class="nc" id="L179">					break;</span>
+				case 'M':
+<span class="nc" id="L181">					modifiers |= m;</span>
+<span class="nc" id="L182">					break;</span>
+				case 'S':
+<span class="nc" id="L184">					modifiers |= s;</span>
+					break;
+				}
+			}
+		}
+<span class="nc" id="L189">		String key = keyStroke.substring(index + 1);</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		if (key.length() == 1) {</span>
+<span class="nc" id="L191">			return new Key(modifiersToString(modifiers), 0, key.charAt(0));</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		} else if (key.length() == 0) {</span>
+			// Log.log(Log.ERROR,DefaultInputHandler.class,
+			// &quot;Invalid key stroke: &quot; + keyStroke);
+<span class="nc" id="L195">			return null;</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		} else if (key.equals(&quot;SPACE&quot;)) {</span>
+<span class="nc" id="L197">			return new Key(modifiersToString(modifiers), 0, ' ');</span>
+		} else {
+			int ch;
+
+			try {
+<span class="nc" id="L202">				ch = KeyEvent.class.getField(&quot;VK_&quot;.concat(key)).getInt(null);</span>
+<span class="nc" id="L203">			} catch (Exception e) {</span>
+				// Log.log(Log.ERROR,DefaultInputHandler.class,
+				// &quot;Invalid key stroke: &quot;
+				// + keyStroke);
+<span class="nc" id="L207">				return null;</span>
+			}
+
+<span class="nc" id="L210">			return new Key(modifiersToString(modifiers), ch, '\0');</span>
+		}
+	} // }}}
+
+	// {{{ setModifierMapping() method
+	/**
+	 * Changes the mapping between symbolic modifier key names (&lt;code&gt;C&lt;/code&gt;,
+	 * &lt;code&gt;A&lt;/code&gt;, &lt;code&gt;M&lt;/code&gt;, &lt;code&gt;S&lt;/code&gt;) and Java modifier flags.
+	 * 
+	 * You can map more than one Java modifier to a symobolic modifier, for
+	 * example :
+	 * &lt;p&gt;
+	 * &lt;code&gt;&lt;pre&gt;
+	 * 	setModifierMapping(
+	 * 		InputEvent.CTRL_MASK,
+	 * 		InputEvent.ALT_MASK | InputEvent.META_MASK,
+	 * 		0,
+	 * 		InputEvent.SHIFT_MASK);
+	 * &lt;pre&gt;&lt;/code&gt;
+	 * &lt;/p&gt;
+	 * 
+	 * You cannot map a Java modifer to more than one symbolic modifier.
+	 * 
+	 * @param c
+	 *            The modifier(s) to map the &lt;code&gt;C&lt;/code&gt; modifier to
+	 * @param a
+	 *            The modifier(s) to map the &lt;code&gt;A&lt;/code&gt; modifier to
+	 * @param m
+	 *            The modifier(s) to map the &lt;code&gt;M&lt;/code&gt; modifier to
+	 * @param s
+	 *            The modifier(s) to map the &lt;code&gt;S&lt;/code&gt; modifier to
+	 * 
+	 * @since jEdit 4.2pre3
+	 */
+	public static void setModifierMapping(int c, int a, int m, int s) {
+
+<span class="nc" id="L246">		int duplicateMapping = ((c &amp; a) | (c &amp; m) | (c &amp; s) | (a &amp; m) | (a &amp; s) | (m &amp; s));</span>
+
+<span class="nc bnc" id="L248" title="All 2 branches missed.">		if ((duplicateMapping &amp; InputEvent.CTRL_MASK) != 0) {</span>
+<span class="nc" id="L249">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L250">					&quot;CTRL is mapped to more than one modifier&quot;);</span>
+		}
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		if ((duplicateMapping &amp; InputEvent.ALT_MASK) != 0) {</span>
+<span class="nc" id="L253">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L254">					&quot;ALT is mapped to more than one modifier&quot;);</span>
+		}
+<span class="nc bnc" id="L256" title="All 2 branches missed.">		if ((duplicateMapping &amp; InputEvent.META_MASK) != 0) {</span>
+<span class="nc" id="L257">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L258">					&quot;META is mapped to more than one modifier&quot;);</span>
+		}
+<span class="nc bnc" id="L260" title="All 2 branches missed.">		if ((duplicateMapping &amp; InputEvent.SHIFT_MASK) != 0) {</span>
+<span class="nc" id="L261">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L262">					&quot;SHIFT is mapped to more than one modifier&quot;);</span>
+		}
+
+<span class="nc" id="L265">		KeyEventTranslator.c = c;</span>
+<span class="nc" id="L266">		KeyEventTranslator.a = a;</span>
+<span class="nc" id="L267">		KeyEventTranslator.m = m;</span>
+<span class="nc" id="L268">		KeyEventTranslator.s = s;</span>
+<span class="nc" id="L269">	} // }}}</span>
+
+	// {{{ getSymbolicModifierName() method
+	/**
+	 * Returns a the symbolic modifier name for the specified Java modifier
+	 * flag.
+	 * 
+	 * @param mod
+	 *            A modifier constant from &lt;code&gt;InputEvent&lt;/code&gt;
+	 * 
+	 * @since jEdit 4.2pre3
+	 */
+	public static String getSymbolicModifierName(int mod) {
+<span class="nc bnc" id="L282" title="All 2 branches missed.">		if ((mod &amp; c) != 0)</span>
+<span class="nc" id="L283">			return &quot;control&quot;;</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		else if ((mod &amp; a) != 0)</span>
+<span class="nc" id="L285">			return &quot;alt&quot;;</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">		else if ((mod &amp; m) != 0)</span>
+<span class="nc" id="L287">			return &quot;meta&quot;;</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		else if ((mod &amp; s) != 0)</span>
+<span class="nc" id="L289">			return &quot;shift&quot;;</span>
+		else
+<span class="nc" id="L291">			return &quot;&quot;;</span>
+	} // }}}
+
+	// {{{ modifiersToString() method
+	public static String modifiersToString(int mods) {
+<span class="nc" id="L296">		StringBuffer buf = null;</span>
+
+<span class="nc bnc" id="L298" title="All 2 branches missed.">		if ((mods &amp; InputEvent.CTRL_MASK) != 0) {</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">			if (buf == null)</span>
+<span class="nc" id="L300">				buf = new StringBuffer();</span>
+			else
+<span class="nc" id="L302">				buf.append(GrabKeyDialog.MODIFIER_SEPARATOR);</span>
+<span class="nc" id="L303">			buf.append(getSymbolicModifierName(InputEvent.CTRL_MASK));</span>
+		}
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		if ((mods &amp; InputEvent.ALT_MASK) != 0) {</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">			if (buf == null)</span>
+<span class="nc" id="L307">				buf = new StringBuffer();</span>
+			else
+<span class="nc" id="L309">				buf.append(GrabKeyDialog.MODIFIER_SEPARATOR);</span>
+<span class="nc" id="L310">			buf.append(getSymbolicModifierName(InputEvent.ALT_MASK));</span>
+		}
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		if ((mods &amp; InputEvent.META_MASK) != 0) {</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			if (buf == null)</span>
+<span class="nc" id="L314">				buf = new StringBuffer();</span>
+			else
+<span class="nc" id="L316">				buf.append(GrabKeyDialog.MODIFIER_SEPARATOR);</span>
+<span class="nc" id="L317">			buf.append(getSymbolicModifierName(InputEvent.META_MASK));</span>
+		}
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		if ((mods &amp; InputEvent.SHIFT_MASK) != 0) {</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">			if (buf == null)</span>
+<span class="nc" id="L321">				buf = new StringBuffer();</span>
+			else
+<span class="nc" id="L323">				buf.append(GrabKeyDialog.MODIFIER_SEPARATOR);</span>
+<span class="nc" id="L324">			buf.append(getSymbolicModifierName(InputEvent.SHIFT_MASK));</span>
+		}
+
+<span class="nc bnc" id="L327" title="All 2 branches missed.">		if (buf == null)</span>
+<span class="nc" id="L328">			return null;</span>
+		else
+<span class="nc" id="L330">			return buf.toString();</span>
+	} // }}}
+
+	// {{{ getModifierString() method
+	/**
+	 * Returns a string containing symbolic modifier names set in the specified
+	 * event.
+	 * 
+	 * @param evt
+	 *            The event
+	 * 
+	 * @since jEdit 4.2pre3
+	 */
+	public static String getModifierString(InputEvent evt) {
+<span class="nc" id="L344">		StringBuffer buf = new StringBuffer();</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">		if (evt.isControlDown())</span>
+<span class="nc" id="L346">			buf.append(getSymbolicModifierName(InputEvent.CTRL_MASK));</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">		if (evt.isAltDown())</span>
+<span class="nc" id="L348">			buf.append(getSymbolicModifierName(InputEvent.ALT_MASK));</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">		if (evt.isMetaDown())</span>
+<span class="nc" id="L350">			buf.append(getSymbolicModifierName(InputEvent.META_MASK));</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">		if (evt.isShiftDown())</span>
+<span class="nc" id="L352">			buf.append(getSymbolicModifierName(InputEvent.SHIFT_MASK));</span>
+<span class="nc bnc" id="L353" title="All 2 branches missed.">		return (buf.length() == 0 ? null : buf.toString());</span>
+	} // }}}
+
+	static int c, a, m, s;
+
+	// {{{ Private members
+<span class="nc" id="L359">	private static Map transMap = new HashMap();</span>
+
+	static {
+<span class="nc bnc" id="L362" title="All 2 branches missed.">		if (GrabKeyDialog.isMacOS()) {</span>
+<span class="nc" id="L363">			setModifierMapping(InputEvent.META_MASK, /* == C+ */</span>
+<span class="nc" id="L364">					InputEvent.CTRL_MASK, /* == A+ */</span>
+					/* M+ discarded by key event workaround! */
+<span class="nc" id="L366">					InputEvent.ALT_MASK, /* == M+ */</span>
+<span class="nc" id="L367">					InputEvent.SHIFT_MASK /* == S+ */);</span>
+<span class="nc" id="L368">		} else {</span>
+<span class="nc" id="L369">			setModifierMapping(InputEvent.CTRL_MASK, InputEvent.ALT_MASK,</span>
+<span class="nc" id="L370">					InputEvent.META_MASK, InputEvent.SHIFT_MASK);</span>
+		}
+<span class="nc" id="L372">	} // }}}</span>
+
+	// {{{ Key class
+	public static class Key {
+		public String modifiers;
+		public int key;
+		public char input;
+
+<span class="nc" id="L380">		public Key(String modifiers, int key, char input) {</span>
+<span class="nc" id="L381">			this.modifiers = modifiers;</span>
+<span class="nc" id="L382">			this.key = key;</span>
+<span class="nc" id="L383">			this.input = input;</span>
+<span class="nc" id="L384">		}</span>
+
+		public int hashCode() {
+<span class="nc" id="L387">			return key + input;</span>
+		}
+
+		public boolean equals(Object o) {
+<span class="nc bnc" id="L391" title="All 2 branches missed.">			if (o instanceof Key) {</span>
+<span class="nc" id="L392">				Key k = (Key) o;</span>
+<span class="nc bnc" id="L393" title="All 4 branches missed.">				if ((modifiers.equals(k.modifiers)) &amp;&amp; key == k.key</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">						&amp;&amp; input == k.input) {</span>
+<span class="nc" id="L395">					return true;</span>
+				}
+			}
+
+<span class="nc" id="L399">			return false;</span>
+		}
+
+		public String toString() {
+<span class="nc bnc" id="L403" title="All 2 branches missed.">			return (modifiers == null ? &quot;&quot; : modifiers) + &quot;&lt;&quot;</span>
+<span class="nc" id="L404">					+ Integer.toString(key, 16) + &quot;,&quot;</span>
+<span class="nc" id="L405">					+ Integer.toString(input, 16) + &quot;&gt;&quot;;</span>
+		}
+	} // }}}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

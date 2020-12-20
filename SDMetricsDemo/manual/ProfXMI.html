@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - XMI Serialization of Profile Extensions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProfSDMetrics.html">Prev</a> - <a href="ProfOpt1.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="Profiles.html">8.7 Defining Metrics for Profiles</a> > 8.7.3 XMI Serialization of Profile Extensions
+<hr>
+<h3><a name="ProfXMI"></a>8.7.3 XMI Serialization of Profile Extensions</h3>
+
+To facilitate the tracing of system requirements, the SysML defines
+requirement diagrams to represent the textual requirements of a system.
+Formally, a SysML requirement is a stereotype that extends meta-class "class", 
+and defines two new properties "Id" and "Text" to capture a human-readable ID 
+and summary text of the requirement.<p>
+
+The following extract of an XMI file shows a SysML model with a package named 
+"Specifications". The package contains a requirement "XYZ" with Id "R1" and text 
+"The system shall do XYZ":
+
+<pre>
+&lt;xmi:XMI xmi:version="2.1" ...&gt;
+  &lt;uml:Model name = "Sample" xmi:id = "xmi1"&gt;
+    &lt;packagedElement xmi:type="uml:Package" xmi:id="xmi2" name="Specifications"&gt;
+      &lt;packagedElement xmi:type="uml:Class" xmi:id="xmi3" name="XYZ" /&gt;
+    &lt;/packagedElement&gt;
+    ...
+  &lt;/uml:Model&gt;
+  &lt;sysml:Requirement base_Class="xmi3" xmi:id="xmi7" 
+    Text="The system shall do XYZ" Id="R1" /&gt;
+&lt;/xmi:XMI&gt;
+</pre>
+
+As a consequence of the UML's lightweight extension approach, 
+two XML elements are needed to represent the requirement:
+<ul>
+<li>A regular UML Class with the name "XYZ". This element represents the
+requirement in the model.
+<li>A SysML Requirement that references class "XYZ" via the attribute 
+"base_Class", and provides the values for the new properties "Id" and "Text". 
+This element represents the application of the "Requirement" stereotype to 
+class "XYZ".  Note that the element is outside the model. 
+</ul>
+
+SDMetrics offers three options to deal with such XMI files:
+<ul>
+<li>profile extensions with regular model elements
+<li>extension references without inheritance
+<li>extension references with inheritance
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProfSDMetrics.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Profiles.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ProfOpt1.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.7.2 "Profiles in SDMetrics"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.7.4 "Profile Extensions with Regular Model Elements"</td></tr></table>
+
+</body>
+</html>

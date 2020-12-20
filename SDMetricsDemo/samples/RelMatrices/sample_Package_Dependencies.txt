@@ -1,0 +1,11 @@
+Name	SDMetrics.com.sdmetrics.app	SDMetrics.com.sdmetrics.metrics	SDMetrics.com.sdmetrics.model	SDMetrics.com.sdmetrics.cmdline	SDMetrics.com.sdmetrics.output	SDMetrics.com.sdmetrics.math	SDMetrics.com.sdmetrics.util	SDMetrics.com.sdmetrics	SDMetrics.com	SDMetrics
+SDMetrics.com.sdmetrics.app	0	1	1	0	0	0	0	0	0	0
+SDMetrics.com.sdmetrics.metrics	0	0	1	0	0	1	0	0	0	0
+SDMetrics.com.sdmetrics.model	0	0	0	0	0	1	1	0	0	0
+SDMetrics.com.sdmetrics.cmdline	1	1	0	0	1	0	0	0	0	0
+SDMetrics.com.sdmetrics.output	1	0	0	0	0	0	0	0	0	0
+SDMetrics.com.sdmetrics.math	0	0	0	0	0	0	0	0	0	0
+SDMetrics.com.sdmetrics.util	0	0	0	0	0	0	0	0	0	0
+SDMetrics.com.sdmetrics	0	0	0	0	0	0	0	0	0	0
+SDMetrics.com	0	0	0	0	0	0	0	0	0	0
+SDMetrics	0	0	0	0	0	0	0	0	0	0

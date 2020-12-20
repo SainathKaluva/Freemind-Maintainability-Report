@@ -1,0 +1,1597 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeView.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">NodeView.java</span></div><h1>NodeView.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.view.mindmapview;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.MalformedURLException;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.SwingConstants;
+import javax.swing.ToolTipManager;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.TreeNode;
+
+import freemind.controller.Controller;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindMain;
+import freemind.main.HtmlTools;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMapCloud;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.NodeAdapter;
+import freemind.preferences.FreemindPropertyListener;
+import freemind.view.mindmapview.attributeview.AttributeView;
+
+/**
+ * This class represents a single Node of a MindMap (in analogy to
+ * TreeCellRenderer).
+ */
+public class NodeView extends JComponent implements TreeModelListener {
+	public void setFocusCycleRoot(boolean pFocusCycleRoot) {
+		// FIXME: On purpose removed. test this!
+		// super.setFocusCycleRoot(pFocusCycleRoot);
+<span class="nc" id="L76">	}</span>
+
+<span class="nc" id="L78">	static private int FOLDING_SYMBOL_WIDTH = -1;</span>
+
+	protected MindMapNode model;
+	protected MapView map;
+	private MainView mainView;
+	private AttributeView attributeView;
+<span class="nc" id="L84">	protected final static Color dragColor = Color.lightGray; // the Color of</span>
+																// appearing
+																// GradientBox
+																// on
+																// drag over
+<span class="nc" id="L89">	private boolean left = true; // is the node left of root?</span>
+<span class="nc" id="L90">	private boolean isLong = false;</span>
+
+	public final static int DRAGGED_OVER_NO = 0;
+	public final static int DRAGGED_OVER_SON = 1;
+	public final static int DRAGGED_OVER_SIBLING = 2;
+	/** For RootNodeView. */
+	public final static int DRAGGED_OVER_SON_LEFT = 3;
+
+	final static int ALIGN_BOTTOM = -1;
+	final static int ALIGN_CENTER = 0;
+	final static int ALIGN_TOP = 1;
+
+<span class="nc" id="L102">	final private static Point zeroPoint = new Point(0, 0);</span>
+	private static Logger logger;
+	private static FreemindPropertyListener sListener;
+	//
+	// Constructors
+	//
+
+	private Object viewDeletionEvent;
+	private int maxToolTipWidth;
+	private NodeView preferredChild;
+	private JComponent contentPane;
+	protected NodeMotionListenerView motionListenerView;
+
+<span class="nc" id="L115">	static final int SPACE_AROUND = 50;</span>
+
+	private NodeFoldingComponent mFoldingListener;
+
+<span class="nc" id="L119">	protected NodeView(MindMapNode model, int position, MapView map,</span>
+			Container parent) {
+<span class="nc bnc" id="L121" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L122">			logger = map.getController().getFrame()</span>
+<span class="nc" id="L123">					.getLogger(this.getClass().getName());</span>
+		}
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if(sListener == null){</span>
+<span class="nc" id="L126">			sListener = new FreemindPropertyListener() {</span>
+				
+				public void propertyChanged(String pPropertyName,
+						String pNewValue, String pOldValue) {
+<span class="nc" id="L130">					if (Tools.safeEquals(pPropertyName,</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">							FreeMind.TOOLTIP_DISPLAY_TIME)) {</span>
+						// control tooltip times:
+<span class="nc" id="L133">						ToolTipManager.sharedInstance().setDismissDelay(</span>
+<span class="nc" id="L134">								Resources.getInstance().getIntProperty(</span>
+<span class="nc" id="L135">										FreeMind.TOOLTIP_DISPLAY_TIME, 4000));</span>
+					}
+<span class="nc" id="L137">				}</span>
+			};
+<span class="nc" id="L139">			Controller.addPropertyChangeListenerAndPropagate(sListener);</span>
+		}
+
+<span class="nc" id="L142">		setFocusCycleRoot(true);</span>
+
+<span class="nc" id="L144">		this.model = model;</span>
+<span class="nc" id="L145">		this.map = map;</span>
+<span class="nc" id="L146">		final TreeNode parentNode = model.getParent();</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		final int index = parentNode == null ? 0 : parentNode.getIndex(model);</span>
+<span class="nc" id="L148">		createAttributeView();</span>
+
+<span class="nc" id="L150">		parent.add(this, index);</span>
+
+<span class="nc" id="L152">		addFoldingListener();</span>
+<span class="nc" id="L153">	}</span>
+
+	protected void addFoldingListener() {
+<span class="nc bnc" id="L156" title="All 6 branches missed.">		if(mFoldingListener == null &amp;&amp; getModel().hasVisibleChilds() &amp;&amp; !getModel().isRoot()) {</span>
+<span class="nc" id="L157">			mFoldingListener = new NodeFoldingComponent(this);</span>
+<span class="nc" id="L158">			add(mFoldingListener, getComponentCount()-1);</span>
+
+<span class="nc" id="L160">			mFoldingListener.addActionListener(new ActionListener() {</span>
+				
+				public void actionPerformed(ActionEvent pE) {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">					getModeController().setFolded(getModel(), !getModel().isFolded());</span>
+<span class="nc" id="L164">				}</span>
+			});
+		}
+<span class="nc" id="L167">	}</span>
+
+	protected void removeFoldingListener() {
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if(mFoldingListener != null) {</span>
+<span class="nc" id="L171">			mFoldingListener.dispose();</span>
+<span class="nc" id="L172">			remove(mFoldingListener);</span>
+<span class="nc" id="L173">			mFoldingListener = null;</span>
+		}
+<span class="nc" id="L175">	}</span>
+	
+	public void propertyChanged(String pPropertyName, String pNewValue,
+			String pOldValue) {
+<span class="nc" id="L179">	}</span>
+	
+
+	void setMainView(MainView newMainView) {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (mainView != null) {</span>
+<span class="nc" id="L184">			final Container c = mainView.getParent();</span>
+			int i;
+<span class="nc bnc" id="L186" title="All 2 branches missed.">			for (i = c.getComponentCount() - 1; i &gt;= 0</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">					&amp;&amp; mainView != c.getComponent(i); i--) {</span>
+				// left blank on purpose
+			}
+<span class="nc" id="L190">			c.remove(i);</span>
+<span class="nc" id="L191">			ToolTipManager.sharedInstance().unregisterComponent(mainView);</span>
+<span class="nc" id="L192">			mainView.removeMouseListener(this.map.getNodeMouseMotionListener());</span>
+<span class="nc" id="L193">			mainView.removeMouseMotionListener(this.map</span>
+<span class="nc" id="L194">					.getNodeMouseMotionListener());</span>
+<span class="nc" id="L195">			c.add(newMainView, i);</span>
+<span class="nc" id="L196">		} else {</span>
+<span class="nc" id="L197">			add(newMainView);</span>
+		}
+<span class="nc" id="L199">		this.mainView = newMainView;</span>
+<span class="nc" id="L200">		ToolTipManager.sharedInstance().registerComponent(mainView);</span>
+<span class="nc" id="L201">		mainView.addMouseListener(this.map.getNodeMouseMotionListener());</span>
+<span class="nc" id="L202">		mainView.addMouseMotionListener(this.map.getNodeMouseMotionListener());</span>
+<span class="nc" id="L203">		addDragListener(map.getNodeDragListener());</span>
+<span class="nc" id="L204">		addDropListener(map.getNodeDropListener());</span>
+<span class="nc bnc" id="L205" title="All 4 branches missed.">		if (!model.isRoot() &amp;&amp; &quot;true&quot;.equals(map.getController().getProperty(FreeMindMain.ENABLE_NODE_MOVEMENT))) {</span>
+<span class="nc" id="L206">			motionListenerView = new NodeMotionListenerView(this);</span>
+<span class="nc" id="L207">			add(motionListenerView);</span>
+		}
+
+<span class="nc" id="L210">	}</span>
+
+	protected void removeFromMap() {
+<span class="nc" id="L213">		setFocusCycleRoot(false);</span>
+<span class="nc" id="L214">		getParent().remove(this);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		if (motionListenerView != null) {</span>
+<span class="nc" id="L216">			remove(motionListenerView);</span>
+<span class="nc" id="L217">			motionListenerView = null;</span>
+		}
+<span class="nc" id="L219">		removeFoldingListener();</span>
+<span class="nc" id="L220">		ToolTipManager.sharedInstance().unregisterComponent(mainView);</span>
+<span class="nc" id="L221">	}</span>
+
+	void addDragListener(DragGestureListener dgl) {
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (dgl == null)</span>
+<span class="nc" id="L225">			return;</span>
+<span class="nc" id="L226">		DragSource dragSource = DragSource.getDefaultDragSource();</span>
+<span class="nc" id="L227">		dragSource.createDefaultDragGestureRecognizer(getMainView(),</span>
+<span class="nc" id="L228">				DnDConstants.ACTION_COPY | DnDConstants.ACTION_MOVE</span>
+<span class="nc" id="L229">						| DnDConstants.ACTION_LINK, dgl);</span>
+<span class="nc" id="L230">	}</span>
+
+	void addDropListener(DropTargetListener dtl) {
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		if (dtl == null)</span>
+<span class="nc" id="L234">			return;</span>
+<span class="nc" id="L235">		DropTarget dropTarget = new DropTarget(getMainView(), dtl);</span>
+<span class="nc" id="L236">		dropTarget.setActive(true);</span>
+<span class="nc" id="L237">	}</span>
+
+	public boolean isRoot() {
+<span class="nc" id="L240">		return getModel().isRoot();</span>
+	}
+
+	public boolean getIsLong() {
+<span class="nc" id="L244">		return isLong;</span>
+	}
+
+	/* fc, 25.1.2004: Refactoring necessary: should call the model. */
+	public boolean isSiblingOf(NodeView myNodeView) {
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		return getParentView() == myNodeView.getParentView();</span>
+	}
+
+	/* fc, 25.1.2004: Refactoring necessary: should call the model. */
+	public boolean isChildOf(NodeView myNodeView) {
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		return getParentView() == myNodeView;</span>
+	}
+
+	/* fc, 25.1.2004: Refactoring necessary: should call the model. */
+	public boolean isParentOf(NodeView myNodeView) {
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		return (this == myNodeView.getParentView());</span>
+	}
+
+	public MindMapNode getModel() {
+<span class="nc" id="L263">		return model;</span>
+	}
+
+	/**
+	 * Returns the coordinates occupied by the node and its children as a vector
+	 * of four point per node.
+	 */
+	public void getCoordinates(LinkedList inList) {
+<span class="nc" id="L271">		getCoordinates(inList, 0, false, 0, 0);</span>
+<span class="nc" id="L272">	}</span>
+
+	private void getCoordinates(LinkedList inList,
+			int additionalDistanceForConvexHull, boolean byChildren,
+			int transX, int transY) {
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		if (!isVisible())</span>
+<span class="nc" id="L278">			return;</span>
+
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (isContentVisible()) {</span>
+<span class="nc" id="L281">			MindMapCloud cloud = getModel().getCloud();</span>
+
+			// consider existing clouds of children
+<span class="nc bnc" id="L284" title="All 4 branches missed.">			if (byChildren &amp;&amp; cloud != null) {</span>
+<span class="nc" id="L285">				additionalDistanceForConvexHull += CloudView</span>
+<span class="nc" id="L286">						.getAdditionalHeigth(cloud, this) / 5;</span>
+			}
+<span class="nc" id="L288">			final int x = transX + getContent().getX() - getDeltaX();</span>
+<span class="nc" id="L289">			final int y = transY + getContent().getY() - getDeltaY();</span>
+<span class="nc" id="L290">			final int width = getMainViewWidthWithFoldingMark();</span>
+<span class="nc" id="L291">			int heightWithFoldingMark = getMainViewHeightWithFoldingMark();</span>
+<span class="nc" id="L292">			final int height = Math.max(heightWithFoldingMark, getContent()</span>
+<span class="nc" id="L293">					.getHeight());</span>
+<span class="nc" id="L294">			inList.addLast(new Point(-additionalDistanceForConvexHull + x,</span>
+<span class="nc" id="L295">					-additionalDistanceForConvexHull + y));</span>
+<span class="nc" id="L296">			inList.addLast(new Point(-additionalDistanceForConvexHull + x,</span>
+<span class="nc" id="L297">					additionalDistanceForConvexHull + y + height));</span>
+<span class="nc" id="L298">			inList.addLast(new Point(additionalDistanceForConvexHull + x</span>
+<span class="nc" id="L299">					+ width, additionalDistanceForConvexHull + y + height));</span>
+<span class="nc" id="L300">			inList.addLast(new Point(additionalDistanceForConvexHull + x</span>
+<span class="nc" id="L301">					+ width, -additionalDistanceForConvexHull + y));</span>
+		}
+
+<span class="nc" id="L304">		LinkedList childrenViews = getChildrenViews();</span>
+<span class="nc" id="L305">		ListIterator children_it = childrenViews.listIterator();</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">		while (children_it.hasNext()) {</span>
+<span class="nc" id="L307">			NodeView child = (NodeView) children_it.next();</span>
+<span class="nc" id="L308">			child.getCoordinates(inList, additionalDistanceForConvexHull, true,</span>
+<span class="nc" id="L309">					transX + child.getX(), transY + child.getY());</span>
+		}
+<span class="nc" id="L311">	}</span>
+
+	/**
+     */
+	public void setText(String string) {
+<span class="nc" id="L316">		mainView.setText(string);</span>
+<span class="nc" id="L317">	}</span>
+
+	/**
+     */
+	public String getText() {
+<span class="nc" id="L322">		return mainView.getText();</span>
+	}
+
+	protected int getMainViewWidthWithFoldingMark() {
+<span class="nc" id="L326">		return mainView.getMainViewWidthWithFoldingMark();</span>
+	}
+
+	/** get height including folding symbol */
+	protected int getMainViewHeightWithFoldingMark() {
+<span class="nc" id="L331">		return mainView.getMainViewHeightWithFoldingMark();</span>
+	}
+
+	/** get x coordinate including folding symbol */
+	public int getDeltaX() {
+<span class="nc" id="L336">		return mainView.getDeltaX();</span>
+	}
+
+	/** get y coordinate including folding symbol */
+	public int getDeltaY() {
+<span class="nc" id="L341">		return mainView.getDeltaY();</span>
+	}
+
+	public void requestFocus() {
+		// delegate to mapview:
+<span class="nc" id="L346">		getController().obtainFocusForSelected();</span>
+<span class="nc" id="L347">	}</span>
+
+
+	//
+	// get/set methods
+	//
+
+	/**
+	 * Calculates the tree height increment because of the clouds.
+	 */
+	public int getAdditionalCloudHeigth() {
+<span class="nc bnc" id="L358" title="All 2 branches missed.">		if (!isContentVisible()) {</span>
+<span class="nc" id="L359">			return 0;</span>
+		}
+
+<span class="nc" id="L362">		MindMapCloud cloud = getModel().getCloud();</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		if (cloud != null) {</span>
+<span class="nc" id="L364">			return CloudView.getAdditionalHeigth(cloud, this);</span>
+		} else {
+<span class="nc" id="L366">			return 0;</span>
+		}
+	}
+
+	public boolean isSelected() {
+<span class="nc" id="L371">		return (getMap().isSelected(this));</span>
+	}
+
+	/** Is the node left of root? */
+	public boolean isLeft() {
+<span class="nc" id="L376">		return getModel().isLeft();</span>
+	}
+
+	protected void setModel(MindMapNode model) {
+<span class="nc" id="L380">		this.model = model;</span>
+<span class="nc" id="L381">	}</span>
+
+	public MapView getMap() {
+<span class="nc" id="L384">		return map;</span>
+	}
+
+	protected Controller getController() {
+<span class="nc" id="L388">		return map.getController();</span>
+	}
+
+	protected ModeController getModeController() {
+<span class="nc" id="L392">		return getMap().getModel().getModeController();</span>
+	}
+
+	protected FreeMindMain getFrame() {
+<span class="nc" id="L396">		return getController().getFrame();</span>
+	}
+
+	boolean isParentHidden() {
+<span class="nc" id="L400">		final Container parent = getParent();</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">		if (!(parent instanceof NodeView))</span>
+<span class="nc" id="L402">			return false;</span>
+<span class="nc" id="L403">		NodeView parentView = (NodeView) parent;</span>
+<span class="nc bnc" id="L404" title="All 2 branches missed.">		return !parentView.isContentVisible();</span>
+	}
+
+	public NodeView getParentView() {
+<span class="nc" id="L408">		final Container parent = getParent();</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">		if (parent instanceof NodeView)</span>
+<span class="nc" id="L410">			return (NodeView) parent;</span>
+<span class="nc" id="L411">		return null;</span>
+	}
+
+	public NodeView getVisibleParentView() {
+<span class="nc" id="L415">		final Container parent = getParent();</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">		if (!(parent instanceof NodeView))</span>
+<span class="nc" id="L417">			return null;</span>
+<span class="nc" id="L418">		NodeView parentView = (NodeView) parent;</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">		if (parentView.isContentVisible()) {</span>
+<span class="nc" id="L420">			return parentView;</span>
+		}
+<span class="nc" id="L422">		return parentView.getVisibleParentView();</span>
+	}
+
+	/**
+	 * This method returns the NodeViews that are children of this node.
+	 */
+	public LinkedList getChildrenViews() {
+<span class="nc" id="L429">		LinkedList childrenViews = new LinkedList();</span>
+<span class="nc" id="L430">		final Component[] components = getComponents();</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">		for (int i = 0; i &lt; components.length; i++) {</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">			if (!(components[i] instanceof NodeView)) {</span>
+<span class="nc" id="L433">				continue;</span>
+			}
+<span class="nc" id="L435">			NodeView view = (NodeView) components[i];</span>
+<span class="nc" id="L436">			childrenViews.add(view); // child.getViewer() );</span>
+		}
+<span class="nc" id="L438">		return childrenViews;</span>
+	}
+
+	protected LinkedList getSiblingViews() {
+<span class="nc" id="L442">		return getParentView().getChildrenViews();</span>
+	}
+
+	/**
+	 * Returns the point the edge should start given the point of the child node
+	 * that should be connected.
+	 * 
+	 * @param targetView
+	 *            TODO
+	 */
+	Point getMainViewOutPoint(NodeView targetView, Point destinationPoint) {
+<span class="nc" id="L453">		final NodeViewLayout layoutManager = (NodeViewLayout) getLayout();</span>
+<span class="nc" id="L454">		Point out = layoutManager.getMainViewOutPoint(this, targetView,</span>
+<span class="nc" id="L455">				destinationPoint);</span>
+<span class="nc" id="L456">		return out;</span>
+	}
+
+	/**
+	 * Returns the Point where the InEdge should arrive the Node.
+	 */
+	Point getMainViewInPoint() {
+<span class="nc" id="L463">		final NodeViewLayout layoutManager = (NodeViewLayout) getLayout();</span>
+<span class="nc" id="L464">		Point in = layoutManager.getMainViewInPoint(this);</span>
+<span class="nc" id="L465">		return in;</span>
+	}
+
+	/**
+	 * Returns the Point where the Links should arrive the Node.
+	 */
+	public Point getLinkPoint(Point declination) {
+		int x, y;
+		Point linkPoint;
+<span class="nc bnc" id="L474" title="All 2 branches missed.">		if (declination != null) {</span>
+<span class="nc" id="L475">			x = getMap().getZoomed(declination.x);</span>
+<span class="nc" id="L476">			y = getMap().getZoomed(declination.y);</span>
+<span class="nc" id="L477">		} else {</span>
+<span class="nc" id="L478">			x = 1;</span>
+<span class="nc" id="L479">			y = 0;</span>
+		}
+<span class="nc bnc" id="L481" title="All 2 branches missed.">		if (isLeft()) {</span>
+<span class="nc" id="L482">			x = -x;</span>
+		}
+<span class="nc bnc" id="L484" title="All 2 branches missed.">		if (y != 0) {</span>
+<span class="nc" id="L485">			double ctgRect = Math.abs((double) getContent().getWidth()</span>
+<span class="nc" id="L486">					/ getContent().getHeight());</span>
+<span class="nc" id="L487">			double ctgLine = Math.abs((double) x / y);</span>
+			int absLinkX, absLinkY;
+<span class="nc bnc" id="L489" title="All 2 branches missed.">			if (ctgRect &gt; ctgLine) {</span>
+<span class="nc" id="L490">				absLinkX = Math.abs(x * getContent().getHeight() / (2 * y));</span>
+<span class="nc" id="L491">				absLinkY = getContent().getHeight() / 2;</span>
+<span class="nc" id="L492">			} else {</span>
+<span class="nc" id="L493">				absLinkX = getContent().getWidth() / 2;</span>
+<span class="nc" id="L494">				absLinkY = Math.abs(y * getContent().getWidth() / (2 * x));</span>
+			}
+<span class="nc" id="L496">			linkPoint = new Point(getContent().getWidth() / 2</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">					+ (x &gt; 0 ? absLinkX : -absLinkX), getContent().getHeight()</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">					/ 2 + (y &gt; 0 ? absLinkY : -absLinkY));</span>
+<span class="nc" id="L499">		} else {</span>
+<span class="nc bnc" id="L500" title="All 2 branches missed.">			linkPoint = new Point((x &gt; 0 ? getContent().getWidth() : 0),</span>
+<span class="nc" id="L501">					(getContent().getHeight() / 2));</span>
+		}
+<span class="nc" id="L503">		linkPoint.translate(getContent().getX(), getContent().getY());</span>
+<span class="nc" id="L504">		convertPointToMap(linkPoint);</span>
+<span class="nc" id="L505">		return linkPoint;</span>
+	}
+
+	protected Point convertPointToMap(Point p) {
+<span class="nc" id="L509">		return Tools.convertPointToAncestor(this, p, getMap());</span>
+	}
+
+	/**
+	 * Returns the relative position of the Edge. This is used by bold edge to
+	 * know how to shift the line.
+	 */
+	int getAlignment() {
+<span class="nc" id="L517">		return mainView.getAlignment();</span>
+	}
+
+	//
+	// Navigation
+	//
+	/**
+	 * The algorithm should be here the following (see Eclipse editor):
+	 * Selected is the n-th node from above.
+	 * Look for the last node visible on the screen and make this node the first one.
+	 * Now select the n-th node from above.
+	 * 
+	 * Easier idea to implement:
+	 * Store node y position as y0.
+	 * Search for a node with the same parent with y position y0+height
+	 * Scroll the window by height.
+	 */
+	protected NodeView getNextPage() {
+		// from root we cannot jump
+<span class="nc bnc" id="L536" title="All 2 branches missed.">		if (getModel().isRoot()) {</span>
+<span class="nc" id="L537">			return this; // I'm root</span>
+		}
+<span class="nc" id="L539">		int y0 = getInPointInMap().y + getMap().getViewportSize().height;</span>
+<span class="nc" id="L540">		NodeView sibling = getNextVisibleSibling();</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">		if (sibling == this) {</span>
+<span class="nc" id="L542">			return this; // at the end</span>
+		}
+		// if (sibling.getParentView() != this.getParentView()) {
+		// return sibling; // sibling on another page (has different parent)
+		// }
+<span class="nc" id="L547">		NodeView nextSibling = sibling.getNextVisibleSibling();</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">		while (nextSibling != sibling</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">				&amp;&amp; sibling.getParentView() == nextSibling.getParentView()) {</span>
+			// has the same position after one page?
+<span class="nc bnc" id="L551" title="All 2 branches missed.">			if(nextSibling.getInPointInMap().y &gt;= y0) {</span>
+<span class="nc" id="L552">				break;</span>
+			}
+<span class="nc" id="L554">			sibling = nextSibling;</span>
+<span class="nc" id="L555">			nextSibling = nextSibling.getNextVisibleSibling();</span>
+		}
+<span class="nc" id="L557">		return sibling; // last on the page</span>
+	}
+	/**
+	 * @return the position of the in-point of this node in view coordinates
+	 */
+	protected Point getInPointInMap() {
+<span class="nc" id="L563">		return convertPointToMap(getMainViewInPoint());</span>
+	}
+
+	protected NodeView getPreviousPage() {
+<span class="nc bnc" id="L567" title="All 2 branches missed.">		if (getModel().isRoot()) {</span>
+<span class="nc" id="L568">			return this; // I'm root</span>
+		}
+<span class="nc" id="L570">		int y0 = getInPointInMap().y - getMap().getViewportSize().height;</span>
+<span class="nc" id="L571">		NodeView sibling = getPreviousVisibleSibling();</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">		if (sibling == this) {</span>
+<span class="nc" id="L573">			return this; // at the end</span>
+		}
+		// if (sibling.getParentView() != this.getParentView()) {
+		// return sibling; // sibling on another page (has different parent)
+		// }
+<span class="nc" id="L578">		NodeView previousSibling = sibling.getPreviousVisibleSibling();</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">		while (previousSibling != sibling</span>
+<span class="nc bnc" id="L580" title="All 2 branches missed.">				&amp;&amp; sibling.getParentView() == previousSibling.getParentView()) {</span>
+			// has the same position after one page?
+<span class="nc bnc" id="L582" title="All 2 branches missed.">			if(previousSibling.getInPointInMap().y &lt;= y0) {</span>
+<span class="nc" id="L583">				break;</span>
+			}
+<span class="nc" id="L585">			sibling = previousSibling;</span>
+<span class="nc" id="L586">			previousSibling = previousSibling.getPreviousVisibleSibling();</span>
+		}
+<span class="nc" id="L588">		return sibling; // last on the page</span>
+	}
+
+	protected NodeView getNextVisibleSibling() {
+		NodeView sibling;
+<span class="nc" id="L593">		NodeView lastSibling = this;</span>
+		// get next sibling even in higher levels
+<span class="nc bnc" id="L595" title="All 2 branches missed.">		for (sibling = this; !sibling.getModel().isRoot(); sibling = sibling</span>
+<span class="nc" id="L596">				.getParentView()) {</span>
+<span class="nc" id="L597">			lastSibling = sibling;</span>
+<span class="nc" id="L598">			sibling = sibling.getNextSiblingSingle();</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">			if (sibling != lastSibling) {</span>
+<span class="nc" id="L600">				break; // found sibling</span>
+			}
+		}
+
+		// we have the nextSibling, search in childs
+		// untill: leaf, closed node, max level
+<span class="nc bnc" id="L606" title="All 2 branches missed.">		while (sibling.getModel().getNodeLevel() &lt; getMap()</span>
+<span class="nc" id="L607">				.getSiblingMaxLevel()) {</span>
+			// can we drill down?
+<span class="nc bnc" id="L609" title="All 2 branches missed.">			NodeView first = sibling.getFirst(sibling.isRoot() ? lastSibling</span>
+<span class="nc bnc" id="L610" title="All 2 branches missed.">					: null, this.isLeft(), !this.isLeft());</span>
+<span class="nc bnc" id="L611" title="All 2 branches missed.">			if (first == null) {</span>
+<span class="nc" id="L612">				break;</span>
+			}
+<span class="nc" id="L614">			sibling = first;</span>
+		}
+<span class="nc bnc" id="L616" title="All 2 branches missed.">		if (sibling.isRoot()) {</span>
+<span class="nc" id="L617">			return this; // didn't find (we are at the end)</span>
+		}
+
+<span class="nc" id="L620">		return sibling;</span>
+	}
+
+	/**
+	 * @param startAfter
+	 *            TODO
+	 */
+	NodeView getFirst(Component startAfter, boolean leftOnly, boolean rightOnly) {
+<span class="nc" id="L628">		final Component[] components = getComponents();</span>
+<span class="nc bnc" id="L629" title="All 2 branches missed.">		for (int i = 0; i &lt; components.length; i++) {</span>
+<span class="nc bnc" id="L630" title="All 2 branches missed.">			if (startAfter != null) {</span>
+<span class="nc bnc" id="L631" title="All 2 branches missed.">				if (components[i] == startAfter) {</span>
+<span class="nc" id="L632">					startAfter = null;</span>
+				}
+<span class="nc" id="L634">				continue;</span>
+			}
+<span class="nc bnc" id="L636" title="All 2 branches missed.">			if (!(components[i] instanceof NodeView)) {</span>
+<span class="nc" id="L637">				continue;</span>
+			}
+<span class="nc" id="L639">			NodeView view = (NodeView) components[i];</span>
+<span class="nc bnc" id="L640" title="All 8 branches missed.">			if (leftOnly &amp;&amp; !view.isLeft() || rightOnly &amp;&amp; view.isLeft()) {</span>
+<span class="nc" id="L641">				continue;</span>
+			}
+<span class="nc bnc" id="L643" title="All 2 branches missed.">			if (view.isContentVisible()) {</span>
+<span class="nc" id="L644">				return view;</span>
+			}
+<span class="nc" id="L646">			NodeView child = view.getFirst(null, leftOnly, rightOnly);</span>
+<span class="nc bnc" id="L647" title="All 2 branches missed.">			if (child != null) {</span>
+<span class="nc" id="L648">				return child;</span>
+			}
+		}
+<span class="nc" id="L651">		return null;</span>
+	}
+
+	/**
+	 */
+	public boolean isContentVisible() {
+<span class="nc" id="L657">		return getModel().isVisible();</span>
+	}
+
+	private NodeView getLast(Component startBefore, boolean leftOnly,
+			boolean rightOnly) {
+<span class="nc" id="L662">		final Component[] components = getComponents();</span>
+<span class="nc bnc" id="L663" title="All 2 branches missed.">		for (int i = components.length - 1; i &gt;= 0; i--) {</span>
+<span class="nc bnc" id="L664" title="All 2 branches missed.">			if (startBefore != null) {</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">				if (components[i] == startBefore) {</span>
+<span class="nc" id="L666">					startBefore = null;</span>
+				}
+<span class="nc" id="L668">				continue;</span>
+			}
+<span class="nc bnc" id="L670" title="All 2 branches missed.">			if (!(components[i] instanceof NodeView)) {</span>
+<span class="nc" id="L671">				continue;</span>
+			}
+<span class="nc" id="L673">			NodeView view = (NodeView) components[i];</span>
+<span class="nc bnc" id="L674" title="All 8 branches missed.">			if (leftOnly &amp;&amp; !view.isLeft() || rightOnly &amp;&amp; view.isLeft()) {</span>
+<span class="nc" id="L675">				continue;</span>
+			}
+<span class="nc bnc" id="L677" title="All 2 branches missed.">			if (view.isContentVisible()) {</span>
+<span class="nc" id="L678">				return view;</span>
+			}
+<span class="nc" id="L680">			NodeView child = view.getLast(null, leftOnly, rightOnly);</span>
+<span class="nc bnc" id="L681" title="All 2 branches missed.">			if (child != null) {</span>
+<span class="nc" id="L682">				return child;</span>
+			}
+		}
+<span class="nc" id="L685">		return null;</span>
+	}
+
+	LinkedList getLeft(boolean onlyVisible) {
+<span class="nc" id="L689">		LinkedList all = getChildrenViews();</span>
+<span class="nc" id="L690">		LinkedList left = new LinkedList();</span>
+<span class="nc bnc" id="L691" title="All 2 branches missed.">		for (ListIterator e = all.listIterator(); e.hasNext();) {</span>
+<span class="nc" id="L692">			NodeView node = (NodeView) e.next();</span>
+<span class="nc bnc" id="L693" title="All 2 branches missed.">			if (node == null)</span>
+<span class="nc" id="L694">				continue;</span>
+<span class="nc bnc" id="L695" title="All 2 branches missed.">			if (node.isLeft())</span>
+<span class="nc" id="L696">				left.add(node);</span>
+		}
+<span class="nc" id="L698">		return left;</span>
+	}
+
+	LinkedList getRight(boolean onlyVisible) {
+<span class="nc" id="L702">		LinkedList all = getChildrenViews();</span>
+<span class="nc" id="L703">		LinkedList right = new LinkedList();</span>
+<span class="nc bnc" id="L704" title="All 2 branches missed.">		for (ListIterator e = all.listIterator(); e.hasNext();) {</span>
+<span class="nc" id="L705">			NodeView node = (NodeView) e.next();</span>
+<span class="nc bnc" id="L706" title="All 2 branches missed.">			if (node == null)</span>
+<span class="nc" id="L707">				continue;</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">			if (!node.isLeft())</span>
+<span class="nc" id="L709">				right.add(node);</span>
+		}
+<span class="nc" id="L711">		return right;</span>
+	}
+
+	protected NodeView getPreviousVisibleSibling() {
+		NodeView sibling;
+<span class="nc" id="L716">		NodeView previousSibling = this;</span>
+
+		// get Previous sibling even in higher levels
+<span class="nc bnc" id="L719" title="All 2 branches missed.">		for (sibling = this; !sibling.getModel().isRoot(); sibling = sibling</span>
+<span class="nc" id="L720">				.getParentView()) {</span>
+<span class="nc" id="L721">			previousSibling = sibling;</span>
+<span class="nc" id="L722">			sibling = sibling.getPreviousSiblingSingle();</span>
+<span class="nc bnc" id="L723" title="All 2 branches missed.">			if (sibling != previousSibling) {</span>
+<span class="nc" id="L724">				break; // found sibling</span>
+			}
+		}
+		// we have the PreviousSibling, search in childs
+		// untill: leaf, closed node, max level
+<span class="nc bnc" id="L729" title="All 2 branches missed.">		while (sibling.getModel().getNodeLevel() &lt; getMap()</span>
+<span class="nc" id="L730">				.getSiblingMaxLevel()) {</span>
+<span class="nc bnc" id="L731" title="All 2 branches missed.">			NodeView last = sibling.getLast(sibling.isRoot() ? previousSibling</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">					: null, this.isLeft(), !this.isLeft());</span>
+<span class="nc bnc" id="L733" title="All 2 branches missed.">			if (last == null) {</span>
+<span class="nc" id="L734">				break;</span>
+			}
+<span class="nc" id="L736">			sibling = last;</span>
+		}
+<span class="nc bnc" id="L738" title="All 2 branches missed.">		if (sibling.isRoot()) {</span>
+<span class="nc" id="L739">			return this; // didn't find (we are at the end)</span>
+		}
+
+<span class="nc" id="L742">		return sibling;</span>
+	}
+
+	protected NodeView getNextSiblingSingle() {
+<span class="nc" id="L746">		LinkedList v = null;</span>
+<span class="nc bnc" id="L747" title="All 2 branches missed.">		if (getParentView().getModel().isRoot()) {</span>
+<span class="nc bnc" id="L748" title="All 2 branches missed.">			if (this.isLeft()) {</span>
+<span class="nc" id="L749">				v = (getParentView()).getLeft(true);</span>
+<span class="nc" id="L750">			} else {</span>
+<span class="nc" id="L751">				v = (getParentView()).getRight(true);</span>
+			}
+<span class="nc" id="L753">		} else {</span>
+<span class="nc" id="L754">			v = getParentView().getChildrenViews();</span>
+		}
+<span class="nc" id="L756">		final int index = v.indexOf(this);</span>
+<span class="nc bnc" id="L757" title="All 2 branches missed.">		for (int i = index + 1; i &lt; v.size(); i++) {</span>
+<span class="nc" id="L758">			final NodeView nextView = (NodeView) v.get(i);</span>
+<span class="nc bnc" id="L759" title="All 2 branches missed.">			if (nextView.isContentVisible()) {</span>
+<span class="nc" id="L760">				return nextView;</span>
+			} else {
+<span class="nc" id="L762">				final NodeView first = nextView.getFirst(null, false, false);</span>
+<span class="nc bnc" id="L763" title="All 2 branches missed.">				if (first != null) {</span>
+<span class="nc" id="L764">					return first;</span>
+				}
+			}
+		}
+<span class="nc" id="L768">		return this;</span>
+	}
+
+	protected NodeView getPreviousSiblingSingle() {
+<span class="nc" id="L772">		LinkedList v = null;</span>
+<span class="nc bnc" id="L773" title="All 2 branches missed.">		if (getParentView().getModel().isRoot()) {</span>
+<span class="nc bnc" id="L774" title="All 2 branches missed.">			if (this.isLeft()) {</span>
+<span class="nc" id="L775">				v = (getParentView()).getLeft(true);</span>
+<span class="nc" id="L776">			} else {</span>
+<span class="nc" id="L777">				v = (getParentView()).getRight(true);</span>
+			}
+<span class="nc" id="L779">		} else {</span>
+<span class="nc" id="L780">			v = getParentView().getChildrenViews();</span>
+		}
+<span class="nc" id="L782">		final int index = v.indexOf(this);</span>
+<span class="nc bnc" id="L783" title="All 2 branches missed.">		for (int i = index - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L784">			final NodeView nextView = (NodeView) v.get(i);</span>
+<span class="nc bnc" id="L785" title="All 2 branches missed.">			if (nextView.isContentVisible()) {</span>
+<span class="nc" id="L786">				return nextView;</span>
+			} else {
+<span class="nc" id="L788">				final NodeView last = nextView.getLast(null, false, false);</span>
+<span class="nc bnc" id="L789" title="All 2 branches missed.">				if (last != null) {</span>
+<span class="nc" id="L790">					return last;</span>
+				}
+			}
+		}
+<span class="nc" id="L794">		return this;</span>
+	}
+
+	//
+	// Update from Model
+	//
+
+	void insert() {
+<span class="nc" id="L802">		ListIterator it = getModel().childrenFolded();</span>
+<span class="nc bnc" id="L803" title="All 2 branches missed.">		while (it.hasNext()) {</span>
+<span class="nc" id="L804">			insert((MindMapNode) it.next(), 0);</span>
+		}
+<span class="nc" id="L806">	}</span>
+
+	/**
+	 * Create views for the newNode and all his descendants, set their isLeft
+	 * attribute according to this view.
+	 */
+
+	NodeView insert(MindMapNode newNode, int position) {
+<span class="nc" id="L814">		NodeView newView = NodeViewFactory.getInstance().newNodeView(newNode,</span>
+<span class="nc" id="L815">				position, getMap(), this);</span>
+<span class="nc" id="L816">		newView.insert();</span>
+<span class="nc" id="L817">		return newView;</span>
+	}
+
+	/**
+	 * This is a bit problematic, because getChildrenViews() only works if model
+	 * is not yet removed. (So do not _really_ delete the model before the view
+	 * removed (it needs to stay in memory)
+	 */
+	void remove() {
+<span class="nc bnc" id="L826" title="All 2 branches missed.">		for (ListIterator e = getChildrenViews().listIterator(); e.hasNext();) {</span>
+<span class="nc" id="L827">			((NodeView) e.next()).remove();</span>
+		}
+<span class="nc bnc" id="L829" title="All 2 branches missed.">		if (isSelected()) {</span>
+<span class="nc" id="L830">			getMap().deselect(this);</span>
+		}
+<span class="nc" id="L832">		getModeController().onViewRemovedHook(this);</span>
+<span class="nc" id="L833">		removeFromMap();</span>
+<span class="nc bnc" id="L834" title="All 2 branches missed.">		if (attributeView != null) {</span>
+<span class="nc" id="L835">			attributeView.viewRemoved();</span>
+		}
+<span class="nc" id="L837">		getModel().removeViewer(this); // Let the model know he is invisible</span>
+<span class="nc" id="L838">	}</span>
+
+	void update() {
+<span class="nc" id="L841">		updateStyle();</span>
+<span class="nc bnc" id="L842" title="All 2 branches missed.">		if (!isContentVisible()) {</span>
+			// not visible at all
+<span class="nc" id="L844">			removeFoldingListener();</span>
+<span class="nc" id="L845">			mainView.setVisible(false);</span>
+<span class="nc" id="L846">			return;</span>
+		}
+<span class="nc" id="L848">		mainView.setVisible(true);</span>
+<span class="nc" id="L849">		updateTextColor();</span>
+<span class="nc" id="L850">		updateFont();</span>
+<span class="nc" id="L851">		updateIcons();</span>
+<span class="nc" id="L852">		createAttributeView();</span>
+<span class="nc bnc" id="L853" title="All 2 branches missed.">		if (attributeView != null) {</span>
+<span class="nc" id="L854">			attributeView.update();</span>
+		}
+		// visible. has it still visible children?
+<span class="nc bnc" id="L857" title="All 2 branches missed.">		if(getModel().hasVisibleChilds()) {</span>
+<span class="nc" id="L858">			addFoldingListener();</span>
+<span class="nc" id="L859">		} else {</span>
+<span class="nc" id="L860">			removeFoldingListener();</span>
+		}
+<span class="nc" id="L862">		updateText();</span>
+<span class="nc" id="L863">		updateToolTip();</span>
+<span class="nc" id="L864">		revalidate(); // Because of zoom?</span>
+<span class="nc" id="L865">	}</span>
+
+	public void createAttributeView() {
+<span class="nc bnc" id="L868" title="All 4 branches missed.">		if (attributeView == null &amp;&amp; model.getAttributes().getNode() != null) {</span>
+<span class="nc" id="L869">			attributeView = new AttributeView(this);</span>
+		}
+<span class="nc" id="L871">	}</span>
+
+	void repaintSelected() {
+<span class="nc" id="L874">		updateTextColor();</span>
+<span class="nc" id="L875">		repaint();</span>
+<span class="nc" id="L876">	}</span>
+
+	private void updateText() {
+<span class="nc" id="L879">		String nodeText = getModel().toString();</span>
+<span class="nc" id="L880">		final boolean isHtml = nodeText.startsWith(&quot;&lt;html&gt;&quot;);</span>
+		// 6) Set the text
+		// Right now, this implementation is quite logical, although it allows
+		// for nonconvex feature of nodes starting with &lt;html&gt;.
+
+		// For plain text, tell if node is long and its width has to be
+		// restricted
+		// boolean isMultiline = nodeText.indexOf(&quot;\n&quot;) &gt;= 0;
+<span class="nc" id="L888">		boolean widthMustBeRestricted = false;</span>
+<span class="nc bnc" id="L889" title="All 2 branches missed.">		if (!isHtml) {</span>
+<span class="nc" id="L890">			String[] lines = nodeText.split(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L891" title="All 2 branches missed.">			for (int line = 0; line &lt; lines.length; line++) {</span>
+				// Compute the width the node would spontaneously take,
+				// by preliminarily setting the text.
+<span class="nc" id="L894">				setText(lines[line]);</span>
+<span class="nc bnc" id="L895" title="All 2 branches missed.">				widthMustBeRestricted = mainView.getPreferredSize().width &gt; map</span>
+<span class="nc" id="L896">						.getZoomed(map.getMaxNodeWidth())</span>
+<span class="nc" id="L897">						+ mainView.getIconWidth();</span>
+<span class="nc bnc" id="L898" title="All 2 branches missed.">				if (widthMustBeRestricted) {</span>
+<span class="nc" id="L899">					break;</span>
+				}
+			}
+<span class="nc bnc" id="L902" title="All 4 branches missed.">			isLong = widthMustBeRestricted || lines.length &gt; 1;</span>
+		}
+
+<span class="nc bnc" id="L905" title="All 2 branches missed.">		if (isHtml) {</span>
+			// Make it possible to use relative img references in HTML using tag
+			// &lt;base&gt;.
+<span class="nc bnc" id="L908" title="All 4 branches missed.">			if (nodeText.indexOf(&quot;&lt;img&quot;) &gt;= 0 &amp;&amp; nodeText.indexOf(&quot;&lt;base &quot;) &lt; 0) {</span>
+				try {
+<span class="nc" id="L910">					nodeText = &quot;&lt;html&gt;&lt;base href=\&quot;&quot; + map.getModel().getURL()</span>
+<span class="nc" id="L911">							+ &quot;\&quot;&gt;&quot; + nodeText.substring(6);</span>
+<span class="nc" id="L912">				} catch (MalformedURLException e) {</span>
+				}
+			}
+			// If user does not want us to set the width automatically, he'll
+			// use &lt;body width=&quot;&quot;&gt;,
+			// &lt;body width=&quot;800&quot;&gt;, or avoid the &lt;body&gt; tag altogether.
+
+			// Set user HTML head
+<span class="nc" id="L920">			String htmlLongNodeHead = getFrame()</span>
+<span class="nc" id="L921">					.getProperty(&quot;html_long_node_head&quot;);</span>
+<span class="nc bnc" id="L922" title="All 4 branches missed.">			if (htmlLongNodeHead != null &amp;&amp; !htmlLongNodeHead.equals(&quot;&quot;)) {</span>
+<span class="nc bnc" id="L923" title="All 2 branches missed.">				if (nodeText.matches(&quot;(?ims).*&lt;head&gt;.*&quot;)) {</span>
+<span class="nc" id="L924">					nodeText = nodeText.replaceFirst(&quot;(?ims).*&lt;head&gt;.*&quot;,</span>
+<span class="nc" id="L925">							&quot;&lt;head&gt;&quot; + htmlLongNodeHead);</span>
+<span class="nc" id="L926">				} else {</span>
+<span class="nc" id="L927">					nodeText = nodeText.replaceFirst(&quot;(?ims)&lt;html&gt;&quot;,</span>
+<span class="nc" id="L928">							&quot;&lt;html&gt;&lt;head&gt;&quot; + htmlLongNodeHead + &quot;&lt;/head&gt;&quot;);</span>
+				}
+			}
+
+			// Find out if the width has to be restricted.
+<span class="nc bnc" id="L933" title="All 2 branches missed.">			if (nodeText.length() &lt; 30000) {</span>
+				// Empirically determined limit, above which we restrict the
+				// width without actually checking it.
+				// The purpose of that is to speed up rendering of very long
+				// nodes.
+<span class="nc" id="L938">				setText(nodeText);</span>
+<span class="nc bnc" id="L939" title="All 2 branches missed.">				widthMustBeRestricted = mainView.getPreferredSize().width &gt; map</span>
+<span class="nc" id="L940">						.getZoomed(map.getMaxNodeWidth())</span>
+<span class="nc" id="L941">						+ mainView.getIconWidth();</span>
+<span class="nc" id="L942">			} else {</span>
+<span class="nc" id="L943">				widthMustBeRestricted = true;</span>
+			}
+
+<span class="nc bnc" id="L946" title="All 2 branches missed.">			if (widthMustBeRestricted) {</span>
+<span class="nc" id="L947">				nodeText = nodeText.replaceFirst(&quot;(?i)&lt;body&gt;&quot;, &quot;&lt;body width=\&quot;&quot;</span>
+<span class="nc" id="L948">						+ map.getMaxNodeWidth() + &quot;\&quot;&gt;&quot;);</span>
+			}
+<span class="nc" id="L950">			setText(nodeText);</span>
+<span class="nc bnc" id="L951" title="All 2 branches missed.">		} else if (nodeText.startsWith(&quot;&lt;table&gt;&quot;)) {</span>
+<span class="nc" id="L952">			String[] lines = nodeText.split(&quot;\n&quot;);</span>
+<span class="nc" id="L953">			lines[0] = lines[0].substring(7); // remove &lt;table&gt; tag</span>
+<span class="nc bnc" id="L954" title="All 2 branches missed.">			int startingLine = lines[0].matches(&quot;\\s*&quot;) ? 1 : 0;</span>
+			// ^ If the remaining first line is empty, do not draw it
+
+<span class="nc" id="L957">			String text = &quot;&lt;html&gt;&lt;table border=1 style=\&quot;border-color: white\&quot;&gt;&quot;;</span>
+			// String[] lines = nodeText.split(&quot;\n&quot;);
+<span class="nc bnc" id="L959" title="All 2 branches missed.">			for (int line = startingLine; line &lt; lines.length; line++) {</span>
+<span class="nc" id="L960">				text += &quot;&lt;tr&gt;&lt;td style=\&quot;border-color: white;\&quot;&gt;&quot;</span>
+<span class="nc" id="L961">						+ HtmlTools.toXMLEscapedText(lines[line]).replaceAll(</span>
+<span class="nc" id="L962">								&quot;\t&quot;, &quot;&lt;td style=\&quot;border-color: white\&quot;&gt;&quot;);</span>
+			}
+<span class="nc" id="L964">			setText(text);</span>
+<span class="nc bnc" id="L965" title="All 2 branches missed.">		} else if (isLong) {</span>
+<span class="nc" id="L966">			String text = HtmlTools.plainToHTML(nodeText);</span>
+<span class="nc bnc" id="L967" title="All 2 branches missed.">			if (widthMustBeRestricted) {</span>
+<span class="nc" id="L968">				text = text.replaceFirst(&quot;(?i)&lt;p&gt;&quot;,</span>
+<span class="nc" id="L969">						&quot;&lt;p width=\&quot;&quot; + map.getMaxNodeWidth() + &quot;\&quot;&gt;&quot;);</span>
+			}
+<span class="nc" id="L971">			setText(text);</span>
+<span class="nc" id="L972">		} else {</span>
+<span class="nc" id="L973">			setText(nodeText);</span>
+		}
+<span class="nc" id="L975">	}</span>
+
+	private void updateFont() {
+<span class="nc" id="L978">		Font font = getModel().getFont();</span>
+<span class="nc bnc" id="L979" title="All 2 branches missed.">		font = font == null ? getController().getDefaultFont() : font;</span>
+<span class="nc bnc" id="L980" title="All 2 branches missed.">		if (font != null) {</span>
+<span class="nc" id="L981">			mainView.setFont(font);</span>
+<span class="nc" id="L982">		} else {</span>
+			// We can survive this trouble.
+<span class="nc" id="L984">			System.err.println(&quot;NodeView.update(): default font is null.&quot;);</span>
+		}
+<span class="nc" id="L986">	}</span>
+
+	private void updateIcons() {
+<span class="nc" id="L989">		updateIconPosition();</span>
+<span class="nc" id="L990">		MultipleImage iconImages = new MultipleImage(1.0f);</span>
+<span class="nc" id="L991">		boolean iconPresent = false;</span>
+		/* fc, 06.10.2003: images? */
+
+<span class="nc" id="L994">		FreeMindMain frame = getFrame();</span>
+<span class="nc" id="L995">		Map stateIcons = (getModel()).getStateIcons();</span>
+<span class="nc bnc" id="L996" title="All 2 branches missed.">		for (Iterator i = stateIcons.keySet().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L997">			String key = (String) i.next();</span>
+<span class="nc" id="L998">			iconPresent = true;</span>
+<span class="nc" id="L999">			ImageIcon myIcon = (ImageIcon) stateIcons.get(key);</span>
+<span class="nc" id="L1000">			iconImages.addImage(myIcon);</span>
+
+		}
+
+<span class="nc" id="L1004">		List icons = (getModel()).getIcons();</span>
+<span class="nc bnc" id="L1005" title="All 2 branches missed.">		for (Iterator i = icons.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L1006">			MindIcon myIcon = (MindIcon) i.next();</span>
+<span class="nc" id="L1007">			iconPresent = true;</span>
+			// System.out.println(&quot;print the icon &quot; + myicon.toString());
+<span class="nc" id="L1009">			iconImages.addImage(myIcon.getIcon());</span>
+		}
+<span class="nc" id="L1011">		String link = ((NodeAdapter) getModel()).getLink();</span>
+<span class="nc bnc" id="L1012" title="All 2 branches missed.">		if (link != null) {</span>
+<span class="nc" id="L1013">			iconPresent = true;</span>
+<span class="nc" id="L1014">			String iconPath = &quot;images/Link.png&quot;;</span>
+<span class="nc bnc" id="L1015" title="All 2 branches missed.">			if (link.startsWith(&quot;#&quot;)) {</span>
+<span class="nc" id="L1016">				iconPath = &quot;images/LinkLocal.png&quot;;</span>
+<span class="nc bnc" id="L1017" title="All 2 branches missed.">			} else if (link.startsWith(&quot;mailto:&quot;)) {</span>
+<span class="nc" id="L1018">				iconPath = &quot;images/Mail.png&quot;;</span>
+<span class="nc bnc" id="L1019" title="All 2 branches missed.">			} else if (Tools.executableByExtension(link)) {</span>
+<span class="nc" id="L1020">				iconPath = &quot;images/Executable.png&quot;;</span>
+			}
+<span class="nc" id="L1022">			ImageIcon icon = new ImageIcon(frame.getResource(iconPath));</span>
+<span class="nc" id="L1023">			iconImages.addImage(icon);</span>
+		}
+		// /* Folded icon by Matthias Schade (mascha2), fc, 20.12.2003*/
+		// if (((NodeAdapter)getModel()).isFolded()) {
+		// iconPresent = true;
+		// ImageIcon icon = new
+		// ImageIcon(((NodeAdapter)getModel()).getFrame().getResource(&quot;images/Folded.png&quot;));
+		// iconImages.addImage(icon);
+		// }
+		// DanielPolansky: set icon only if icon is present, because
+		// we don't want to insert any additional white space.
+<span class="nc bnc" id="L1034" title="All 2 branches missed.">		setIcon(iconPresent ? iconImages : null);</span>
+<span class="nc" id="L1035">	}</span>
+
+	private void updateIconPosition() {
+<span class="nc" id="L1038">		getMainView().setHorizontalTextPosition(</span>
+<span class="nc bnc" id="L1039" title="All 2 branches missed.">				isLeft() ? SwingConstants.LEADING : SwingConstants.TRAILING);</span>
+<span class="nc" id="L1040">	}</span>
+
+	private void updateTextColor() {
+		Color color;
+<span class="nc" id="L1044">		color = getModel().getColor();</span>
+<span class="nc bnc" id="L1045" title="All 2 branches missed.">		if (color == null) {</span>
+<span class="nc" id="L1046">			color = MapView.standardNodeTextColor;</span>
+		}
+<span class="nc" id="L1048">		mainView.setForeground(color);</span>
+<span class="nc" id="L1049">	}</span>
+
+	boolean useSelectionColors() {
+<span class="nc bnc" id="L1052" title="All 4 branches missed.">		return isSelected() &amp;&amp; !MapView.standardDrawRectangleForSelection</span>
+<span class="nc bnc" id="L1053" title="All 2 branches missed.">				&amp;&amp; !map.isCurrentlyPrinting();</span>
+	}
+
+	void updateStyle() {
+<span class="nc bnc" id="L1057" title="All 2 branches missed.">		if (mainView != null</span>
+<span class="nc bnc" id="L1058" title="All 2 branches missed.">				&amp;&amp; (mainView.getStyle().equals(model.getStyle()) || model</span>
+<span class="nc bnc" id="L1059" title="All 2 branches missed.">						.isRoot())) {</span>
+<span class="nc" id="L1060">			return;</span>
+		}
+<span class="nc" id="L1062">		final MainView newMainView = NodeViewFactory.getInstance().newMainView(</span>
+<span class="nc" id="L1063">				model);</span>
+<span class="nc" id="L1064">		setMainView(newMainView);</span>
+
+<span class="nc" id="L1066">	}</span>
+
+	/**
+	 * Updates the tool tip of the node.
+	 */
+	public void updateToolTip() {
+<span class="nc" id="L1072">		Map tooltips = getModel().getToolTip();</span>
+		/*
+		 * if(tooltips.size() == 1) { String toolTipText = (String)
+		 * tooltips.values().iterator().next();
+		 * logger.finest(&quot;setting tooltip to &quot;+toolTipText);
+		 * mainView.setToolTipText(toolTipText); } else
+<span class="nc bnc" id="L1078" title="All 2 branches missed.">		 */if (tooltips.size() == 0) {</span>
+<span class="nc" id="L1079">			mainView.setToolTipText(null);</span>
+<span class="nc" id="L1080">		} else {</span>
+			// html table
+<span class="nc" id="L1082">			StringBuffer text = new StringBuffer(&quot;&lt;html&gt;&lt;table width=\&quot;&quot;</span>
+<span class="nc" id="L1083">					+ getMaxToolTipWidth() + &quot;\&quot;&gt;&quot;);</span>
+<span class="nc bnc" id="L1084" title="All 2 branches missed.">			for (Iterator i = tooltips.keySet().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L1085">				String key = (String) i.next();</span>
+<span class="nc" id="L1086">				String value = (String) tooltips.get(key);</span>
+				// no html end inside the value:
+<span class="nc" id="L1088">				value = value.replaceAll(&quot;&lt;/html&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L1089">				text.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;);</span>
+<span class="nc" id="L1090">				text.append(value);</span>
+<span class="nc" id="L1091">				text.append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
+			}
+<span class="nc" id="L1093">			text.append(&quot;&lt;/table&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L1094">			mainView.setToolTipText(text.toString());</span>
+		}
+<span class="nc" id="L1096">	}</span>
+
+	public int getMaxToolTipWidth() {
+<span class="nc bnc" id="L1099" title="All 2 branches missed.">		if (maxToolTipWidth == 0) {</span>
+			try {
+<span class="nc" id="L1101">				maxToolTipWidth = getController().getIntProperty(</span>
+<span class="nc" id="L1102">						&quot;max_tooltip_width&quot;, 600);</span>
+<span class="nc" id="L1103">			} catch (NumberFormatException e) {</span>
+<span class="nc" id="L1104">				maxToolTipWidth = 600;</span>
+			}
+		}
+<span class="nc" id="L1107">		return maxToolTipWidth;</span>
+	}
+
+	/**
+     */
+	public void setIcon(MultipleImage image) {
+<span class="nc" id="L1113">		mainView.setIcon(image);</span>
+<span class="nc" id="L1114">	}</span>
+
+	void updateAll() {
+<span class="nc" id="L1117">		update();</span>
+<span class="nc" id="L1118">		invalidate();</span>
+<span class="nc bnc" id="L1119" title="All 2 branches missed.">		for (ListIterator e = getChildrenViews().listIterator(); e.hasNext();) {</span>
+<span class="nc" id="L1120">			NodeView child = (NodeView) e.next();</span>
+<span class="nc" id="L1121">			child.updateAll();</span>
+		}
+<span class="nc" id="L1123">	}</span>
+
+	String getStyle() {
+<span class="nc" id="L1126">		return mainView.getStyle();</span>
+	}
+
+	/**
+	 * @return returns the color that should used to select the node.
+	 */
+	protected Color getSelectedColor() {
+		// Color backgroundColor = getModel().getBackgroundColor();
+		// // if(backgroundColor != null) {
+		// // Color backBrighter = backgroundColor.brighter();
+		// // // white?
+		// // if(backBrighter.getRGB() == Color.WHITE.getRGB()) {
+		// // return standardSelectColor;
+		// // }
+		// // // == standard??
+		// // if (backBrighter.equals (standardSelectColor) ) {
+		// // return backgroundColor.darker();
+		// // }
+		// // return backBrighter;
+		// // }
+		// // == standard??
+		// if (backgroundColor != null /*&amp;&amp;
+		// backgroundColor.equals(standardSelectColor)*/ ) {
+		// // bad hack:
+		// return getAntiColor1(backgroundColor);
+		// // return new Color(0xFFFFFF - backgroundColor.getRGB());
+		// }
+<span class="nc" id="L1153">		return MapView.standardSelectColor;</span>
+	}
+
+	/*
+	 * http://groups.google.de/groups?hl=de&amp;lr=&amp;ie=UTF-8&amp;threadm=9i5bbo%24h1kmi%243
+	 * %
+	 * 40ID-77081.news.dfncis.de&amp;rnum=1&amp;prev=/groups%3Fq%3Djava%2520komplement%25
+	 * C3
+	 * %25A4rfarbe%2520helligkeit%26hl%3Dde%26lr%3D%26ie%3DUTF-8%26sa%3DN%26as_qdr
+	 * %3Dall%26tab%3Dwg
+	 */
+	/**
+	 * Determines to a given color a color, that is the best contrary color. It
+	 * is different from {@link #getAntiColor2}.
+	 * 
+	 * @since PPS 1.1.1
+	 */
+	protected static Color getAntiColor1(Color c) {
+<span class="nc" id="L1171">		float[] hsb = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(),</span>
+<span class="nc" id="L1172">				null);</span>
+<span class="nc" id="L1173">		hsb[0] += 0.40;</span>
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">		if (hsb[0] &gt; 1)</span>
+<span class="nc" id="L1175">			hsb[0]--;</span>
+<span class="nc" id="L1176">		hsb[1] = 1;</span>
+<span class="nc" id="L1177">		hsb[2] = 0.7f;</span>
+<span class="nc" id="L1178">		return Color.getHSBColor(hsb[0], hsb[1], hsb[2]);</span>
+	}
+
+	/**
+	 * Determines to a given color a color, that is the best contrary color. It
+	 * is different from {@link #getAntiColor1}.
+	 * 
+	 * @since PPS 1.1.1
+	 */
+	protected static Color getAntiColor2(Color c) {
+<span class="nc" id="L1188">		float[] hsb = Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(),</span>
+<span class="nc" id="L1189">				null);</span>
+<span class="nc" id="L1190">		hsb[0] -= 0.40;</span>
+<span class="nc bnc" id="L1191" title="All 2 branches missed.">		if (hsb[0] &lt; 0)</span>
+<span class="nc" id="L1192">			hsb[0]++;</span>
+<span class="nc" id="L1193">		hsb[1] = 1;</span>
+<span class="nc" id="L1194">		hsb[2] = (float) 0.8;</span>
+<span class="nc" id="L1195">		return Color.getHSBColor(hsb[0], hsb[1], hsb[2]);</span>
+	}
+
+	/**
+	 * @return Returns the sHIFT.
+	 */
+
+	public int getShift() {
+<span class="nc" id="L1203">		return map.getZoomed(model.calcShiftY());</span>
+	}
+
+	/**
+	 * @return Returns the VGAP.
+	 */
+	public int getVGap() {
+<span class="nc" id="L1210">		return map.getZoomed(model.getVGap());</span>
+	}
+
+	public int getHGap() {
+<span class="nc" id="L1214">		return map.getZoomed(model.getHGap());</span>
+	}
+
+	public MainView getMainView() {
+<span class="nc" id="L1218">		return mainView;</span>
+	}
+
+	void syncronizeAttributeView() {
+<span class="nc bnc" id="L1222" title="All 2 branches missed.">		if (attributeView != null) {</span>
+<span class="nc" id="L1223">			attributeView.syncronizeAttributeView();</span>
+		}
+<span class="nc" id="L1225">	}</span>
+
+	public Font getTextFont() {
+<span class="nc" id="L1228">		return getMainView().getFont();</span>
+	}
+
+	public Color getTextColor() {
+<span class="nc" id="L1232">		Color color = getModel().getColor();</span>
+<span class="nc bnc" id="L1233" title="All 2 branches missed.">		if (color == null) {</span>
+<span class="nc" id="L1234">			color = MapView.standardNodeTextColor;</span>
+		}
+<span class="nc" id="L1236">		return color;</span>
+
+	}
+
+	/**
+     */
+	public AttributeView getAttributeView() {
+<span class="nc bnc" id="L1243" title="All 2 branches missed.">		if (attributeView == null) {</span>
+<span class="nc" id="L1244">			model.createAttributeTableModel();</span>
+<span class="nc" id="L1245">			attributeView = new AttributeView(this);</span>
+		}
+
+<span class="nc" id="L1248">		return attributeView;</span>
+	}
+
+	public NodeView getPreferredVisibleChild(boolean left) { // mind preferred
+																// child
+		// :-) (PN)
+<span class="nc bnc" id="L1254" title="All 4 branches missed.">		if (preferredChild != null &amp;&amp; (left == preferredChild.isLeft())</span>
+<span class="nc bnc" id="L1255" title="All 2 branches missed.">				&amp;&amp; this.preferredChild.getParent() == this) {</span>
+<span class="nc bnc" id="L1256" title="All 2 branches missed.">			if (preferredChild.isContentVisible()) {</span>
+<span class="nc" id="L1257">				return preferredChild;</span>
+			} else {
+<span class="nc" id="L1259">				NodeView newSelected = preferredChild</span>
+<span class="nc" id="L1260">						.getPreferredVisibleChild(left);</span>
+<span class="nc bnc" id="L1261" title="All 2 branches missed.">				if (newSelected != null) {</span>
+<span class="nc" id="L1262">					return newSelected;</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L1266" title="All 2 branches missed.">		if (!getModel().isLeaf()) {</span>
+<span class="nc" id="L1267">			int yGap = Integer.MAX_VALUE;</span>
+			final NodeView baseComponent;
+<span class="nc bnc" id="L1269" title="All 2 branches missed.">			if (isContentVisible()) {</span>
+<span class="nc" id="L1270">				baseComponent = this;</span>
+<span class="nc" id="L1271">			} else {</span>
+<span class="nc" id="L1272">				baseComponent = getVisibleParentView();</span>
+			}
+<span class="nc" id="L1274">			int ownY = baseComponent.getMainView().getY()</span>
+<span class="nc" id="L1275">					+ baseComponent.getMainView().getHeight() / 2;</span>
+<span class="nc" id="L1276">			NodeView newSelected = null;</span>
+<span class="nc bnc" id="L1277" title="All 2 branches missed.">			for (int i = 0; i &lt; getComponentCount(); i++) {</span>
+<span class="nc" id="L1278">				Component c = getComponent(i);</span>
+<span class="nc bnc" id="L1279" title="All 2 branches missed.">				if (!(c instanceof NodeView)) {</span>
+<span class="nc" id="L1280">					continue;</span>
+				}
+<span class="nc" id="L1282">				NodeView childView = (NodeView) c;</span>
+<span class="nc bnc" id="L1283" title="All 2 branches missed.">				if (!(childView.isLeft() == left)) {</span>
+<span class="nc" id="L1284">					continue;</span>
+				}
+<span class="nc bnc" id="L1286" title="All 2 branches missed.">				if (!childView.isContentVisible()) {</span>
+<span class="nc" id="L1287">					childView = childView.getPreferredVisibleChild(left);</span>
+<span class="nc bnc" id="L1288" title="All 2 branches missed.">					if (childView == null) {</span>
+<span class="nc" id="L1289">						continue;</span>
+					}
+				}
+<span class="nc" id="L1292">				Point childPoint = new Point(0, childView.getMainView()</span>
+<span class="nc" id="L1293">						.getHeight() / 2);</span>
+<span class="nc" id="L1294">				Tools.convertPointToAncestor(childView.getMainView(),</span>
+<span class="nc" id="L1295">						childPoint, baseComponent);</span>
+<span class="nc" id="L1296">				final int gapToChild = Math.abs(childPoint.y - ownY);</span>
+<span class="nc bnc" id="L1297" title="All 2 branches missed.">				if (gapToChild &lt; yGap) {</span>
+<span class="nc" id="L1298">					newSelected = childView;</span>
+<span class="nc" id="L1299">					preferredChild = (NodeView) c;</span>
+<span class="nc" id="L1300">					yGap = gapToChild;</span>
+				} else {
+					break;
+				}
+			}
+<span class="nc" id="L1305">			return newSelected;</span>
+		}
+<span class="nc" id="L1307">		return null;</span>
+	}
+
+	public void setPreferredChild(NodeView view) {
+<span class="nc" id="L1311">		this.preferredChild = view;</span>
+<span class="nc" id="L1312">		final Container parent = this.getParent();</span>
+<span class="nc bnc" id="L1313" title="All 2 branches missed.">		if (view == null) {</span>
+<span class="nc" id="L1314">			return;</span>
+<span class="nc bnc" id="L1315" title="All 2 branches missed.">		} else if (parent instanceof NodeView) {</span>
+			// set also preffered child of parents...
+<span class="nc" id="L1317">			((NodeView) parent).setPreferredChild(this);</span>
+		}
+<span class="nc" id="L1319">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.swing.event.TreeModelListener#treeNodesChanged(javax.swing.event
+	 * .TreeModelEvent)
+	 */
+	public void treeNodesChanged(TreeModelEvent e) {
+<span class="nc" id="L1329">		update();</span>
+<span class="nc" id="L1330">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.swing.event.TreeModelListener#treeNodesInserted(javax.swing.event
+	 * .TreeModelEvent)
+	 */
+	public void treeNodesInserted(TreeModelEvent e) {
+<span class="nc" id="L1340">		addFoldingListener();</span>
+<span class="nc bnc" id="L1341" title="All 2 branches missed.">		if (getModel().isFolded()) {</span>
+<span class="nc" id="L1342">			return;</span>
+		}
+<span class="nc" id="L1344">		final int[] childIndices = e.getChildIndices();</span>
+
+<span class="nc bnc" id="L1346" title="All 2 branches missed.">		for (int i = 0; i &lt; childIndices.length; i++) {</span>
+<span class="nc" id="L1347">			int index = childIndices[i];</span>
+<span class="nc" id="L1348">			insert((MindMapNode) getModel().getChildAt(index), index);</span>
+		}
+<span class="nc" id="L1350">		revalidate();</span>
+
+<span class="nc" id="L1352">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.swing.event.TreeModelListener#treeNodesRemoved(javax.swing.event
+	 * .TreeModelEvent)
+	 */
+	public void treeNodesRemoved(TreeModelEvent e) {
+<span class="nc bnc" id="L1362" title="All 2 branches missed.">		if(!getModel().hasVisibleChilds()) {</span>
+<span class="nc" id="L1363">			removeFoldingListener();</span>
+		}
+<span class="nc" id="L1365">		getMap().resetShiftSelectionOrigin();</span>
+<span class="nc bnc" id="L1366" title="All 2 branches missed.">		if (getModel().isFolded()) {</span>
+<span class="nc" id="L1367">			return;</span>
+		}
+
+<span class="nc" id="L1370">		final int[] childIndices = e.getChildIndices();</span>
+<span class="nc bnc" id="L1371" title="All 2 branches missed.">		boolean preferredChildIsLeft = preferredChild != null</span>
+<span class="nc bnc" id="L1372" title="All 2 branches missed.">				&amp;&amp; preferredChild.isLeft();</span>
+
+<span class="nc bnc" id="L1374" title="All 2 branches missed.">		for (int i = childIndices.length - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L1375">			final int index = childIndices[i];</span>
+<span class="nc" id="L1376">			final NodeView node = (NodeView) getComponent(index);</span>
+<span class="nc bnc" id="L1377" title="All 2 branches missed.">			if (node == this.preferredChild) { // mind preferred child :-) (PN)</span>
+<span class="nc" id="L1378">				this.preferredChild = null;</span>
+<span class="nc bnc" id="L1379" title="All 2 branches missed.">				for (int j = index + 1; j &lt; getComponentCount(); j++) {</span>
+<span class="nc" id="L1380">					final Component c = getComponent(j);</span>
+<span class="nc bnc" id="L1381" title="All 2 branches missed.">					if (!(c instanceof NodeView)) {</span>
+<span class="nc" id="L1382">						break;</span>
+					}
+<span class="nc" id="L1384">					NodeView candidate = (NodeView) c;</span>
+<span class="nc bnc" id="L1385" title="All 2 branches missed.">					if (candidate.isVisible()</span>
+<span class="nc bnc" id="L1386" title="All 2 branches missed.">							&amp;&amp; node.isLeft() == candidate.isLeft()) {</span>
+<span class="nc" id="L1387">						this.preferredChild = candidate;</span>
+<span class="nc" id="L1388">						break;</span>
+					}
+				}
+<span class="nc bnc" id="L1391" title="All 2 branches missed.">				if (this.preferredChild == null) {</span>
+<span class="nc bnc" id="L1392" title="All 2 branches missed.">					for (int j = index - 1; j &gt;= 0; j--) {</span>
+<span class="nc" id="L1393">						final Component c = getComponent(j);</span>
+<span class="nc bnc" id="L1394" title="All 2 branches missed.">						if (!(c instanceof NodeView)) {</span>
+<span class="nc" id="L1395">							break;</span>
+						}
+<span class="nc" id="L1397">						NodeView candidate = (NodeView) c;</span>
+<span class="nc bnc" id="L1398" title="All 2 branches missed.">						if (candidate.isVisible()</span>
+<span class="nc bnc" id="L1399" title="All 2 branches missed.">								&amp;&amp; node.isLeft() == candidate.isLeft()) {</span>
+<span class="nc" id="L1400">							this.preferredChild = candidate;</span>
+<span class="nc" id="L1401">							break;</span>
+						}
+					}
+				}
+			}
+<span class="nc" id="L1406">			node.remove();</span>
+		}
+<span class="nc" id="L1408">		NodeView preferred = getPreferredVisibleChild(preferredChildIsLeft);</span>
+<span class="nc bnc" id="L1409" title="All 2 branches missed.">		if (preferred != null) { // after delete focus on a brother (PN)</span>
+<span class="nc" id="L1410">			getMap().selectAsTheOnlyOneSelected(preferred);</span>
+<span class="nc" id="L1411">		} else {</span>
+<span class="nc" id="L1412">			getMap().selectAsTheOnlyOneSelected(this);</span>
+		}
+<span class="nc" id="L1414">		revalidate();</span>
+<span class="nc" id="L1415">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.swing.event.TreeModelListener#treeStructureChanged(javax.swing.
+	 * event.TreeModelEvent)
+	 */
+	public void treeStructureChanged(TreeModelEvent e) {
+<span class="nc" id="L1425">		getMap().resetShiftSelectionOrigin();</span>
+<span class="nc bnc" id="L1426" title="All 2 branches missed.">		for (ListIterator i = getChildrenViews().listIterator(); i.hasNext();) {</span>
+<span class="nc" id="L1427">			((NodeView) i.next()).remove();</span>
+		}
+<span class="nc" id="L1429">		insert();</span>
+<span class="nc bnc" id="L1430" title="All 2 branches missed.">		if (map.getSelected() == null) {</span>
+<span class="nc" id="L1431">			map.selectAsTheOnlyOneSelected(this);</span>
+		}
+<span class="nc" id="L1433">		map.revalidateSelecteds();</span>
+<span class="nc" id="L1434">		revalidate();</span>
+<span class="nc" id="L1435">	}</span>
+
+	public int getZoomedFoldingSymbolHalfWidth() {
+<span class="nc" id="L1438">		int preferredFoldingSymbolHalfWidth = (int) ((getFoldingSymbolWidth() * map</span>
+<span class="nc" id="L1439">				.getZoom()) / 2);</span>
+<span class="nc" id="L1440">		return Math.min(preferredFoldingSymbolHalfWidth, getHeight() / 2);</span>
+	}
+
+	/**
+	 * @return the left/right point of the folding circle. To receive its
+	 * center, the amount has to be moved to left/right (depending on its side) 
+	 * by the folding circle width.
+	 */
+	public Point getFoldingMarkPosition() {
+<span class="nc" id="L1449">		Point out = getMainViewOutPoint(this, new Point());</span>
+<span class="nc" id="L1450">		return out;</span>
+	}
+
+	public JComponent getContent() {
+<span class="nc bnc" id="L1454" title="All 2 branches missed.">		return contentPane == null ? mainView : contentPane;</span>
+	}
+
+	public Container getContentPane() {
+<span class="nc bnc" id="L1458" title="All 2 branches missed.">		if (contentPane == null) {</span>
+<span class="nc" id="L1459">			contentPane = NodeViewFactory.getInstance().newContentPane(this);</span>
+<span class="nc" id="L1460">			remove(mainView);</span>
+<span class="nc" id="L1461">			contentPane.add(mainView);</span>
+<span class="nc" id="L1462">			add(contentPane);</span>
+		}
+<span class="nc" id="L1464">		return contentPane;</span>
+	}
+
+	public NodeMotionListenerView getMotionListenerView() {
+<span class="nc" id="L1468">		return motionListenerView;</span>
+	}
+
+	public void setBounds(int x, int y, int width, int height) {
+<span class="nc" id="L1472">		super.setBounds(x, y, width, height);</span>
+<span class="nc bnc" id="L1473" title="All 2 branches missed.">		if (motionListenerView != null) {</span>
+<span class="nc" id="L1474">			motionListenerView.invalidate();</span>
+		}
+<span class="nc bnc" id="L1476" title="All 2 branches missed.">		if (mFoldingListener != null) {</span>
+<span class="nc" id="L1477">			mFoldingListener.invalidate();</span>
+		}
+<span class="nc" id="L1479">	}</span>
+
+	public void setVisible(boolean isVisible) {
+<span class="nc" id="L1482">		super.setVisible(isVisible);</span>
+<span class="nc bnc" id="L1483" title="All 2 branches missed.">		if (motionListenerView != null) {</span>
+<span class="nc" id="L1484">			motionListenerView.setVisible(isVisible);</span>
+		}
+<span class="nc bnc" id="L1486" title="All 2 branches missed.">		if (mFoldingListener != null) {</span>
+<span class="nc" id="L1487">			mFoldingListener.setVisible(isVisible);</span>
+		}
+<span class="nc" id="L1489">	}</span>
+
+	private void paintCloudsAndEdges(Graphics2D g) {
+<span class="nc" id="L1492">		Object renderingHint = getController().setEdgesRenderingHint(g);</span>
+<span class="nc bnc" id="L1493" title="All 2 branches missed.">		for (int i = 0; i &lt; getComponentCount(); i++) {</span>
+<span class="nc" id="L1494">			final Component component = getComponent(i);</span>
+<span class="nc bnc" id="L1495" title="All 2 branches missed.">			if (!(component instanceof NodeView)) {</span>
+<span class="nc" id="L1496">				continue;</span>
+			}
+<span class="nc" id="L1498">			NodeView nodeView = (NodeView) component;</span>
+<span class="nc bnc" id="L1499" title="All 2 branches missed.">			if (nodeView.isContentVisible()) {</span>
+<span class="nc" id="L1500">				Point p = new Point();</span>
+<span class="nc" id="L1501">				Tools.convertPointToAncestor(nodeView, p, this);</span>
+<span class="nc" id="L1502">				g.translate(p.x, p.y);</span>
+<span class="nc" id="L1503">				nodeView.paintCloud(g);</span>
+<span class="nc" id="L1504">				g.translate(-p.x, -p.y);</span>
+<span class="nc" id="L1505">				EdgeView edge = NodeViewFactory.getInstance().getEdge(nodeView);</span>
+<span class="nc" id="L1506">				edge.paint(nodeView, g);</span>
+<span class="nc" id="L1507">			} else {</span>
+<span class="nc" id="L1508">				nodeView.paintCloudsAndEdges(g);</span>
+			}
+		}
+<span class="nc" id="L1511">		Tools.restoreAntialiasing(g, renderingHint);</span>
+<span class="nc" id="L1512">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JComponent#paint(java.awt.Graphics)
+	 */
+	public void paint(Graphics g) {
+<span class="nc" id="L1520">		final boolean isRoot = isRoot();</span>
+<span class="nc bnc" id="L1521" title="All 2 branches missed.">		if (isRoot) {</span>
+<span class="nc" id="L1522">			paintCloud(g);</span>
+		}
+<span class="nc bnc" id="L1524" title="All 2 branches missed.">		if (isContentVisible()) {</span>
+<span class="nc" id="L1525">			Graphics2D g2d = (Graphics2D) g;</span>
+<span class="nc" id="L1526">			paintCloudsAndEdges(g2d);</span>
+<span class="nc" id="L1527">			super.paint(g);</span>
+			// return to std stroke
+<span class="nc" id="L1529">			g2d.setStroke(BubbleMainView.DEF_STROKE);</span>
+//			if (!isRoot) {
+//				paintFoldingMark(g2d);
+//			}
+<span class="nc" id="L1533">		} else {</span>
+<span class="nc" id="L1534">			super.paint(g);</span>
+		}
+		// g.setColor(Color.BLACK);
+		// g.drawRect(0, 0, getWidth()-1, getHeight()-1);
+<span class="nc" id="L1538">	}</span>
+
+	private void paintCloud(Graphics g) {
+<span class="nc bnc" id="L1541" title="All 4 branches missed.">		if (isContentVisible() &amp;&amp; model.getCloud() != null) {</span>
+<span class="nc" id="L1542">			CloudView cloud = new CloudView(model.getCloud(), this);</span>
+<span class="nc" id="L1543">			cloud.paint(g);</span>
+		}
+<span class="nc" id="L1545">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.Component#toString()
+	 */
+	public String toString() {
+<span class="nc" id="L1553">		return getModel().toString() + &quot;, &quot; + super.toString();</span>
+	}
+
+	public Rectangle getInnerBounds() {
+<span class="nc" id="L1557">		final int space = getMap().getZoomed(SPACE_AROUND);</span>
+<span class="nc" id="L1558">		return new Rectangle(space, space, getWidth() - 2 * space, getHeight()</span>
+<span class="nc" id="L1559">				- 2 * space);</span>
+	}
+
+	public boolean contains(int x, int y) {
+<span class="nc" id="L1563">		final int space = getMap().getZoomed(SPACE_AROUND) - 2</span>
+<span class="nc" id="L1564">				* getZoomedFoldingSymbolHalfWidth();</span>
+<span class="nc bnc" id="L1565" title="All 8 branches missed.">		return (x &gt;= space) &amp;&amp; (x &lt; getWidth() - space) &amp;&amp; (y &gt;= space)</span>
+<span class="nc" id="L1566">				&amp;&amp; (y &lt; getHeight() - space);</span>
+	}
+
+	public Color getTextBackground() {
+<span class="nc" id="L1570">		final Color modelBackgroundColor = getModel().getBackgroundColor();</span>
+<span class="nc bnc" id="L1571" title="All 2 branches missed.">		if (modelBackgroundColor != null) {</span>
+<span class="nc" id="L1572">			return modelBackgroundColor;</span>
+		}
+<span class="nc" id="L1574">		return getBackgroundColor();</span>
+	}
+
+	private Color getBackgroundColor() {
+<span class="nc" id="L1578">		final MindMapCloud cloud = getModel().getCloud();</span>
+<span class="nc bnc" id="L1579" title="All 2 branches missed.">		if (cloud != null) {</span>
+<span class="nc" id="L1580">			return cloud.getColor();</span>
+		}
+<span class="nc bnc" id="L1582" title="All 2 branches missed.">		if (isRoot()) {</span>
+<span class="nc" id="L1583">			return getMap().getBackground();</span>
+		}
+<span class="nc" id="L1585">		return getParentView().getBackgroundColor();</span>
+	}
+
+	public static int getFoldingSymbolWidth() {
+<span class="nc bnc" id="L1589" title="All 2 branches missed.">		if (FOLDING_SYMBOL_WIDTH == -1) {</span>
+<span class="nc" id="L1590">			FOLDING_SYMBOL_WIDTH = Resources.getInstance().getIntProperty(</span>
+<span class="nc" id="L1591">					&quot;foldingsymbolwidth&quot;, 8);</span>
+		}
+<span class="nc" id="L1593">		return FOLDING_SYMBOL_WIDTH;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

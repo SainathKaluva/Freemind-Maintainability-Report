@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>XHTMLWriter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">XHTMLWriter.java</span></div><h1>XHTMLWriter.java</h1><pre class="source lang-java linenums">package freemind.main;
+
+/*
+ * XHTMLWriter -- A simple XHTML document writer
+ * 
+ * (C) 2004 Richard &quot;Shred&quot; Koerber
+ *   http://www.shredzone.net/
+ *
+ * This is free software. You can modify and use it at will.
+ */
+
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilterWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.Option;
+
+/**
+ * Create a new XHTMLWriter which is able to save a HTMLDocument as XHTML.
+ * &lt;p&gt;
+ * The result will be a valid XML file, but it is not granted that the file will
+ * really be XHTML 1.0 transitional conform. The basic purpose of this class
+ * is to give an XSL processor access to plain HTML files.
+ * 
+ * @author Richard &quot;Shred&quot; Kï¿½rber
+ */
+public class XHTMLWriter extends FixedHTMLWriter {
+<span class="fc" id="L35">	private boolean writeLineSeparatorEnabled = true;</span>
+
+	/**
+	 * Create a new XHTMLWriter that will write the entire HTMLDocument.
+	 * 
+	 * @param writer
+	 *            Writer to write to
+	 * @param doc
+	 *            Source document
+	 */
+	public XHTMLWriter(Writer writer, HTMLDocument doc) {
+<span class="fc" id="L46">		this(writer, doc, 0, doc.getLength());</span>
+<span class="fc" id="L47">	}</span>
+
+	/**
+	 * Create a new XHTMLWriter that will write a part of a HTMLDocument.
+	 * 
+	 * @param writer
+	 *            Writer to write to
+	 * @param doc
+	 *            Source document
+	 * @param pos
+	 *            Starting position
+	 * @param len
+	 *            Length
+	 */
+	public XHTMLWriter(Writer writer, HTMLDocument doc, int pos, int len) {
+<span class="fc" id="L62">		super(new XHTMLFilterWriter(writer), doc, pos, len);</span>
+<span class="fc" id="L63">		setLineLength(Integer.MAX_VALUE);</span>
+<span class="fc" id="L64">	}</span>
+
+	/**
+	 * Start the writing process. An XML and DOCTYPE header will be written
+	 * prior to the XHTML output.
+	 */
+	public void write() throws IOException, BadLocationException {
+		// fc, 17.5.06: no special tags, as they are wrong inside XML tags like
+		// &lt;content&gt;...&lt;html&gt;...
+		// write( &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;&quot; );
+		// writeLineSeparator();
+		// write( &quot;&lt;!DOCTYPE html PUBLIC \&quot;-//W3C//&quot;
+		// + &quot;DTD XHTML 1.0 Transitional//EN\&quot; &quot;
+		// + &quot;\&quot;DTD/xhtml1-transitional.dtd\&quot;&gt;&quot; );
+		// writeLineSeparator();
+<span class="fc" id="L79">		super.write();</span>
+<span class="fc" id="L80">	}</span>
+
+	protected void writeOption(Option option) throws IOException {
+<span class="nc" id="L83">		writeLineSeparatorEnabled = false;</span>
+<span class="nc" id="L84">		super.writeOption(option);</span>
+<span class="nc" id="L85">		writeLineSeparatorEnabled = true;</span>
+<span class="nc" id="L86">		write(&quot;&lt;/option&gt;&quot;);</span>
+<span class="nc" id="L87">		writeLineSeparator();</span>
+<span class="nc" id="L88">	}</span>
+
+	protected void writeLineSeparator() throws IOException {
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">		if (writeLineSeparatorEnabled)</span>
+<span class="fc" id="L92">			super.writeLineSeparator();</span>
+<span class="fc" id="L93">	}</span>
+
+	/**
+	 * Read HTML from the Reader, and send XHTML to the writer. Common mistakes
+	 * in the HTML code will also be corrected. The result is pretty-printed.
+	 * 
+	 * @param reader
+	 *            HTML source
+	 * @param writer
+	 *            XHTML target
+	 */
+	public static void html2xhtml(Reader reader, Writer writer)
+			throws IOException, BadLocationException {
+		// --- Create a HTML document ---
+<span class="fc" id="L107">		HTMLEditorKit kit = new HTMLEditorKit();</span>
+<span class="fc" id="L108">		Document doc = kit.createDefaultDocument();</span>
+
+		// --- Read the HTML source ---
+<span class="fc" id="L111">		kit.read(reader, doc, doc.getLength());</span>
+
+		// --- Write the content ---
+<span class="fc" id="L114">		XHTMLWriter xhw = new XHTMLWriter(writer, (HTMLDocument) doc);</span>
+<span class="fc" id="L115">		xhw.write();</span>
+<span class="fc" id="L116">	}</span>
+
+	/**
+	 * External call to convert a source HTML file to a target XHTML file.
+	 * &lt;p&gt;
+	 * Usage: &lt;tt&gt;java XHTMLWriter &amp;lt;source file&amp;gt; &amp;lt;target file&amp;gt;&lt;/tt&gt;
+	 * 
+	 * @param args
+	 *            Shell arguments
+	 */
+	public static void main(String[] args) {
+		try {
+<span class="nc" id="L128">			FileReader reader = new FileReader(args[0]);</span>
+<span class="nc" id="L129">			FileWriter writer = new FileWriter(args[1]);</span>
+<span class="nc" id="L130">			html2xhtml(reader, writer);</span>
+<span class="nc" id="L131">			writer.close();</span>
+<span class="nc" id="L132">			reader.close();</span>
+<span class="nc" id="L133">		} catch (Exception e) {</span>
+<span class="nc" id="L134">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L136">	}</span>
+
+	/**
+	 * This FilterWriter will convert the output of Swing's HTMLWriter to XHTML
+	 * format. This is done by converting tags like &amp;lt;br&amp;gt; to
+	 * &amp;lt;br&amp;nbsp;/&amp;gt;. Also, special characters in tag attributes are
+	 * escaped.
+	 * &lt;p&gt;
+	 * This filter relies on known flaws of the HTMLWriter. It is known to work
+	 * with Java 1.4, but might not work with future Java releases.
+	 */
+	public static class XHTMLFilterWriter extends FilterWriter {
+<span class="fc" id="L148">		private boolean insideTag = false; // We're inside a tag</span>
+<span class="fc" id="L149">		private boolean insideValue = false; // We're inside an attribute value</span>
+<span class="fc" id="L150">		private boolean readTag = false; // We're reading the tag name</span>
+<span class="fc" id="L151">		private String tag = &quot;&quot;; // Collector for the tag name</span>
+
+		/**
+		 * Create a new XHTMLFilterWriter.
+		 * 
+		 * @param writer
+		 *            Writer to write to
+		 */
+		public XHTMLFilterWriter(Writer writer) {
+<span class="fc" id="L160">			super(writer);</span>
+<span class="fc" id="L161">		}</span>
+
+		/**
+		 * Write a single char to the Writer.
+		 * 
+		 * @param c
+		 *            Char to be written
+		 */
+		public void write(int c) throws IOException {
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">			if (insideValue) {</span>
+				// We're currently within a tag attribute's value.
+				// Take care for proper HTML escaping.
+<span class="nc bnc" id="L173" title="All 2 branches missed.">				if (c == '&amp;') {</span>
+<span class="nc" id="L174">					super.write(&quot;&amp;amp;&quot;, 0, 5);</span>
+<span class="nc" id="L175">					return;</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">				} else if (c == '&lt;') {</span>
+<span class="nc" id="L177">					super.write(&quot;&amp;lt;&quot;, 0, 4);</span>
+<span class="nc" id="L178">					return;</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">				} else if (c == '&gt;') {</span>
+<span class="nc" id="L180">					super.write(&quot;&amp;gt;&quot;, 0, 4);</span>
+<span class="nc" id="L181">					return;</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">				} else if (c == '&quot;') { // leaving the value</span>
+<span class="nc" id="L183">					insideValue = false;</span>
+				}
+<span class="pc bfc" id="L185" title="All 2 branches covered.">			} else if (insideTag) {</span>
+				// We're inside a tag. Add a slash to the closing tag bracket
+				// for
+				// certain tags (like img, br, hr, input, ... ).
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">				if (readTag) {</span>
+<span class="pc bpc" id="L190" title="1 of 4 branches missed.">					if (c == ' ' || c == '&gt;') { // tag name ends</span>
+<span class="fc" id="L191">						readTag = false;</span>
+<span class="fc" id="L192">					} else {</span>
+<span class="fc" id="L193">						tag += (char) c; // collect tag name here</span>
+					}
+				}
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">				if (c == '&quot;') { // attribute value begins</span>
+<span class="nc" id="L197">					insideValue = true;</span>
+<span class="pc bfc" id="L198" title="All 2 branches covered.">				} else if (c == '&gt;') { // check if this is a &quot;certain tag&quot;</span>
+<span class="pc bpc" id="L199" title="2 of 4 branches missed.">					if (tag.equals(&quot;img&quot;) || tag.equals(&quot;br&quot;)</span>
+<span class="pc bpc" id="L200" title="2 of 4 branches missed.">							|| tag.equals(&quot;hr&quot;) || tag.equals(&quot;input&quot;)</span>
+<span class="pc bpc" id="L201" title="2 of 4 branches missed.">							|| tag.equals(&quot;meta&quot;) || tag.equals(&quot;link&quot;)</span>
+<span class="pc bpc" id="L202" title="2 of 4 branches missed.">							|| tag.equals(&quot;area&quot;) || tag.equals(&quot;base&quot;)</span>
+<span class="pc bpc" id="L203" title="2 of 4 branches missed.">							|| tag.equals(&quot;basefont&quot;) || tag.equals(&quot;frame&quot;)</span>
+<span class="pc bpc" id="L204" title="2 of 4 branches missed.">							|| tag.equals(&quot;iframe&quot;) || tag.equals(&quot;col&quot;)) {</span>
+<span class="nc" id="L205">						super.write(&quot; /&quot;); // add slash to the closing bracket</span>
+					}
+<span class="fc" id="L207">					insideTag = false;</span>
+<span class="fc" id="L208">					readTag = false;</span>
+				}
+<span class="fc bfc" id="L210" title="All 2 branches covered.">			} else if (c == '&lt;') {</span>
+				// We're just at the very beginning of a tag.
+<span class="fc" id="L212">				tag = &quot;&quot;;</span>
+<span class="fc" id="L213">				insideTag = true;</span>
+<span class="fc" id="L214">				readTag = true;</span>
+			}
+<span class="fc" id="L216">			super.write(c);</span>
+<span class="fc" id="L217">		}</span>
+
+		/**
+		 * Write a char array to the Writer.
+		 * 
+		 * @param cbuf
+		 *            Char array to be written
+		 * @param off
+		 *            Start offset within the array
+		 * @param len
+		 *            Number of chars to be written
+		 */
+		public void write(char[] cbuf, int off, int len) throws IOException {
+<span class="fc bfc" id="L230" title="All 2 branches covered.">			while (len-- &gt; 0) {</span>
+<span class="fc" id="L231">				write((int) cbuf[off++]);</span>
+			}
+<span class="fc" id="L233">		}</span>
+
+		/**
+		 * Write a String to the Writer.
+		 * 
+		 * @param str
+		 *            String to be written
+		 * @param off
+		 *            Start offset within the String
+		 * @param len
+		 *            Number of chars to be written
+		 */
+		public void write(String str, int off, int len) throws IOException {
+<span class="nc" id="L246">			write(str.toCharArray(), off, len);</span>
+<span class="nc" id="L247">		}</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

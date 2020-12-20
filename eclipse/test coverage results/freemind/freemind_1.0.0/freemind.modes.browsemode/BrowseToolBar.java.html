@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>BrowseToolBar.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.browsemode</a> &gt; <span class="el_source">BrowseToolBar.java</span></div><h1>BrowseToolBar.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.browsemode;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
+
+import javax.swing.JLabel;
+import javax.swing.JToolBar;
+
+import freemind.modes.ControllerAdapter;
+import freemind.modes.common.dialogs.PersistentEditableComboBox;
+
+public class BrowseToolBar extends JToolBar {
+
+	public static final String BROWSE_URL_STORAGE_KEY = &quot;browse_url_storage&quot;;
+
+	private ControllerAdapter c;
+<span class="nc" id="L38">	private PersistentEditableComboBox urlfield = null;</span>
+
+<span class="nc" id="L40">	public BrowseToolBar(ControllerAdapter controller) {</span>
+
+<span class="nc" id="L42">		this.c = controller;</span>
+<span class="nc" id="L43">		this.setRollover(true);</span>
+<span class="nc" id="L44">		this.add(controller.getController().showFilterToolbarAction);</span>
+<span class="nc" id="L45">		urlfield = new PersistentEditableComboBox(controller,</span>
+<span class="nc" id="L46">				BROWSE_URL_STORAGE_KEY);</span>
+
+<span class="nc" id="L48">		urlfield.addActionListener(new ActionListener() {</span>
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L50">				String urlText = urlfield.getText();</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">				if (&quot;&quot;.equals(urlText)</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">						|| e.getActionCommand().equals(&quot;comboBoxEdited&quot;))</span>
+<span class="nc" id="L53">					return;</span>
+				try {
+<span class="nc" id="L55">					c.load(new URL(urlText));</span>
+<span class="nc" id="L56">				} catch (Exception e1) {</span>
+<span class="nc" id="L57">					freemind.main.Resources.getInstance().logException(e1);</span>
+					// FIXME: Give a good error message.
+<span class="nc" id="L59">					c.getController().errorMessage(e1);</span>
+				}
+<span class="nc" id="L61">			}</span>
+		});
+
+<span class="nc" id="L64">		add(new JLabel(&quot;URL:&quot;));</span>
+<span class="nc" id="L65">		add(urlfield);</span>
+<span class="nc" id="L66">	}</span>
+
+	void setURLField(String text) {
+<span class="nc" id="L69">		urlfield.setText(text);</span>
+<span class="nc" id="L70">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

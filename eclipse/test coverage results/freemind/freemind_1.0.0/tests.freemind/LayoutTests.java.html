@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>LayoutTests.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">LayoutTests.java</span></div><h1>LayoutTests.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2013 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package tests.freemind;
+
+import java.awt.BorderLayout;
+import java.awt.LayoutManager;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DropTargetListener;
+import java.util.Vector;
+
+import javax.swing.JPanel;
+
+import freemind.controller.Controller;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.MindMapMode;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.MapView.ScrollPane;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * @date 13.08.2013
+ */
+<span class="fc" id="L48">public class LayoutTests extends FreeMindTestBase {</span>
+
+	private MindMapNodeModel mRoot;
+	private MindMapNodeModel mChild1;
+	private MindMapNodeModel mChild2;
+	private MapView mMapView;
+	private MindMapMapModel mModel;
+	private ScrollPane mScrollPane;
+
+	protected void setUp() throws Exception {
+<span class="fc" id="L58">		super.setUp();</span>
+<span class="fc" id="L59">		JPanel parent = new JPanel();</span>
+<span class="fc" id="L60">		Rectangle bounds = new Rectangle(0, 0, 400, 600);</span>
+<span class="fc" id="L61">		parent.setBounds(bounds);</span>
+<span class="fc" id="L62">		mScrollPane = new MapView.ScrollPane();</span>
+<span class="fc" id="L63">		parent.add(mScrollPane, BorderLayout.CENTER);</span>
+<span class="fc" id="L64">		Controller controller = new Controller(mFreeMindMain);</span>
+<span class="nc" id="L65">		controller.initialization();</span>
+<span class="nc" id="L66">		MindMapMode mode = new MindMapMode() {</span>
+			public freemind.modes.ModeController createModeController() {
+<span class="nc" id="L68">				return new MindMapController(this) {</span>
+					protected void init() {
+<span class="nc" id="L70">					}</span>
+				};
+			};
+		};
+<span class="nc" id="L74">		mode.init(controller);</span>
+<span class="nc" id="L75">		MindMapController mc = (MindMapController) mode.createModeController();</span>
+<span class="nc" id="L76">		mModel = new MindMapMapModel(mFreeMindMain, mc);</span>
+<span class="nc" id="L77">		mc.setModel(mModel);</span>
+<span class="nc" id="L78">		mRoot = new MindMapNodeModel(&quot;ROOT&quot;, mFreeMindMain,</span>
+<span class="nc" id="L79">				mModel);</span>
+<span class="nc" id="L80">		mChild1 = new MindMapNodeModel(&quot;CHILD1&quot;, mFreeMindMain,</span>
+<span class="nc" id="L81">				mModel);</span>
+<span class="nc" id="L82">		mRoot.insert(mChild1, 0);</span>
+<span class="nc" id="L83">		mChild2 = new MindMapNodeModel(&quot;CHILD2&quot;, mFreeMindMain,</span>
+<span class="nc" id="L84">				mModel);</span>
+<span class="nc" id="L85">		mRoot.insert(mChild2, 1);</span>
+<span class="nc" id="L86">		mModel.setRoot(mRoot);</span>
+<span class="nc" id="L87">		mMapView = new MapView(mModel, controller) {</span>
+			DragGestureListener getNodeDragListener() {
+<span class="nc" id="L89">				return null;</span>
+			}
+
+			DropTargetListener getNodeDropListener() {
+<span class="nc" id="L93">				return null;</span>
+			}
+
+			public void selectAsTheOnlyOneSelected(NodeView pNewSelected,
+					boolean pRequestFocus) {
+<span class="nc" id="L98">			}</span>
+
+		};
+<span class="nc" id="L101">		mScrollPane.setViewportView(mMapView);</span>
+<span class="nc" id="L102">		mc.setView(mMapView);</span>
+<span class="nc" id="L103">		mMapView.setBounds(parent.getBounds());</span>
+<span class="nc" id="L104">		parent.setOpaque(true);</span>
+<span class="nc" id="L105">		parent.setDoubleBuffered(false); // for better performance</span>
+<span class="nc" id="L106">		parent.doLayout();</span>
+<span class="nc" id="L107">		Tools.waitForEventQueue();</span>
+<span class="nc" id="L108">		mMapView.addNotify();</span>
+<span class="nc" id="L109">	}</span>
+
+	public void testYShift() throws Exception {
+<span class="nc" id="L112">		layout(mMapView);</span>
+<span class="nc" id="L113">		int yCoordinate = getYCoordinate(mChild2);</span>
+<span class="nc" id="L114">		int yCoordinateRoot = getYCoordinate(mRoot);</span>
+<span class="nc" id="L115">		mChild2.setShiftY(10);</span>
+<span class="nc" id="L116">		layout(mMapView);</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		assertTrue(getYCoordinate(mChild1) != getYCoordinate(mChild2));</span>
+<span class="nc" id="L118">		assertEquals(yCoordinateRoot, getYCoordinate(mRoot));</span>
+<span class="nc" id="L119">		assertEquals(yCoordinate + 10, getYCoordinate(mChild2));</span>
+<span class="nc" id="L120">	}</span>
+
+	public void testYShiftNegative() throws Exception {
+<span class="nc" id="L123">		layout(mMapView);</span>
+<span class="nc" id="L124">		int yCoordinate = getYCoordinate(mChild2);</span>
+<span class="nc" id="L125">		int yCoordinateRoot = getYCoordinate(mRoot);</span>
+<span class="nc" id="L126">		int yCoordinateChild1 = getYCoordinate(mChild1);</span>
+<span class="nc" id="L127">		int delta = -10;</span>
+<span class="nc" id="L128">		mChild2.setShiftY(delta);</span>
+<span class="nc" id="L129">		layout(mMapView);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		assertTrue(getYCoordinate(mChild1) != getYCoordinate(mChild2));</span>
+<span class="nc" id="L131">		assertEquals(yCoordinateRoot - delta, getYCoordinate(mRoot));</span>
+<span class="nc" id="L132">		assertEquals(yCoordinateChild1, getYCoordinate(mChild1));</span>
+<span class="nc" id="L133">		assertEquals(yCoordinate, getYCoordinate(mChild2));</span>
+<span class="nc" id="L134">	}</span>
+	
+	public void testYShiftNegativeWith3Childs() throws Exception {
+<span class="nc" id="L137">		MindMapNodeModel child3 = new MindMapNodeModel(&quot;CHILD3&quot;, mFreeMindMain,</span>
+<span class="nc" id="L138">				mModel);</span>
+<span class="nc" id="L139">		mModel.insertNodeInto(child3, mRoot, 2);</span>
+<span class="nc" id="L140">		layout(mMapView);</span>
+<span class="nc" id="L141">		int yCoordinate = getYCoordinate(mChild2);</span>
+<span class="nc" id="L142">		int yCoordinateRoot = getYCoordinate(mRoot);</span>
+<span class="nc" id="L143">		int yCoordinateChild1 = getYCoordinate(mChild1);</span>
+<span class="nc" id="L144">		int yCoordinate3 = getYCoordinate(child3);</span>
+<span class="nc" id="L145">		int delta = -10;</span>
+<span class="nc" id="L146">		mChild2.setShiftY(delta);</span>
+//		mModel.save(new File(&quot;/tmp/testYShiftNegativeWith3Childs.mm&quot;));
+<span class="nc" id="L148">		layout(mMapView);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		assertTrue(getYCoordinate(mChild1) != getYCoordinate(mChild2));</span>
+<span class="nc" id="L150">		assertEquals(yCoordinateRoot - delta, getYCoordinate(mRoot));</span>
+<span class="nc" id="L151">		assertEquals(yCoordinateChild1, getYCoordinate(mChild1));</span>
+<span class="nc" id="L152">		assertEquals(yCoordinate, getYCoordinate(mChild2));</span>
+<span class="nc" id="L153">		assertEquals(yCoordinate3 - delta, getYCoordinate(child3));</span>
+<span class="nc" id="L154">	}</span>
+	
+	public void testScrollMap() throws Exception {
+<span class="nc" id="L157">		layout(mMapView);</span>
+<span class="nc" id="L158">		int yCoordinateRoot = getYCoordinateToViewport(mRoot);</span>
+<span class="nc" id="L159">		int delta = 10;</span>
+<span class="nc" id="L160">		Point viewPosition = mMapView.getViewPosition();</span>
+<span class="nc" id="L161">		mMapView.scrollBy(0, delta);</span>
+<span class="nc" id="L162">		layout(mMapView);</span>
+<span class="nc" id="L163">		assertEquals(viewPosition.y + delta, mMapView.getViewPosition().y);</span>
+<span class="nc" id="L164">		assertEquals(yCoordinateRoot - delta, getYCoordinateToViewport(mRoot));</span>
+<span class="nc" id="L165">	}</span>
+	
+	public void testYShiftNegativeWith3ChildsWithRootMovement() throws Exception {
+<span class="nc" id="L168">		MindMapNodeModel child3 = new MindMapNodeModel(&quot;CHILD3&quot;, mFreeMindMain,</span>
+<span class="nc" id="L169">				mModel);</span>
+<span class="nc" id="L170">		mModel.insertNodeInto(child3, mRoot, 2);</span>
+<span class="nc" id="L171">		layout(mMapView);</span>
+<span class="nc" id="L172">		int yCoordinate = getYCoordinateToViewport(mChild2);</span>
+<span class="nc" id="L173">		int yCoordinateRoot = getYCoordinateToViewport(mRoot);</span>
+<span class="nc" id="L174">		int yCoordinateChild1 = getYCoordinateToViewport(mChild1);</span>
+<span class="nc" id="L175">		int yCoordinate3 = getYCoordinateToViewport(child3);</span>
+<span class="nc" id="L176">		int delta = -10;</span>
+<span class="nc" id="L177">		mChild2.setShiftY(delta);</span>
+<span class="nc" id="L178">		mMapView.scrollBy(0, -delta);</span>
+<span class="nc" id="L179">		layout(mMapView);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		assertTrue(getYCoordinateToViewport(mChild1) != getYCoordinateToViewport(mChild2));</span>
+<span class="nc" id="L181">		assertEquals(yCoordinateRoot, getYCoordinateToViewport(mRoot));</span>
+<span class="nc" id="L182">		assertEquals(yCoordinateChild1 + delta, getYCoordinateToViewport(mChild1));</span>
+<span class="nc" id="L183">		assertEquals(yCoordinate + delta, getYCoordinateToViewport(mChild2));</span>
+<span class="nc" id="L184">		assertEquals(yCoordinate3, getYCoordinateToViewport(child3));</span>
+<span class="nc" id="L185">	}</span>
+	
+	public void testYShiftNegativeWith3ChildsYCalcToRoot() throws Exception {
+<span class="nc" id="L188">		MindMapNodeModel child3 = new MindMapNodeModel(&quot;CHILD3&quot;, mFreeMindMain,</span>
+<span class="nc" id="L189">				mModel);</span>
+<span class="nc" id="L190">		mModel.insertNodeInto(child3, mRoot, 2);</span>
+<span class="nc" id="L191">		layout(mMapView);</span>
+<span class="nc" id="L192">		int yCoordinateRoot = getYCoordinate(mRoot);</span>
+<span class="nc" id="L193">		int yCoordinate = getYCoordinate(mChild2) - yCoordinateRoot;</span>
+<span class="nc" id="L194">		int yCoordinateChild1 = getYCoordinate(mChild1) - yCoordinateRoot;</span>
+<span class="nc" id="L195">		int yCoordinate3 = getYCoordinate(child3) - yCoordinateRoot;</span>
+<span class="nc" id="L196">		int delta = -10;</span>
+<span class="nc" id="L197">		mChild2.setShiftY(delta);</span>
+<span class="nc" id="L198">		layout(mMapView);</span>
+<span class="nc" id="L199">		int yCoordinateRoot2 = getYCoordinate(mRoot);</span>
+<span class="nc" id="L200">		assertEquals(yCoordinateChild1 + delta, getYCoordinate(mChild1)-yCoordinateRoot2);</span>
+<span class="nc" id="L201">		assertEquals(yCoordinate + delta, getYCoordinate(mChild2)-yCoordinateRoot2);</span>
+<span class="nc" id="L202">		assertEquals(yCoordinate3, getYCoordinate(child3)-yCoordinateRoot2);</span>
+<span class="nc" id="L203">	}</span>
+	
+	protected void layout(MapView mapView) {
+<span class="nc" id="L206">		NodeView root = mapView.getRoot();</span>
+<span class="nc" id="L207">		LayoutManager layout = root.getLayout();</span>
+<span class="nc" id="L208">		layout.layoutContainer(root);</span>
+<span class="nc" id="L209">		root.getMainView().doLayout();</span>
+<span class="nc" id="L210">		Vector nodes = Tools.getVectorWithSingleElement(root);</span>
+		// print summary
+<span class="nc" id="L212">		System.out.println(&quot;------------------&quot;);</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		while(!nodes.isEmpty()) {</span>
+<span class="nc" id="L214">			NodeView view = (NodeView) nodes.lastElement();</span>
+<span class="nc" id="L215">			nodes.remove(view);</span>
+<span class="nc" id="L216">			nodes.addAll(view.getChildrenViews());</span>
+<span class="nc" id="L217">			int yCoordinate = getYCoordinate(view.getModel());</span>
+<span class="nc" id="L218">			int yCoordinateRoot = getYCoordinate(root.getModel());</span>
+<span class="nc" id="L219">			System.out.println(&quot;Y coordinate of node &quot; + view.getModel() + &quot; is &quot; + (yCoordinate-yCoordinateRoot));</span>
+		}
+<span class="nc" id="L221">		System.out.println(&quot;------------------&quot;);</span>
+<span class="nc" id="L222">	}</span>
+
+	protected int getYCoordinate(MindMapNode child2) {
+<span class="nc bnc" id="L225" title="All 2 branches missed.">		assertTrue(child2.getViewers().size() &gt; 0);</span>
+<span class="nc" id="L226">		NodeView nodeView = (NodeView) child2.getViewers().iterator().next();</span>
+<span class="nc" id="L227">		Point point = nodeView.getMainView().getLocation();</span>
+<span class="nc" id="L228">		Tools.convertPointToAncestor(nodeView, point, mMapView);</span>
+<span class="nc" id="L229">		return point.y;</span>
+	}
+
+	protected int getYCoordinateToViewport(MindMapNode child2) {
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		assertTrue(child2.getViewers().size() &gt; 0);</span>
+<span class="nc" id="L234">		NodeView nodeView = (NodeView) child2.getViewers().iterator().next();</span>
+<span class="nc" id="L235">		Point point = nodeView.getMainView().getLocation();</span>
+<span class="nc" id="L236">		Tools.convertPointToAncestor(nodeView, point, mScrollPane);</span>
+<span class="nc" id="L237">		return point.y;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

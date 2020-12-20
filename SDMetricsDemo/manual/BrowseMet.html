@@ -1,0 +1,79 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - The View 'Histograms'</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="HighPerc.html">Prev</a> - <a href="BrowseEl.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > 4.5 The View 'Histograms'
+<hr>
+<h2><a name="BrowseMet"></a>4.5 The View 'Histograms'</h2>
+
+The histogram view provides a graphical representation of the distribution 
+of a design metric.<p>
+
+<img src="images/histoview.png" alt="Histogram View"><br>
+<b>Figure 10:&nbsp;Histogram view</b><p>
+
+Select the metric to display from the dropdown list on the left control
+panel, or use the <img src="images/tapedeck.gif" alt="Tape deck">&nbsp;buttons 
+to select the first/previous/next/last metric
+on the list, respectively. Press the "Show full definition" button to
+view the detailed definition of the metric in the measurement catalog
+(see <a href="MetCat.html">Section&nbsp;4.13 "The View 'Catalog'"</a>).<p>
+
+The table below the metric definition shows some descriptive
+statistics for the metric:
+<ul>
+<li>Max - maximum value of the metric
+<li><i>x</i>th - the <i>x</i>th percentile of the metric, for various
+values of <i>x</i>
+<li>Min - minimum value of the metric
+<li>Count - the number of observations (UML model elements) for which
+the metric was calculated
+<li>Mean - the average value of the metric distribution
+<li>StdDev - the standard deviation of the metric distribution
+</ul>
+
+The diagram on the right shows the distribution of the selected
+metric. You can choose between two types of diagrams with the radio
+buttons below the diagram:
+
+<ul>
+<li>Show histogram<br>
+
+The histogram is a type of bar graph that depicts the frequency of
+metric values in class intervals by the length of its bars. The scale
+of measurement on the horizontal axis is the range of the metric under
+consideration. It is subdivided into intervals of equal width. The
+plot points on the horizontal axis are the exact limits of the
+interval.  The height of the bar for each interval is proportional to
+the number of values that fall into the interval. This number is also
+shown on top of each bar.
+
+<li>Show cumulative distribution<br>
+
+The cumulative distribution graph shows, for any value <i>x</i> in the
+range of the metric, the percentage of model elements for which the
+metric value is <i>&lt;=x</i>. The scale of measurement on the
+horizontal axis is the range of the metric under consideration. The
+scale on the vertical axis is the percentage of elements below a given
+threshold <i>x</i> on the horizontal axis.
+</ul>
+
+If you see a "Diagram not available" message instead of a graph, the
+measurement values of the selected metric are not numerical or
+do not vary at all, or both. No graph is shown for such metrics.<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="HighPerc.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="MainWind.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="BrowseEl.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.4.1 "Highlighting Outliers"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.6 "The View 'Kiviat Diagrams'"</td></tr></table>
+
+</body>
+</html>

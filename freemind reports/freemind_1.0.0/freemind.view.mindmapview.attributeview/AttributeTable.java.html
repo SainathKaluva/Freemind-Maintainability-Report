@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributeTable.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview.attributeview</a> &gt; <span class="el_source">AttributeTable.java</span></div><h1>AttributeTable.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 12.06.2005
+ *
+ */
+package freemind.view.mindmapview.attributeview;
+
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.logging.Logger;
+
+import javax.swing.ComboBoxEditor;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultCellEditor;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
+import javax.swing.JTable;
+import javax.swing.JViewport;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.event.TableModelEvent;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
+
+import freemind.main.Resources;
+import freemind.modes.MindMapNode;
+import freemind.modes.attributes.AttributeController;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.attributes.AttributeTableLayoutModel;
+import freemind.modes.attributes.AttributeTableModel;
+import freemind.modes.attributes.ColumnWidthChangeEvent;
+import freemind.modes.attributes.ColumnWidthChangeListener;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author dimitri 12.06.2005
+ */
+public class AttributeTable extends JTable implements ColumnWidthChangeListener {
+	private static final int MAX_HEIGTH = 300;
+	private static final int MAX_WIDTH = 600;
+
+<span class="nc" id="L71">	static private class MyFocusListener implements FocusListener {</span>
+		private AttributeTable focusedTable;
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.FocusListener#focusGained(java.awt.event.FocusEvent)
+		 */
+		public void focusGained(final FocusEvent event) {
+<span class="nc" id="L81">			final Component source = (Component) event.getSource();</span>
+<span class="nc" id="L82">			final Component oppositeComponent = event.getOppositeComponent();</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (source instanceof AttributeTable) {</span>
+<span class="nc" id="L84">				focusedTable = (AttributeTable) source;</span>
+<span class="nc" id="L85">			} else {</span>
+<span class="nc" id="L86">				focusedTable = (AttributeTable) SwingUtilities</span>
+<span class="nc" id="L87">						.getAncestorOfClass(AttributeTable.class, source);</span>
+			}
+<span class="nc" id="L89">			EventQueue.invokeLater(new Runnable() {</span>
+				public void run() {
+<span class="nc bnc" id="L91" title="All 2 branches missed.">					if (focusedTable != null) {</span>
+<span class="nc" id="L92">						final Component newNodeViewInFocus = SwingUtilities</span>
+<span class="nc" id="L93">								.getAncestorOfClass(NodeView.class,</span>
+<span class="nc" id="L94">										focusedTable);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">						if (newNodeViewInFocus != null) {</span>
+<span class="nc" id="L96">							NodeView viewer = (NodeView) newNodeViewInFocus;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">							if (viewer != viewer.getMap().getSelected()) {</span>
+<span class="nc" id="L98">								viewer.getMap().selectAsTheOnlyOneSelected(</span>
+<span class="nc" id="L99">										viewer);</span>
+							}
+						}
+					}
+<span class="nc" id="L103">				}</span>
+			});
+<span class="nc" id="L105">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.FocusListener#focusLost(java.awt.event.FocusEvent)
+		 */
+		public void focusLost(FocusEvent event) {
+<span class="nc" id="L114">			Component oppositeComponent = event.getOppositeComponent();</span>
+<span class="nc" id="L115">			Component newTable = SwingUtilities.getAncestorOfClass(</span>
+<span class="nc" id="L116">					AttributeTable.class, oppositeComponent);</span>
+<span class="nc bnc" id="L117" title="All 4 branches missed.">			if (focusedTable != null &amp;&amp; focusedTable != newTable) {</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (focusedTable.isEditing()) {</span>
+<span class="nc" id="L119">					focusedTable.getCellEditor().stopCellEditing();</span>
+				}
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				if (!focusedTable.attributeView.isPopupShown()) {</span>
+<span class="nc" id="L122">					final AttributeView attributeView = focusedTable</span>
+<span class="nc" id="L123">							.getAttributeView();</span>
+<span class="nc" id="L124">					final String currentAttributeViewType = attributeView</span>
+<span class="nc" id="L125">							.getNode().getMap().getRegistry().getAttributes()</span>
+<span class="nc" id="L126">							.getAttributeViewType();</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">					if (attributeView.getViewType() != currentAttributeViewType) {</span>
+<span class="nc" id="L128">						attributeView.stateChanged(null);</span>
+					}
+				}
+<span class="nc" id="L131">				focusedTable = null;</span>
+			}
+<span class="nc" id="L133">		}</span>
+
+	}
+
+<span class="nc" id="L137">	static private class HeaderMouseListener extends MouseAdapter {</span>
+		public void mouseReleased(MouseEvent e) {
+<span class="nc" id="L139">			JTableHeader header = (JTableHeader) e.getSource();</span>
+<span class="nc" id="L140">			AttributeTable table = (AttributeTable) header.getTable();</span>
+<span class="nc" id="L141">			float zoom = table.attributeView.getMapView().getZoom();</span>
+<span class="nc" id="L142">			Dimension preferredScrollableViewportSize = table</span>
+<span class="nc" id="L143">					.getPreferredScrollableViewportSize();</span>
+<span class="nc" id="L144">			JViewport port = (JViewport) table.getParent();</span>
+<span class="nc" id="L145">			Dimension extentSize = port.getExtentSize();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (preferredScrollableViewportSize.width != extentSize.width) {</span>
+<span class="nc" id="L147">				AttributeTableModel model = (AttributeTableModel) table</span>
+<span class="nc" id="L148">						.getModel();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">				for (int col = 0; col &lt; table.getColumnCount(); col++) {</span>
+<span class="nc" id="L150">					int modelColumnWidth = model.getColumnWidth(col);</span>
+<span class="nc" id="L151">					int currentColumnWidth = (int) (table.getColumnModel()</span>
+<span class="nc" id="L152">							.getColumn(col).getWidth() / zoom);</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">					if (modelColumnWidth != currentColumnWidth) {</span>
+<span class="nc" id="L154">						model.setColumnWidth(col, currentColumnWidth);</span>
+					}
+				}
+			}
+<span class="nc" id="L158">		}</span>
+	}
+
+<span class="nc" id="L161">	static private MyFocusListener focusListener = new MyFocusListener();</span>
+<span class="nc" id="L162">	static private MouseListener componentListener = new HeaderMouseListener();</span>
+<span class="nc" id="L163">	private int highRowIndex = 0;</span>
+<span class="nc" id="L164">	static private ComboBoxModel defaultComboBoxModel = null;</span>
+<span class="nc" id="L165">	static private AttributeTableCellRenderer dtcr = new AttributeTableCellRenderer();</span>
+	private AttributeView attributeView;
+	private static final int EXTRA_HEIGHT = 4;
+	private static final float TABLE_ROW_HEIGHT = 4;
+<span class="nc" id="L169">	private static final Dimension prefHeaderSize = new Dimension(1, 8);</span>
+<span class="nc" id="L170">	private static Logger mLogger = null;</span>
+
+	AttributeTable(AttributeView attributeView) {
+<span class="nc" id="L173">		super();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (mLogger == null) {</span>
+<span class="nc" id="L175">			mLogger = Resources.getInstance().getLogger(</span>
+<span class="nc" id="L176">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L178">		this.attributeView = attributeView;</span>
+<span class="nc" id="L179">		addFocusListener(focusListener);</span>
+<span class="nc" id="L180">		final MindMapNode model = attributeView.getNodeView().getModel();</span>
+<span class="nc" id="L181">		final AttributeController attributeController = model.getMap()</span>
+<span class="nc" id="L182">				.getRegistry().getModeController().getAttributeController();</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (attributeController != null) {</span>
+<span class="nc" id="L184">			getTableHeader().addMouseListener(componentListener);</span>
+<span class="nc" id="L185">		} else {</span>
+<span class="nc" id="L186">			getTableHeader().setResizingAllowed(false);</span>
+		}
+<span class="nc" id="L188">		setModel(attributeView.getCurrentAttributeTableModel());</span>
+<span class="nc" id="L189">		updateFontSize(this, 1F);</span>
+<span class="nc" id="L190">		updateColumnWidths();</span>
+<span class="nc" id="L191">		setAutoResizeMode(AUTO_RESIZE_OFF);</span>
+<span class="nc" id="L192">		getTableHeader().setReorderingAllowed(false);</span>
+<span class="nc" id="L193">		getTableHeader().setPreferredSize(prefHeaderSize);</span>
+<span class="nc" id="L194">		int h = getRowHeight();</span>
+<span class="nc" id="L195">		updateRowHeights();</span>
+<span class="nc" id="L196">		setRowSelectionAllowed(false);</span>
+<span class="nc" id="L197">		putClientProperty(&quot;JTable.autoStartsEdit&quot;, Boolean.FALSE);</span>
+<span class="nc" id="L198">	}</span>
+
+	public TableCellRenderer getCellRenderer(int row, int column) {
+<span class="nc" id="L201">		String text = getValueAt(row, column).toString();</span>
+<span class="nc" id="L202">		dtcr.setText(text);</span>
+<span class="nc" id="L203">		int prefWidth = dtcr.getPreferredSize().width;</span>
+<span class="nc" id="L204">		int width = getColumnModel().getColumn(column).getWidth();</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		if (prefWidth &gt; width) {</span>
+<span class="nc" id="L206">			dtcr.setToolTipText(text);</span>
+<span class="nc" id="L207">		} else {</span>
+<span class="nc" id="L208">			dtcr.setToolTipText(null);</span>
+		}
+<span class="nc" id="L210">		return dtcr;</span>
+	}
+
+	public TableCellEditor getCellEditor(int row, int column) {
+<span class="nc" id="L214">		JComboBox comboBox = new JComboBox();</span>
+<span class="nc" id="L215">		DefaultCellEditor dce = new DefaultCellEditor(comboBox);</span>
+<span class="nc" id="L216">		return dce;</span>
+	}
+
+	/**
+     * 
+     */
+	public Component prepareEditor(TableCellEditor tce, int row, int col) {
+		ComboBoxModel model;
+<span class="nc" id="L224">		JComboBox comboBox = (JComboBox) ((DefaultCellEditor) tce)</span>
+<span class="nc" id="L225">				.getComponent();</span>
+<span class="nc" id="L226">		MindMapNode node = getAttributeTableModel().getNode();</span>
+<span class="nc" id="L227">		AttributeRegistry attributes = node.getMap().getRegistry()</span>
+<span class="nc" id="L228">				.getAttributes();</span>
+<span class="nc bnc" id="L229" title="All 3 branches missed.">		switch (col) {</span>
+		case 0:
+<span class="nc" id="L231">			model = attributes.getComboBoxModel();</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			comboBox.setEditable(!attributes.isRestricted());</span>
+<span class="nc" id="L233">			break;</span>
+		case 1:
+<span class="nc" id="L235">			String attrName = getAttributeTableModel().getValueAt(row, 0)</span>
+<span class="nc" id="L236">					.toString();</span>
+<span class="nc" id="L237">			model = attributes.getDefaultComboBoxModel(attrName);</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">			comboBox.setEditable(!attributes.isRestricted(attrName));</span>
+<span class="nc" id="L239">			break;</span>
+		default:
+<span class="nc" id="L241">			model = getDefaultComboBoxModel();</span>
+		}
+<span class="nc" id="L243">		comboBox.setModel(model);</span>
+<span class="nc" id="L244">		model.setSelectedItem(getValueAt(row, col));</span>
+
+<span class="nc" id="L246">		comboBox.addFocusListener(focusListener);</span>
+<span class="nc" id="L247">		comboBox.getEditor().getEditorComponent()</span>
+<span class="nc" id="L248">				.addFocusListener(focusListener);</span>
+<span class="nc" id="L249">		Component editor = super.prepareEditor(tce, row, col);</span>
+<span class="nc" id="L250">		updateFontSize(editor, getZoom());</span>
+<span class="nc" id="L251">		return editor;</span>
+	}
+
+	public Dimension getPreferredScrollableViewportSize() {
+<span class="nc bnc" id="L255" title="All 2 branches missed.">		if (!isValid())</span>
+<span class="nc" id="L256">			validate();</span>
+<span class="nc" id="L257">		float zoom = getZoom();</span>
+<span class="nc" id="L258">		Dimension dimension = super.getPreferredSize();</span>
+<span class="nc" id="L259">		dimension.width = Math.min((int) (MAX_WIDTH * zoom), dimension.width);</span>
+<span class="nc" id="L260">		dimension.height = Math.min((int) (MAX_HEIGTH * zoom)</span>
+<span class="nc" id="L261">				- getTableHeaderHeight(), dimension.height);</span>
+<span class="nc" id="L262">		return dimension;</span>
+	}
+
+	static ComboBoxModel getDefaultComboBoxModel() {
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		if (defaultComboBoxModel == null) {</span>
+<span class="nc" id="L267">			defaultComboBoxModel = new DefaultComboBoxModel();</span>
+		}
+<span class="nc" id="L269">		return defaultComboBoxModel;</span>
+	}
+
+	public void changeSelection(int rowIndex, int columnIndex, boolean toggle,
+			boolean extend) {
+<span class="nc" id="L274">		int rowCount = getRowCount();</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">		if (rowCount == 0)</span>
+<span class="nc" id="L276">			return;</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		if (rowIndex &gt;= rowCount) {</span>
+<span class="nc" id="L278">			rowIndex = 0;</span>
+<span class="nc" id="L279">			columnIndex = 0;</span>
+		}
+<span class="nc" id="L281">		changeSelectedRowHeight(rowIndex);</span>
+<span class="nc" id="L282">		super.changeSelection(rowIndex, columnIndex, toggle, extend);</span>
+<span class="nc" id="L283">	}</span>
+
+	private void changeSelectedRowHeight(int rowIndex) {
+<span class="nc bnc" id="L286" title="All 2 branches missed.">		if (highRowIndex != rowIndex) {</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">			if (highRowIndex &lt; getRowCount()) {</span>
+<span class="nc" id="L288">				int h = getRowHeight(highRowIndex);</span>
+<span class="nc" id="L289">				setRowHeight(highRowIndex, h - EXTRA_HEIGHT);</span>
+			}
+<span class="nc" id="L291">			int h = getRowHeight(rowIndex);</span>
+<span class="nc" id="L292">			setRowHeight(rowIndex, h + EXTRA_HEIGHT);</span>
+<span class="nc" id="L293">			highRowIndex = rowIndex;</span>
+		}
+<span class="nc" id="L295">	}</span>
+
+	/**
+     * 
+     */
+	void updateAttributeTable() {
+<span class="nc" id="L301">		updateFontSize(this, 1F);</span>
+<span class="nc" id="L302">		updateRowHeights();</span>
+<span class="nc" id="L303">		updateColumnWidths();</span>
+<span class="nc" id="L304">	}</span>
+
+	private void updateColumnWidths() {
+<span class="nc" id="L307">		float zoom = getZoom();</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">		for (int i = 0; i &lt; 2; i++) {</span>
+<span class="nc" id="L309">			int width = (int) (getAttributeTableModel().getColumnWidth(i) * zoom);</span>
+<span class="nc" id="L310">			getColumnModel().getColumn(i).setPreferredWidth(width);</span>
+		}
+<span class="nc" id="L312">	}</span>
+
+	private void updateRowHeights() {
+<span class="nc" id="L315">		int rowCount = getRowCount();</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">		if (rowCount == 0)</span>
+<span class="nc" id="L317">			return;</span>
+
+<span class="nc" id="L319">		int constHeight = getTableHeaderHeight() + EXTRA_HEIGHT;</span>
+<span class="nc" id="L320">		float zoom = getZoom();</span>
+<span class="nc" id="L321">		float fontSize = getFontSize();</span>
+<span class="nc" id="L322">		float tableRowHeight = fontSize + zoom * TABLE_ROW_HEIGHT;</span>
+<span class="nc" id="L323">		int newHeight = (int) ((tableRowHeight * rowCount + (zoom - 1)</span>
+<span class="nc" id="L324">				* constHeight) / rowCount);</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">		if (newHeight &lt; 1) {</span>
+<span class="nc" id="L326">			newHeight = 1;</span>
+		}
+<span class="nc" id="L328">		int highRowsNumber = (int) ((tableRowHeight - newHeight) * rowCount);</span>
+<span class="nc bnc" id="L329" title="All 2 branches missed.">		for (int i = 0; i &lt; highRowsNumber; i++) {</span>
+<span class="nc" id="L330">			setRowHeight(i, 1 + newHeight</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">					+ (i == highRowIndex ? EXTRA_HEIGHT : 0));</span>
+		}
+<span class="nc bnc" id="L333" title="All 2 branches missed.">		for (int i = highRowsNumber; i &lt; rowCount; i++) {</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">			setRowHeight(i, newHeight + (i == highRowIndex ? EXTRA_HEIGHT : 0));</span>
+		}
+<span class="nc" id="L336">	}</span>
+
+	int getTableHeaderHeight() {
+<span class="nc" id="L339">		final JTableHeader tableHeader = getTableHeader();</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		return tableHeader != null ? tableHeader.getPreferredSize().height : 0;</span>
+	}
+
+	private void updateFontSize(Component c, float zoom) {
+		// 1) Determine font
+<span class="nc" id="L345">		Font font = c.getFont();</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">		if (font != null) {</span>
+<span class="nc" id="L347">			float oldFontSize = font.getSize2D();</span>
+<span class="nc" id="L348">			float newFontSize = getFontSize() * zoom;</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">			if (oldFontSize != newFontSize) {</span>
+<span class="nc" id="L350">				font = font.deriveFont(newFontSize);</span>
+<span class="nc" id="L351">				c.setFont(font);</span>
+			}
+		}
+<span class="nc" id="L354">	}</span>
+
+	float getZoom() {
+<span class="nc" id="L357">		return attributeView.getMapView().getZoom();</span>
+	}
+
+	public void tableChanged(TableModelEvent e) {
+<span class="nc" id="L361">		super.tableChanged(e);</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">		if (getParent() == null)</span>
+<span class="nc" id="L363">			return;</span>
+
+<span class="nc bnc" id="L365" title="All 2 branches missed.">		if (e.getType() == TableModelEvent.DELETE</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">				&amp;&amp; e.getFirstRow() == highRowIndex</span>
+<span class="nc bnc" id="L367" title="All 4 branches missed.">				&amp;&amp; e.getFirstRow() == getRowCount() &amp;&amp; e.getFirstRow() != 0) {</span>
+<span class="nc" id="L368">			changeSelection(e.getFirstRow() - 1, 0, false, false);</span>
+<span class="nc" id="L369">		} else {</span>
+<span class="nc" id="L370">			updateRowHeights();</span>
+		}
+
+<span class="nc" id="L373">		MapView map = getAttributeView().getNodeView().getMap();</span>
+<span class="nc" id="L374">		getParent().getParent().invalidate();</span>
+<span class="nc" id="L375">		map.getModel().nodeChanged(getAttributeView().getNode());</span>
+<span class="nc" id="L376">	}</span>
+
+	public void viewRemoved() {
+<span class="nc" id="L379">		getModel().removeTableModelListener(this);</span>
+<span class="nc" id="L380">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JTable#removeNotify()
+	 */
+	public void removeNotify() {
+		// TODO Auto-generated method stub
+<span class="nc" id="L389">		super.removeNotify();</span>
+<span class="nc" id="L390">	}</span>
+
+	private float getFontSize() {
+<span class="nc" id="L393">		return (attributeView.getNodeView().getModel().getMap().getRegistry()</span>
+<span class="nc" id="L394">				.getAttributes().getFontSize());</span>
+	}
+
+	public void setModel(TableModel dataModel) {
+<span class="nc" id="L398">		super.setModel(dataModel);</span>
+<span class="nc" id="L399">	}</span>
+
+	private void removeListenerFromEditor() {
+<span class="nc" id="L402">		JComboBox comboBox = (JComboBox) getEditorComponent();</span>
+<span class="nc" id="L403">		comboBox.removeFocusListener(focusListener);</span>
+<span class="nc" id="L404">		comboBox.getEditor().getEditorComponent()</span>
+<span class="nc" id="L405">				.removeFocusListener(focusListener);</span>
+<span class="nc" id="L406">		comboBox.setModel(new DefaultComboBoxModel());</span>
+<span class="nc" id="L407">	}</span>
+
+	public void removeEditor() {
+<span class="nc" id="L410">		removeListenerFromEditor();</span>
+<span class="nc" id="L411">		getAttributeTableModel().editingCanceled();</span>
+<span class="nc" id="L412">		super.removeEditor();</span>
+<span class="nc" id="L413">	}</span>
+
+	/**
+	 * @return Returns the currentModel.
+	 */
+	public AttributeTableModelDecoratorAdapter getAttributeTableModel() {
+<span class="nc" id="L419">		return (AttributeTableModelDecoratorAdapter) getModel();</span>
+	}
+
+	public AttributeView getAttributeView() {
+<span class="nc" id="L423">		return attributeView;</span>
+	}
+
+	/**
+     * 
+     */
+	public void setOptimalColumnWidths() {
+<span class="nc" id="L430">		Component comp = null;</span>
+<span class="nc" id="L431">		int cellWidth = 0;</span>
+<span class="nc" id="L432">		int maxCellWidth = 2 * (int) (Math.ceil(getFontSize()</span>
+<span class="nc" id="L433">				+ TABLE_ROW_HEIGHT));</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">		for (int col = 0; col &lt; 2; col++) {</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">			for (int row = 0; row &lt; getRowCount(); row++) {</span>
+<span class="nc" id="L436">				comp = dtcr.getTableCellRendererComponent(this,</span>
+<span class="nc" id="L437">						getValueAt(row, col), false, false, row, col);</span>
+<span class="nc" id="L438">				cellWidth = comp.getPreferredSize().width;</span>
+<span class="nc" id="L439">				maxCellWidth = Math.max(cellWidth, maxCellWidth);</span>
+			}
+<span class="nc" id="L441">			getAttributeTableModel().setColumnWidth(col, maxCellWidth + 1);</span>
+		}
+<span class="nc" id="L443">	}</span>
+
+	/**
+     */
+	public void insertRow(int row) {
+<span class="nc bnc" id="L448" title="All 2 branches missed.">		if (getModel() instanceof ExtendedAttributeTableModelDecorator) {</span>
+<span class="nc" id="L449">			ExtendedAttributeTableModelDecorator model = (ExtendedAttributeTableModelDecorator) getModel();</span>
+<span class="nc bnc" id="L450" title="All 4 branches missed.">			if (isEditing() &amp;&amp; getCellEditor() != null</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">					&amp;&amp; !getCellEditor().stopCellEditing()) {</span>
+<span class="nc" id="L452">				return;</span>
+			}
+<span class="nc" id="L454">			model.insertRow(row);</span>
+<span class="nc" id="L455">			changeSelection(row, 0, false, false);</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">			if (editCellAt(row, 0))</span>
+<span class="nc" id="L457">				getEditorComponent().requestFocus();</span>
+		}
+<span class="nc" id="L459">	}</span>
+
+	/**
+     */
+	public void removeRow(int row) {
+<span class="nc bnc" id="L464" title="All 2 branches missed.">		if (getModel() instanceof ExtendedAttributeTableModelDecorator) {</span>
+<span class="nc" id="L465">			ExtendedAttributeTableModelDecorator model = (ExtendedAttributeTableModelDecorator) getModel();</span>
+<span class="nc" id="L466">			model.removeRow(row);</span>
+		}
+<span class="nc" id="L468">	}</span>
+
+	/**
+     */
+	public void moveRowUp(int row) {
+<span class="nc bnc" id="L473" title="All 2 branches missed.">		if (getModel() instanceof ExtendedAttributeTableModelDecorator) {</span>
+<span class="nc" id="L474">			ExtendedAttributeTableModelDecorator model = (ExtendedAttributeTableModelDecorator) getModel();</span>
+<span class="nc" id="L475">			model.moveRowUp(row);</span>
+		}
+<span class="nc" id="L477">	}</span>
+
+	/**
+     */
+	public void moveRowDown(int row) {
+<span class="nc bnc" id="L482" title="All 2 branches missed.">		if (getModel() instanceof ExtendedAttributeTableModelDecorator) {</span>
+<span class="nc" id="L483">			ExtendedAttributeTableModelDecorator model = (ExtendedAttributeTableModelDecorator) getModel();</span>
+<span class="nc" id="L484">			model.moveRowDown(row);</span>
+		}
+<span class="nc" id="L486">	}</span>
+
+	public void columnWidthChanged(ColumnWidthChangeEvent event) {
+<span class="nc" id="L489">		float zoom = getZoom();</span>
+<span class="nc" id="L490">		int col = event.getColumnNumber();</span>
+<span class="nc" id="L491">		AttributeTableLayoutModel layoutModel = (AttributeTableLayoutModel) event</span>
+<span class="nc" id="L492">				.getSource();</span>
+<span class="nc" id="L493">		int width = layoutModel.getColumnWidth(col);</span>
+<span class="nc" id="L494">		getColumnModel().getColumn(col).setPreferredWidth((int) (width * zoom));</span>
+<span class="nc" id="L495">		getAttributeView().getNode().getMap()</span>
+<span class="nc" id="L496">				.nodeChanged(getAttributeView().getNode());</span>
+<span class="nc" id="L497">	}</span>
+
+	protected boolean processKeyBinding(KeyStroke ks, KeyEvent e,
+			int condition, boolean pressed) {
+<span class="nc" id="L501">		mLogger.info(&quot;AttributeTable.processKeyBinding&quot;);</span>
+<span class="nc bnc" id="L502" title="All 4 branches missed.">		if (ks.getKeyCode() == KeyEvent.VK_TAB &amp;&amp; e.getModifiers() == 0</span>
+<span class="nc bnc" id="L503" title="All 4 branches missed.">				&amp;&amp; pressed &amp;&amp; getSelectedColumn() == 1</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">				&amp;&amp; getSelectedRow() == getRowCount() - 1</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">				&amp;&amp; getModel() instanceof ExtendedAttributeTableModelDecorator) {</span>
+<span class="nc" id="L506">			insertRow(getRowCount());</span>
+<span class="nc" id="L507">			return true;</span>
+		}
+<span class="nc bnc" id="L509" title="All 4 branches missed.">		if (ks.getKeyCode() == KeyEvent.VK_ESCAPE &amp;&amp; e.getModifiers() == 0</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">				&amp;&amp; pressed) {</span>
+<span class="nc" id="L511">			attributeView.getNodeView().requestFocus();</span>
+<span class="nc" id="L512">			return true;</span>
+		}
+<span class="nc" id="L514">		boolean retValue = super.processKeyBinding(ks, e, condition, pressed);</span>
+		// Start editing when a key is typed. UI classes can disable this
+		// behavior
+		// by setting the client property JTable.autoStartsEdit to
+		// Boolean.FALSE.
+<span class="nc bnc" id="L519" title="All 2 branches missed.">		if (!retValue</span>
+<span class="nc bnc" id="L520" title="All 2 branches missed.">				&amp;&amp; condition == WHEN_FOCUSED</span>
+<span class="nc bnc" id="L521" title="All 2 branches missed.">				&amp;&amp; isFocusOwner()</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">				&amp;&amp; ks.getKeyCode() != KeyEvent.VK_TAB</span>
+<span class="nc bnc" id="L523" title="All 2 branches missed.">				&amp;&amp; e != null</span>
+<span class="nc bnc" id="L524" title="All 2 branches missed.">				&amp;&amp; e.getID() == KeyEvent.KEY_PRESSED</span>
+<span class="nc bnc" id="L525" title="All 2 branches missed.">				&amp;&amp; !e.isActionKey()</span>
+<span class="nc bnc" id="L526" title="All 2 branches missed.">				&amp;&amp; e.getKeyChar() != KeyEvent.CHAR_UNDEFINED</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">				&amp;&amp; 0 == (e.getModifiers() &amp; (KeyEvent.CTRL_MASK | KeyEvent.ALT_MASK))) {</span>
+			// We do not have a binding for the event.
+			// Try to install the editor
+<span class="nc" id="L530">			int leadRow = getSelectionModel().getLeadSelectionIndex();</span>
+<span class="nc" id="L531">			int leadColumn = getColumnModel().getSelectionModel()</span>
+<span class="nc" id="L532">					.getLeadSelectionIndex();</span>
+<span class="nc bnc" id="L533" title="All 6 branches missed.">			if (leadRow != -1 &amp;&amp; leadColumn != -1 &amp;&amp; !isEditing()) {</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">				if (!editCellAt(leadRow, leadColumn)) {</span>
+<span class="nc" id="L535">					return false;</span>
+				}
+			}
+<span class="nc" id="L538">			Component editorComponent = getEditorComponent();</span>
+			// If the editorComponent is a JComboBox, pass the event to it.
+<span class="nc bnc" id="L540" title="All 2 branches missed.">			if (editorComponent instanceof JComboBox) {</span>
+<span class="nc" id="L541">				JComboBox comboBox = (JComboBox) editorComponent;</span>
+<span class="nc bnc" id="L542" title="All 2 branches missed.">				if (comboBox.isEditable()) {</span>
+<span class="nc" id="L543">					ComboBoxEditor editor = comboBox.getEditor();</span>
+<span class="nc" id="L544">					editor.selectAll(); // to enable overwrite</span>
+					KeyEvent keyEv;
+<span class="nc" id="L546">					keyEv = new KeyEvent(editor.getEditorComponent(),</span>
+<span class="nc" id="L547">							KeyEvent.KEY_TYPED, e.getWhen(), e.getModifiers(),</span>
+<span class="nc" id="L548">							KeyEvent.VK_UNDEFINED, e.getKeyChar(),</span>
+<span class="nc" id="L549">							KeyEvent.KEY_LOCATION_UNKNOWN);</span>
+<span class="nc" id="L550">					retValue = SwingUtilities.processKeyBindings(keyEv);</span>
+<span class="nc" id="L551">				} else {</span>
+<span class="nc" id="L552">					editorComponent.requestFocus();</span>
+<span class="nc" id="L553">					retValue = true;</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L557" title="All 2 branches missed.">		if (ks.getKeyCode() == KeyEvent.VK_SPACE) {</span>
+<span class="nc" id="L558">			return true;</span>
+		}
+<span class="nc" id="L560">		return retValue;</span>
+	}
+
+	public boolean isVisible() {
+<span class="nc" id="L564">		return attributeView.areAttributesVisible();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

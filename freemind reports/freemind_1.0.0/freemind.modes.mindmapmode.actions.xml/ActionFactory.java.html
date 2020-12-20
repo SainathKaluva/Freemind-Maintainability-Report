@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ActionFactory.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions.xml</a> &gt; <span class="el_source">ActionFactory.java</span></div><h1>ActionFactory.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 24.04.2004
+ */
+
+package freemind.modes.mindmapmode.actions.xml;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Vector;
+
+import freemind.controller.Controller;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.modes.mindmapmode.actions.xml.ActionFilter.FinalActionFilter;
+import freemind.modes.mindmapmode.actions.xml.ActionFilter.FirstActionFilter;
+
+/**
+ * @author foltin
+ * 
+ */
+public class ActionFactory {
+
+	private Controller controller;
+	/**
+	 * This Vector denotes all handler of the action to be called for each
+	 * action.
+	 */
+	private Vector registeredHandler;
+	/** This set denotes all filters for XmlActions. */
+	private Vector registeredFilters;
+	/** HashMap of Action class -&gt; actor instance. */
+	private HashMap registeredActors;
+	private UndoActionHandler undoActionHandler;
+<span class="nc" id="L51">	private static java.util.logging.Logger logger = null;</span>
+
+	/**
+	 *
+	 */
+	public ActionFactory(Controller c) {
+<span class="nc" id="L57">		super();</span>
+<span class="nc" id="L58">		this.controller = c;</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L60">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L61">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L63">		registeredHandler = new Vector();</span>
+<span class="nc" id="L64">		registeredFilters = new Vector();</span>
+<span class="nc" id="L65">		registeredActors = new HashMap();</span>
+<span class="nc" id="L66">	}</span>
+
+	/**
+	 * The handler is put in front. Thus it is called before others are called.
+	 */
+	public void registerHandler(ActionHandler newHandler) {
+		// if it is present, put it in front:
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if (!registeredHandler.contains(newHandler)) {</span>
+<span class="nc" id="L74">			registeredHandler.remove(newHandler);</span>
+		}
+<span class="nc" id="L76">		registeredHandler.add(0, newHandler);</span>
+<span class="nc" id="L77">	}</span>
+
+	public void deregisterHandler(ActionHandler newHandler) {
+<span class="nc" id="L80">		registeredHandler.remove(newHandler);</span>
+<span class="nc" id="L81">	}</span>
+
+	public void registerFilter(ActionFilter newFilter) {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (!registeredFilters.contains(newFilter)) {</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if (newFilter instanceof FinalActionFilter) {</span>
+				/* Insert as the last one here. */
+<span class="nc" id="L87">				registeredFilters.insertElementAt(newFilter,</span>
+<span class="nc" id="L88">						registeredFilters.size());</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			} else if (newFilter instanceof FirstActionFilter) {</span>
+				/* Insert as the first one here. */
+<span class="nc" id="L91">				registeredFilters.insertElementAt(newFilter, 0);</span>
+<span class="nc" id="L92">			} else {</span>
+				/* Insert before FinalActionFilters */
+<span class="nc" id="L94">				int index = 0;</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				for (Iterator it = registeredFilters.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L96">					ActionFilter filter = (ActionFilter) it.next();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">					if (filter instanceof FinalActionFilter) {</span>
+<span class="nc" id="L98">						break;</span>
+					}
+<span class="nc" id="L100">					index++;</span>
+				}
+<span class="nc" id="L102">				registeredFilters.insertElementAt(newFilter, index);</span>
+			}
+		}
+		// int count = 0;
+		// for (Iterator it = registeredFilters.iterator(); it.hasNext();) {
+		// ActionFilter filter = (ActionFilter) it.next();
+		// logger.info(&quot;Filter &quot; + count + &quot;: &quot; + filter.getClass().getName());
+		// count++;
+		// }
+<span class="nc" id="L111">	}</span>
+
+	public void deregisterFilter(ActionFilter newFilter) {
+<span class="nc" id="L114">		registeredFilters.remove(newFilter);</span>
+<span class="nc" id="L115">	}</span>
+
+	private void startTransaction(String name) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		for (Iterator i = registeredHandler.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L119">			ActionHandler handler = (ActionHandler) i.next();</span>
+<span class="nc" id="L120">			handler.startTransaction(name);</span>
+		}
+<span class="nc" id="L122">	}</span>
+
+	private void endTransaction(String name) {
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		for (Iterator i = registeredHandler.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L126">			ActionHandler handler = (ActionHandler) i.next();</span>
+<span class="nc" id="L127">			handler.endTransaction(name);</span>
+		}
+<span class="nc" id="L129">	}</span>
+
+	/**
+	 * @return see {@link #executeAction(ActionPair)}
+	 */
+	public boolean doTransaction(String pName, ActionPair pPair) {
+<span class="nc" id="L135">		this.startTransaction(pName);</span>
+<span class="nc" id="L136">		boolean result = this.executeAction(pPair);</span>
+<span class="nc" id="L137">		this.endTransaction(pName);</span>
+<span class="nc" id="L138">		return result;</span>
+	}
+
+	/**
+	 * @return the success of the action. If an exception arises, the method
+	 *         returns false.
+	 */
+	private boolean executeAction(ActionPair pair) {
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if (pair == null)</span>
+<span class="nc" id="L147">			return false;</span>
+<span class="nc" id="L148">		boolean returnValue = true;</span>
+		// register for undo first, as the filter things are repeated when the
+		// undo is executed as well!
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (undoActionHandler != null) {</span>
+			try {
+<span class="nc" id="L153">				undoActionHandler.executeAction(pair);</span>
+<span class="nc" id="L154">			} catch (Exception e) {</span>
+<span class="nc" id="L155">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L156">				returnValue = false;</span>
+			}
+		}
+
+<span class="nc" id="L160">		ActionPair filteredPair = pair;</span>
+		// first filter:
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		for (Iterator i = registeredFilters.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L163">			ActionFilter filter = (ActionFilter) i.next();</span>
+<span class="nc" id="L164">			filteredPair = filter.filterAction(filteredPair);</span>
+		}
+
+<span class="nc" id="L167">		Object[] aArray = registeredHandler.toArray();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		for (int i = 0; i &lt; aArray.length; i++) {</span>
+<span class="nc" id="L169">			ActionHandler handler = (ActionHandler) aArray[i];</span>
+			try {
+<span class="nc" id="L171">				handler.executeAction(filteredPair.getDoAction());</span>
+<span class="nc" id="L172">			} catch (Exception e) {</span>
+<span class="nc" id="L173">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L174">				returnValue = false;</span>
+				// to break or not to break. this is the question here...
+			}
+		}
+<span class="nc" id="L178">		return returnValue;</span>
+	}
+
+	/**
+	 */
+	public Controller getController() {
+<span class="nc" id="L184">		return controller;</span>
+	}
+
+	/**
+	 */
+	public void registerActor(ActorXml actor, Class action) {
+<span class="nc" id="L190">		registeredActors.put(action, actor);</span>
+<span class="nc" id="L191">	}</span>
+
+	/**
+	 */
+	public void deregisterActor(Class action) {
+<span class="nc" id="L196">		registeredActors.remove(action);</span>
+<span class="nc" id="L197">	}</span>
+
+	public ActorXml getActor(XmlAction action) {
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		for (Iterator i = registeredActors.keySet().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L201">			Class actorClass = (Class) i.next();</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			if (actorClass.isInstance(action)) {</span>
+<span class="nc" id="L203">				return (ActorXml) registeredActors.get(actorClass);</span>
+			}
+		}
+		// Class actionClass = action.getClass();
+		// if(registeredActors.containsKey(actionClass)) {
+		// return (ActorXml) registeredActors.get(actionClass);
+		// }
+<span class="nc" id="L210">		throw new IllegalArgumentException(&quot;No actor present for xmlaction&quot;</span>
+<span class="nc" id="L211">				+ action.getClass());</span>
+	}
+
+	public void registerUndoHandler(UndoActionHandler undoActionHandler) {
+<span class="nc" id="L215">		this.undoActionHandler = undoActionHandler;</span>
+<span class="nc" id="L216">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

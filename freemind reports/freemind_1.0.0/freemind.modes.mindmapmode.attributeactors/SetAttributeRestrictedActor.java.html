@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>SetAttributeRestrictedActor.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.attributeactors</a> &gt; <span class="el_source">SetAttributeRestrictedActor.java</span></div><h1>SetAttributeRestrictedActor.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 29.01.2006
+ * Created by Dimitri Polivaev
+ */
+package freemind.modes.mindmapmode.attributeactors;
+
+import freemind.controller.actions.generated.instance.SetAttributeRestrictedElementaryAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.AbstractActorXml;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+public class SetAttributeRestrictedActor extends AbstractActorXml {
+
+	public SetAttributeRestrictedActor(MindMapController mindMapModeController) {
+<span class="nc" id="L36">		super(mindMapModeController);</span>
+<span class="nc" id="L37">	}</span>
+
+	public XmlAction createAction(int index, boolean value) {
+<span class="nc" id="L40">		SetAttributeRestrictedElementaryAction action = new SetAttributeRestrictedElementaryAction();</span>
+<span class="nc" id="L41">		action.setIndex(index);</span>
+<span class="nc" id="L42">		action.setIsRestricted(value);</span>
+<span class="nc" id="L43">		return action;</span>
+	}
+
+	public ActionPair createActionPair(int index, boolean value) {
+		final boolean previousValue;
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		if (index == AttributeRegistry.GLOBAL) {</span>
+<span class="nc" id="L49">			previousValue = getAttributeRegistry().isRestricted();</span>
+<span class="nc" id="L50">		} else {</span>
+<span class="nc" id="L51">			previousValue = getAttributeRegistry().getElement(index)</span>
+<span class="nc" id="L52">					.isRestricted();</span>
+		}
+<span class="nc" id="L54">		ActionPair actionPair = new ActionPair(createAction(index, value),</span>
+<span class="nc" id="L55">				createAction(index, previousValue));</span>
+<span class="nc" id="L56">		return actionPair;</span>
+	}
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (action instanceof SetAttributeRestrictedElementaryAction) {</span>
+<span class="nc" id="L61">			SetAttributeRestrictedElementaryAction setAttributeRestrictedAction = (SetAttributeRestrictedElementaryAction) action;</span>
+<span class="nc" id="L62">			act(setAttributeRestrictedAction.getIndex(),</span>
+<span class="nc" id="L63">					setAttributeRestrictedAction.getIsRestricted());</span>
+		}
+
+<span class="nc" id="L66">	}</span>
+
+	private void act(int index, boolean value) {
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (index == AttributeRegistry.GLOBAL) {</span>
+<span class="nc" id="L70">			getAttributeRegistry().setRestricted(value);</span>
+<span class="nc" id="L71">		} else {</span>
+<span class="nc" id="L72">			getAttributeRegistry().getElement(index).setRestriction(value);</span>
+		}
+<span class="nc" id="L74">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L77">		return SetAttributeRestrictedElementaryAction.class;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

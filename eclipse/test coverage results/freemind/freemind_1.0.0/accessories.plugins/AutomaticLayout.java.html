@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AutomaticLayout.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">AutomaticLayout.java</span></div><h1>AutomaticLayout.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 16.03.2004
+ *
+ */
+package accessories.plugins;
+
+import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+import accessories.plugins.dialogs.ChooseFormatPopupDialog;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+
+import freemind.common.PropertyBean;
+import freemind.common.PropertyControl;
+import freemind.common.SeparatorProperty;
+import freemind.common.TextTranslator;
+import freemind.common.XmlBindingTools;
+import freemind.controller.Controller;
+import freemind.controller.actions.generated.instance.Pattern;
+import freemind.controller.actions.generated.instance.Patterns;
+import freemind.extensions.HookRegistration;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.StylePatternFactory;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.hooks.PermanentMindMapNodeHookAdapter;
+import freemind.preferences.FreemindPropertyContributor;
+import freemind.preferences.FreemindPropertyListener;
+import freemind.preferences.layout.OptionPanel;
+
+/**
+ * @author foltin
+ * 
+ */
+public class AutomaticLayout extends PermanentMindMapNodeHookAdapter {
+
+	private static final String AUTOMATIC_FORMAT_LEVEL = &quot;automaticFormat_level&quot;;
+
+	/**
+	 * Registers the property pages.
+	 * 
+	 * @author foltin
+	 * 
+	 */
+	public static class Registration implements HookRegistration {
+		private AutomaticLayoutPropertyContributor mAutomaticLayoutPropertyContributor;
+
+		private final MindMapController modeController;
+
+<span class="nc" id="L84">		private static FreemindPropertyListener listener = null;</span>
+
+<span class="nc" id="L86">		public Registration(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L87">			modeController = (MindMapController) controller;</span>
+<span class="nc" id="L88">		}</span>
+
+<span class="nc" id="L90">		static class MyFreemindPropertyListener implements</span>
+				FreemindPropertyListener {
+			public void propertyChanged(String propertyName, String newValue,
+					String oldValue) {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				if (propertyName.startsWith(AUTOMATIC_FORMAT_LEVEL)) {</span>
+<span class="nc" id="L95">					patterns = null;</span>
+				}
+<span class="nc" id="L97">			}</span>
+		};
+
+		public void register() {
+			// add listener:
+<span class="nc bnc" id="L102" title="All 2 branches missed.">			if (listener == null) {</span>
+<span class="nc" id="L103">				listener = new MyFreemindPropertyListener();</span>
+			}
+<span class="nc" id="L105">			Controller.addPropertyChangeListener(listener);</span>
+
+<span class="nc" id="L107">			mAutomaticLayoutPropertyContributor = new AutomaticLayoutPropertyContributor(</span>
+<span class="nc" id="L108">					modeController);</span>
+<span class="nc" id="L109">			OptionPanel.addContributor(mAutomaticLayoutPropertyContributor);</span>
+<span class="nc" id="L110">		}</span>
+
+		public void deRegister() {
+<span class="nc" id="L113">			OptionPanel.removeContributor(mAutomaticLayoutPropertyContributor);</span>
+<span class="nc" id="L114">			Controller.removePropertyChangeListener(listener);</span>
+<span class="nc" id="L115">		}</span>
+
+	}
+
+	/**
+	 * Translates style pattern properties into strings.
+	 * */
+	static class StylePropertyTranslator implements TextTranslator {
+		private final MindMapController controller;
+
+		StylePropertyTranslator(MindMapController controller) {
+<span class="nc" id="L126">			super();</span>
+<span class="nc" id="L127">			this.controller = controller;</span>
+<span class="nc" id="L128">		}</span>
+
+		public String getText(String pKey) {
+<span class="nc" id="L131">			return controller.getText(pKey);</span>
+		}
+	}
+
+	/**
+	 * Currently not used. Is useful if you want to make single patterns
+	 * changeable.
+	 * */
+	public static class StylePatternProperty extends PropertyBean implements
+			PropertyControl, ActionListener {
+
+		String description;
+
+		String label;
+
+		String pattern;
+
+		JButton mButton;
+
+		private final TextTranslator mTranslator;
+
+		private final MindMapController mindMapController;
+
+		public StylePatternProperty(String description, String label,
+				TextTranslator pTranslator, MindMapController pController) {
+<span class="nc" id="L156">			super();</span>
+<span class="nc" id="L157">			this.description = description;</span>
+<span class="nc" id="L158">			this.label = label;</span>
+<span class="nc" id="L159">			mTranslator = pTranslator;</span>
+<span class="nc" id="L160">			mindMapController = pController;</span>
+<span class="nc" id="L161">			mButton = new JButton();</span>
+<span class="nc" id="L162">			mButton.addActionListener(this);</span>
+<span class="nc" id="L163">			pattern = null;</span>
+<span class="nc" id="L164">		}</span>
+
+		public String getDescription() {
+<span class="nc" id="L167">			return description;</span>
+		}
+
+		public String getLabel() {
+<span class="nc" id="L171">			return label;</span>
+		}
+
+		public void setValue(String value) {
+<span class="nc" id="L175">			pattern = value;</span>
+<span class="nc" id="L176">			Pattern resultPattern = getPatternFromString();</span>
+<span class="nc" id="L177">			String patternString = StylePatternFactory.toString(resultPattern,</span>
+<span class="nc" id="L178">					new StylePropertyTranslator(mindMapController));</span>
+<span class="nc" id="L179">			mButton.setText(patternString);</span>
+<span class="nc" id="L180">			mButton.setToolTipText(patternString);</span>
+<span class="nc" id="L181">		}</span>
+
+		public String getValue() {
+<span class="nc" id="L184">			return pattern;</span>
+		}
+
+		public void layout(DefaultFormBuilder builder,
+				TextTranslator pTranslator) {
+<span class="nc" id="L189">			JLabel label = builder.append(pTranslator.getText(getLabel()),</span>
+<span class="nc" id="L190">					mButton);</span>
+<span class="nc" id="L191">			label.setToolTipText(pTranslator.getText(getDescription()));</span>
+			// add &quot;reset to standard&quot; popup:
+
+<span class="nc" id="L194">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+			// construct pattern:
+<span class="nc" id="L198">			Pattern pat = getPatternFromString();</span>
+<span class="nc" id="L199">			ChooseFormatPopupDialog formatDialog = new ChooseFormatPopupDialog(</span>
+<span class="nc" id="L200">					mindMapController.getFrame().getJFrame(),</span>
+<span class="nc" id="L201">					mindMapController,</span>
+<span class="nc" id="L202">					&quot;accessories/plugins/AutomaticLayout.properties_StyleDialogTitle&quot;,</span>
+<span class="nc" id="L203">					pat);</span>
+<span class="nc" id="L204">			formatDialog.setModal(true);</span>
+<span class="nc" id="L205">			formatDialog.setVisible(true);</span>
+			// process result:
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			if (formatDialog.getResult() == ChooseFormatPopupDialog.OK) {</span>
+<span class="nc" id="L208">				Pattern resultPattern = formatDialog.getPattern();</span>
+<span class="nc" id="L209">				resultPattern.setName(&quot;dummy&quot;);</span>
+<span class="nc" id="L210">				pattern = XmlBindingTools.getInstance().marshall(resultPattern);</span>
+<span class="nc" id="L211">				setValue(pattern);</span>
+<span class="nc" id="L212">				firePropertyChangeEvent();</span>
+			}
+<span class="nc" id="L214">		}</span>
+
+		private Pattern getPatternFromString() {
+<span class="nc" id="L217">			return StylePatternFactory.getPatternFromString(pattern);</span>
+		}
+
+		public void setEnabled(boolean pEnabled) {
+<span class="nc" id="L221">			mButton.setEnabled(pEnabled);</span>
+<span class="nc" id="L222">		}</span>
+
+	}
+
+	public static class StylePatternListProperty extends PropertyBean implements
+			PropertyControl, ListSelectionListener {
+
+		String description;
+
+		String label;
+
+		String patterns;
+
+		JList mList;
+
+<span class="nc" id="L237">		boolean mDialogIsShown = false;</span>
+
+		private final TextTranslator mTranslator;
+
+		private final MindMapController mindMapController;
+
+		private DefaultListModel mDefaultListModel;
+
+		public StylePatternListProperty(String description, String label,
+				TextTranslator pTranslator, MindMapController pController) {
+<span class="nc" id="L247">			super();</span>
+<span class="nc" id="L248">			this.description = description;</span>
+<span class="nc" id="L249">			this.label = label;</span>
+<span class="nc" id="L250">			mTranslator = pTranslator;</span>
+<span class="nc" id="L251">			mindMapController = pController;</span>
+<span class="nc" id="L252">			mList = new JList();</span>
+<span class="nc" id="L253">			mList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);</span>
+<span class="nc" id="L254">			mDefaultListModel = new DefaultListModel();</span>
+<span class="nc" id="L255">			mList.setModel(mDefaultListModel);</span>
+<span class="nc" id="L256">			mList.addListSelectionListener(this);</span>
+<span class="nc" id="L257">			patterns = null;</span>
+<span class="nc" id="L258">		}</span>
+
+		public String getDescription() {
+<span class="nc" id="L261">			return description;</span>
+		}
+
+		public String getLabel() {
+<span class="nc" id="L265">			return label;</span>
+		}
+
+		public void setValue(String value) {
+<span class="nc" id="L269">			patterns = value;</span>
+<span class="nc" id="L270">			Patterns resultPatterns = getPatternsFromString();</span>
+<span class="nc" id="L271">			mDefaultListModel.clear();</span>
+<span class="nc" id="L272">			int j = 1;</span>
+<span class="nc" id="L273">			StylePropertyTranslator stylePropertyTranslator = new StylePropertyTranslator(</span>
+<span class="nc" id="L274">					mindMapController);</span>
+<span class="nc" id="L275">			for (Iterator i = resultPatterns.getListChoiceList().iterator(); i</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L277">				Pattern pattern = (Pattern) i.next();</span>
+<span class="nc" id="L278">				mDefaultListModel.addElement(mTranslator.getText(&quot;level&quot; + j)</span>
+<span class="nc" id="L279">						+ &quot;: &quot;</span>
+<span class="nc" id="L280">						+ StylePatternFactory.toString(pattern,</span>
+<span class="nc" id="L281">								stylePropertyTranslator));</span>
+<span class="nc" id="L282">				j++;</span>
+			}
+<span class="nc" id="L284">		}</span>
+
+		public String getValue() {
+<span class="nc" id="L287">			return patterns;</span>
+		}
+
+		public void layout(DefaultFormBuilder builder,
+				TextTranslator pTranslator) {
+<span class="nc" id="L292">			JLabel label = builder.append(pTranslator.getText(getLabel()));</span>
+<span class="nc" id="L293">			builder.append(new JLabel());</span>
+<span class="nc" id="L294">			label.setToolTipText(pTranslator.getText(getDescription()));</span>
+<span class="nc" id="L295">			builder.appendSeparator();</span>
+<span class="nc" id="L296">			builder.append(new JScrollPane(mList), 3);</span>
+			// builder.append(mList);
+<span class="nc" id="L298">		}</span>
+
+		private Patterns getPatternsFromString() {
+<span class="nc" id="L301">			return StylePatternFactory.getPatternsFromString(patterns);</span>
+		}
+
+		public void setEnabled(boolean pEnabled) {
+<span class="nc" id="L305">			mList.setEnabled(pEnabled);</span>
+<span class="nc" id="L306">		}</span>
+
+		public void valueChanged(ListSelectionEvent e) {
+			// construct pattern:
+<span class="nc" id="L310">			final Patterns pat = getPatternsFromString();</span>
+<span class="nc" id="L311">			JList source = (JList) e.getSource();</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">			if (source.getSelectedIndex() &lt; 0)</span>
+<span class="nc" id="L313">				return;</span>
+<span class="nc" id="L314">			final Pattern choice = (Pattern) pat.getChoice(source</span>
+<span class="nc" id="L315">					.getSelectedIndex());</span>
+<span class="nc" id="L316">			final ChooseFormatPopupDialog formatDialog = new ChooseFormatPopupDialog(</span>
+<span class="nc" id="L317">					mindMapController.getFrame().getJFrame(),</span>
+<span class="nc" id="L318">					mindMapController,</span>
+<span class="nc" id="L319">					&quot;accessories/plugins/AutomaticLayout.properties_StyleDialogTitle&quot;,</span>
+<span class="nc" id="L320">					choice);</span>
+			// FIXME: What's that? (fc, 8,4,2008).
+<span class="nc" id="L322">			EventQueue.invokeLater(new Runnable() {</span>
+				public void run() {
+<span class="nc bnc" id="L324" title="All 2 branches missed.">					if (mDialogIsShown)</span>
+<span class="nc" id="L325">						return;</span>
+<span class="nc" id="L326">					mDialogIsShown = true;</span>
+					try {
+<span class="nc" id="L328">						formatDialog.setModal(true);</span>
+<span class="nc" id="L329">						formatDialog.setVisible(true);</span>
+						// process result:
+<span class="nc bnc" id="L331" title="All 2 branches missed.">						if (formatDialog.getResult() == ChooseFormatPopupDialog.OK) {</span>
+<span class="nc" id="L332">							formatDialog.getPattern(choice);</span>
+<span class="nc" id="L333">							patterns = XmlBindingTools.getInstance().marshall(</span>
+<span class="nc" id="L334">									pat);</span>
+<span class="nc" id="L335">							setValue(patterns);</span>
+<span class="nc" id="L336">							firePropertyChangeEvent();</span>
+						}
+<span class="nc" id="L338">					} finally {</span>
+<span class="nc" id="L339">						mDialogIsShown = false;</span>
+<span class="nc" id="L340">					}</span>
+<span class="nc" id="L341">				}</span>
+
+			});
+<span class="nc" id="L344">		}</span>
+
+	}
+
+	private static final class AutomaticLayoutPropertyContributor implements
+			FreemindPropertyContributor {
+
+		private final MindMapController modeController;
+
+<span class="nc" id="L353">		public AutomaticLayoutPropertyContributor(</span>
+				MindMapController modeController) {
+<span class="nc" id="L355">			this.modeController = modeController;</span>
+<span class="nc" id="L356">		}</span>
+
+		public List getControls(TextTranslator pTextTranslator) {
+<span class="nc" id="L359">			Vector controls = new Vector();</span>
+<span class="nc" id="L360">			controls.add(new OptionPanel.NewTabProperty(</span>
+<span class="nc" id="L361">					&quot;accessories/plugins/AutomaticLayout.properties_PatternTabName&quot;));</span>
+<span class="nc" id="L362">			controls.add(new SeparatorProperty(</span>
+<span class="nc" id="L363">					&quot;accessories/plugins/AutomaticLayout.properties_PatternSeparatorName&quot;));</span>
+<span class="nc" id="L364">			controls.add(new StylePatternListProperty(&quot;level&quot;,</span>
+<span class="nc" id="L365">					AUTOMATIC_FORMAT_LEVEL, pTextTranslator, modeController));</span>
+<span class="nc" id="L366">			return controls;</span>
+		}
+	}
+
+<span class="nc" id="L370">	private static Patterns patterns = null;</span>
+
+	/**
+     * 
+     */
+	public AutomaticLayout() {
+<span class="nc" id="L376">		super();</span>
+
+<span class="nc" id="L378">	}</span>
+
+	private void setStyle(MindMapNode node) {
+<span class="nc" id="L381">		logger.finest(&quot;updating node id=&quot;</span>
+<span class="nc" id="L382">				+ node.getObjectId(getMindMapController()) + &quot; and text:&quot;</span>
+<span class="nc" id="L383">				+ node);</span>
+<span class="nc" id="L384">		int depth = depth(node);</span>
+<span class="nc" id="L385">		logger.finest(&quot;COLOR, depth=&quot; + (depth));</span>
+<span class="nc" id="L386">		reloadPatterns();</span>
+<span class="nc" id="L387">		int myIndex = patterns.sizeChoiceList() - 1;</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">		if (depth &lt; patterns.sizeChoiceList())</span>
+<span class="nc" id="L389">			myIndex = depth;</span>
+<span class="nc" id="L390">		Pattern p = (Pattern) patterns.getChoice(myIndex);</span>
+<span class="nc" id="L391">		getMindMapController().applyPattern(node, p);</span>
+<span class="nc" id="L392">	}</span>
+
+	private int depth(MindMapNode node) {
+<span class="nc bnc" id="L395" title="All 2 branches missed.">		if (node.isRoot())</span>
+<span class="nc" id="L396">			return 0;</span>
+<span class="nc" id="L397">		return depth(node.getParentNode()) + 1;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHook#onAddChild(freemind.modes.MindMapNode
+	 * )
+	 */
+	public void onAddChildren(MindMapNode newChildNode) {
+<span class="nc" id="L408">		logger.finest(&quot;onAddChildren &quot; + newChildNode);</span>
+<span class="nc" id="L409">		super.onAddChild(newChildNode);</span>
+<span class="nc" id="L410">		setStyleRecursive(newChildNode);</span>
+<span class="nc" id="L411">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHook#onUpdateChildrenHook(freemind.modes
+	 * .MindMapNode)
+	 */
+	public void onUpdateChildrenHook(MindMapNode updatedNode) {
+<span class="nc" id="L421">		super.onUpdateChildrenHook(updatedNode);</span>
+<span class="nc" id="L422">		setStyleRecursive(updatedNode);</span>
+<span class="nc" id="L423">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#onUpdateNodeHook()
+	 */
+	public void onUpdateNodeHook() {
+<span class="nc" id="L431">		super.onUpdateNodeHook();</span>
+<span class="nc" id="L432">		setStyle(getNode());</span>
+<span class="nc" id="L433">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.NodeHook#invoke(freemind.modes.MindMapNode)
+	 */
+	public void invoke(MindMapNode node) {
+<span class="nc" id="L441">		super.invoke(node);</span>
+<span class="nc" id="L442">		setStyleRecursive(node);</span>
+<span class="nc" id="L443">	}</span>
+
+	/** get styles from preferences: */
+	private void reloadPatterns() {
+<span class="nc bnc" id="L447" title="All 2 branches missed.">		if (patterns == null) {</span>
+<span class="nc" id="L448">			String property = getMindMapController().getFrame().getProperty(</span>
+<span class="nc" id="L449">					AUTOMATIC_FORMAT_LEVEL);</span>
+<span class="nc" id="L450">			patterns = StylePatternFactory.getPatternsFromString(property);</span>
+		}
+<span class="nc" id="L452">	}</span>
+
+	/**
+     */
+	private void setStyleRecursive(MindMapNode node) {
+<span class="nc" id="L457">		logger.finest(&quot;setStyle &quot; + node);</span>
+<span class="nc" id="L458">		setStyle(node);</span>
+		// recurse:
+<span class="nc bnc" id="L460" title="All 2 branches missed.">		for (Iterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L461">			MindMapNode child = (MindMapNode) i.next();</span>
+<span class="nc" id="L462">			invoke(child);</span>
+		}
+<span class="nc" id="L464">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Word lists</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="RuleValSet.html">Prev</a> - <a href="RuleExAttr.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefRules.html">8.3 Definition of Design Rules</a> > 8.3.5 Word lists
+<hr>
+<h3><a name="RuleKwd"></a>8.3.5 Word lists</h3>
+
+One aspect of design rule checking involves the use of reserved
+keywords of the UML or programming languages as names of model
+elements.<p>
+
+To check model element names for keywords, we define a list of
+keywords in the metric definition file, and add a rule that checks for
+names on the list:
+
+<pre>
+&lt;wordlist name="CPP" ignorecase="false" &gt; 
+  &lt;entry word="auto" /&gt;
+  &lt;entry word="bool" /&gt;
+  &lt;entry word="break" /&gt;
+  ...
+&lt;/wordlist&gt;
+
+...
+
+&lt;rule name="Keyword" domain="class" category="Naming" severity="1-high"&gt;
+  &lt;description&gt;Class name is a reserved C++ keyword.&lt;/description&gt;
+  &lt;violation condition="name onlist CPP" value="name" /&gt;
+&lt;/rule&gt;
+</pre>
+
+The word list is enclosed in <tt>wordlist</tt> tags. Attribute
+<tt>name</tt> defines a name for the keyword list, which is used later
+to reference the list. Attribute <tt>ignorecase</tt> controls if
+uppercase and lowercase letters should be distinguished when searching
+for a word on the list. For programming languages that are
+case-insensitive, set <tt>ignorecase</tt> to "true". By default,
+<tt>ignorecase</tt> is "false" (i.e., case-sensitive search).<p>
+
+The word list contains a list of <tt>entry</tt> elements. An
+<tt>entry</tt> has one required attribute <tt>word</tt> that
+contains one word of the list.<p>
+
+To check if a word is on a list, there is a special operator
+<tt>onlist</tt> which you can use in condition expressions (see
+<a href="DefCondExp.html">Section&nbsp;8.5.4 "Condition Expressions"</a>). In the condition expression of rule "Keyword" above,
+the left hand operator yields the name of the class, the right hand
+operator is the name of the word list to check.<p>
+
+Note that while the main purpose of the word list feature is to define
+design rules checking for keywords, there are other possible uses:
+<ul>
+
+<li>Your development standards may forbid certain classes or data
+types to be used as types of attributes, parameters, return types,
+etc.
+To define a rule that checks adherence to this standard, create a word
+list with the names of the forbidden types, and then create rules
+to check if the name of an attribute type etc. appears on the list.
+<li>Word lists can also be used to simplify condition expressions of
+set or metric definitions. A condition of the form
+<tt>val='string1'|val='string2'|...|val='stringn')</tt> can be
+rewritten: define a word list containing the strings <tt>string1</tt>
+to <tt>stringn</tt>, and reduce the condition expression to <tt>val
+onlist wordlist</tt>.
+
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="RuleValSet.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefRules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="RuleExAttr.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.3.4 "Valueset for Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.3.6 "Exempting Approved Rule Violations"</td></tr></table>
+
+</body>
+</html>

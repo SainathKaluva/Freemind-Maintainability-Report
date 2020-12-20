@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>EditNodeWYSIWYG.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">EditNodeWYSIWYG.java</span></div><h1>EditNodeWYSIWYG.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - a program for creating and viewing mindmaps</span>
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *See COPYING for details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ */
+/*$Id: EditNodeWYSIWYG.java,v 1.1.4.46 2010/05/25 20:09:32 christianfoltin Exp $*/
+
+package freemind.view.mindmapview;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import javax.swing.JButton;
+import javax.swing.JEditorPane;
+import javax.swing.JPanel;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.html.HTMLDocument;
+
+import accessories.plugins.NodeNoteRegistration.SimplyHtmlResources;
+
+import com.inet.jortho.SpellChecker;
+import com.lightdev.app.shtm.SHTMLPanel;
+
+import freemind.main.FreeMindMain;
+import freemind.main.HtmlTools;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.ModeController;
+
+/**
+ * @author Daniel Polansky
+ * 
+ */
+public class EditNodeWYSIWYG extends EditNodeBase {
+
+	private KeyEvent firstEvent;
+
+	private static HTMLDialog htmlEditorWindow;
+
+	private static class HTMLDialog extends EditDialog {
+		private static final long serialVersionUID = 2862979626489782521L;
+		private SHTMLPanel htmlEditorPanel;
+
+		HTMLDialog(EditNodeBase base) throws Exception {
+<span class="nc" id="L67">			super(base);</span>
+<span class="nc" id="L68">			createEditorPanel();</span>
+<span class="nc" id="L69">			getContentPane().add(htmlEditorPanel, BorderLayout.CENTER);</span>
+<span class="nc" id="L70">			Tools.addEscapeActionToDialog(this, new CancelAction());</span>
+<span class="nc" id="L71">			final JButton okButton = new JButton();</span>
+<span class="nc" id="L72">			final JButton cancelButton = new JButton();</span>
+<span class="nc" id="L73">			final JButton splitButton = new JButton();</span>
+
+<span class="nc" id="L75">			Tools.setLabelAndMnemonic(okButton, base.getText(&quot;ok&quot;));</span>
+<span class="nc" id="L76">			Tools.setLabelAndMnemonic(cancelButton, base.getText(&quot;cancel&quot;));</span>
+<span class="nc" id="L77">			Tools.setLabelAndMnemonic(splitButton, base.getText(&quot;split&quot;));</span>
+
+<span class="nc" id="L79">			okButton.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L81">					submit();</span>
+<span class="nc" id="L82">				}</span>
+			});
+
+<span class="nc" id="L85">			cancelButton.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L87">					cancel();</span>
+<span class="nc" id="L88">				}</span>
+			});
+
+<span class="nc" id="L91">			splitButton.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L93">					split();</span>
+<span class="nc" id="L94">				}</span>
+			});
+
+<span class="nc" id="L97">			Tools.addKeyActionToDialog(this, new SubmitAction(), &quot;alt ENTER&quot;,</span>
+<span class="nc" id="L98">					&quot;submit&quot;);</span>
+<span class="nc" id="L99">			Tools.addKeyActionToDialog(this, new SubmitAction(),</span>
+<span class="nc" id="L100">					&quot;control ENTER&quot;, &quot;submit&quot;);</span>
+<span class="nc" id="L101">			JPanel buttonPane = new JPanel();</span>
+<span class="nc" id="L102">			buttonPane.add(okButton);</span>
+<span class="nc" id="L103">			buttonPane.add(cancelButton);</span>
+<span class="nc" id="L104">			buttonPane.add(splitButton);</span>
+<span class="nc" id="L105">			buttonPane.setMaximumSize(new Dimension(1000, 20));</span>
+<span class="nc" id="L106">			getContentPane().add(buttonPane, BorderLayout.SOUTH);</span>
+<span class="nc" id="L107">			htmlEditorPanel.setOpenHyperlinkHandler(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent pE) {
+					try {
+<span class="nc" id="L110">						getBase().getController().getFrame()</span>
+<span class="nc" id="L111">								.openDocument(new URL(pE.getActionCommand()));</span>
+<span class="nc" id="L112">					} catch (Exception e) {</span>
+<span class="nc" id="L113">						freemind.main.Resources.getInstance().logException(e);</span>
+					}
+<span class="nc" id="L115">				}</span>
+			});
+
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (checkSpelling) {</span>
+<span class="nc" id="L119">				SpellChecker.register(htmlEditorPanel.getEditorPane());</span>
+			}
+<span class="nc" id="L121">		}</span>
+
+		private SHTMLPanel createEditorPanel() throws Exception {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if (htmlEditorPanel == null) {</span>
+<span class="nc" id="L125">				SHTMLPanel.setResources(new SimplyHtmlResources());</span>
+<span class="nc" id="L126">				htmlEditorPanel = SHTMLPanel.createSHTMLPanel();</span>
+//				htmlEditorPanel.getEditorPane().addMouseListener(new MouseAdapter () {
+//					public void mousePressed(MouseEvent e) {
+//						conditionallyShowPopup(e);
+//					}
+//
+//					public void mouseReleased(MouseEvent e) {
+//						conditionallyShowPopup(e);
+//					}
+//
+//					private void conditionallyShowPopup(MouseEvent e) {
+//						if (e.isPopupTrigger()) {
+//							System.out.println(&quot;fooooooooooooooooooooo&quot;);
+//							JPopupMenu popupMenu =
+//									((SHTMLEditorPane) e.getSource()).getPopup();
+//							if (checkSpelling &amp;&amp; popupMenu != null) {
+////								popupMenu.add(SpellChecker.createCheckerMenu(), 0);
+////								popupMenu.add(SpellChecker.createLanguagesMenu(), 1);
+////								popupMenu.addSeparator();
+////								popupMenu.show(e.getComponent(), e.getX(), e.getY());
+//							}
+////							e.consume();
+//						}
+//					}
+//				});
+			}
+<span class="nc" id="L152">			return htmlEditorPanel;</span>
+		}
+
+		/**
+		 * @return Returns the htmlEditorPanel.
+		 */
+		public SHTMLPanel getHtmlEditorPanel() {
+<span class="nc" id="L159">			return htmlEditorPanel;</span>
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see freemind.view.mindmapview.EditNodeBase.Dialog#close()
+		 */
+		protected void submit() {
+<span class="nc" id="L168">			removeBodyStyle();</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			if (htmlEditorPanel.needsSaving()) {</span>
+<span class="nc" id="L170">				getBase().getEditControl().ok(</span>
+<span class="nc" id="L171">						HtmlTools.unescapeHTMLUnicodeEntity(htmlEditorPanel</span>
+<span class="nc" id="L172">								.getDocumentText()));</span>
+<span class="nc" id="L173">			} else {</span>
+<span class="nc" id="L174">				getBase().getEditControl().cancel();</span>
+			}
+<span class="nc" id="L176">			super.submit();</span>
+<span class="nc" id="L177">		}</span>
+
+		private void removeBodyStyle() {
+<span class="nc" id="L180">			htmlEditorPanel.getDocument().getStyleSheet().removeStyle(&quot;body&quot;);</span>
+<span class="nc" id="L181">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see freemind.view.mindmapview.EditNodeBase.Dialog#split()
+		 */
+		protected void split() {
+<span class="nc" id="L189">			removeBodyStyle();</span>
+<span class="nc" id="L190">			getBase().getEditControl().split(</span>
+<span class="nc" id="L191">					HtmlTools.unescapeHTMLUnicodeEntity(htmlEditorPanel</span>
+<span class="nc" id="L192">							.getDocumentText()),</span>
+<span class="nc" id="L193">					htmlEditorPanel.getCaretPosition());</span>
+<span class="nc" id="L194">			super.split();</span>
+<span class="nc" id="L195">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see freemind.view.mindmapview.EditNodeBase.Dialog#close()
+		 */
+		protected void cancel() {
+<span class="nc" id="L203">			removeBodyStyle();</span>
+<span class="nc" id="L204">			getBase().getEditControl().cancel();</span>
+<span class="nc" id="L205">			super.cancel();</span>
+<span class="nc" id="L206">		}</span>
+
+		protected boolean isChanged() {
+<span class="nc" id="L209">			return htmlEditorPanel.needsSaving();</span>
+		}
+
+		public Component getMostRecentFocusOwner() {
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			if (isFocused()) {</span>
+<span class="nc" id="L214">				return getFocusOwner();</span>
+			} else {
+<span class="nc" id="L216">				return htmlEditorPanel.getMostRecentFocusOwner();</span>
+			}
+		}
+	}
+
+	public EditNodeWYSIWYG(final NodeView node, final String text,
+			final KeyEvent firstEvent, ModeController controller,
+			EditControl editControl) {
+<span class="nc" id="L224">		super(node, text, controller, editControl);</span>
+<span class="nc" id="L225">		this.firstEvent = firstEvent;</span>
+<span class="nc" id="L226">	}</span>
+
+	public void show() {
+		// Return true if successful.
+		try {
+<span class="nc" id="L231">			final FreeMindMain frame = getFrame();</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			if (htmlEditorWindow == null) {</span>
+<span class="nc" id="L233">				htmlEditorWindow = new HTMLDialog(this);</span>
+			}
+<span class="nc" id="L235">			htmlEditorWindow.setBase(this);</span>
+<span class="nc" id="L236">			final SHTMLPanel htmlEditorPanel = ((HTMLDialog) htmlEditorWindow)</span>
+<span class="nc" id="L237">					.getHtmlEditorPanel();</span>
+<span class="nc" id="L238">			String rule = &quot;BODY {&quot;;</span>
+<span class="nc" id="L239">			Font font = node.getTextFont();</span>
+<span class="nc" id="L240">			if (Resources.getInstance().getBoolProperty(</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">					&quot;experimental_font_sizing_for_long_node_editors&quot;)) {</span>
+				/*
+				 * This is a proposal of Dan, but it doesn't work as expected.
+				 * 
+				 * http://sourceforge.net/tracker/?func=detail&amp;aid=2800933&amp;group_id
+				 * =7118&amp;atid=107118
+				 */
+<span class="nc" id="L248">				font = Tools.updateFontSize(font, this.getView().getZoom(),</span>
+<span class="nc" id="L249">						font.getSize());</span>
+			}
+<span class="nc" id="L251">			final Color nodeTextBackground = node.getTextBackground();</span>
+<span class="nc" id="L252">			rule += &quot;font-family: &quot; + font.getFamily() + &quot;;&quot;;</span>
+<span class="nc" id="L253">			rule += &quot;font-size: &quot; + font.getSize() + &quot;pt;&quot;;</span>
+			// Daniel said:, but no effect:
+			// rule += &quot;font-size: &quot;+node.getFont().getSize()+&quot;pt;&quot;;
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (node.getModel().isItalic()) {</span>
+<span class="nc" id="L257">				rule += &quot;font-style: italic; &quot;;</span>
+			}
+<span class="nc bnc" id="L259" title="All 2 branches missed.">			if (node.getModel().isBold()) {</span>
+<span class="nc" id="L260">				rule += &quot;font-weight: bold; &quot;;</span>
+			}
+<span class="nc" id="L262">			final Color nodeTextColor = node.getTextColor();</span>
+<span class="nc" id="L263">			rule += &quot;color: &quot; + Tools.colorToXml(nodeTextColor) + &quot;;&quot;;</span>
+<span class="nc" id="L264">			rule += &quot;}\n&quot;;</span>
+<span class="nc" id="L265">			rule += &quot;p {&quot;;</span>
+<span class="nc" id="L266">			rule += &quot;margin-top:0;&quot;;</span>
+<span class="nc" id="L267">			rule += &quot;}\n&quot;;</span>
+<span class="nc" id="L268">			final HTMLDocument document = htmlEditorPanel.getDocument();</span>
+<span class="nc" id="L269">			final JEditorPane editorPane = htmlEditorPanel.getEditorPane();</span>
+<span class="nc" id="L270">			editorPane.setForeground(nodeTextColor);</span>
+<span class="nc" id="L271">			editorPane.setBackground(nodeTextBackground);</span>
+<span class="nc" id="L272">			editorPane.setCaretColor(nodeTextColor);</span>
+<span class="nc" id="L273">			document.getStyleSheet().addRule(rule);</span>
+			try {
+<span class="nc" id="L275">				document.setBase(node.getMap().getModel().getURL());</span>
+<span class="nc" id="L276">			} catch (MalformedURLException e) {</span>
+			}
+
+			// { -- Set size (can be refactored to share code with long node
+			// editor)
+<span class="nc" id="L281">			int preferredHeight = (int) (node.getMainView().getHeight() * 1.2);</span>
+<span class="nc" id="L282">			preferredHeight = Math.max(preferredHeight, Integer.parseInt(frame</span>
+<span class="nc" id="L283">					.getProperty(&quot;el__min_default_window_height&quot;)));</span>
+<span class="nc" id="L284">			preferredHeight = Math.min(preferredHeight, Integer.parseInt(frame</span>
+<span class="nc" id="L285">					.getProperty(&quot;el__max_default_window_height&quot;)));</span>
+<span class="nc" id="L286">			int preferredWidth = (int) (node.getMainView().getWidth() * 1.2);</span>
+<span class="nc" id="L287">			preferredWidth = Math.max(preferredWidth, Integer.parseInt(frame</span>
+<span class="nc" id="L288">					.getProperty(&quot;el__min_default_window_width&quot;)));</span>
+<span class="nc" id="L289">			preferredWidth = Math.min(preferredWidth, Integer.parseInt(frame</span>
+<span class="nc" id="L290">					.getProperty(&quot;el__max_default_window_width&quot;)));</span>
+<span class="nc" id="L291">			htmlEditorPanel.setContentPanePreferredSize(new Dimension(</span>
+<span class="nc" id="L292">					preferredWidth, preferredHeight));</span>
+			// }
+
+<span class="nc" id="L295">			htmlEditorWindow.pack();</span>
+
+<span class="nc" id="L297">			Tools.setDialogLocationRelativeTo(htmlEditorWindow, node);</span>
+
+<span class="nc" id="L299">			String content = node.getModel().toString();</span>
+<span class="nc bnc" id="L300" title="All 2 branches missed.">			if (!HtmlTools.isHtmlNode(content)) {</span>
+<span class="nc" id="L301">				content = HtmlTools.plainToHTML(content);</span>
+			}
+<span class="nc" id="L303">			htmlEditorPanel.setCurrentDocumentContent(content);</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">			if (firstEvent instanceof KeyEvent) {</span>
+<span class="nc" id="L305">				final KeyEvent firstKeyEvent = (KeyEvent) firstEvent;</span>
+<span class="nc" id="L306">				final JTextComponent currentPane = htmlEditorPanel</span>
+<span class="nc" id="L307">						.getEditorPane();</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">				if (currentPane == htmlEditorPanel.getMostRecentFocusOwner()) {</span>
+<span class="nc" id="L309">					redispatchKeyEvents(currentPane, firstKeyEvent);</span>
+				}
+<span class="nc" id="L311">			} // 1st key event defined</span>
+			else {
+<span class="nc" id="L313">				editorPane.setCaretPosition(htmlEditorPanel.getDocument()</span>
+<span class="nc" id="L314">						.getLength());</span>
+			}
+<span class="nc" id="L316">			htmlEditorPanel.getMostRecentFocusOwner().requestFocus();</span>
+<span class="nc" id="L317">			htmlEditorWindow.show();</span>
+<span class="nc" id="L318">		} catch (Exception ex) { // Probably class not found exception</span>
+<span class="nc" id="L319">			freemind.main.Resources.getInstance().logException(ex);</span>
+<span class="nc" id="L320">			System.err</span>
+<span class="nc" id="L321">					.println(&quot;Loading of WYSIWYG HTML editor failed. Use the other editors instead.&quot;);</span>
+		}
+<span class="nc" id="L323">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

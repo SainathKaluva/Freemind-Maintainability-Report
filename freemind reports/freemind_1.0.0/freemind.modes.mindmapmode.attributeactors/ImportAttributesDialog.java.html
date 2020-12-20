@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ImportAttributesDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.attributeactors</a> &gt; <span class="el_source">ImportAttributesDialog.java</span></div><h1>ImportAttributesDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 11.12.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.modes.mindmapmode.attributeactors;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.swing.Box;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreeSelectionModel;
+
+import freemind.controller.Controller;
+import freemind.controller.MapModuleManager;
+import freemind.controller.filter.util.SortedComboBoxModel;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMap;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.attributes.AttributeRegistryElement;
+import freemind.view.MapModule;
+
+class ImportAttributesDialog extends JDialog implements TreeSelectionListener {
+	private JTree tree;
+	private JScrollPane scrollPane;
+	private DefaultMutableTreeNode topNode;
+	private AttributeRegistry currentAttributes;
+
+	static private class TreeNodeInfo {
+		private String info;
+		static private final int FULL_SELECTED = 0;
+		static private final int PARTIAL_SELECTED = 1;
+		static private final int NOT_SELECTED = 2;
+
+		private int selected;
+
+<span class="nc" id="L75">		public TreeNodeInfo(String info) {</span>
+<span class="nc" id="L76">			this.info = info;</span>
+<span class="nc" id="L77">			this.selected = NOT_SELECTED;</span>
+<span class="nc" id="L78">		}</span>
+
+		int getSelected() {
+<span class="nc" id="L81">			return selected;</span>
+		}
+
+		void setSelected(int selected) {
+<span class="nc" id="L85">			this.selected = selected;</span>
+<span class="nc" id="L86">		}</span>
+
+		String getInfo() {
+<span class="nc" id="L89">			return info;</span>
+		}
+
+		public String toString() {
+<span class="nc" id="L93">			return info;</span>
+		}
+	}
+
+	static private class AttributeTreeNodeInfo extends TreeNodeInfo {
+		private boolean restricted;
+
+		public AttributeTreeNodeInfo(String info, boolean restricted) {
+<span class="nc" id="L101">			super(info);</span>
+<span class="nc" id="L102">			this.restricted = restricted;</span>
+<span class="nc" id="L103">		}</span>
+
+		boolean isRestricted() {
+<span class="nc" id="L106">			return restricted;</span>
+		}
+
+	}
+
+	static private class MyRenderer extends DefaultTreeCellRenderer {
+<span class="nc" id="L112">		static final Icon iconFull = MindIcon.factory(&quot;button_ok&quot;).getIcon();</span>
+<span class="nc" id="L113">		static final Icon iconPartial = MindIcon.factory(&quot;forward&quot;).getIcon();</span>
+<span class="nc" id="L114">		static final Icon iconNotSelected = MindIcon.factory(&quot;button_cancel&quot;)</span>
+<span class="nc" id="L115">				.getIcon();</span>
+
+<span class="nc" id="L117">		public MyRenderer() {</span>
+<span class="nc" id="L118">		}</span>
+
+		public Component getTreeCellRendererComponent(JTree tree, Object value,
+				boolean sel, boolean expanded, boolean leaf, int row,
+				boolean hasFocus) {
+
+<span class="nc" id="L124">			super.getTreeCellRendererComponent(tree, value, false, expanded,</span>
+<span class="nc" id="L125">					leaf, row, false);</span>
+
+<span class="nc" id="L127">			DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;</span>
+<span class="nc" id="L128">			TreeNodeInfo info = (TreeNodeInfo) node.getUserObject();</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">			switch (info.getSelected()) {</span>
+			case TreeNodeInfo.FULL_SELECTED:
+<span class="nc" id="L131">				setIcon(iconFull);</span>
+<span class="nc" id="L132">				break;</span>
+			case TreeNodeInfo.PARTIAL_SELECTED:
+<span class="nc" id="L134">				setIcon(iconPartial);</span>
+<span class="nc" id="L135">				break;</span>
+			case TreeNodeInfo.NOT_SELECTED:
+<span class="nc" id="L137">				setIcon(iconNotSelected);</span>
+				break;
+			}
+<span class="nc" id="L140">			return this;</span>
+		}
+	}
+
+<span class="nc" id="L144">	MyRenderer renderer = null;</span>
+	private DefaultTreeModel treeModel;
+	private Component parentComponent;
+	private Controller c;
+
+	public ImportAttributesDialog(final Controller c,
+			final Component parentComponent) {
+<span class="nc" id="L151">		super(c.getJFrame(), Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L152">				&quot;attributes_import&quot;), true);</span>
+<span class="nc" id="L153">		this.c = c;</span>
+<span class="nc" id="L154">		this.parentComponent = parentComponent;</span>
+<span class="nc" id="L155">		TreeNodeInfo nodeInfo = new TreeNodeInfo(Resources.getInstance()</span>
+<span class="nc" id="L156">				.getResourceString(&quot;attribute_top&quot;));</span>
+<span class="nc" id="L157">		topNode = new DefaultMutableTreeNode(nodeInfo);</span>
+<span class="nc" id="L158">		treeModel = new DefaultTreeModel(topNode);</span>
+<span class="nc" id="L159">		tree = new JTree(treeModel);</span>
+<span class="nc" id="L160">		tree.getSelectionModel().setSelectionMode(</span>
+<span class="nc" id="L161">				TreeSelectionModel.SINGLE_TREE_SELECTION);</span>
+<span class="nc" id="L162">		tree.addTreeSelectionListener(this);</span>
+
+<span class="nc" id="L164">		scrollPane = new JScrollPane();</span>
+<span class="nc" id="L165">		scrollPane.setViewportView(tree);</span>
+<span class="nc" id="L166">		scrollPane.setPreferredSize(new Dimension(600, 300));</span>
+<span class="nc" id="L167">		getContentPane().add(scrollPane, BorderLayout.CENTER);</span>
+
+<span class="nc" id="L169">		Box buttons = Box.createHorizontalBox();</span>
+<span class="nc" id="L170">		buttons.setBorder(new EmptyBorder(5, 5, 5, 5));</span>
+
+<span class="nc" id="L172">		JButton okBtn = new JButton();</span>
+<span class="nc" id="L173">		Tools.setLabelAndMnemonic(okBtn, Resources.getInstance()</span>
+<span class="nc" id="L174">				.getResourceString(&quot;ok&quot;));</span>
+<span class="nc" id="L175">		okBtn.addActionListener(new ActionListener() {</span>
+
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L178">				performImport(topNode);</span>
+<span class="nc" id="L179">				dispose();</span>
+<span class="nc" id="L180">			}</span>
+
+		});
+
+<span class="nc" id="L184">		JButton cancelBtn = new JButton();</span>
+<span class="nc" id="L185">		Tools.setLabelAndMnemonic(cancelBtn, Resources.getInstance()</span>
+<span class="nc" id="L186">				.getResourceString(&quot;cancel&quot;));</span>
+<span class="nc" id="L187">		cancelBtn.addActionListener(new ActionListener() {</span>
+
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L190">				dispose();</span>
+<span class="nc" id="L191">			}</span>
+
+		});
+<span class="nc" id="L194">		buttons.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L195">		buttons.add(okBtn);</span>
+<span class="nc" id="L196">		buttons.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L197">		buttons.add(cancelBtn);</span>
+<span class="nc" id="L198">		buttons.add(Box.createHorizontalGlue());</span>
+
+<span class="nc" id="L200">		getContentPane().add(buttons, BorderLayout.SOUTH);</span>
+
+<span class="nc" id="L202">		Tools.addEscapeActionToDialog(this);</span>
+<span class="nc" id="L203">	}</span>
+
+	public void show() {
+<span class="nc" id="L206">		createMapSubTrees(topNode);</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (topNode.getChildCount() == 0) {</span>
+<span class="nc" id="L208">			JOptionPane.showMessageDialog(</span>
+<span class="nc" id="L209">					parentComponent,</span>
+<span class="nc" id="L210">					Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L211">							&quot;attributes_no_import_candidates_found&quot;),</span>
+<span class="nc" id="L212">					getTitle(), JOptionPane.INFORMATION_MESSAGE);</span>
+<span class="nc" id="L213">			return;</span>
+		}
+<span class="nc" id="L215">		treeModel.reload();</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if (renderer == null) {</span>
+<span class="nc" id="L217">			renderer = new MyRenderer();</span>
+		}
+<span class="nc" id="L219">		tree.setCellRenderer(renderer);</span>
+<span class="nc" id="L220">		setLocationRelativeTo(parentComponent);</span>
+<span class="nc" id="L221">		pack();</span>
+<span class="nc" id="L222">		super.show();</span>
+<span class="nc" id="L223">	}</span>
+
+	private void performImport(DefaultMutableTreeNode node) {
+<span class="nc" id="L226">		TreeNodeInfo info = (TreeNodeInfo) node.getUserObject();</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (info.getSelected() == TreeNodeInfo.NOT_SELECTED) {</span>
+<span class="nc" id="L228">			return;</span>
+		}
+<span class="nc" id="L230">		String name = info.getInfo();</span>
+<span class="nc" id="L231">		boolean attributeNameRegistered = false;</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">		for (int i = 0; i &lt; node.getChildCount(); i++) {</span>
+<span class="nc" id="L233">			DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node</span>
+<span class="nc" id="L234">					.getChildAt(i);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			if (childNode.isLeaf()) {</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">				if (attributeNameRegistered == false) {</span>
+<span class="nc" id="L237">					attributeNameRegistered = true;</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">					if (-1 == currentAttributes.indexOf(name)) {</span>
+<span class="nc" id="L239">						currentAttributes.getAttributeController()</span>
+<span class="nc" id="L240">								.performRegistryAttribute(name);</span>
+<span class="nc" id="L241">						int index = currentAttributes.indexOf(name);</span>
+<span class="nc" id="L242">						currentAttributes.getAttributeController()</span>
+<span class="nc" id="L243">								.performSetRestriction(</span>
+<span class="nc" id="L244">										index,</span>
+<span class="nc" id="L245">										((AttributeTreeNodeInfo) info)</span>
+<span class="nc" id="L246">												.isRestricted());</span>
+					}
+				}
+<span class="nc" id="L249">				TreeNodeInfo childInfo = (TreeNodeInfo) childNode</span>
+<span class="nc" id="L250">						.getUserObject();</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">				if (childInfo.getSelected() == TreeNodeInfo.FULL_SELECTED) {</span>
+<span class="nc" id="L252">					String value = childInfo.getInfo();</span>
+<span class="nc" id="L253">					currentAttributes.getAttributeController()</span>
+<span class="nc" id="L254">							.performRegistryAttributeValue(name, value);</span>
+				}
+<span class="nc" id="L256">			} else {</span>
+<span class="nc" id="L257">				performImport(childNode);</span>
+			}
+		}
+
+<span class="nc" id="L261">	}</span>
+
+	private void createMapSubTrees(DefaultMutableTreeNode top) {
+<span class="nc" id="L264">		top.removeAllChildren();</span>
+<span class="nc" id="L265">		TreeNodeInfo topInfo = (TreeNodeInfo) top.getUserObject();</span>
+<span class="nc" id="L266">		topInfo.setSelected(TreeNodeInfo.NOT_SELECTED);</span>
+<span class="nc" id="L267">		MapModuleManager mapModuleManager = c.getMapModuleManager();</span>
+<span class="nc" id="L268">		MindMap currentMap = mapModuleManager.getMapModule().getModel();</span>
+<span class="nc" id="L269">		currentAttributes = currentMap.getRegistry().getAttributes();</span>
+<span class="nc" id="L270">		Iterator iterator = mapModuleManager.getMapModules().entrySet()</span>
+<span class="nc" id="L271">				.iterator();</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">		while (iterator.hasNext()) {</span>
+<span class="nc" id="L273">			Map.Entry entry = (Map.Entry) iterator.next();</span>
+<span class="nc" id="L274">			String nextmapName = entry.getKey().toString();</span>
+<span class="nc" id="L275">			MapModule nextMapModule = (MapModule) entry.getValue();</span>
+<span class="nc" id="L276">			MindMap nextMap = nextMapModule.getModel();</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (nextMap == currentMap) {</span>
+<span class="nc" id="L278">				continue;</span>
+			}
+<span class="nc" id="L280">			TreeNodeInfo treeNodeInfo = new TreeNodeInfo(nextmapName);</span>
+<span class="nc" id="L281">			DefaultMutableTreeNode mapInfo = new DefaultMutableTreeNode(</span>
+<span class="nc" id="L282">					treeNodeInfo);</span>
+<span class="nc" id="L283">			createAttributeSubTrees(mapInfo, nextMap.getRegistry()</span>
+<span class="nc" id="L284">					.getAttributes());</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">			if (mapInfo.getChildCount() != 0) {</span>
+<span class="nc" id="L286">				top.add(mapInfo);</span>
+			}
+		}
+
+<span class="nc" id="L290">	}</span>
+
+	private void createAttributeSubTrees(DefaultMutableTreeNode mapInfo,
+			AttributeRegistry attributes) {
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		for (int i = 0; i &lt; attributes.size(); i++) {</span>
+<span class="nc" id="L295">			AttributeRegistryElement element = attributes.getElement(i);</span>
+<span class="nc" id="L296">			TreeNodeInfo treeNodeInfo = new AttributeTreeNodeInfo(element</span>
+<span class="nc" id="L297">					.getKey().toString(), element.isRestricted());</span>
+<span class="nc" id="L298">			DefaultMutableTreeNode attributeInfo = new DefaultMutableTreeNode(</span>
+<span class="nc" id="L299">					treeNodeInfo);</span>
+<span class="nc" id="L300">			createValueSubTrees(attributeInfo, element, currentAttributes);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			if (attributeInfo.getChildCount() != 0) {</span>
+<span class="nc" id="L302">				mapInfo.add(attributeInfo);</span>
+			}
+		}
+<span class="nc" id="L305">	}</span>
+
+	private void createValueSubTrees(DefaultMutableTreeNode attributeInfo,
+			AttributeRegistryElement element,
+			AttributeRegistry currentAttributes) {
+<span class="nc" id="L310">		String attributeName = element.getKey().toString();</span>
+<span class="nc" id="L311">		SortedComboBoxModel values = element.getValues();</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		for (int i = 0; i &lt; values.getSize(); i++) {</span>
+<span class="nc" id="L313">			Object nextElement = values.getElementAt(i);</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">			if (!currentAttributes.exist(attributeName, nextElement)) {</span>
+<span class="nc" id="L315">				TreeNodeInfo treeNodeInfo = new TreeNodeInfo(</span>
+<span class="nc" id="L316">						nextElement.toString());</span>
+<span class="nc" id="L317">				DefaultMutableTreeNode valueInfo = new DefaultMutableTreeNode(</span>
+<span class="nc" id="L318">						treeNodeInfo);</span>
+<span class="nc" id="L319">				attributeInfo.add(valueInfo);</span>
+			}
+		}
+<span class="nc" id="L322">	}</span>
+
+	public void valueChanged(TreeSelectionEvent e) {
+<span class="nc" id="L325">		DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree</span>
+<span class="nc" id="L326">				.getLastSelectedPathComponent();</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">		if (selectedNode == null) {</span>
+<span class="nc" id="L328">			return;</span>
+		}
+<span class="nc" id="L330">		TreeNodeInfo info = (TreeNodeInfo) selectedNode.getUserObject();</span>
+		int newSelectionType;
+<span class="nc bnc" id="L332" title="All 2 branches missed.">		switch (info.getSelected()) {</span>
+		case TreeNodeInfo.FULL_SELECTED:
+<span class="nc" id="L334">			newSelectionType = TreeNodeInfo.NOT_SELECTED;</span>
+<span class="nc" id="L335">			break;</span>
+		default:
+<span class="nc" id="L337">			newSelectionType = TreeNodeInfo.FULL_SELECTED;</span>
+			break;
+		}
+<span class="nc" id="L340">		setSelectionType(selectedNode, newSelectionType);</span>
+<span class="nc" id="L341">		setParentSelectionType(selectedNode, newSelectionType);</span>
+<span class="nc" id="L342">		tree.clearSelection();</span>
+<span class="nc" id="L343">	}</span>
+
+	private void setParentSelectionType(DefaultMutableTreeNode selectedNode,
+			int newSelectionType) {
+<span class="nc" id="L347">		TreeNode parentNode = selectedNode.getParent();</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		if (parentNode == null) {</span>
+<span class="nc" id="L349">			return;</span>
+		}
+<span class="nc" id="L351">		DefaultMutableTreeNode defaultMutableParentNode = (DefaultMutableTreeNode) parentNode;</span>
+<span class="nc" id="L352">		TreeNodeInfo info = (TreeNodeInfo) (defaultMutableParentNode)</span>
+<span class="nc" id="L353">				.getUserObject();</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">		if (newSelectionType == TreeNodeInfo.PARTIAL_SELECTED) {</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">			if (info.getSelected() != TreeNodeInfo.PARTIAL_SELECTED) {</span>
+<span class="nc" id="L356">				info.setSelected(TreeNodeInfo.PARTIAL_SELECTED);</span>
+<span class="nc" id="L357">				treeModel.nodeChanged(defaultMutableParentNode);</span>
+			}
+<span class="nc" id="L359">			setParentSelectionType(defaultMutableParentNode,</span>
+<span class="nc" id="L360">					TreeNodeInfo.PARTIAL_SELECTED);</span>
+<span class="nc" id="L361">			return;</span>
+		}
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		for (int i = 0; i &lt; defaultMutableParentNode.getChildCount(); i++) {</span>
+<span class="nc" id="L364">			TreeNodeInfo childInfo = (TreeNodeInfo) ((DefaultMutableTreeNode) defaultMutableParentNode</span>
+<span class="nc" id="L365">					.getChildAt(i)).getUserObject();</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (childInfo.getSelected() != newSelectionType) {</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">				if (info.getSelected() != TreeNodeInfo.PARTIAL_SELECTED) {</span>
+<span class="nc" id="L368">					info.setSelected(TreeNodeInfo.PARTIAL_SELECTED);</span>
+<span class="nc" id="L369">					treeModel.nodeChanged(defaultMutableParentNode);</span>
+				}
+<span class="nc" id="L371">				setParentSelectionType(defaultMutableParentNode,</span>
+<span class="nc" id="L372">						TreeNodeInfo.PARTIAL_SELECTED);</span>
+<span class="nc" id="L373">				return;</span>
+			}
+		}
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		if (info.getSelected() != newSelectionType) {</span>
+<span class="nc" id="L377">			info.setSelected(newSelectionType);</span>
+<span class="nc" id="L378">			treeModel.nodeChanged(defaultMutableParentNode);</span>
+		}
+<span class="nc" id="L380">		setParentSelectionType(defaultMutableParentNode, newSelectionType);</span>
+<span class="nc" id="L381">	}</span>
+
+	private void setSelectionType(TreeNode selectedNode, int newSelectionType) {
+<span class="nc" id="L384">		TreeNodeInfo info = (TreeNodeInfo) ((DefaultMutableTreeNode) selectedNode)</span>
+<span class="nc" id="L385">				.getUserObject();</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">		if (info.getSelected() != newSelectionType) {</span>
+<span class="nc" id="L387">			info.setSelected(newSelectionType);</span>
+<span class="nc" id="L388">			treeModel.nodeChanged(selectedNode);</span>
+		}
+<span class="nc bnc" id="L390" title="All 2 branches missed.">		for (int i = 0; i &lt; selectedNode.getChildCount(); i++) {</span>
+<span class="nc" id="L391">			setSelectionType(selectedNode.getChildAt(i), newSelectionType);</span>
+		}
+
+<span class="nc" id="L394">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

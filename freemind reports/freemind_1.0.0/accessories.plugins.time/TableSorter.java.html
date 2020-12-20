@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>TableSorter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.time</a> &gt; <span class="el_source">TableSorter.java</span></div><h1>TableSorter.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+package accessories.plugins.time;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.Icon;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
+
+/**
+ * TableSorter is a decorator for TableModels; adding sorting functionality to a
+ * supplied TableModel. TableSorter does not store or copy the data in its
+ * TableModel; instead it maintains a map from the row indexes of the view to
+ * the row indexes of the model. As requests are made of the sorter (like
+ * getValueAt(row, col)) they are passed to the underlying model after the row
+ * numbers have been translated via the internal mapping array. This way, the
+ * TableSorter appears to hold another copy of the table with the rows in a
+ * different order.
+ * &lt;p/&gt;
+ * TableSorter registers itself as a listener to the underlying model, just as
+ * the JTable itself would. Events recieved from the model are examined,
+ * sometimes manipulated (typically widened), and then passed on to the
+ * TableSorter's listeners (typically the JTable). If a change to the model has
+ * invalidated the order of TableSorter's rows, a note of this is made and the
+ * sorter will resort the rows the next time a value is requested.
+ * &lt;p/&gt;
+ * When the tableHeader property is set, either by using the setTableHeader()
+ * method or the two argument constructor, the table header may be used as a
+ * complete UI for TableSorter. The default renderer of the tableHeader is
+ * decorated with a renderer that indicates the sorting status of each column.
+ * In addition, a mouse listener is installed with the following behavior:
+ * &lt;ul&gt;
+ * &lt;li&gt;
+ * Mouse-click: Clears the sorting status of all other columns and advances the
+ * sorting status of that column through three values: {NOT_SORTED, ASCENDING,
+ * DESCENDING} (then back to NOT_SORTED again).
+ * &lt;li&gt;
+ * SHIFT-mouse-click: Clears the sorting status of all other columns and cycles
+ * the sorting status of the column through the same three values, in the
+ * opposite order: {NOT_SORTED, DESCENDING, ASCENDING}.
+ * &lt;li&gt;
+ * CONTROL-mouse-click and CONTROL-SHIFT-mouse-click: as above except that the
+ * changes to the column do not cancel the statuses of columns that are already
+ * sorting - giving a way to initiate a compound sort.
+ * &lt;/ul&gt;
+ * &lt;p/&gt;
+ * This is a long overdue rewrite of a class of the same name that first
+ * appeared in the swing table demos in 1997.
+ * 
+ * @author Philip Milne
+ * @author Brendon McLean
+ * @author Dan van Enckevort
+ * @author Parwinder Sekhon
+ * @version 2.0 02/27/04
+ */
+
+public class TableSorter extends AbstractTableModel {
+	protected TableModel tableModel;
+
+	public static final int DESCENDING = -1;
+	public static final int NOT_SORTED = 0;
+	public static final int ASCENDING = 1;
+
+<span class="nc" id="L101">	private static Directive EMPTY_DIRECTIVE = new Directive(-1, NOT_SORTED);</span>
+
+<span class="nc" id="L103">	public static final Comparator COMPARABLE_COMAPRATOR = new Comparator() {</span>
+		public int compare(Object o1, Object o2) {
+<span class="nc" id="L105">			return ((Comparable) o1).compareTo(o2);</span>
+		}
+	};
+<span class="nc" id="L108">	public static final Comparator LEXICAL_COMPARATOR = new Comparator() {</span>
+		public int compare(Object o1, Object o2) {
+<span class="nc" id="L110">			return o1.toString().compareToIgnoreCase(o2.toString());</span>
+		}
+<span class="nc" id="L112">	};</span>
+
+	private Row[] viewToModel;
+	private int[] modelToView;
+
+	private JTableHeader tableHeader;
+	private MouseListener mouseListener;
+	private TableModelListener tableModelListener;
+<span class="nc" id="L120">	private Map columnComparators = new HashMap();</span>
+<span class="nc" id="L121">	private List sortingColumns = new ArrayList();</span>
+
+<span class="nc" id="L123">	public TableSorter() {</span>
+<span class="nc" id="L124">		this.mouseListener = new MouseHandler();</span>
+<span class="nc" id="L125">		this.tableModelListener = new TableModelHandler();</span>
+<span class="nc" id="L126">	}</span>
+
+	public TableSorter(TableModel tableModel) {
+<span class="nc" id="L129">		this();</span>
+<span class="nc" id="L130">		setTableModel(tableModel);</span>
+<span class="nc" id="L131">	}</span>
+
+	public TableSorter(TableModel tableModel, JTableHeader tableHeader) {
+<span class="nc" id="L134">		this();</span>
+<span class="nc" id="L135">		setTableHeader(tableHeader);</span>
+<span class="nc" id="L136">		setTableModel(tableModel);</span>
+<span class="nc" id="L137">	}</span>
+
+	private void clearSortingState() {
+<span class="nc" id="L140">		viewToModel = null;</span>
+<span class="nc" id="L141">		modelToView = null;</span>
+<span class="nc" id="L142">	}</span>
+
+	public TableModel getTableModel() {
+<span class="nc" id="L145">		return tableModel;</span>
+	}
+
+	public void setTableModel(TableModel tableModel) {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (this.tableModel != null) {</span>
+<span class="nc" id="L150">			this.tableModel.removeTableModelListener(tableModelListener);</span>
+		}
+
+<span class="nc" id="L153">		this.tableModel = tableModel;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (this.tableModel != null) {</span>
+<span class="nc" id="L155">			this.tableModel.addTableModelListener(tableModelListener);</span>
+		}
+
+<span class="nc" id="L158">		clearSortingState();</span>
+<span class="nc" id="L159">		fireTableStructureChanged();</span>
+<span class="nc" id="L160">	}</span>
+
+	public JTableHeader getTableHeader() {
+<span class="nc" id="L163">		return tableHeader;</span>
+	}
+
+	public void setTableHeader(JTableHeader tableHeader) {
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (this.tableHeader != null) {</span>
+<span class="nc" id="L168">			this.tableHeader.removeMouseListener(mouseListener);</span>
+<span class="nc" id="L169">			TableCellRenderer defaultRenderer = this.tableHeader</span>
+<span class="nc" id="L170">					.getDefaultRenderer();</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			if (defaultRenderer instanceof SortableHeaderRenderer) {</span>
+<span class="nc" id="L172">				this.tableHeader</span>
+<span class="nc" id="L173">						.setDefaultRenderer(((SortableHeaderRenderer) defaultRenderer).tableCellRenderer);</span>
+			}
+		}
+<span class="nc" id="L176">		this.tableHeader = tableHeader;</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (this.tableHeader != null) {</span>
+<span class="nc" id="L178">			this.tableHeader.addMouseListener(mouseListener);</span>
+<span class="nc" id="L179">			this.tableHeader.setDefaultRenderer(new SortableHeaderRenderer(</span>
+<span class="nc" id="L180">					this.tableHeader.getDefaultRenderer()));</span>
+		}
+<span class="nc" id="L182">	}</span>
+
+	public boolean isSorting() {
+<span class="nc bnc" id="L185" title="All 2 branches missed.">		return sortingColumns.size() != 0;</span>
+	}
+
+	private Directive getDirective(int column) {
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		for (int i = 0; i &lt; sortingColumns.size(); i++) {</span>
+<span class="nc" id="L190">			Directive directive = (Directive) sortingColumns.get(i);</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			if (directive.column == column) {</span>
+<span class="nc" id="L192">				return directive;</span>
+			}
+		}
+<span class="nc" id="L195">		return EMPTY_DIRECTIVE;</span>
+	}
+
+	public int getSortingStatus(int column) {
+<span class="nc" id="L199">		return getDirective(column).direction;</span>
+	}
+
+	private void sortingStatusChanged() {
+<span class="nc" id="L203">		clearSortingState();</span>
+<span class="nc" id="L204">		fireTableDataChanged();</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		if (tableHeader != null) {</span>
+<span class="nc" id="L206">			tableHeader.repaint();</span>
+		}
+<span class="nc" id="L208">	}</span>
+
+	public void setSortingStatus(int column, int status) {
+<span class="nc" id="L211">		Directive directive = getDirective(column);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if (directive != EMPTY_DIRECTIVE) {</span>
+<span class="nc" id="L213">			sortingColumns.remove(directive);</span>
+		}
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		if (status != NOT_SORTED) {</span>
+<span class="nc" id="L216">			sortingColumns.add(new Directive(column, status));</span>
+		}
+<span class="nc" id="L218">		sortingStatusChanged();</span>
+<span class="nc" id="L219">	}</span>
+
+	protected Icon getHeaderRendererIcon(int column, int size) {
+<span class="nc" id="L222">		Directive directive = getDirective(column);</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">		if (directive == EMPTY_DIRECTIVE) {</span>
+<span class="nc" id="L224">			return null;</span>
+		}
+<span class="nc bnc" id="L226" title="All 2 branches missed.">		return new Arrow(directive.direction == DESCENDING, size,</span>
+<span class="nc" id="L227">				sortingColumns.indexOf(directive));</span>
+	}
+
+	private void cancelSorting() {
+<span class="nc" id="L231">		sortingColumns.clear();</span>
+<span class="nc" id="L232">		sortingStatusChanged();</span>
+<span class="nc" id="L233">	}</span>
+
+	public void setColumnComparator(Class type, Comparator comparator) {
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		if (comparator == null) {</span>
+<span class="nc" id="L237">			columnComparators.remove(type);</span>
+<span class="nc" id="L238">		} else {</span>
+<span class="nc" id="L239">			columnComparators.put(type, comparator);</span>
+		}
+<span class="nc" id="L241">	}</span>
+
+	protected Comparator getComparator(int column) {
+<span class="nc" id="L244">		Class columnType = tableModel.getColumnClass(column);</span>
+<span class="nc" id="L245">		Comparator comparator = (Comparator) columnComparators.get(columnType);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (comparator != null) {</span>
+<span class="nc" id="L247">			return comparator;</span>
+		}
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		if (Comparable.class.isAssignableFrom(columnType)) {</span>
+<span class="nc" id="L250">			return COMPARABLE_COMAPRATOR;</span>
+		}
+<span class="nc" id="L252">		return LEXICAL_COMPARATOR;</span>
+	}
+
+	private Row[] getViewToModel() {
+<span class="nc bnc" id="L256" title="All 2 branches missed.">		if (viewToModel == null) {</span>
+<span class="nc" id="L257">			int tableModelRowCount = tableModel.getRowCount();</span>
+<span class="nc" id="L258">			viewToModel = new Row[tableModelRowCount];</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">			for (int row = 0; row &lt; tableModelRowCount; row++) {</span>
+<span class="nc" id="L260">				viewToModel[row] = new Row(row);</span>
+			}
+
+<span class="nc bnc" id="L263" title="All 2 branches missed.">			if (isSorting()) {</span>
+<span class="nc" id="L264">				Arrays.sort(viewToModel);</span>
+			}
+		}
+<span class="nc" id="L267">		return viewToModel;</span>
+	}
+
+	public int modelIndex(int viewIndex) {
+<span class="nc" id="L271">		return getViewToModel()[viewIndex].modelIndex;</span>
+	}
+
+	private int[] getModelToView() {
+<span class="nc bnc" id="L275" title="All 2 branches missed.">		if (modelToView == null) {</span>
+<span class="nc" id="L276">			int n = getViewToModel().length;</span>
+<span class="nc" id="L277">			modelToView = new int[n];</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">			for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L279">				modelToView[modelIndex(i)] = i;</span>
+			}
+		}
+<span class="nc" id="L282">		return modelToView;</span>
+	}
+
+	// TableModel interface methods
+
+	public int getRowCount() {
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		return (tableModel == null) ? 0 : tableModel.getRowCount();</span>
+	}
+
+	public int getColumnCount() {
+<span class="nc bnc" id="L292" title="All 2 branches missed.">		return (tableModel == null) ? 0 : tableModel.getColumnCount();</span>
+	}
+
+	public String getColumnName(int column) {
+<span class="nc" id="L296">		return tableModel.getColumnName(column);</span>
+	}
+
+	public Class getColumnClass(int column) {
+<span class="nc" id="L300">		return tableModel.getColumnClass(column);</span>
+	}
+
+	public boolean isCellEditable(int row, int column) {
+<span class="nc" id="L304">		return tableModel.isCellEditable(modelIndex(row), column);</span>
+	}
+
+	public Object getValueAt(int row, int column) {
+<span class="nc" id="L308">		return tableModel.getValueAt(modelIndex(row), column);</span>
+	}
+
+	public void setValueAt(Object aValue, int row, int column) {
+<span class="nc" id="L312">		tableModel.setValueAt(aValue, modelIndex(row), column);</span>
+<span class="nc" id="L313">	}</span>
+
+	// Helper classes
+
+	private class Row implements Comparable {
+		private int modelIndex;
+
+<span class="nc" id="L320">		public Row(int index) {</span>
+<span class="nc" id="L321">			this.modelIndex = index;</span>
+<span class="nc" id="L322">		}</span>
+
+		public int compareTo(Object o) {
+<span class="nc" id="L325">			int row1 = modelIndex;</span>
+<span class="nc" id="L326">			int row2 = ((Row) o).modelIndex;</span>
+
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			for (Iterator it = sortingColumns.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L329">				Directive directive = (Directive) it.next();</span>
+<span class="nc" id="L330">				int column = directive.column;</span>
+<span class="nc" id="L331">				Object o1 = tableModel.getValueAt(row1, column);</span>
+<span class="nc" id="L332">				Object o2 = tableModel.getValueAt(row2, column);</span>
+
+<span class="nc" id="L334">				int comparison = 0;</span>
+				// Define null less than everything, except null.
+<span class="nc bnc" id="L336" title="All 4 branches missed.">				if (o1 == null &amp;&amp; o2 == null) {</span>
+<span class="nc" id="L337">					comparison = 0;</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">				} else if (o1 == null) {</span>
+<span class="nc" id="L339">					comparison = -1;</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">				} else if (o2 == null) {</span>
+<span class="nc" id="L341">					comparison = 1;</span>
+<span class="nc" id="L342">				} else {</span>
+<span class="nc" id="L343">					comparison = getComparator(column).compare(o1, o2);</span>
+				}
+<span class="nc bnc" id="L345" title="All 2 branches missed.">				if (comparison != 0) {</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">					return directive.direction == DESCENDING ? -comparison</span>
+<span class="nc" id="L347">							: comparison;</span>
+				}
+			}
+<span class="nc" id="L350">			return 0;</span>
+		}
+	}
+
+<span class="nc" id="L354">	private class TableModelHandler implements TableModelListener {</span>
+		public void tableChanged(TableModelEvent e) {
+			// If we're not sorting by anything, just pass the event along.
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			if (!isSorting()) {</span>
+<span class="nc" id="L358">				clearSortingState();</span>
+<span class="nc" id="L359">				fireTableChanged(e);</span>
+<span class="nc" id="L360">				return;</span>
+			}
+
+			// If the table structure has changed, cancel the sorting; the
+			// sorting columns may have been either moved or deleted from
+			// the model.
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (e.getFirstRow() == TableModelEvent.HEADER_ROW) {</span>
+<span class="nc" id="L367">				cancelSorting();</span>
+<span class="nc" id="L368">				fireTableChanged(e);</span>
+<span class="nc" id="L369">				return;</span>
+			}
+
+			// We can map a cell event through to the view without widening
+			// when the following conditions apply:
+			//
+			// a) all the changes are on one row (e.getFirstRow() ==
+			// e.getLastRow()) and,
+			// b) all the changes are in one column (column !=
+			// TableModelEvent.ALL_COLUMNS) and,
+			// c) we are not sorting on that column (getSortingStatus(column) ==
+			// NOT_SORTED) and,
+			// d) a reverse lookup will not trigger a sort (modelToView != null)
+			//
+			// Note: INSERT and DELETE events fail this test as they have column
+			// == ALL_COLUMNS.
+			//
+			// The last check, for (modelToView != null) is to see if
+			// modelToView
+			// is already allocated. If we don't do this check; sorting can
+			// become
+			// a performance bottleneck for applications where cells
+			// change rapidly in different parts of the table. If cells
+			// change alternately in the sorting column and then outside of
+			// it this class can end up re-sorting on alternate cell updates -
+			// which can be a performance problem for large tables. The last
+			// clause avoids this problem.
+<span class="nc" id="L396">			int column = e.getColumn();</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">			if (e.getFirstRow() == e.getLastRow()</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">					&amp;&amp; column != TableModelEvent.ALL_COLUMNS</span>
+<span class="nc bnc" id="L399" title="All 2 branches missed.">					&amp;&amp; getSortingStatus(column) == NOT_SORTED</span>
+<span class="nc bnc" id="L400" title="All 2 branches missed.">					&amp;&amp; modelToView != null) {</span>
+<span class="nc" id="L401">				int viewIndex = getModelToView()[e.getFirstRow()];</span>
+<span class="nc" id="L402">				fireTableChanged(new TableModelEvent(TableSorter.this,</span>
+<span class="nc" id="L403">						viewIndex, viewIndex, column, e.getType()));</span>
+<span class="nc" id="L404">				return;</span>
+			}
+
+			// Something has happened to the data that may have invalidated the
+			// row order.
+<span class="nc" id="L409">			clearSortingState();</span>
+<span class="nc" id="L410">			fireTableDataChanged();</span>
+<span class="nc" id="L411">			return;</span>
+		}
+	}
+
+<span class="nc" id="L415">	private class MouseHandler extends MouseAdapter {</span>
+		public void mouseClicked(MouseEvent e) {
+<span class="nc" id="L417">			JTableHeader h = (JTableHeader) e.getSource();</span>
+<span class="nc" id="L418">			TableColumnModel columnModel = h.getColumnModel();</span>
+<span class="nc" id="L419">			int viewColumn = columnModel.getColumnIndexAtX(e.getX());</span>
+<span class="nc" id="L420">			int column = columnModel.getColumn(viewColumn).getModelIndex();</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">			if (column != -1) {</span>
+<span class="nc" id="L422">				int status = getSortingStatus(column);</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">				if (!e.isControlDown()) {</span>
+<span class="nc" id="L424">					cancelSorting();</span>
+				}
+				// Cycle the sorting states through {NOT_SORTED, ASCENDING,
+				// DESCENDING} or
+				// {NOT_SORTED, DESCENDING, ASCENDING} depending on whether
+				// shift is pressed.
+<span class="nc bnc" id="L430" title="All 2 branches missed.">				status = status + (e.isShiftDown() ? -1 : 1);</span>
+<span class="nc" id="L431">				status = (status + 4) % 3 - 1; // signed mod, returning {-1, 0,</span>
+												// 1}
+<span class="nc" id="L433">				setSortingStatus(column, status);</span>
+			}
+<span class="nc" id="L435">		}</span>
+	}
+
+	private static class Arrow implements Icon {
+		private boolean descending;
+		private int size;
+		private int priority;
+
+<span class="nc" id="L443">		public Arrow(boolean descending, int size, int priority) {</span>
+<span class="nc" id="L444">			this.descending = descending;</span>
+<span class="nc" id="L445">			this.size = size;</span>
+<span class="nc" id="L446">			this.priority = priority;</span>
+<span class="nc" id="L447">		}</span>
+
+		public void paintIcon(Component c, Graphics g, int x, int y) {
+<span class="nc bnc" id="L450" title="All 2 branches missed.">			Color color = c == null ? Color.GRAY : c.getBackground();</span>
+			// In a compound sort, make each succesive triangle 20%
+			// smaller than the previous one.
+<span class="nc" id="L453">			int dx = (int) (size / 2 * Math.pow(0.8, priority));</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">			int dy = descending ? dx : -dx;</span>
+			// Align icon (roughly) with font baseline.
+<span class="nc bnc" id="L456" title="All 2 branches missed.">			y = y + 5 * size / 6 + (descending ? -dy : 0);</span>
+<span class="nc bnc" id="L457" title="All 2 branches missed.">			int shift = descending ? 1 : -1;</span>
+<span class="nc" id="L458">			g.translate(x, y);</span>
+
+			// Right diagonal.
+<span class="nc" id="L461">			g.setColor(color.darker());</span>
+<span class="nc" id="L462">			g.drawLine(dx / 2, dy, 0, 0);</span>
+<span class="nc" id="L463">			g.drawLine(dx / 2, dy + shift, 0, shift);</span>
+
+			// Left diagonal.
+<span class="nc" id="L466">			g.setColor(color.brighter());</span>
+<span class="nc" id="L467">			g.drawLine(dx / 2, dy, dx, 0);</span>
+<span class="nc" id="L468">			g.drawLine(dx / 2, dy + shift, dx, shift);</span>
+
+			// Horizontal line.
+<span class="nc bnc" id="L471" title="All 2 branches missed.">			if (descending) {</span>
+<span class="nc" id="L472">				g.setColor(color.darker().darker());</span>
+<span class="nc" id="L473">			} else {</span>
+<span class="nc" id="L474">				g.setColor(color.brighter().brighter());</span>
+			}
+<span class="nc" id="L476">			g.drawLine(dx, 0, 0, 0);</span>
+
+<span class="nc" id="L478">			g.setColor(color);</span>
+<span class="nc" id="L479">			g.translate(-x, -y);</span>
+<span class="nc" id="L480">		}</span>
+
+		public int getIconWidth() {
+<span class="nc" id="L483">			return size;</span>
+		}
+
+		public int getIconHeight() {
+<span class="nc" id="L487">			return size;</span>
+		}
+	}
+
+	private class SortableHeaderRenderer implements TableCellRenderer {
+		private TableCellRenderer tableCellRenderer;
+
+<span class="nc" id="L494">		public SortableHeaderRenderer(TableCellRenderer tableCellRenderer) {</span>
+<span class="nc" id="L495">			this.tableCellRenderer = tableCellRenderer;</span>
+<span class="nc" id="L496">		}</span>
+
+		public Component getTableCellRendererComponent(JTable table,
+				Object value, boolean isSelected, boolean hasFocus, int row,
+				int column) {
+<span class="nc" id="L501">			Component c = tableCellRenderer.getTableCellRendererComponent(</span>
+<span class="nc" id="L502">					table, value, isSelected, hasFocus, row, column);</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">			if (c instanceof JLabel) {</span>
+<span class="nc" id="L504">				JLabel l = (JLabel) c;</span>
+<span class="nc" id="L505">				l.setHorizontalTextPosition(JLabel.LEFT);</span>
+<span class="nc" id="L506">				int modelColumn = table.convertColumnIndexToModel(column);</span>
+<span class="nc" id="L507">				l.setIcon(getHeaderRendererIcon(modelColumn, l.getFont()</span>
+<span class="nc" id="L508">						.getSize()));</span>
+			}
+<span class="nc" id="L510">			return c;</span>
+		}
+	}
+
+	private static class Directive {
+		private int column;
+		private int direction;
+
+<span class="nc" id="L518">		public Directive(int column, int direction) {</span>
+<span class="nc" id="L519">			this.column = column;</span>
+<span class="nc" id="L520">			this.direction = direction;</span>
+<span class="nc" id="L521">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

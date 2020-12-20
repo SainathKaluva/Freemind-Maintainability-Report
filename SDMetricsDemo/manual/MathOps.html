@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Mathematical Operators and Functions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="DefMetExp.html">Prev</a> - <a href="DotOp.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="ExpTerms.html">8.5 Expression Terms</a> > <a href="DefMetExp.html">8.5.2 Metric Expressions</a> > 8.5.2.1 Mathematical Operators and Functions
+<hr>
+<h4><a name="MathOps"></a>8.5.2.1 Mathematical Operators and Functions</h4> 
+
+The operators allowed in a metric expression are:
+
+<ul>
+<li>a+b (a plus b, or, if a is a string, the string concatenation of a and b)
+<li>a-b (a minus b)
+<li>a*b (a multiplied by b)
+<li>a/b (a divided by b)
+<li>a^b (a to the power of b)
+<li>a->b or a in b (the number of times a is contained in (multi-)set
+b; the alternate notation <tt>in</tt> can be used to avoid conflicts
+with the special XML character &gt;, see <a href="ExprXML.html">Section&nbsp;8.5.5 "Expression Terms and XML"</a>)
+</ul>
+
+The operators have the following precedence:
+<ol>
+<li>^ and -> (or in)
+<li>the unary - and +
+<li>* and /
+<li>+ and -
+</ol>
+
+In addition, a number of math and special purpose functions are
+available.<p>
+
+<b>Math functions</b>
+<ul>
+<li><tt>ln(x)</tt>: Returns the natural logarithm of x.
+<li><tt>exp(x)</tt>: Returns Euler's number e raised to the power
+of x.
+<li><tt>sqrt(x)</tt>: Returns the square root of x.
+<li><tt>abs(x)</tt>: Returns the absolute value of x.
+<li><tt>ceil(x)</tt>: Returns the smallest integer greater or
+equal to x.
+<li><tt>floor(x)</tt>: Returns the largest integer smaller or
+equal to x.
+<li><tt>round(x)</tt>: Returns the integer closest to x
+(<tt>round(x)=floor(x+0.5)</tt>).
+</ul>
+
+<b>Special purpose functions</b>
+<ul>
+<li><tt>length(s)</tt>: Returns the length of the string s.
+<li><tt>size(s)</tt>: Returns the number of elements in set s
+(respecting cardinality if s is a multiset).
+<li><tt>flatsize(s)</tt>: Returns the number of different elements
+in set s. For regular sets, this is the same as <tt>size</tt>, for
+multisets, the cardinality of elements is disregarded.
+<li><tt>tolowercase(s)</tt>: Returns a string with all upper case
+letters in s changed to lower case.
+<li><tt>parsenumber(s)</tt>: Returns the numerical value of a string
+that represents a number, e.g. '3' or '-5.15'. The formatting
+for number constants applies (see <a href="Constants.html">Section&nbsp;8.5.1.1 "Constants"</a>).
+<li><tt>typeof(e)</tt>: Returns the type of the model element e,
+as a string.
+<li><tt>qualifiedname(e):</tt> Returns the fully qualified name (see
+<a href="QualNames.html">Section&nbsp;4.2.2.1 "Qualified Element Names"</a>) of the model element e. 
+</ul>
+
+Parentheses can be used as usual to override the default
+precedence. An example of a valid metric expression is
+<tt>-0.5*NumOps^2+(self->AssocCls+ln(NumOps))*NOC/(1+NOD)</tt>.<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="DefMetExp.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefMetExp.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="DotOp.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.5.2 "Metric Expressions"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.5.2.2 "Special Operators"</td></tr></table>
+
+</body>
+</html>

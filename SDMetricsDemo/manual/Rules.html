@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - The View 'Rule Checker'</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="BrowseEl.html">Prev</a> - <a href="RuleFilter.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > 4.7 The View 'Rule Checker'
+<hr>
+<h2><a name="Rules"></a>4.7 The View 'Rule Checker'</h2>
+
+Design rules and heuristics detect potential problems in your UML
+design, for example:
+<ul>
+<li>incomplete design such as unnamed classes, states without
+transitions,
+<li>incorrect design such as an interface having an association with
+navigability away from the interface,
+<li>style issues such as circular dependencies among packages, a class
+referencing one of its subclasses,
+<li>violation of naming conventions for classes, attributes,
+operations, packages,
+<li>etc.
+</ul>
+
+<a href="LORules.html">Appendix&nbsp;C: "List of Design Rules"</a> contains the list of design rules that SDMetrics
+implements. Of course, you can customize this list to your needs,
+and define new design rules of your own. This is described in
+<a href="DefRules.html">Section&nbsp;8.3 "Definition of Design Rules"</a>.<p>
+
+The 'Rule Checker' view displays design rule violations in a table. Each row
+of the table represents a violation of a design rule by a design element.<p> 
+
+<img src="images/rulecheck.png" alt="Design rule checker"><br>
+<b>Figure 12:&nbsp;Design Rule Checker</b><p>
+
+The meaning of the columns is as follows:
+
+<ul>
+<li><i>Name</i>: Name of the design element that violates the rule.
+<li><i>Rule</i>: Name of the violated rule.
+<li><i>Value</i>: Some rules return a value that provides additional
+information about how the design element violates the rule.
+<li><i>Category</i>: The category of the rule describes the criteria
+the rule checks, for example naming, completeness, correctness, or style.
+<li><i>Severity</i>: The severity of the violated indicates how 
+critical the violation of the rule is, and therefore how urgently 
+it should be resolved.
+<li><i>Description</i>: A short description of the violated rule.
+</ul>
+
+The context menu of right hand side table contains links to the
+measurement catalog showing the detailed definition of the violated
+rule in the selected row (see <a href="MetCat.html">Section&nbsp;4.13 "The View 'Catalog'"</a>), and the Kiviat diagram
+for the model element in the selected row (when available).<p>
+
+Sort the table of design rule violations by columns, e.g., to
+quickly find all rule violations for a particular design element, all
+violations of a particular rule, or to sort the rule violations by
+their severity or category. <a href="CommonControls.html">Section&nbsp;4.3.1 "Common controls in views"</a> describes how to sort
+tables.<p>
+
+<hr>
+<a href="RuleFilter.html">4.7.1&nbsp;Filtering Design Rules</a><br>
+<a href="RuleAccepting.html">4.7.2&nbsp;Accepting Design Rule Violations</a><br>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="BrowseEl.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="MainWind.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="RuleFilter.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.6 "The View 'Kiviat Diagrams'"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.7.1 "Filtering Design Rules"</td></tr></table>
+
+</body>
+</html>

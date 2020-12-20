@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Region Rules</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Rules_statemachine.html">Prev</a> - <a href="Rules_state.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LORules.html">C: List of Design Rules</a> > C.17 Region Rules
+<hr>
+<h2><a name="Rules_region"></a>C.17 Region Rules</h2>
+<a name="Rules_region_TooManyInitialStates"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>TooManyInitialStates</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The region has two or more initial states.<p> A region can have at most one initial state. Check the region and remove the surplus initial states. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of initial states of the region.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_region_InitialAndFinalStates"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>InitialAndFinalStates</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">There is no initial or final state for the state machine.<p> The top-level region of a state machine should have one initial state and at least one final state so that the state machine has a well-defined beginning and end. <ul><li>Suggested in [<a href="References.html#References_JRH04">JRH04</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_region_DupName"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DupName</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The region has two or more states of the same name.<p> Distinctive states should have distinctive names. Duplicate names can also cause problems during code generation. <ul><li>Suggested in [<a href="References.html#References_RVR04">RVR04</a>]. <li>Value reported: name of the duplicate state. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_region_EmptyRegion"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>EmptyRegion</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The region has no states.<p> Add states to the region, or remove the region from the model.
+</td></tr></table><hr><p>
+<a name="Rules_region_DeepHistory"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DeepHistory</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The region has two or more deep history states.<p> A region can have at most one deep history state. Check the region and delete the surplus history states. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of deep history states of the region. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_region_ShallowHistory"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>ShallowHistory</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The region has two or more shallow history states.<p> A region can have at most one shallow history state. Check the region and delete the surplus history states. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of shallow history states of the region. </ul> 
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Rules_statemachine.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LORules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Rules_state.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;C.16 "Statemachine Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;C.18 "State Rules"</td></tr></table>
+
+</body>
+</html>

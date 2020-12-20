@@ -1,0 +1,516 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MapAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">MapAdapter.java</span></div><h1>MapAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.swing.event.EventListenerList;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+
+import freemind.controller.filter.DefaultFilter;
+import freemind.controller.filter.Filter;
+import freemind.controller.filter.condition.NoFilteringCondition;
+import freemind.main.FreeMindMain;
+import freemind.main.Tools;
+import freemind.main.XMLParseException;
+
+public abstract class MapAdapter extends DefaultTreeModel implements MindMap {
+
+	private static final int INTERVAL_BETWEEN_FILE_MODIFICATION_TIME_CHECKS = 5000;
+	/**
+	 * denotes the amount of changes since the last save. The initial value is
+	 * zero, such that new models are not to be saved.
+	 */
+<span class="nc" id="L58">	protected int changesPerformedSinceLastSave = 0;</span>
+<span class="nc" id="L59">	protected boolean readOnly = true;</span>
+	private File file;
+<span class="nc" id="L61">	private long mFileTime = 0;</span>
+	private FreeMindMain frame;
+	static protected Logger logger;
+	private MapRegistry registry;
+<span class="nc" id="L65">	private Filter filter = null;</span>
+	protected final ModeController mModeController;
+<span class="nc" id="L67">	private HashSet mMapSourceChangedObserverSet = new HashSet();</span>
+	private Timer mTimerForFileChangeObservation;
+
+	public MapAdapter(FreeMindMain frame, ModeController modeController) {
+<span class="nc" id="L71">		super(null);</span>
+<span class="nc" id="L72">		this.frame = frame;</span>
+<span class="nc" id="L73">		this.mModeController = modeController;</span>
+<span class="nc" id="L74">		mModeController.setModel(this);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L76">			logger = frame.getLogger(this.getClass().getName());</span>
+		}
+<span class="nc" id="L78">		registry = new MapRegistry(this, modeController);</span>
+<span class="nc" id="L79">		filter = new DefaultFilter(NoFilteringCondition.createCondition(),</span>
+<span class="nc" id="L80">				true, false);</span>
+<span class="nc" id="L81">		mTimerForFileChangeObservation = new Timer();</span>
+<span class="nc" id="L82">		mTimerForFileChangeObservation.schedule(</span>
+<span class="nc" id="L83">				new FileChangeInspectorTimerTask(),</span>
+<span class="nc" id="L84">				INTERVAL_BETWEEN_FILE_MODIFICATION_TIME_CHECKS,</span>
+<span class="nc" id="L85">				INTERVAL_BETWEEN_FILE_MODIFICATION_TIME_CHECKS);</span>
+<span class="nc" id="L86">	}</span>
+
+	public ModeController getModeController() {
+<span class="nc" id="L89">		return mModeController;</span>
+	}
+
+<span class="nc" id="L92">	protected class FileChangeInspectorTimerTask extends TimerTask {</span>
+
+		public void run() {
+<span class="nc" id="L95">			boolean shouldFire = false;</span>
+<span class="nc" id="L96">			long lastModified = 0;</span>
+			// minimal synchronized block:
+<span class="nc" id="L98">			synchronized (MapAdapter.this) {</span>
+<span class="nc" id="L99">				lastModified = getFileTime();</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">				if (lastModified &gt; mFileTime) {</span>
+<span class="nc" id="L101">					shouldFire = true;</span>
+					// don't change the file time here. Only, after the user has been asked.
+				}
+			}
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			if (shouldFire) {</span>
+<span class="nc" id="L106">				for (Iterator it = mMapSourceChangedObserverSet.iterator(); it</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">						.hasNext();) {</span>
+<span class="nc" id="L108">					logger.info(&quot;File &quot; + getFile()</span>
+<span class="nc" id="L109">							+ &quot; changed on disk as it was last modified at &quot;</span>
+<span class="nc" id="L110">							+ new Date(lastModified));</span>
+<span class="nc" id="L111">					MapSourceChangedObserver observer = (MapSourceChangedObserver) it</span>
+<span class="nc" id="L112">							.next();</span>
+					try {
+<span class="nc" id="L114">						boolean changeAccepted = observer.mapSourceChanged(MapAdapter.this);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">						if(!changeAccepted) {</span>
+							// this is a trick: at the next save/load the correct value is set again. 
+<span class="nc" id="L117">							mFileTime = Long.MAX_VALUE;</span>
+<span class="nc" id="L118">						} else {</span>
+<span class="nc" id="L119">							mFileTime = lastModified;</span>
+						}
+<span class="nc" id="L121">					} catch (Exception e) {</span>
+<span class="nc" id="L122">						freemind.main.Resources.getInstance().logException(e);</span>
+					}
+				}
+			}
+<span class="nc" id="L126">		}</span>
+	}
+
+	/**
+	 * Instantiations of this class must call this, when a map was loaded or
+	 * saved.
+	 */
+	protected void setFileTime() {
+<span class="nc" id="L134">		mFileTime = getFileTime();</span>
+<span class="nc" id="L135">	}</span>
+
+	private long getFileTime() {
+		long lastModified;
+		File fileName;
+<span class="nc" id="L140">		fileName = getFile();</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (fileName != null) {</span>
+<span class="nc" id="L142">			lastModified = fileName.lastModified();</span>
+<span class="nc" id="L143">		} else {</span>
+<span class="nc" id="L144">			lastModified = 0;</span>
+		}
+<span class="nc" id="L146">		return lastModified;</span>
+	}
+
+	public void load(File file) throws FileNotFoundException, IOException {
+		try {
+<span class="nc" id="L151">			load(Tools.fileToUrl(file));</span>
+<span class="nc" id="L152">		} catch (XMLParseException e) {</span>
+<span class="nc" id="L153">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L154">		} catch (URISyntaxException e) {</span>
+<span class="nc" id="L155">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L157">	}</span>
+
+	/**
+	 * Attempts to lock the map using semaphore file.
+	 * 
+	 * @return If the map is locked, return the name of the locking user, return
+	 *         null otherwise.
+	 * @throws Exception
+	 */
+	public String tryToLock(File file) throws Exception {
+<span class="nc" id="L167">		return null;</span>
+	}
+
+	public void destroy() {
+<span class="nc" id="L171">		cancelFileChangeObservationTimer();</span>
+		// Do all the necessary destructions in your model,
+		// e.g. remove file locks.
+		// and remove all hooks:
+<span class="nc" id="L175">		removeNodes(getRootNode());</span>
+<span class="nc" id="L176">	}</span>
+
+	protected void cancelFileChangeObservationTimer() {
+<span class="nc" id="L179">		mTimerForFileChangeObservation.cancel();</span>
+<span class="nc" id="L180">	}</span>
+
+	// (PN)
+	// public void close() {
+	// }
+
+	/**
+	 */
+	private void removeNodes(MindMapNode node) {
+<span class="nc" id="L189">		node.removeAllHooks();</span>
+<span class="nc" id="L190">		mModeController.fireNodePreDeleteEvent(node);</span>
+		// and all children:
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		for (Iterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L193">			MindMapNode child = (MindMapNode) i.next();</span>
+<span class="nc" id="L194">			removeNodes(child);</span>
+		}
+<span class="nc" id="L196">	}</span>
+
+	public FreeMindMain getFrame() {
+<span class="nc" id="L199">		return frame;</span>
+	}
+
+	//
+	// Attributes
+	//
+
+	public boolean isSaved() {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		return (changesPerformedSinceLastSave == 0);</span>
+	}
+
+	public boolean isReadOnly() {
+<span class="nc" id="L211">		return readOnly;</span>
+	}
+
+	/**
+	 * Counts the amount of actions performed.
+	 * 
+	 * @param saved
+	 *            true if the file was saved recently. False otherwise.
+	 */
+	public void setSaved(boolean saved) {
+<span class="nc" id="L221">		boolean setTitle = false;</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (saved) {</span>
+<span class="nc" id="L223">			changesPerformedSinceLastSave = 0;</span>
+<span class="nc" id="L224">			setTitle = true;</span>
+<span class="nc" id="L225">		} else {</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			if (changesPerformedSinceLastSave == 0) {</span>
+<span class="nc" id="L227">				setTitle = true;</span>
+			}
+<span class="nc" id="L229">			++changesPerformedSinceLastSave;</span>
+		}
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if (setTitle) {</span>
+<span class="nc" id="L232">			getModeController().getController().setTitle();</span>
+		}
+<span class="nc" id="L234">	}</span>
+
+	protected int getNumberOfChangesSinceLastSave() {
+<span class="nc" id="L237">		return changesPerformedSinceLastSave;</span>
+	}
+
+	public MindMapNode getRootNode() {
+<span class="nc" id="L241">		return (MindMapNode) getRoot();</span>
+	}
+
+	public void setRoot(MindMapNode root) {
+<span class="nc" id="L245">		super.setRoot(root);</span>
+<span class="nc" id="L246">	}</span>
+
+	/**
+	 * @param newRoot
+	 *            one of the nodes, that is now root. The others are grouped
+	 *            around.
+	 */
+	public void changeRoot(MindMapNode newRoot) {
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		if (newRoot == getRootNode()) {</span>
+<span class="nc" id="L255">			return;</span>
+		}
+<span class="nc" id="L257">		boolean left = newRoot.isLeft();</span>
+<span class="nc" id="L258">		MindMapNode node = newRoot;</span>
+		// collect parents (as we remove them from their parents...)
+<span class="nc" id="L260">		Vector parents = new Vector();</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		while (node.getParentNode() != null) {</span>
+<span class="nc" id="L262">			MindMapNode parent = node.getParentNode();</span>
+<span class="nc" id="L263">			parents.add(0, node);</span>
+<span class="nc" id="L264">			node = parent;</span>
+		}
+		// bind all parents to a new chain:
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		for (Iterator it = parents.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L268">			node = (MindMapNode) it.next();</span>
+<span class="nc" id="L269">			MindMapNode parent = node.getParentNode();</span>
+			// remove parent
+<span class="nc" id="L271">			node.removeFromParent();</span>
+			// special treatment for left/right
+<span class="nc bnc" id="L273" title="All 2 branches missed.">			if (node == newRoot) {</span>
+<span class="nc" id="L274">				for (Iterator it2 = node.getChildren().iterator(); it2</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">						.hasNext();) {</span>
+<span class="nc" id="L276">					MindMapNode child = (MindMapNode) it2.next();</span>
+<span class="nc" id="L277">					child.setLeft(left);</span>
+				}
+<span class="nc bnc" id="L279" title="All 2 branches missed.">				parent.setLeft(!left);</span>
+			}
+			// and put it as a child
+<span class="nc" id="L282">			node.insert(parent, node.getChildCount());</span>
+		}
+		// and set root
+<span class="nc" id="L285">		setRoot(newRoot);</span>
+<span class="nc" id="L286">	}</span>
+
+	/**
+	 * Change this to always return null if your model doesn't support files.
+	 */
+	public File getFile() {
+<span class="nc" id="L292">		return file;</span>
+	}
+
+	/**
+	 * Return URL of the map (whether as local file or a web location)
+	 */
+	public URL getURL() throws MalformedURLException {
+<span class="nc bnc" id="L299" title="All 2 branches missed.">		return getFile() != null ? Tools.fileToUrl(getFile()) : null;</span>
+	}
+
+	protected void setFile(File file) {
+<span class="nc" id="L303">		this.file = file;</span>
+<span class="nc" id="L304">	}</span>
+
+	protected String getText(String textId) {
+<span class="nc" id="L307">		return getFrame().getResourceString(textId);</span>
+	}
+
+	//
+	// Node editing
+	//
+
+	public String getAsPlainText(List mindMapNodes) {
+<span class="nc" id="L315">		return &quot;&quot;;</span>
+	}
+
+	public String getAsRTF(List mindMapNodes) {
+<span class="nc" id="L319">		return &quot;&quot;;</span>
+	}
+
+	public String getAsHTML(List mindMapNodes) {
+<span class="nc" id="L323">		return null;</span>
+	}
+
+	public String getRestorable() {
+<span class="nc" id="L327">		return null;</span>
+	}
+
+	public MindMapLinkRegistry getLinkRegistry() {
+<span class="nc" id="L331">		return null;</span>
+	}
+
+	/**
+	 * This method should not be called directly!
+	 */
+	public void nodeChanged(TreeNode node) {
+<span class="nc" id="L338">		getModeController().nodeChanged((MindMapNode) node);</span>
+<span class="nc" id="L339">	}</span>
+
+	public void nodeRefresh(TreeNode node) {
+<span class="nc" id="L342">		getModeController().nodeRefresh((MindMapNode) node);</span>
+<span class="nc" id="L343">	}</span>
+
+	/**
+	 * Invoke this method if you've totally changed the children of node and its
+	 * childrens children... This will post a treeStructureChanged event.
+	 */
+	void nodeChangedInternal(TreeNode node) {
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		if (node != null) {</span>
+<span class="nc" id="L351">			fireTreeNodesChanged(this, getPathToRoot(node), null, null);</span>
+		}
+<span class="nc" id="L353">	}</span>
+
+	/**
+	 * Notifies all listeners that have registered interest for notification on
+	 * this event type. The event instance is lazily created using the
+	 * parameters passed into the fire method.
+	 * 
+	 * @param source
+	 *            the node being changed
+	 * @param path
+	 *            the path to the root node
+	 * @param childIndices
+	 *            the indices of the changed elements
+	 * @param children
+	 *            the changed elements
+	 * @see EventListenerList
+	 */
+	protected void fireTreeNodesInserted(Object source, Object[] path,
+			int[] childIndices, Object[] children) {
+		// Guaranteed to return a non-null array
+<span class="nc" id="L373">		Object[] listeners = listenerList.getListenerList();</span>
+<span class="nc" id="L374">		TreeModelEvent e = null;</span>
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+<span class="nc" id="L377">		e = fireTreeNodesInserted(source, path, childIndices, children,</span>
+<span class="nc" id="L378">				listeners, e);</span>
+<span class="nc" id="L379">		MindMapNode node = (MindMapNode) path[path.length - 1];</span>
+<span class="nc" id="L380">		fireTreeNodesInserted(source, path, childIndices, children, node</span>
+<span class="nc" id="L381">				.getListeners().getListenerList(), e);</span>
+<span class="nc" id="L382">	}</span>
+
+	private TreeModelEvent fireTreeNodesInserted(Object source, Object[] path,
+			int[] childIndices, Object[] children, Object[] listeners,
+			TreeModelEvent e) {
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		for (int i = listeners.length - 2; i &gt;= 0; i -= 2) {</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">			if (listeners[i] == TreeModelListener.class) {</span>
+				// Lazily create the event:
+<span class="nc bnc" id="L390" title="All 2 branches missed.">				if (e == null)</span>
+<span class="nc" id="L391">					e = new TreeModelEvent(source, path, childIndices, children);</span>
+<span class="nc" id="L392">				((TreeModelListener) listeners[i + 1]).treeNodesInserted(e);</span>
+			}
+		}
+<span class="nc" id="L395">		return e;</span>
+	}
+
+	protected void fireTreeNodesRemoved(Object source, Object[] path,
+			int[] childIndices, Object[] children) {
+		// Guaranteed to return a non-null array
+<span class="nc" id="L401">		Object[] listeners = listenerList.getListenerList();</span>
+<span class="nc" id="L402">		TreeModelEvent e = null;</span>
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+<span class="nc" id="L405">		e = fireTreeNodesRemoved(source, path, childIndices, children,</span>
+<span class="nc" id="L406">				listeners, e);</span>
+<span class="nc" id="L407">		MindMapNode node = (MindMapNode) path[path.length - 1];</span>
+<span class="nc" id="L408">		fireTreeNodesRemoved(source, path, childIndices, children, node</span>
+<span class="nc" id="L409">				.getListeners().getListenerList(), e);</span>
+<span class="nc" id="L410">	}</span>
+
+	private TreeModelEvent fireTreeNodesRemoved(Object source, Object[] path,
+			int[] childIndices, Object[] children, Object[] listeners,
+			TreeModelEvent e) {
+<span class="nc bnc" id="L415" title="All 2 branches missed.">		for (int i = listeners.length - 2; i &gt;= 0; i -= 2) {</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">			if (listeners[i] == TreeModelListener.class) {</span>
+				// Lazily create the event:
+<span class="nc bnc" id="L418" title="All 2 branches missed.">				if (e == null)</span>
+<span class="nc" id="L419">					e = new TreeModelEvent(source, path, childIndices, children);</span>
+<span class="nc" id="L420">				((TreeModelListener) listeners[i + 1]).treeNodesRemoved(e);</span>
+			}
+		}
+<span class="nc" id="L423">		return e;</span>
+	}
+
+	protected void fireTreeStructureChanged(Object source, Object[] path,
+			int[] childIndices, Object[] children) {
+		// Guaranteed to return a non-null array
+<span class="nc" id="L429">		Object[] listeners = listenerList.getListenerList();</span>
+<span class="nc" id="L430">		TreeModelEvent e = null;</span>
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+<span class="nc" id="L433">		e = fireTreeStructureChanged(source, path, childIndices, children,</span>
+<span class="nc" id="L434">				listeners, e);</span>
+<span class="nc" id="L435">		MindMapNode node = (MindMapNode) path[path.length - 1];</span>
+<span class="nc" id="L436">		fireTreeStructureChanged(source, path, childIndices, children, node</span>
+<span class="nc" id="L437">				.getListeners().getListenerList(), e);</span>
+<span class="nc" id="L438">	}</span>
+
+	private TreeModelEvent fireTreeStructureChanged(Object source,
+			Object[] path, int[] childIndices, Object[] children,
+			Object[] listeners, TreeModelEvent e) {
+<span class="nc bnc" id="L443" title="All 2 branches missed.">		for (int i = listeners.length - 2; i &gt;= 0; i -= 2) {</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">			if (listeners[i] == TreeModelListener.class) {</span>
+				// Lazily create the event:
+<span class="nc bnc" id="L446" title="All 2 branches missed.">				if (e == null)</span>
+<span class="nc" id="L447">					e = new TreeModelEvent(source, path, childIndices, children);</span>
+<span class="nc" id="L448">				((TreeModelListener) listeners[i + 1]).treeStructureChanged(e);</span>
+			}
+		}
+<span class="nc" id="L451">		return e;</span>
+	}
+
+	protected void fireTreeNodesChanged(Object source, Object[] path,
+			int[] childIndices, Object[] children) {
+		// Guaranteed to return a non-null array
+<span class="nc" id="L457">		Object[] listeners = listenerList.getListenerList();</span>
+<span class="nc" id="L458">		TreeModelEvent e = null;</span>
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+<span class="nc" id="L461">		e = fireTreeNodesChanged(source, path, childIndices, children,</span>
+<span class="nc" id="L462">				listeners, e);</span>
+<span class="nc" id="L463">		MindMapNode node = (MindMapNode) path[path.length - 1];</span>
+<span class="nc" id="L464">		fireTreeNodesChanged(source, path, childIndices, children, node</span>
+<span class="nc" id="L465">				.getListeners().getListenerList(), e);</span>
+<span class="nc" id="L466">	}</span>
+
+	private TreeModelEvent fireTreeNodesChanged(Object source, Object[] path,
+			int[] childIndices, Object[] children, Object[] listeners,
+			TreeModelEvent e) {
+<span class="nc bnc" id="L471" title="All 2 branches missed.">		for (int i = listeners.length - 2; i &gt;= 0; i -= 2) {</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">			if (listeners[i] == TreeModelListener.class) {</span>
+				// Lazily create the event:
+<span class="nc bnc" id="L474" title="All 2 branches missed.">				if (e == null)</span>
+<span class="nc" id="L475">					e = new TreeModelEvent(source, path, childIndices, children);</span>
+<span class="nc" id="L476">				((TreeModelListener) listeners[i + 1]).treeNodesChanged(e);</span>
+			}
+		}
+<span class="nc" id="L479">		return e;</span>
+	}
+
+	public MapRegistry getRegistry() {
+<span class="nc" id="L483">		return registry;</span>
+	}
+
+	public Filter getFilter() {
+<span class="nc" id="L487">		return filter;</span>
+	}
+
+	public void setFilter(Filter filter) {
+<span class="nc" id="L491">		this.filter = filter;</span>
+<span class="nc" id="L492">	}</span>
+
+	public void registerMapSourceChangedObserver(
+			MapSourceChangedObserver pMapSourceChangedObserver,
+			long pGetEventIfChangedAfterThisTimeInMillies) {
+<span class="nc bnc" id="L497" title="All 2 branches missed.">		if (pGetEventIfChangedAfterThisTimeInMillies != 0</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">				&amp;&amp; mFileTime &gt; pGetEventIfChangedAfterThisTimeInMillies) {</span>
+			try {
+				// Issue event here.
+<span class="nc" id="L501">				pMapSourceChangedObserver.mapSourceChanged(this);</span>
+<span class="nc" id="L502">			} catch (Exception e) {</span>
+<span class="nc" id="L503">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+		}
+<span class="nc" id="L506">		mMapSourceChangedObserverSet.add(pMapSourceChangedObserver);</span>
+<span class="nc" id="L507">	}</span>
+
+	public long deregisterMapSourceChangedObserver(
+			MapSourceChangedObserver pMapSourceChangedObserver) {
+<span class="nc" id="L511">		mMapSourceChangedObserverSet.remove(pMapSourceChangedObserver);</span>
+<span class="nc" id="L512">		return mFileTime;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

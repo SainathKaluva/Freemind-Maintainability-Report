@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Nesting</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="AttrValue.html">Prev</a> - <a href="Signature.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > 8.1.4 Nesting
+<hr>
+<h3><a name="Nesting"></a>8.1.4 Nesting</h3>
+
+The <tt>nesting</tt> procedure can be used to calculate the level of
+recursive nesting of elements. For instance, packages can be
+nested within other packages, classes can contain inner classes,
+states can be contained in (composite) states, and so on. With the
+<tt>nesting</tt> procedure, you can count the levels of nesting.<p>
+
+The <tt>nesting</tt> procedure has one required attribute,
+<tt>relation</tt>, specifying the relation which establishes the
+nesting relationship. Usually, this will be the "context"
+relation. For example:
+
+<pre>
+&lt;metric name="NestingLevel" domain="package"&gt;
+  &lt;nesting relation="context" /&gt;
+&lt;/metric&gt;
+</pre>
+
+The calculation procedure is as follows: retrieve the element that is
+referenced by the specified relation (here: context). If this element
+is "compatible", recursively calculate the metric
+for that element, increase by one, and return that value. Else
+(context element is not of the same type, e.g., top level packages
+defined in the namespace of the model), the metric yields 0.<p>
+
+An element is "compatible" with nesting metric <i>m</i> of domain
+type <i>t</i> if the type of the element is <i>t</i>, or if its type 
+is a subtype or supertype of <i>t</i> and metric <i>m</i> is defined 
+for the type.<p>
+
+For a typical package hierarchy, the results are (column NestingLevel):<p>
+
+<table><tr><th>Package</th><th>NestingLevel</th><th>LNest</th></tr>
+<tr><td>javax</td><td>0</td><td>2</td></tr>
+<tr><td>javax.swing</td><td>1</td><td>1</td></tr>
+<tr><td>javax.swing.event</td><td>2</td><td>0</td></tr>
+</table><br>
+<b>Table 5:&nbsp;Package nesting metrics example</b><p>
+
+How does the <tt>nesting</tt> procedure is differ from
+projections using the <tt>nesting</tt> attribute? Projections navigate 
+the specified relation in the opposite direction. 
+A projection operates on all elements where the specified
+relation points to the current element for which the projection is
+calculated (navigation to the current element). The <tt>nesting</tt>
+procedure, on the other hand, simply navigates from the current
+element to the element referenced by the specified relation
+(navigation away from the current element). Consequently, a metric
+LNest defined as a projection as follows would count the levels of
+nesting within a package (as shown in column "LNest" of
+Table&nbsp;5):
+
+<pre>
+&lt;metric name="LNest" domain="package"&gt;
+  &lt;description&gt;Levels of package nesting in this package.&lt;/description&gt;
+  &lt;projection relation="context" target="package" nesting="true" /&gt;
+&lt;/metric&gt;
+</pre>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="AttrValue.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Signature.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.3 "Attribute Value"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.1.5 "Signature"</td></tr></table>
+
+</body>
+</html>

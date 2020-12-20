@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>StylePattern.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">StylePattern.java</span></div><h1>StylePattern.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes;
+
+import java.awt.Color;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.Reader;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+
+// Daniel: this seems like a description of what pattern should do rather
+// than of that what it actually does.
+
+/**
+ * THIS CLASS IS NO LONGER USED!
+ * 
+ * This class represents a StylePattern than can be applied to a node or a whole
+ * branch. The properties of the nodes are replaced with the properties saved in
+ * the pattern. If a property &quot;text&quot; is given, this pattern is automatically
+ * applied to all nodes that contain the String saved in &quot;text&quot;.
+ */
+public class StylePattern {
+	private String name;
+	/**
+	 * NOT USED: The idea of recursive is redundant. You have a possibility to
+	 * select all nodes in a branch easily.
+	 */
+	private boolean recursive;
+
+	private String text;
+
+	private Color nodeColor;
+	private Color nodeBackgroundColor;
+	private String nodeStyle;
+
+<span class="nc" id="L62">	private String nodeFontFamily = null;</span>
+<span class="nc" id="L63">	private Integer nodeFontSize = null;</span>
+<span class="nc" id="L64">	private Boolean nodeFontBold = null;</span>
+<span class="nc" id="L65">	private Boolean nodeFontItalic = null;</span>
+
+	private MindIcon nodeIcon;
+
+	private Color edgeColor;
+	private String edgeStyle;
+	private Integer edgeWidth;
+
+	/** Inhertitable patterns, fc, 3.12.2003. */
+	private StylePattern mChildrenStylePattern;
+
+	/**
+	 * Empty constructor
+	 */
+<span class="nc" id="L79">	public StylePattern() {</span>
+<span class="nc" id="L80">	}</span>
+
+<span class="nc" id="L82">	public StylePattern(XMLElement elm, List justConstructedPatterns) {</span>
+<span class="nc" id="L83">		loadPattern(elm, justConstructedPatterns);</span>
+<span class="nc" id="L84">	}</span>
+
+	/**
+	 * Constructs a style pattern from a node:
+	 */
+<span class="nc" id="L89">	public StylePattern(MindMapNode node) {</span>
+<span class="nc" id="L90">		nodeColor = node.getColor();</span>
+<span class="nc" id="L91">		nodeBackgroundColor = node.getBackgroundColor();</span>
+<span class="nc" id="L92">		nodeStyle = node.getStyle();</span>
+
+<span class="nc" id="L94">		nodeFontBold = new Boolean(node.isBold());</span>
+<span class="nc" id="L95">		nodeFontItalic = new Boolean(node.isItalic());</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		nodeFontSize = node.getFontSize() == null ? null : Integer.valueOf(node</span>
+<span class="nc" id="L97">				.getFontSize());</span>
+<span class="nc" id="L98">		nodeFontFamily = node.getFontFamilyName();</span>
+
+<span class="nc" id="L100">		nodeIcon = null;</span>
+		// appliesToNodeIcon = node.getIcons().size()&gt;0;
+		// nodeIcon = (MindIcon)
+		// (node.getIcons().size()==0?null:node.getIcons().get(0));
+
+<span class="nc" id="L105">		edgeColor = node.getEdge().getColor();</span>
+<span class="nc" id="L106">		edgeStyle = node.getEdge().getStyle();</span>
+<span class="nc" id="L107">		edgeWidth = new Integer(node.getEdge().getWidth());</span>
+
+<span class="nc" id="L109">	}</span>
+
+	public String toString() {
+<span class="nc" id="L112">		return &quot;node: &quot; + nodeColor + &quot;, &quot; + nodeBackgroundColor + &quot;, &quot;</span>
+<span class="nc" id="L113">				+ nodeStyle + &quot;, &quot; + nodeFontFamily + &quot;, &quot; + nodeFontSize</span>
+<span class="nc" id="L114">				+ &quot;, &quot; + nodeIcon + &quot;, &quot; + text + &quot;, &quot; + &quot;\nedge: &quot; + edgeColor</span>
+<span class="nc" id="L115">				+ &quot;, &quot; + edgeStyle + &quot;, &quot; + edgeWidth;</span>
+	}
+
+	public boolean getAppliesToEdge() {
+<span class="nc bnc" id="L119" title="All 6 branches missed.">		return edgeColor != null || edgeStyle != null || edgeWidth != null;</span>
+	}
+
+	public boolean getAppliesToNode() {
+<span class="nc bnc" id="L123" title="All 4 branches missed.">		return nodeBackgroundColor != null || nodeColor != null</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				|| nodeStyle != null;</span>
+	}
+
+	public boolean getAppliesToNodeFont() {
+<span class="nc bnc" id="L128" title="All 4 branches missed.">		return nodeFontBold != null || nodeFontFamily != null</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">				|| nodeFontItalic != null || nodeFontSize != null;</span>
+	}
+
+	public boolean getAppliesToNodeIcon() {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		return nodeIcon != null;</span>
+	}
+
+	public boolean getAppliesToChildren() {
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		return mChildrenStylePattern != null;</span>
+	}
+
+	/**
+	 * Get the value of name.
+	 * 
+	 * @return Value of name.
+	 */
+	public String getName() {
+<span class="nc" id="L146">		return name;</span>
+	}
+
+	/**
+	 * Set the value of name.
+	 * 
+	 * @param v
+	 *            Value to assign to name.
+	 */
+	public void setName(String v) {
+<span class="nc" id="L156">		this.name = v;</span>
+<span class="nc" id="L157">	}</span>
+
+	/**
+	 * Determine if the properies of this pattern, of course except the &quot;text&quot;
+	 * attribute, apply to all the child nodes of this node.
+	 * 
+	 * @return Value of recursive.
+	 */
+	public boolean getRecursive() {
+<span class="nc" id="L166">		return recursive;</span>
+	}
+
+	/**
+	 * Set the value of recursive.
+	 * 
+	 * @param v
+	 *            Value to assign to recursive.
+	 */
+	public void setRecursive(boolean v) {
+<span class="nc" id="L176">		this.recursive = v;</span>
+<span class="nc" id="L177">	}</span>
+
+	/**
+	 * Get the value of text.
+	 * 
+	 * @return Value of text.
+	 */
+	public String getText() {
+<span class="nc" id="L185">		return text;</span>
+	}
+
+	/**
+	 * Set the value of text.
+	 * 
+	 * @param v
+	 *            Value to assign to text.
+	 */
+	public void setText(String v) {
+<span class="nc" id="L195">		this.text = v;</span>
+<span class="nc" id="L196">	}</span>
+
+	/**
+	 * Get the value of nodeColor.
+	 * 
+	 * @return Value of nodeColor.
+	 */
+	public Color getNodeColor() {
+<span class="nc" id="L204">		return nodeColor;</span>
+	}
+
+	/**
+	 * Set the value of nodeColor.
+	 * 
+	 * @param v
+	 *            Value to assign to nodeColor.
+	 */
+	public void setNodeColor(Color v) {
+<span class="nc" id="L214">		this.nodeColor = v;</span>
+<span class="nc" id="L215">	}</span>
+
+	public Color getNodeBackgroundColor() {
+<span class="nc" id="L218">		return nodeBackgroundColor;</span>
+	}
+
+	public void setNodeBackgroundColor(Color nodeBackgroundColor) {
+<span class="nc" id="L222">		this.nodeBackgroundColor = nodeBackgroundColor;</span>
+<span class="nc" id="L223">	}</span>
+
+	/**
+	 * Get the value of nodeStyle.
+	 * 
+	 * @return Value of nodeStyle.
+	 */
+	public String getNodeStyle() {
+<span class="nc" id="L231">		return nodeStyle;</span>
+	}
+
+	/**
+	 * Set the value of nodeStyle.
+	 * 
+	 * @param nodeStyle
+	 *            Value to assign to nodeStyle.
+	 */
+	public void setNodeStyle(String nodeStyle) {
+<span class="nc" id="L241">		this.nodeStyle = nodeStyle;</span>
+<span class="nc" id="L242">	}</span>
+
+	/**
+	 * @return Returns the nodeFontFamily.
+	 */
+	public String getNodeFontFamily() {
+<span class="nc" id="L248">		return nodeFontFamily;</span>
+	}
+
+	/**
+	 * @param nodeFontFamily
+	 *            The nodeFontFamily to set.
+	 */
+	public void setNodeFontFamily(String nodeFontFamily) {
+<span class="nc" id="L256">		this.nodeFontFamily = nodeFontFamily;</span>
+<span class="nc" id="L257">	}</span>
+
+	/**
+	 * @return Returns the nodeFontSize.
+	 */
+	public Integer getNodeFontSize() {
+<span class="nc" id="L263">		return nodeFontSize;</span>
+	}
+
+	/**
+	 * @param nodeFontSize
+	 *            The nodeFontSize to set.
+	 */
+	public void setNodeFontSize(Integer nodeFontSize) {
+<span class="nc" id="L271">		this.nodeFontSize = nodeFontSize;</span>
+<span class="nc" id="L272">	}</span>
+
+	/**
+	 * Get the value of icon.
+	 * 
+	 * @return Value of icon.
+	 */
+	public MindIcon getNodeIcon() {
+<span class="nc" id="L280">		return nodeIcon;</span>
+	}
+
+	/**
+	 * Set the value of icon.
+	 * 
+	 * @param nodeIcon
+	 *            Value to assign to icon.
+	 */
+	public void setNodeIcon(MindIcon nodeIcon) {
+<span class="nc" id="L290">		this.nodeIcon = nodeIcon;</span>
+<span class="nc" id="L291">	}</span>
+
+	/**
+	 * Get the value of edgeColor.
+	 * 
+	 * @return Value of edgeColor.
+	 */
+	public Color getEdgeColor() {
+<span class="nc" id="L299">		return edgeColor;</span>
+	}
+
+	/**
+	 * Set the value of edgeColor.
+	 * 
+	 * @param edgeColor
+	 *            Value to assign to edgeColor.
+	 */
+	public void setEdgeColor(Color edgeColor) {
+<span class="nc" id="L309">		this.edgeColor = edgeColor;</span>
+<span class="nc" id="L310">	}</span>
+
+	/**
+	 * Get the value of edgeStyle.
+	 * 
+	 * @return Value of edgeStyle.
+	 */
+	public String getEdgeStyle() {
+<span class="nc" id="L318">		return edgeStyle;</span>
+	}
+
+	/**
+	 * Set the value of edgeStyle.
+	 * 
+	 * @param edgeStyle
+	 *            Value to assign to edgeStyle.
+	 */
+	public void setEdgeStyle(String edgeStyle) {
+<span class="nc" id="L328">		this.edgeStyle = edgeStyle;</span>
+<span class="nc" id="L329">	}</span>
+
+	/**
+	 * Get the value of edgeWidth.
+	 * 
+	 * @return Value of edgeWidth.
+	 */
+	public Integer getEdgeWidth() {
+<span class="nc" id="L337">		return edgeWidth;</span>
+	}
+
+	/**
+	 * Set the value of edgeWidth.
+	 * 
+	 * @param edgeWidth
+	 *            Value to assign to edgeWidth.
+	 */
+	public void setEdgeWidth(Integer edgeWidth) {
+<span class="nc" id="L347">		this.edgeWidth = edgeWidth;</span>
+<span class="nc" id="L348">	}</span>
+
+	/**
+	 * Get the value of ChildrenStylePattern.
+	 * 
+	 * @return Value of ChildrenStylePattern.
+	 */
+	public StylePattern getChildrenStylePattern() {
+<span class="nc" id="L356">		return mChildrenStylePattern;</span>
+	}
+
+	/**
+	 * Set the value of ChildrenStylePattern.
+	 * 
+	 * @param pChildrenStylePattern
+	 *            Value to assign to ChildrenStylePattern.
+	 */
+	public void setChildrenStylePattern(StylePattern pChildrenStylePattern) {
+<span class="nc" id="L366">		this.mChildrenStylePattern = pChildrenStylePattern;</span>
+<span class="nc" id="L367">	}</span>
+
+	public static List loadPatterns(File file) throws Exception {
+<span class="nc" id="L370">		return loadPatterns(new BufferedReader(new FileReader(file)));</span>
+	}
+
+	public static List loadPatterns(Reader reader) throws Exception {
+<span class="nc" id="L374">		List list = new LinkedList();</span>
+<span class="nc" id="L375">		XMLElement parser = new XMLElement();</span>
+<span class="nc" id="L376">		parser.parseFromReader(reader);</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">		for (Enumeration e = parser.enumerateChildren(); e.hasMoreElements();) {</span>
+<span class="nc" id="L378">			list.add(new StylePattern((XMLElement) e.nextElement(), list));</span>
+		}
+<span class="nc" id="L380">		return list;</span>
+	}
+
+	protected void loadPattern(XMLElement pattern, List justConstructedPatterns) {
+		// PATTERN
+<span class="nc bnc" id="L385" title="All 2 branches missed.">		if (pattern.getStringAttribute(&quot;name&quot;) != null) {</span>
+<span class="nc" id="L386">			setName(pattern.getStringAttribute(&quot;name&quot;));</span>
+		}
+<span class="nc bnc" id="L388" title="All 2 branches missed.">		if (Tools.safeEquals(pattern.getStringAttribute(&quot;recursive&quot;), &quot;true&quot;)) {</span>
+<span class="nc" id="L389">			setRecursive(true);</span>
+		}
+
+<span class="nc bnc" id="L392" title="All 2 branches missed.">		for (Iterator i = pattern.getChildren().iterator(); i.hasNext();) {</span>
+			// this has to be improved!
+			// NODE
+<span class="nc" id="L395">			XMLElement child = (XMLElement) i.next();</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">			if (child.getName().equals(&quot;node&quot;)) {</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">				if (child.getStringAttribute(&quot;color&quot;) != null</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">						&amp;&amp; child.getStringAttribute(&quot;color&quot;).length() == 7) {</span>
+<span class="nc" id="L399">					setNodeColor(Tools.xmlToColor(child</span>
+<span class="nc" id="L400">							.getStringAttribute(&quot;color&quot;)));</span>
+				}
+<span class="nc bnc" id="L402" title="All 2 branches missed.">				if (child.getStringAttribute(&quot;background_color&quot;) != null</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">						&amp;&amp; child.getStringAttribute(&quot;background_color&quot;)</span>
+<span class="nc" id="L404">								.length() == 7) {</span>
+<span class="nc" id="L405">					setNodeBackgroundColor(Tools.xmlToColor(child</span>
+<span class="nc" id="L406">							.getStringAttribute(&quot;background_color&quot;)));</span>
+				}
+<span class="nc bnc" id="L408" title="All 2 branches missed.">				if (child.getStringAttribute(&quot;style&quot;) != null) {</span>
+<span class="nc" id="L409">					setNodeStyle(child.getStringAttribute(&quot;style&quot;));</span>
+				}
+<span class="nc bnc" id="L411" title="All 2 branches missed.">				if (child.getStringAttribute(&quot;icon&quot;) != null) {</span>
+<span class="nc bnc" id="L412" title="All 2 branches missed.">					setNodeIcon(child.getStringAttribute(&quot;icon&quot;).equals(&quot;none&quot;) ? null</span>
+							: MindIcon
+<span class="nc" id="L414">									.factory(child.getStringAttribute(&quot;icon&quot;)));</span>
+				}
+<span class="nc" id="L416">				setText(child.getStringAttribute(&quot;text&quot;));</span>
+
+<span class="nc bnc" id="L418" title="All 2 branches missed.">				for (Iterator j = child.getChildren().iterator(); j.hasNext();) {</span>
+<span class="nc" id="L419">					XMLElement nodeChild = (XMLElement) j.next();</span>
+					// FONT
+<span class="nc bnc" id="L421" title="All 2 branches missed.">					if (nodeChild.getName().equals(&quot;font&quot;)) {</span>
+
+<span class="nc bnc" id="L423" title="All 2 branches missed.">						if (nodeChild.getStringAttribute(&quot;name&quot;) != null) {</span>
+<span class="nc" id="L424">							setNodeFontFamily(nodeChild</span>
+<span class="nc" id="L425">									.getStringAttribute(&quot;name&quot;));</span>
+						}
+<span class="nc" id="L427">						if (Tools.safeEquals(</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">								nodeChild.getStringAttribute(&quot;bold&quot;), &quot;true&quot;)) {</span>
+<span class="nc" id="L429">							setNodeFontBold(Boolean.TRUE);</span>
+						}
+<span class="nc" id="L431">						if (Tools.safeEquals(</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">								nodeChild.getStringAttribute(&quot;italic&quot;), &quot;true&quot;)) {</span>
+<span class="nc" id="L433">							setNodeFontItalic(Boolean.TRUE);</span>
+						}
+						// if (font.getProperty(&quot;underline&quot;)!=null &amp;&amp;
+						// nodeChild.getProperty(&quot;underline&quot;).equals(&quot;true&quot;))
+						// setUnderlined(true);
+<span class="nc bnc" id="L438" title="All 2 branches missed.">						if (nodeChild.getStringAttribute(&quot;size&quot;) != null) {</span>
+<span class="nc" id="L439">							setNodeFontSize(Integer.valueOf(nodeChild</span>
+<span class="nc" id="L440">									.getStringAttribute(&quot;size&quot;)));</span>
+						}
+
+					}
+				}
+			}
+
+			// EDGE
+<span class="nc bnc" id="L448" title="All 2 branches missed.">			if (child.getName().equals(&quot;edge&quot;)) {</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">				if (child.getStringAttribute(&quot;style&quot;) != null) {</span>
+<span class="nc" id="L450">					setEdgeStyle(child.getStringAttribute(&quot;style&quot;));</span>
+				}
+<span class="nc bnc" id="L452" title="All 2 branches missed.">				if (child.getStringAttribute(&quot;color&quot;) != null) {</span>
+<span class="nc" id="L453">					setEdgeColor(Tools.xmlToColor(child</span>
+<span class="nc" id="L454">							.getStringAttribute(&quot;color&quot;)));</span>
+				}
+<span class="nc bnc" id="L456" title="All 2 branches missed.">				if (child.getStringAttribute(&quot;width&quot;) != null) {</span>
+<span class="nc bnc" id="L457" title="All 2 branches missed.">					if (child.getStringAttribute(&quot;width&quot;).equals(&quot;thin&quot;)) {</span>
+<span class="nc" id="L458">						setEdgeWidth(new Integer(</span>
+<span class="nc" id="L459">								freemind.modes.EdgeAdapter.WIDTH_THIN));</span>
+<span class="nc" id="L460">					} else {</span>
+<span class="nc" id="L461">						setEdgeWidth(new Integer(Integer.parseInt(child</span>
+<span class="nc" id="L462">								.getStringAttribute(&quot;width&quot;))));</span>
+					}
+				}
+			}
+
+			// CHILD
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			if (child.getName().equals(&quot;child&quot;)) {</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">				if (child.getStringAttribute(&quot;pattern&quot;) != null) {</span>
+					// find name in list of justConstructedPatterns:
+<span class="nc" id="L471">					String searchName = child.getStringAttribute(&quot;pattern&quot;);</span>
+<span class="nc" id="L472">					boolean anythingFound = false;</span>
+<span class="nc" id="L473">					for (ListIterator e = justConstructedPatterns</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">							.listIterator(); e.hasNext();) {</span>
+<span class="nc" id="L475">						StylePattern patternFound = (StylePattern) e.next();</span>
+<span class="nc bnc" id="L476" title="All 2 branches missed.">						if (patternFound.getName().equals(searchName)) {</span>
+<span class="nc" id="L477">							setChildrenStylePattern(patternFound);</span>
+<span class="nc" id="L478">							anythingFound = true;</span>
+<span class="nc" id="L479">							break;</span>
+						}
+					}
+					// perhaps our own pattern?
+<span class="nc bnc" id="L483" title="All 2 branches missed.">					if (getName().equals(searchName)) {</span>
+<span class="nc" id="L484">						setChildrenStylePattern(this);</span>
+<span class="nc" id="L485">						anythingFound = true;</span>
+					}
+<span class="nc bnc" id="L487" title="All 2 branches missed.">					if (anythingFound == false)</span>
+<span class="nc" id="L488">						System.err.println(&quot;Cannot find the children &quot;</span>
+<span class="nc" id="L489">								+ searchName + &quot; to the pattern &quot; + getName());</span>
+				}
+			}
+		}
+<span class="nc" id="L493">	}</span>
+
+	/**
+	 * @return Returns the nodeFontBold.
+	 */
+	public Boolean getNodeFontBold() {
+<span class="nc" id="L499">		return nodeFontBold;</span>
+	}
+
+	/**
+	 * @param nodeFontBold
+	 *            The nodeFontBold to set.
+	 */
+	public void setNodeFontBold(Boolean nodeFontBold) {
+<span class="nc" id="L507">		this.nodeFontBold = nodeFontBold;</span>
+<span class="nc" id="L508">	}</span>
+
+	/**
+	 * @return Returns the nodeFontItalic.
+	 */
+	public Boolean getNodeFontItalic() {
+<span class="nc" id="L514">		return nodeFontItalic;</span>
+	}
+
+	/**
+	 * @param nodeFontItalic
+	 *            The nodeFontItalic to set.
+	 */
+	public void setNodeFontItalic(Boolean nodeFontItalic) {
+<span class="nc" id="L522">		this.nodeFontItalic = nodeFontItalic;</span>
+<span class="nc" id="L523">	}</span>
+
+}
+
+/*
+ * Is saving necessary? public void savePattern(File file) { try { //CODE FOR
+ * NANOXML XMLElement pattern = new XMLElement(); pattern.setTagName(&quot;pattern&quot;);
+ * XMLElement node = new XMLElement(); node.setTagName(&quot;node&quot;);
+ * pattern.addChild(node); XMLElement edge = new XMLElement();
+ * edge.setTagName(&quot;edge&quot;); pattern.addChild(edge);
+ * 
+ * 
+ * pattern.addChild(((MindMapNodeModel)getRoot()).save());
+ * 
+ * XMLElement node = new XMLElement(); node.setTagName(&quot;node&quot;);
+ * 
+ * node.addProperty(&quot;text&quot;,this.toString());
+ * 
+ * // ((MindMapEdgeModel)getEdge()).save(doc,node);
+ * 
+ * XMLElement edge = ((MindMapEdgeModel)getEdge()).save(); if (edge != null) {
+ * node.addChild(edge); }
+ * 
+ * if (isFolded()) { node.addProperty(&quot;folded&quot;,&quot;true&quot;); }
+ * 
+ * if (color != null) { node.addProperty(&quot;color&quot;, Tools.colorToXml(getColor()));
+ * }
+ * 
+ * if (style != null) { node.addProperty(&quot;style&quot;, getStyle()); }
+ * 
+ * //link if (getLink() != null) { node.addProperty(&quot;link&quot;, getLink()); }
+ * 
+ * //font if (font!=null || font.getSize()!=0 || isBold() || isItalic() ||
+ * isUnderlined() ) { XMLElement fontElement = new XMLElement();
+ * fontElement.setTagName(&quot;font&quot;);
+ * 
+ * if (font != null) { fontElement.addProperty(&quot;name&quot;,getFont().getFontName());
+ * } if (font.getSize() != 0) {
+ * fontElement.addProperty(&quot;size&quot;,Integer.toString(getFont().getSize())); } if
+ * (isBold()) { fontElement.addProperty(&quot;bold&quot;,&quot;true&quot;); } if (isItalic()) {
+ * fontElement.addProperty(&quot;italic&quot;,&quot;true&quot;); } if (isUnderlined()) {
+ * fontElement.addProperty(&quot;underline&quot;,&quot;true&quot;); } node.addChild(fontElement); }
+ * 
+ * 
+ * 
+ * //Generating output Stream BufferedWriter fileout = new BufferedWriter( new
+ * OutputStreamWriter( new FileOutputStream(file) ) ); pattern.write(fileout);
+ * 
+ * fileout.close();
+ * 
+ * } catch(Exception e) {
+ * System.err.println(&quot;Error in MindMapMapModel.saveXML(): &quot;);
+ * freemind.main.Resources.getInstance().logExecption(e); } }
+ */
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

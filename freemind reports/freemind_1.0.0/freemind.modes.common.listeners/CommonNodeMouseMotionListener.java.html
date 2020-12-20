@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>CommonNodeMouseMotionListener.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.common.listeners</a> &gt; <span class="el_source">CommonNodeMouseMotionListener.java</span></div><h1>CommonNodeMouseMotionListener.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.common.listeners;
+
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
+import freemind.controller.NodeMouseMotionListener.NodeMouseMotionObserver;
+import freemind.main.Tools;
+import freemind.modes.ModeController;
+import freemind.view.mindmapview.MainView;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * The MouseMotionListener which belongs to every NodeView.
+ * Handles delayed selection.
+ */
+public class CommonNodeMouseMotionListener implements NodeMouseMotionObserver {
+
+	private final ModeController c;
+
+	// Logging:
+	private static java.util.logging.Logger logger;
+
+	/** time in ms, overwritten by property time_for_delayed_selection */
+	private static Tools.IntHolder timeForDelayedSelection;
+
+	/** overwritten by property delayed_selection_enabled */
+	private static Tools.BooleanHolder delayedSelectionEnabled;
+
+	/**
+	 * And a static method to reread this holder. This is used when the
+	 * selection method is changed via the option menu.
+	 */
+	public void updateSelectionMethod() {
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (timeForDelayedSelection == null) {</span>
+<span class="nc" id="L61">			timeForDelayedSelection = new Tools.IntHolder();</span>
+		}
+<span class="nc" id="L63">		delayedSelectionEnabled = new Tools.BooleanHolder();</span>
+<span class="nc" id="L64">		delayedSelectionEnabled.setValue(c.getFrame()</span>
+<span class="nc" id="L65">				.getProperty(&quot;selection_method&quot;)</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">				.equals(&quot;selection_method_direct&quot;) ? false : true);</span>
+		/*
+		 * set time for delay to infinity, if selection_method equals
+		 * selection_method_by_click.
+		 */
+<span class="nc" id="L71">		if (c.getFrame().getProperty(&quot;selection_method&quot;)</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">				.equals(&quot;selection_method_by_click&quot;)) {</span>
+<span class="nc" id="L73">			timeForDelayedSelection.setValue(Integer.MAX_VALUE);</span>
+<span class="nc" id="L74">		} else {</span>
+<span class="nc" id="L75">			timeForDelayedSelection.setValue(Integer.parseInt(c.getFrame()</span>
+<span class="nc" id="L76">					.getProperty(&quot;time_for_delayed_selection&quot;)));</span>
+		}
+<span class="nc" id="L78">	}</span>
+
+	private Timer timerForDelayedSelection;
+
+	/**
+	 * The mouse has to stay in this region to enable the selection after a
+	 * given time.
+	 */
+	private Rectangle controlRegionForDelayedSelection;
+
+	private MouseEvent mMousePressedEvent;
+
+<span class="nc" id="L90">	public CommonNodeMouseMotionListener(ModeController controller) {</span>
+<span class="nc" id="L91">		c = controller;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (logger == null)</span>
+<span class="nc" id="L93">			logger = c.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (delayedSelectionEnabled == null)</span>
+<span class="nc" id="L95">			updateSelectionMethod();</span>
+<span class="nc" id="L96">	}</span>
+
+	public void mouseMoved(MouseEvent e) {
+<span class="nc" id="L99">		logger.finest(&quot;Event: mouseMoved&quot;);</span>
+		// Invoked when the mouse button has been moved on a component (with no
+		// buttons down).
+<span class="nc" id="L102">		MainView node = ((MainView) e.getComponent());</span>
+<span class="nc" id="L103">		boolean isLink = (node).updateCursor(e.getX());</span>
+		// links are displayed in the status bar:
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (isLink) {</span>
+<span class="nc" id="L106">			c.getFrame().out(c.getLinkShortText(node.getNodeView().getModel()));</span>
+		}
+		// test if still in selection region:
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (controlRegionForDelayedSelection != null</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				&amp;&amp; delayedSelectionEnabled.getValue()) {</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			if (!controlRegionForDelayedSelection.contains(e.getPoint())) {</span>
+				// point is not in the region. start timer again and adjust
+				// region to the current point:
+<span class="nc" id="L114">				createTimer(e);</span>
+			}
+		}
+<span class="nc" id="L117">	}</span>
+
+	/** Invoked when a mouse button is pressed on a component and then dragged. */
+	public void mouseDragged(MouseEvent e) {
+<span class="nc" id="L121">		logger.fine(&quot;Event: mouseDragged&quot;);</span>
+		// first stop the timer and select the node:
+<span class="nc" id="L123">		stopTimerForDelayedSelection();</span>
+<span class="nc" id="L124">		NodeView nodeV = ((MainView) e.getComponent()).getNodeView();</span>
+
+		// if dragged for the first time, select the node:
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (!c.getView().isSelected(nodeV))</span>
+<span class="nc" id="L128">			c.extendSelection(e);</span>
+<span class="nc" id="L129">	}</span>
+
+	public void mouseClicked(MouseEvent e) {
+<span class="nc" id="L132">	}</span>
+
+	public void mouseEntered(MouseEvent e) {
+<span class="nc" id="L135">		logger.finest(&quot;Event: mouseEntered&quot;);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (!JOptionPane.getFrameForComponent(e.getComponent()).isFocused())</span>
+<span class="nc" id="L137">			return;</span>
+<span class="nc" id="L138">		createTimer(e);</span>
+		// c.select(e);
+<span class="nc" id="L140">	}</span>
+
+	public void mousePressed(MouseEvent e) {
+<span class="nc" id="L143">		logger.fine(&quot;Event: mousePressed&quot;);</span>
+		// for Linux/Mac
+<span class="nc" id="L145">		mMousePressedEvent = e;</span>
+<span class="nc" id="L146">	}</span>
+
+	public void mouseExited(MouseEvent e) {
+<span class="nc" id="L149">		logger.finest(&quot;Event: mouseExited&quot;);</span>
+<span class="nc" id="L150">		stopTimerForDelayedSelection();</span>
+<span class="nc" id="L151">	}</span>
+
+	public void mouseReleased(MouseEvent e) {
+		// handling click in mouseReleased rather than in mouseClicked
+		// provides better interaction. If mouse was slightly moved
+		// between pressed and released events, the event clicked
+		// is not triggered.
+		// The behavior is not tested on Linux.
+		
+<span class="nc" id="L160">		logger.fine(&quot;Event: mouseReleased&quot;);</span>
+<span class="nc" id="L161">		MouseEvent ev = e;</span>
+		/* 
+		 * For Mac see 
+		 * https://developer.apple.com/library/mac/#documentation/Java/Conceptual/Java14Development/07-NativePlatformIntegration/NativePlatformIntegration.html
+		 * */
+<span class="nc bnc" id="L166" title="All 4 branches missed.">		if(Tools.isLinux() || Tools.isMacOsX()) {</span>
+<span class="nc" id="L167">			ev = mMousePressedEvent;</span>
+		} 
+<span class="nc" id="L169">		handlePopupMenu(ev);</span>
+		
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (ev.isConsumed()) {</span>
+<span class="nc" id="L172">			return;</span>
+		}
+
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (e.getModifiers() == MouseEvent.BUTTON1_MASK) {</span>
+			// FIXME Dimitry: Double Click comes after Plain Click combining
+			// (un)folding with editing
+			// if (e.getClickCount() % 2 == 0) {
+			// c.doubleClick(e);
+			// } else {
+<span class="nc" id="L181">			c.plainClick(e);</span>
+			// }
+<span class="nc" id="L183">			e.consume();</span>
+		}
+<span class="nc" id="L185">	}</span>
+
+	protected void handlePopupMenu(MouseEvent e) {
+		// first stop the timer and select the node:
+<span class="nc" id="L189">		stopTimerForDelayedSelection();</span>
+<span class="nc" id="L190">		logger.fine(&quot;Extending selection for &quot; +e);</span>
+<span class="nc" id="L191">		c.extendSelection(e);</span>
+		// Right mouse &lt;i&gt;press&lt;/i&gt; is &lt;i&gt;not&lt;/i&gt; a popup trigger for Windows.
+		// Only Right mouse release is a popup trigger!
+		// OK, but Right mouse &lt;i&gt;press&lt;/i&gt; &lt;i&gt;is&lt;/i&gt; a popup trigger on Linux.
+<span class="nc" id="L195">		logger.fine(&quot;Looking for popup for &quot; +e);</span>
+<span class="nc" id="L196">		c.showPopupMenu(e);</span>
+<span class="nc" id="L197">	}</span>
+
+	protected Rectangle getControlRegion(Point2D p) {
+		// Create a small square around the given point.
+<span class="nc" id="L201">		int side = 8;</span>
+<span class="nc" id="L202">		return new Rectangle((int) (p.getX() - side / 2),</span>
+<span class="nc" id="L203">				(int) (p.getY() - side / 2), side, side);</span>
+	}
+
+	public void createTimer(MouseEvent e) {
+		// stop old timer if present.*/
+<span class="nc" id="L208">		stopTimerForDelayedSelection();</span>
+		/* Region to check for in the sequel. */
+<span class="nc" id="L210">		controlRegionForDelayedSelection = getControlRegion(e.getPoint());</span>
+<span class="nc" id="L211">		timerForDelayedSelection = new Timer();</span>
+<span class="nc" id="L212">		timerForDelayedSelection.schedule(</span>
+<span class="nc" id="L213">				new timeDelayedSelection(c, e),</span>
+				/*
+				 * if the new selection method is not enabled we put 0 to get
+				 * direct selection.
+				 */
+<span class="nc bnc" id="L218" title="All 2 branches missed.">				(delayedSelectionEnabled.getValue()) ? timeForDelayedSelection</span>
+<span class="nc" id="L219">						.getValue() : 0);</span>
+<span class="nc" id="L220">	}</span>
+
+	protected void stopTimerForDelayedSelection() {
+		// stop timer.
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (timerForDelayedSelection != null)</span>
+<span class="nc" id="L225">			timerForDelayedSelection.cancel();</span>
+<span class="nc" id="L226">		timerForDelayedSelection = null;</span>
+<span class="nc" id="L227">		controlRegionForDelayedSelection = null;</span>
+<span class="nc" id="L228">	}</span>
+
+	protected class timeDelayedSelection extends TimerTask {
+		private final ModeController c;
+
+		private final MouseEvent e;
+
+<span class="nc" id="L235">		timeDelayedSelection(ModeController c, MouseEvent e) {</span>
+<span class="nc" id="L236">			this.c = c;</span>
+<span class="nc" id="L237">			this.e = e;</span>
+<span class="nc" id="L238">		}</span>
+
+		/** TimerTask method to enable the selection after a given time. */
+		public void run() {
+			/*
+			 * formerly in ControllerAdapter. To guarantee, that point-to-select
+			 * does not change selection if any meta key is pressed.
+			 */
+<span class="nc" id="L246">			SwingUtilities.invokeLater(new Runnable() {</span>
+				public void run() {
+<span class="nc bnc" id="L248" title="All 4 branches missed.">					if (e.getModifiers() == 0 &amp;&amp; !c.isBlocked()</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">							&amp;&amp; c.getView().getSelecteds().size() &lt;= 1) {</span>
+<span class="nc" id="L250">						c.extendSelection(e);</span>
+					}
+<span class="nc" id="L252">				}</span>
+			});
+<span class="nc" id="L254">		}</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

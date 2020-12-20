@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>DeleteChildAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">DeleteChildAction.java</span></div><h1>DeleteChildAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 05.05.2004
+ */
+
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.util.Iterator;
+
+import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
+
+import freemind.common.OptionalDontShowMeAgainDialog;
+import freemind.controller.actions.generated.instance.DeleteNodeAction;
+import freemind.controller.actions.generated.instance.PasteNodeAction;
+import freemind.controller.actions.generated.instance.UndoPasteNodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.FreeMind;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.PasteAction.NodeCoordinate;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.NodeView;
+
+public class DeleteChildAction extends AbstractAction implements ActorXml {
+	private final MindMapController mMindMapController;
+	private String text;
+
+	public DeleteChildAction(MindMapController modeController) {
+<span class="nc" id="L54">		super(modeController.getText(&quot;remove_node&quot;), new ImageIcon(</span>
+<span class="nc" id="L55">				modeController.getResource(&quot;images/editdelete.png&quot;)));</span>
+<span class="nc" id="L56">		text = modeController.getText(&quot;remove_node&quot;);</span>
+<span class="nc" id="L57">		this.mMindMapController = modeController;</span>
+<span class="nc" id="L58">		this.mMindMapController.getActionFactory().registerActor(this,</span>
+<span class="nc" id="L59">				getDoActionClass());</span>
+<span class="nc" id="L60">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+		// ask user if not root is selected:
+<span class="nc" id="L64">		for (Iterator iterator = mMindMapController.getSelecteds().iterator(); iterator</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L66">			MindMapNode node = (MindMapNode) iterator.next();</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			if (node.isRoot()) {</span>
+<span class="nc" id="L68">				mMindMapController.getController().errorMessage(</span>
+<span class="nc" id="L69">						mMindMapController.getFrame().getResourceString(</span>
+<span class="nc" id="L70">								&quot;cannot_delete_root&quot;));</span>
+<span class="nc" id="L71">				return;</span>
+			}
+		}
+<span class="nc" id="L74">		int showResult = new OptionalDontShowMeAgainDialog(mMindMapController</span>
+<span class="nc" id="L75">				.getFrame().getJFrame(), mMindMapController.getSelectedView(),</span>
+<span class="nc" id="L76">				&quot;really_remove_node&quot;, &quot;confirmation&quot;, mMindMapController,</span>
+<span class="nc" id="L77">				new OptionalDontShowMeAgainDialog.StandardPropertyHandler(</span>
+<span class="nc" id="L78">						mMindMapController.getController(),</span>
+<span class="nc" id="L79">						FreeMind.RESOURCES_DELETE_NODES_WITHOUT_QUESTION),</span>
+<span class="nc" id="L80">				OptionalDontShowMeAgainDialog.ONLY_OK_SELECTION_IS_STORED)</span>
+<span class="nc" id="L81">				.show().getResult();</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (showResult != JOptionPane.OK_OPTION) {</span>
+<span class="nc" id="L83">			return;</span>
+		}
+		// because of multiple selection, cut is better.
+<span class="nc" id="L86">		mMindMapController.cut();</span>
+		// this.c.deleteNode(c.getSelected());
+<span class="nc" id="L88">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.actions.ActorXml#act(freemind.controller.actions.
+	 * generated.instance.XmlAction)
+	 */
+	public void act(XmlAction action) {
+<span class="nc" id="L98">		DeleteNodeAction deleteNodeAction = (DeleteNodeAction) action;</span>
+<span class="nc" id="L99">		MindMapNode selectedNode = this.mMindMapController</span>
+<span class="nc" id="L100">				.getNodeFromID(deleteNodeAction.getNode());</span>
+<span class="nc" id="L101">		deleteWithoutUndo(selectedNode);</span>
+<span class="nc" id="L102">	}</span>
+
+	/**
+     */
+	public void deleteWithoutUndo(MindMapNode selectedNode) {
+		// remove hooks:
+<span class="nc" id="L108">		removeHooks(selectedNode);</span>
+<span class="nc" id="L109">		MindMapNode parent = selectedNode.getParentNode();</span>
+<span class="nc" id="L110">		mMindMapController.fireNodePreDeleteEvent(selectedNode);</span>
+		// deregister node:
+<span class="nc" id="L112">		mMindMapController.getModel().getLinkRegistry()</span>
+<span class="nc" id="L113">				.deregisterLinkTarget(selectedNode);</span>
+		// deselect
+<span class="nc" id="L115">		MapView view = mMindMapController.getView();</span>
+<span class="nc" id="L116">		NodeView nodeView = view.getNodeView(selectedNode);</span>
+<span class="nc" id="L117">		view.deselect(nodeView);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if(view.getSelecteds().size() == 0) {</span>
+			NodeView newSelectedView;
+<span class="nc" id="L120">			int childIndex = parent.getChildPosition(selectedNode);</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			if(parent.getChildCount() &gt; childIndex+1) {</span>
+				// the next node
+<span class="nc" id="L123">				newSelectedView = view.getNodeView((MindMapNode) parent.getChildAt(childIndex+1));</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			} else if(childIndex &gt; 0) {</span>
+				// the node before:
+<span class="nc" id="L126">				newSelectedView = view.getNodeView((MindMapNode) parent.getChildAt(childIndex-1));</span>
+<span class="nc" id="L127">			} else {</span>
+				// no other node on same level. take the parent.
+<span class="nc" id="L129">				newSelectedView = view.getNodeView(parent);</span>
+			}
+<span class="nc" id="L131">			view.selectAsTheOnlyOneSelected(newSelectedView);</span>
+		}
+<span class="nc" id="L133">		mMindMapController.removeNodeFromParent(selectedNode);</span>
+		// post event
+<span class="nc" id="L135">		mMindMapController.fireNodePostDeleteEvent(selectedNode, parent);</span>
+<span class="nc" id="L136">	}</span>
+
+	private void removeHooks(MindMapNode selectedNode) {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		for (Iterator it = selectedNode.childrenUnfolded(); it.hasNext();) {</span>
+<span class="nc" id="L140">			MindMapNode child = (MindMapNode) it.next();</span>
+<span class="nc" id="L141">			removeHooks(child);</span>
+		}
+<span class="nc" id="L143">		long currentRun = 0;</span>
+		// determine timeout:
+<span class="nc" id="L145">		long timeout = selectedNode.getActivatedHooks().size() * 2 + 2;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		while (selectedNode.getActivatedHooks().size() &gt; 0) {</span>
+<span class="nc" id="L147">			PermanentNodeHook hook = (PermanentNodeHook) selectedNode</span>
+<span class="nc" id="L148">					.getActivatedHooks().iterator().next();</span>
+<span class="nc" id="L149">			selectedNode.removeHook(hook);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (currentRun++ &gt; timeout) {</span>
+<span class="nc" id="L151">				throw new IllegalStateException(</span>
+<span class="nc" id="L152">						&quot;Timeout reached shutting down the hooks.&quot;);</span>
+			}
+		}
+<span class="nc" id="L155">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.actions.ActorXml#getDoActionClass()
+	 */
+	public Class getDoActionClass() {
+<span class="nc" id="L163">		return DeleteNodeAction.class;</span>
+	}
+
+	public void deleteNode(MindMapNode selectedNode) {
+<span class="nc" id="L167">		String newId = mMindMapController.getNodeID(selectedNode);</span>
+
+<span class="nc" id="L169">		Transferable copy = mMindMapController.copy(selectedNode, true);</span>
+<span class="nc" id="L170">		NodeCoordinate coord = new NodeCoordinate(selectedNode,</span>
+<span class="nc" id="L171">				selectedNode.isLeft());</span>
+		// Undo-action
+<span class="nc" id="L173">		PasteNodeAction pasteNodeAction = null;</span>
+<span class="nc" id="L174">		pasteNodeAction = mMindMapController.paste.getPasteNodeAction(copy,</span>
+<span class="nc" id="L175">				coord, (UndoPasteNodeAction) null);</span>
+
+<span class="nc" id="L177">		DeleteNodeAction deleteAction = getDeleteNodeAction(newId);</span>
+<span class="nc" id="L178">		mMindMapController.doTransaction(text,</span>
+<span class="nc" id="L179">				new ActionPair(deleteAction, pasteNodeAction));</span>
+<span class="nc" id="L180">	}</span>
+
+	public DeleteNodeAction getDeleteNodeAction(String newId) {
+<span class="nc" id="L183">		DeleteNodeAction deleteAction = new DeleteNodeAction();</span>
+<span class="nc" id="L184">		deleteAction.setNode(newId);</span>
+<span class="nc" id="L185">		return deleteAction;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

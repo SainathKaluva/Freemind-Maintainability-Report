@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ChooseFormatPopupDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.dialogs</a> &gt; <span class="el_source">ChooseFormatPopupDialog.java</span></div><h1>ChooseFormatPopupDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package accessories.plugins.dialogs;
+
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+
+import freemind.common.TextTranslator;
+import freemind.controller.actions.generated.instance.Pattern;
+import freemind.controller.actions.generated.instance.WindowConfigurationStorage;
+import freemind.main.Tools;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.dialogs.StylePatternFrame;
+import freemind.modes.mindmapmode.dialogs.StylePatternFrame.StylePatternFrameType;
+
+/** */
+public class ChooseFormatPopupDialog extends JDialog implements TextTranslator,
+		KeyListener {
+
+	public static final int CANCEL = -1;
+
+	public static final int OK = 1;
+
+	private static final String WINDOW_PREFERENCE_STORAGE_PROPERTY = &quot;accessories.plugins.dialogs.ChooseFormatPopupDialog.window_storage&quot;;
+
+<span class="nc" id="L59">	private int result = CANCEL;</span>
+
+<span class="nc" id="L61">	private javax.swing.JPanel jContentPane = null;</span>
+
+	private MindMapController mController;
+
+	private JButton jCancelButton;
+
+	private JButton jOKButton;
+
+	private StylePatternFrame mStylePatternFrame;
+
+	/**
+	 * This constructor is used, if you need the user to enter a pattern
+	 * generally.
+	 * 
+	 */
+	public ChooseFormatPopupDialog(JFrame caller, MindMapController controller,
+			String dialogTitle, Pattern pattern) {
+<span class="nc" id="L78">		super(caller);</span>
+<span class="nc" id="L79">		this.mController = controller;</span>
+<span class="nc" id="L80">		initialize(dialogTitle);</span>
+<span class="nc" id="L81">		mStylePatternFrame.setPattern(pattern);</span>
+<span class="nc" id="L82">		mStylePatternFrame.addListeners();</span>
+<span class="nc" id="L83">	}</span>
+
+	/**
+	 * This method initializes this
+	 * 
+	 * @return void
+	 */
+	private void initialize(String dialogTitle) {
+
+<span class="nc" id="L92">		this.setTitle(mController.getText(dialogTitle));</span>
+<span class="nc" id="L93">		JPanel contentPane = getJContentPane();</span>
+<span class="nc" id="L94">		this.setContentPane(contentPane);</span>
+<span class="nc" id="L95">		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L96">		addWindowListener(new WindowAdapter() {</span>
+			public void windowClosing(WindowEvent we) {
+<span class="nc" id="L98">				cancelPressed();</span>
+<span class="nc" id="L99">			}</span>
+		});
+<span class="nc" id="L101">		addKeyListener(this);</span>
+<span class="nc" id="L102">		Action action = new AbstractAction() {</span>
+
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L105">				cancelPressed();</span>
+<span class="nc" id="L106">			}</span>
+		};
+<span class="nc" id="L108">		Tools.addEscapeActionToDialog(this, action);</span>
+<span class="nc" id="L109">		pack();</span>
+<span class="nc" id="L110">		mController.decorateDialog(this, WINDOW_PREFERENCE_STORAGE_PROPERTY);</span>
+
+<span class="nc" id="L112">	}</span>
+
+	private void close() {
+<span class="nc" id="L115">		WindowConfigurationStorage storage = new WindowConfigurationStorage();</span>
+<span class="nc" id="L116">		mController.storeDialogPositions(this, storage,</span>
+<span class="nc" id="L117">				WINDOW_PREFERENCE_STORAGE_PROPERTY);</span>
+<span class="nc" id="L118">		setVisible(false);</span>
+<span class="nc" id="L119">		this.dispose();</span>
+<span class="nc" id="L120">	}</span>
+
+	private void okPressed() {
+<span class="nc" id="L123">		result = OK;</span>
+<span class="nc" id="L124">		close();</span>
+<span class="nc" id="L125">	}</span>
+
+	private void cancelPressed() {
+<span class="nc" id="L128">		result = CANCEL;</span>
+<span class="nc" id="L129">		close();</span>
+<span class="nc" id="L130">	}</span>
+
+	/**
+	 * This method initializes jContentPane
+	 * 
+	 * @return javax.swing.JPanel
+	 */
+	private javax.swing.JPanel getJContentPane() {
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (jContentPane == null) {</span>
+<span class="nc" id="L139">			jContentPane = new javax.swing.JPanel();</span>
+<span class="nc" id="L140">			jContentPane.setLayout(new GridBagLayout());</span>
+			/*
+			 * public GridBagConstraints(int gridx, int gridy, int gridwidth,
+			 * int gridheight, double weightx, double weighty, int anchor, int
+			 * fill, Insets insets, int ipadx, int ipady)
+			 */
+<span class="nc" id="L146">			jContentPane.add(new JScrollPane(getStylePatternFrame()),</span>
+<span class="nc" id="L147">					new GridBagConstraints(0, 0, 2, 1, 2.0, 8.0,</span>
+<span class="nc" id="L148">							GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L149">							new Insets(0, 0, 0, 0), 0, 0));</span>
+<span class="nc" id="L150">			jContentPane.add(getJOKButton(), new GridBagConstraints(0, 1, 1, 1,</span>
+<span class="nc" id="L151">					1.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,</span>
+<span class="nc" id="L152">					new Insets(0, 0, 0, 0), 0, 0));</span>
+<span class="nc" id="L153">			jContentPane.add(getJCancelButton(), new GridBagConstraints(1, 1,</span>
+<span class="nc" id="L154">					1, 1, 1.0, 0.0, GridBagConstraints.EAST,</span>
+<span class="nc" id="L155">					GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));</span>
+<span class="nc" id="L156">			getRootPane().setDefaultButton(getJOKButton());</span>
+		}
+<span class="nc" id="L158">		return jContentPane;</span>
+	}
+
+	private Component getStylePatternFrame() {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		if (mStylePatternFrame == null) {</span>
+<span class="nc" id="L163">			mStylePatternFrame = new StylePatternFrame(this, mController,</span>
+<span class="nc" id="L164">					StylePatternFrameType.WITHOUT_NAME_AND_CHILDS);</span>
+<span class="nc" id="L165">			mStylePatternFrame.init();</span>
+
+		}
+<span class="nc" id="L168">		return mStylePatternFrame;</span>
+	}
+
+	/**
+	 * This method initializes jButton
+	 * 
+	 * @return javax.swing.JButton
+	 */
+	private JButton getJOKButton() {
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (jOKButton == null) {</span>
+<span class="nc" id="L178">			jOKButton = new JButton();</span>
+
+<span class="nc" id="L180">			jOKButton.setAction(new AbstractAction() {</span>
+
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L183">					okPressed();</span>
+<span class="nc" id="L184">				}</span>
+
+			});
+
+<span class="nc" id="L188">			Tools.setLabelAndMnemonic(jOKButton, mController.getText(&quot;ok&quot;));</span>
+		}
+<span class="nc" id="L190">		return jOKButton;</span>
+	}
+
+	/**
+	 * This method initializes jButton1
+	 * 
+	 * @return javax.swing.JButton
+	 */
+	private JButton getJCancelButton() {
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		if (jCancelButton == null) {</span>
+<span class="nc" id="L200">			jCancelButton = new JButton();</span>
+<span class="nc" id="L201">			jCancelButton.setAction(new AbstractAction() {</span>
+
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L204">					cancelPressed();</span>
+<span class="nc" id="L205">				}</span>
+			});
+<span class="nc" id="L207">			Tools.setLabelAndMnemonic(jCancelButton,</span>
+<span class="nc" id="L208">					mController.getText((&quot;cancel&quot;)));</span>
+		}
+<span class="nc" id="L210">		return jCancelButton;</span>
+	}
+
+	/**
+	 * @return Returns the result.
+	 */
+	public int getResult() {
+<span class="nc" id="L217">		return result;</span>
+	}
+
+	public String getText(String pKey) {
+<span class="nc" id="L221">		return mController.getText(pKey);</span>
+	}
+
+	public Pattern getPattern() {
+<span class="nc" id="L225">		return mStylePatternFrame.getResultPattern();</span>
+	}
+
+	public Pattern getPattern(Pattern copyIntoPattern) {
+<span class="nc" id="L229">		return mStylePatternFrame.getResultPattern(copyIntoPattern);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
+	 */
+	public void keyPressed(KeyEvent keyEvent) {
+<span class="nc" id="L238">		System.out.println(&quot;key pressed: &quot; + keyEvent);</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		switch (keyEvent.getKeyCode()) {</span>
+		case KeyEvent.VK_ESCAPE:
+<span class="nc" id="L241">			cancelPressed();</span>
+<span class="nc" id="L242">			keyEvent.consume();</span>
+			break;
+		}
+<span class="nc" id="L245">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
+	 */
+	public void keyReleased(KeyEvent keyEvent) {
+<span class="nc" id="L253">		System.out.println(&quot;keyReleased: &quot; + keyEvent);</span>
+<span class="nc" id="L254">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.event.KeyListener#keyTyped(java.awt.event.KeyEvent)
+	 */
+	public void keyTyped(KeyEvent keyEvent) {
+<span class="nc" id="L262">		System.out.println(&quot;keyTyped: &quot; + keyEvent);</span>
+<span class="nc" id="L263">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

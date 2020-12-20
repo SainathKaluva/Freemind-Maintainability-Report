@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>DatabaseBasics.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.database</a> &gt; <span class="el_source">DatabaseBasics.java</span></div><h1>DatabaseBasics.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2008  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 28.12.2008
+ */
+
+package plugins.collaboration.database;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.WindowConstants;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.factories.ButtonBarFactory;
+import com.jgoodies.forms.layout.FormLayout;
+
+import freemind.common.NumberProperty;
+import freemind.common.PropertyBean;
+import freemind.common.PropertyControl;
+import freemind.controller.Controller;
+import freemind.controller.MapModuleManager.MapTitleContributor;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+import freemind.view.MapModule;
+
+public abstract class DatabaseBasics extends MindMapNodeHookAdapter implements
+		MapTitleContributor {
+
+	public final static String SLAVE_HOOK_NAME = &quot;plugins/collaboration/database/database_slave_plugin&quot;;
+	public final static String SLAVE_STARTER_NAME = &quot;plugins/collaboration/database/database_slave_starter_plugin&quot;;
+	protected static final String ROW_PK = &quot;PK&quot;;
+	protected static final String ROW_ACTION = &quot;do_action&quot;;
+	protected static final String TABLE_XML_ACTIONS = &quot;XmlActions&quot;;
+	protected static final String TABLE_USERS = &quot;Users&quot;;
+	protected static final String ROW_UNDOACTION = &quot;undo_action&quot;;
+	protected static final String ROW_MAP = &quot;map&quot;;
+	protected static final String ROW_USER = &quot;user&quot;;
+<span class="nc" id="L74">	protected static final Integer ROLE_MASTER = Integer.valueOf(0);</span>
+<span class="nc" id="L75">	protected static final Integer ROLE_SLAVE = Integer.valueOf(1);</span>
+	private static final String PORT_PROPERTY = &quot;plugins.collaboration.database.port&quot;;
+	private static final String DATABASE_BASICS_CLASS = &quot;plugins.collaboration.database.DatabaseBasics&quot;;
+
+	protected static final String PASSWORD = DATABASE_BASICS_CLASS
+			+ &quot;.password&quot;;
+	protected static final String PASSWORD_DESCRIPTION = DATABASE_BASICS_CLASS
+			+ &quot;.password.description&quot;;
+
+	protected static final String PASSWORD_VERIFICATION = DATABASE_BASICS_CLASS
+			+ &quot;.password_verification&quot;;
+	protected static final String PASSWORD_VERIFICATION_DESCRIPTION = DATABASE_BASICS_CLASS
+			+ &quot;.password_verification_description&quot;;
+
+	protected static final String HOST = DATABASE_BASICS_CLASS + &quot;.host&quot;;
+	protected static final String HOST_DESCRIPTION = DATABASE_BASICS_CLASS
+			+ &quot;.host.description&quot;;
+
+	protected static final String PORT = DATABASE_BASICS_CLASS + &quot;.port&quot;;
+	protected static final String PORT_DESCRIPTION = DATABASE_BASICS_CLASS
+			+ &quot;.port.description&quot;;
+
+	protected static final String TITLE = DATABASE_BASICS_CLASS + &quot;.title&quot;;
+
+<span class="nc" id="L99">	protected static java.util.logging.Logger logger = null;</span>
+<span class="nc" id="L100">	protected UpdateThread mUpdateThread = null;</span>
+
+	public interface ResultHandler {
+		void processResults(ResultSet rs);
+	}
+
+	public DatabaseBasics() {
+<span class="nc" id="L107">		super();</span>
+<span class="nc" id="L108">	}</span>
+
+	/**
+	 * @return ROLE_MASTER OR ROLE_SLAVE
+	 */
+	public abstract Integer getRole();
+
+	public void startupMapHook() {
+<span class="nc" id="L116">		super.startupMapHook();</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L118">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L119">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L121">		getMindMapController().getController()</span>
+<span class="nc" id="L122">				.registerMapTitleContributor(this);</span>
+<span class="nc" id="L123">	}</span>
+
+	public void shutdownMapHook() {
+<span class="nc" id="L126">		Controller controller = getMindMapController().getController();</span>
+<span class="nc" id="L127">		controller.deregisterMapTitleContributor(this);</span>
+<span class="nc" id="L128">		controller.setTitle();</span>
+<span class="nc" id="L129">		super.shutdownMapHook();</span>
+<span class="nc" id="L130">	}</span>
+
+	protected static void togglePermanentHook(MindMapController controller) {
+<span class="nc" id="L133">		MindMapNode rootNode = controller.getRootNode();</span>
+<span class="nc" id="L134">		List selecteds = Arrays.asList(new MindMapNode[] { rootNode });</span>
+<span class="nc" id="L135">		controller.addHook(rootNode, selecteds, SLAVE_HOOK_NAME, null);</span>
+<span class="nc" id="L136">	}</span>
+
+	protected void setPortProperty(final NumberProperty portProperty) {
+<span class="nc" id="L139">		getMindMapController().getFrame().setProperty(PORT_PROPERTY,</span>
+<span class="nc" id="L140">				portProperty.getValue());</span>
+<span class="nc" id="L141">	}</span>
+
+	protected NumberProperty getPortProperty() {
+<span class="nc" id="L144">		final NumberProperty portProperty = new NumberProperty(</span>
+<span class="nc" id="L145">				PORT_DESCRIPTION, PORT, 1024, 32767, 1);</span>
+		// fill values:
+<span class="nc" id="L147">		portProperty.setValue(&quot;&quot;</span>
+<span class="nc" id="L148">				+ getMindMapController().getFrame().getIntProperty(</span>
+<span class="nc" id="L149">						PORT_PROPERTY, 9001));</span>
+<span class="nc" id="L150">		return portProperty;</span>
+	}
+
+<span class="nc" id="L153">	public static abstract class FormDialogValidator {</span>
+		/**
+		 * @return true, if ok should be enabled.
+		 */
+		public abstract boolean isValid();
+	}
+
+	public static class FormDialog extends JDialog implements
+			PropertyChangeListener {
+		private final MindMapController mController2;
+<span class="nc" id="L163">		private boolean mSuccess = false;</span>
+		private JButton mOkButton;
+		private FormDialogValidator mFormDialogValidator;
+
+		public boolean isSuccess() {
+<span class="nc" id="L168">			return mSuccess;</span>
+		}
+
+		public FormDialog(MindMapController pController) {
+<span class="nc" id="L172">			super(pController.getFrame().getJFrame());</span>
+<span class="nc" id="L173">			mController2 = pController;</span>
+<span class="nc" id="L174">		}</span>
+
+		public void setUp(Vector controls) {
+<span class="nc" id="L177">			setUp(controls, new FormDialogValidator() {</span>
+
+				public boolean isValid() {
+<span class="nc" id="L180">					return true;</span>
+				}
+			});
+<span class="nc" id="L183">		}</span>
+
+		public void setUp(Vector controls, FormDialogValidator pValidator) {
+<span class="nc" id="L186">			mFormDialogValidator = pValidator;</span>
+<span class="nc" id="L187">			setModal(true);</span>
+<span class="nc" id="L188">			getContentPane().setLayout(new BorderLayout());</span>
+<span class="nc" id="L189">			FormLayout formLayout = new FormLayout(</span>
+<span class="nc" id="L190">					&quot;right:max(40dlu;p), 4dlu, 80dlu, 7dlu&quot;, &quot;&quot;);</span>
+<span class="nc" id="L191">			DefaultFormBuilder builder = new DefaultFormBuilder(formLayout);</span>
+<span class="nc" id="L192">			builder.setDefaultDialogBorder();</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			for (Iterator it = controls.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L194">				PropertyControl prop = (PropertyControl) it.next();</span>
+<span class="nc" id="L195">				prop.layout(builder, mController2);</span>
+<span class="nc" id="L196">				PropertyBean bean = (PropertyBean) prop;</span>
+<span class="nc" id="L197">				bean.addPropertyChangeListener(this);</span>
+			}
+<span class="nc" id="L199">			getContentPane().add(builder.getPanel(), BorderLayout.CENTER);</span>
+<span class="nc" id="L200">			JButton cancelButton = new JButton(getText(&quot;Cancel&quot;));</span>
+<span class="nc" id="L201">			cancelButton.addActionListener(new ActionListener() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L204">					closeWindow();</span>
+<span class="nc" id="L205">				}</span>
+
+			});
+<span class="nc" id="L208">			mOkButton = new JButton(getText(&quot;OK&quot;));</span>
+<span class="nc" id="L209">			mOkButton.addActionListener(new ActionListener() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L212">					mSuccess = true;</span>
+<span class="nc" id="L213">					closeWindow();</span>
+<span class="nc" id="L214">				}</span>
+
+			});
+<span class="nc" id="L217">			getRootPane().setDefaultButton(mOkButton);</span>
+<span class="nc" id="L218">			getContentPane().add(</span>
+<span class="nc" id="L219">					ButtonBarFactory.buildOKCancelBar(cancelButton, mOkButton),</span>
+<span class="nc" id="L220">					BorderLayout.SOUTH);</span>
+<span class="nc" id="L221">			setTitle(&quot;Enter Password Dialog&quot;);</span>
+<span class="nc" id="L222">			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);</span>
+<span class="nc" id="L223">			addWindowListener(new WindowAdapter() {</span>
+				public void windowClosing(WindowEvent event) {
+<span class="nc" id="L225">					closeWindow();</span>
+<span class="nc" id="L226">				}</span>
+			});
+<span class="nc" id="L228">			Action action = new AbstractAction() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L231">					closeWindow();</span>
+<span class="nc" id="L232">				}</span>
+			};
+<span class="nc" id="L234">			Action actionSuccess = new AbstractAction() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L237">					mSuccess = true;</span>
+<span class="nc" id="L238">					closeWindow();</span>
+<span class="nc" id="L239">				}</span>
+			};
+<span class="nc" id="L241">			Tools.addEscapeActionToDialog(this, action);</span>
+<span class="nc" id="L242">			Tools.addKeyActionToDialog(this, actionSuccess, &quot;ENTER&quot;,</span>
+<span class="nc" id="L243">					&quot;ok_dialog&quot;);</span>
+
+<span class="nc" id="L245">			pack();</span>
+<span class="nc" id="L246">			setVisible(true);</span>
+
+<span class="nc" id="L248">		}</span>
+
+		private void closeWindow() {
+<span class="nc" id="L251">			setVisible(false);</span>
+<span class="nc" id="L252">		}</span>
+
+		String getText(String text) {
+<span class="nc" id="L255">			return text;</span>
+		}
+
+		public void propertyChange(PropertyChangeEvent pEvt) {
+<span class="nc" id="L259">			logger.info(&quot;Property change &quot; + pEvt);</span>
+<span class="nc" id="L260">			mOkButton.setEnabled(mFormDialogValidator.isValid());</span>
+<span class="nc" id="L261">		}</span>
+
+	}
+
+	public void setUpdateThread(UpdateThread pUpdateThread) {
+<span class="nc" id="L266">		mUpdateThread = pUpdateThread;</span>
+<span class="nc" id="L267">	}</span>
+
+	public UpdateThread getUpdateThread() {
+<span class="nc" id="L270">		return mUpdateThread;</span>
+	}
+
+	public String getMapTitle(String pOldTitle, MapModule pMapModule,
+			MindMap pModel) {
+<span class="nc" id="L275">		String title = pOldTitle;</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">		if (pModel.getModeController() != getMindMapController()) {</span>
+<span class="nc" id="L277">			return pOldTitle;</span>
+		}
+<span class="nc" id="L279">		String userString = &quot;&quot;;</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (mUpdateThread != null) {</span>
+			try {
+<span class="nc" id="L282">				boolean first = true;</span>
+<span class="nc" id="L283">				Vector users = mUpdateThread.getUsers();</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">				for (Iterator it = users.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L285">					String user = (String) it.next();</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">					if (first)</span>
+<span class="nc" id="L287">						first = false;</span>
+					else
+<span class="nc" id="L289">						userString += &quot;, &quot;;</span>
+<span class="nc" id="L290">					userString += user;</span>
+				}
+<span class="nc" id="L292">			} catch (SQLException e) {</span>
+				// TODO Auto-generated catch block
+<span class="nc" id="L294">				freemind.main.Resources.getInstance().logException(e);</span>
+
+			}
+		}
+<span class="nc" id="L298">		return pOldTitle</span>
+<span class="nc" id="L299">				+ Resources.getInstance().format(</span>
+<span class="nc" id="L300">						TITLE,</span>
+<span class="nc" id="L301">						new Object[] { this.getRole(), this.getHost(),</span>
+<span class="nc" id="L302">								this.getPort(), userString });</span>
+	}
+
+	public String getPort() {
+<span class="nc" id="L306">		return mUpdateThread.getPort();</span>
+	}
+
+	public String getHost() {
+<span class="nc" id="L310">		return mUpdateThread.getHost();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

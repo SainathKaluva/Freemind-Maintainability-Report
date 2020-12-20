@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NumberProperty.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.common</a> &gt; <span class="el_source">NumberProperty.java</span></div><h1>NumberProperty.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 25.02.2006
+ */
+/*$Id: NumberProperty.java,v 1.1.2.3.2.5 2009/01/14 21:18:36 christianfoltin Exp $*/
+package freemind.common;
+
+import javax.swing.JLabel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+
+public class NumberProperty extends PropertyBean implements PropertyControl {
+	String description;
+	// JSlider slider;
+	String label;
+	private JSpinner spinner;
+	private final int min;
+	private final int max;
+	private final int step;
+
+	/**
+	     */
+<span class="nc" id="L44">	public NumberProperty(String description, String label, int min, int max,</span>
+			int step) {
+<span class="nc" id="L46">		this.min = min;</span>
+<span class="nc" id="L47">		this.max = max;</span>
+<span class="nc" id="L48">		this.step = step;</span>
+		// slider = new JSlider(JSlider.HORIZONTAL, 5, 1000, 100);
+<span class="nc" id="L50">		spinner = new JSpinner(new SpinnerNumberModel(min, min, max, step));</span>
+
+<span class="nc" id="L52">		this.description = description;</span>
+<span class="nc" id="L53">		this.label = label;</span>
+<span class="nc" id="L54">		spinner.addChangeListener(new ChangeListener() {</span>
+
+			public void stateChanged(ChangeEvent pE) {
+<span class="nc" id="L57">				firePropertyChangeEvent();</span>
+<span class="nc" id="L58">			}</span>
+		});
+
+<span class="nc" id="L61">	}</span>
+
+	public String getDescription() {
+<span class="nc" id="L64">		return description;</span>
+	}
+
+	public String getLabel() {
+<span class="nc" id="L68">		return label;</span>
+	}
+
+	public void setValue(String value) {
+<span class="nc" id="L72">		int intValue = min;</span>
+		try {
+<span class="nc" id="L74">			int parsedIntValue = Integer.parseInt(value);</span>
+<span class="nc" id="L75">			intValue = parsedIntValue;</span>
+<span class="nc" id="L76">			int stepModul = (intValue - min) % step;</span>
+<span class="nc bnc" id="L77" title="All 6 branches missed.">			if (intValue &lt; min || intValue &gt; max || (stepModul != 0)) {</span>
+<span class="nc" id="L78">				System.err.println(&quot;Actual value of property &quot; + getLabel()</span>
+<span class="nc" id="L79">						+ &quot; is not in the allowed range: &quot; + value);</span>
+<span class="nc" id="L80">				intValue = min;</span>
+			}
+<span class="nc" id="L82">		} catch (NumberFormatException e) {</span>
+<span class="nc" id="L83">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L85">		spinner.setValue(new Integer(intValue));</span>
+<span class="nc" id="L86">	}</span>
+
+	public String getValue() {
+<span class="nc" id="L89">		return spinner.getValue().toString();</span>
+	}
+	
+	public int getIntValue() {
+<span class="nc" id="L93">		return ((Integer)(spinner.getValue())).intValue();</span>
+	}
+
+	public void layout(DefaultFormBuilder builder, TextTranslator pTranslator) {
+		// JLabel label = builder
+		// .append(pTranslator.getText(getLabel()), slider);
+<span class="nc" id="L99">		JLabel label = builder.append(pTranslator.getText(getLabel()), spinner);</span>
+<span class="nc" id="L100">		label.setToolTipText(pTranslator.getText(getDescription()));</span>
+<span class="nc" id="L101">	}</span>
+
+	public void setEnabled(boolean pEnabled) {
+<span class="nc" id="L104">		spinner.setEnabled(pEnabled);</span>
+<span class="nc" id="L105">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

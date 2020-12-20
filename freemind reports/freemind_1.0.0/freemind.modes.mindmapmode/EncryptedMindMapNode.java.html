@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>EncryptedMindMapNode.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode</a> &gt; <span class="el_source">EncryptedMindMapNode.java</span></div><h1>EncryptedMindMapNode.java</h1><pre class="source lang-java linenums">/*
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2001 Joerg Mueller &lt;joergmueller@bigfoot.com&gt; See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+
+package freemind.modes.mindmapmode;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ListIterator;
+import java.util.Vector;
+
+import javax.swing.ImageIcon;
+import javax.swing.tree.MutableTreeNode;
+
+import freemind.main.FreeMindMain;
+import freemind.main.HtmlTools;
+import freemind.main.Tools.SingleDesEncrypter;
+import freemind.main.XMLElement;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapLinkRegistry;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+
+public class EncryptedMindMapNode extends MindMapNodeModel {
+
+	/**
+	 * Is used to hide all children (when false)
+	 */
+<span class="nc" id="L47">	private boolean isAccessible = true;</span>
+
+	/**
+	 * Is used to store the child nodes (when true).
+	 */
+<span class="nc" id="L52">	private boolean isStoringEncryptedContent = false;</span>
+
+	/**
+	 * is only set to false by the load mechanism. If the node is generated or
+	 * it is decrypted once, this is always true.
+	 */
+<span class="nc" id="L58">	private boolean isDecrypted = true;</span>
+
+	/**
+	 * password have to be stored in a StringBuffer as Strings cannot be deleted
+	 * or overwritten.
+	 */
+<span class="nc" id="L64">	private StringBuffer password = null;</span>
+
+	private String encryptedContent;
+
+	private static ImageIcon encryptedIcon;
+
+	private static ImageIcon decryptedIcon;
+
+<span class="nc" id="L72">	private boolean isShuttingDown = false;</span>
+
+	/**
+     */
+	public EncryptedMindMapNode(Object userObject, FreeMindMain frame,
+			MindMap map) {
+<span class="nc" id="L78">		super(userObject, frame, map);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (encryptedIcon == null) {</span>
+<span class="nc" id="L80">			encryptedIcon = MindIcon.factory(&quot;encrypted&quot;).getIcon();</span>
+		}
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (decryptedIcon == null) {</span>
+<span class="nc" id="L83">			decryptedIcon = MindIcon.factory(&quot;decrypted&quot;).getIcon();</span>
+		}
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (map != null) {</span>
+<span class="nc" id="L86">			updateIcon();</span>
+		}
+<span class="nc" id="L88">	}</span>
+
+	public void setMap(MindMap map) {
+<span class="nc" id="L91">		super.setMap(map);</span>
+<span class="nc" id="L92">		updateIcon();</span>
+<span class="nc" id="L93">	}</span>
+
+	/**
+	 * @return true, if the password was correct.
+	 */
+	public boolean decrypt(StringBuffer givenPassword) {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (!checkPassword(givenPassword)) {</span>
+<span class="nc" id="L100">			return false;</span>
+		}
+<span class="nc" id="L102">		setAccessible(true);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (!isDecrypted) {</span>
+			try {
+<span class="nc" id="L105">				MindMapNode node = null;</span>
+<span class="nc" id="L106">				String childXml = decryptXml(encryptedContent, password);</span>
+				// is it a map at all?
+<span class="nc bnc" id="L108" title="All 2 branches missed.">				if (childXml.startsWith(MindMapMapModel.MAP_INITIAL_START)) {</span>
+<span class="nc" id="L109">					node = getNodeFromXml(childXml);</span>
+<span class="nc" id="L110">				} else {</span>
+					// old handling up to version 0.9.0_rc8:
+<span class="nc" id="L112">					String[] childs = childXml</span>
+<span class="nc" id="L113">							.split(ModeController.NODESEPARATOR);</span>
+					// and now? paste it:
+					// make a 0.8.0 map out of it:
+<span class="nc" id="L116">					String mapContent = MindMapMapModel.MAP_INITIAL_START</span>
+							+ &quot;0.8.0\&quot;&gt;&lt;node TEXT=\&quot;DUMMY\&quot;&gt;&quot;;
+<span class="nc bnc" id="L118" title="All 2 branches missed.">					for (int j = 0; j &lt; childs.length; j++) {</span>
+<span class="nc" id="L119">						String nodeContent = childs[j];</span>
+<span class="nc" id="L120">						mapContent += nodeContent;</span>
+					}
+<span class="nc" id="L122">					mapContent += &quot;&lt;/node&gt;&lt;/map&gt;&quot;;</span>
+<span class="nc" id="L123">					node = getNodeFromXml(mapContent);</span>
+				}
+<span class="nc" id="L125">				int index = 0;</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">				for (ListIterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L127">					MindMapNodeModel importNode = (MindMapNodeModel) i.next();</span>
+<span class="nc" id="L128">					((MindMapController) getModeController()).insertNodeInto(</span>
+<span class="nc" id="L129">							importNode, this, index++);</span>
+				}
+<span class="nc" id="L131">				isDecrypted = true;</span>
+<span class="nc" id="L132">			} catch (Exception e) {</span>
+<span class="nc" id="L133">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L134">				setAccessible(false);</span>
+			}
+		}
+<span class="nc" id="L137">		setFolded(false);</span>
+<span class="nc" id="L138">		getMap().getRegistry().registrySubtree(this, false);</span>
+<span class="nc" id="L139">		return true;</span>
+	}
+
+	private void paste(MindMapNodeModel importNode) {
+<span class="nc" id="L143">		((MindMapController) getModeController()).paste(importNode, this);</span>
+<span class="nc" id="L144">	}</span>
+
+	private MindMapNodeModel getNodeFromXml(String childXml) throws IOException {
+		// the loadTree method performs an automatical version update.
+<span class="nc" id="L148">		MindMapNodeModel node = getMindMapMapModel().loadTree(</span>
+<span class="nc" id="L149">				new MindMapMapModel.StringReaderCreator(childXml), false);</span>
+<span class="nc" id="L150">		return node;</span>
+	}
+
+	private MindMapMapModel getMindMapMapModel() {
+<span class="nc" id="L154">		return ((MindMapMapModel) getMap());</span>
+	}
+
+	/**
+     */
+	public boolean checkPassword(StringBuffer givenPassword) {
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		if (password != null) {</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			if (!equals(givenPassword, password)) {</span>
+<span class="nc" id="L163">				logger.warning(&quot;Wrong password supplied (cached!=given).&quot;);</span>
+<span class="nc" id="L164">				return false;</span>
+			}
+<span class="nc" id="L166">			return true;</span>
+		}
+		// new password:
+<span class="nc" id="L169">		String decryptedNode = decryptXml(encryptedContent, givenPassword);</span>
+		// FIXME: Better test needed.
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (decryptedNode == null) {</span>
+<span class="nc" id="L172">			logger.warning(&quot;Wrong password supplied (deciphered text is null).&quot;);</span>
+<span class="nc" id="L173">			return false;</span>
+		}
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (!decryptedNode.startsWith(&quot;&lt;node &quot;)) {</span>
+			// not an encrpyted node in the old format
+			// (node,separator,node,...), we test for xml:
+<span class="nc bnc" id="L178" title="All 2 branches missed.">			if (!HtmlTools.getInstance().isWellformedXml(decryptedNode)) {</span>
+<span class="nc" id="L179">				logger.warning(&quot;Wrong password supplied (malformed deciphered text).&quot;);</span>
+<span class="nc" id="L180">				return false;</span>
+			}
+		}
+<span class="nc" id="L183">		this.password = givenPassword;</span>
+<span class="nc" id="L184">		return true;</span>
+	}
+
+	/**
+     */
+	private boolean equals(StringBuffer givenPassword, StringBuffer password2) {
+<span class="nc bnc" id="L190" title="All 2 branches missed.">		if (givenPassword.length() != password.length())</span>
+<span class="nc" id="L191">			return false;</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		for (int i = 0; i &lt; password2.length(); i++) {</span>
+<span class="nc" id="L193">			char c1 = password2.charAt(i);</span>
+<span class="nc" id="L194">			char c2 = givenPassword.charAt(i);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">			if (c1 != c2)</span>
+<span class="nc" id="L196">				return false;</span>
+		}
+<span class="nc" id="L198">		return true;</span>
+	}
+
+	public void encrypt() {
+		// FIXME: Sync.
+<span class="nc" id="L203">		setFolded(true);</span>
+<span class="nc" id="L204">		setAccessible(false);</span>
+<span class="nc" id="L205">	}</span>
+
+	public int getChildCount() {
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if (isAccessible()) {</span>
+<span class="nc" id="L209">			return super.getChildCount();</span>
+		}
+<span class="nc" id="L211">		return 0;</span>
+	}
+
+	public ListIterator childrenFolded() {
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		if (isAccessible()) {</span>
+<span class="nc" id="L216">			return super.childrenFolded();</span>
+		}
+<span class="nc" id="L218">		return new Vector().listIterator();</span>
+	}
+
+	public ListIterator childrenUnfolded() {
+<span class="nc bnc" id="L222" title="All 4 branches missed.">		if (isAccessible() || isShuttingDown) {</span>
+<span class="nc" id="L223">			return super.childrenUnfolded();</span>
+		}
+<span class="nc" id="L225">		return new Vector().listIterator();</span>
+	}
+
+	public boolean hasChildren() {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		if (isAccessible()) {</span>
+<span class="nc" id="L230">			return super.hasChildren();</span>
+		}
+<span class="nc" id="L232">		return false;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMapNode#getIcons()
+	 */
+	public void updateIcon() {
+<span class="nc bnc" id="L241" title="All 2 branches missed.">		if (isAccessible()) {</span>
+<span class="nc" id="L242">			setStateIcon(&quot;encrypted&quot;, null);</span>
+<span class="nc" id="L243">			setStateIcon(&quot;decrypted&quot;, decryptedIcon);</span>
+<span class="nc" id="L244">		} else {</span>
+<span class="nc" id="L245">			setStateIcon(&quot;decrypted&quot;, null);</span>
+<span class="nc" id="L246">			setStateIcon(&quot;encrypted&quot;, encryptedIcon);</span>
+		}
+<span class="nc" id="L248">	}</span>
+
+	public void setPassword(StringBuffer password) {
+<span class="nc" id="L251">		this.password = password;</span>
+<span class="nc" id="L252">	}</span>
+
+	/**
+     *  
+     */
+
+	public boolean isFolded() {
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		if (isAccessible()) {</span>
+<span class="nc" id="L260">			return super.isFolded();</span>
+		}
+<span class="nc" id="L262">		return true;</span>
+	}
+
+	/**
+     *  
+     */
+
+	public void setFolded(boolean folded) {
+<span class="nc bnc" id="L270" title="All 2 branches missed.">		if (isAccessible()) {</span>
+<span class="nc" id="L271">			super.setFolded(folded);</span>
+<span class="nc" id="L272">		} else {</span>
+<span class="nc" id="L273">			super.setFolded(true);</span>
+		}
+<span class="nc" id="L275">	}</span>
+
+	/**
+     *  
+     */
+
+	public void setAdditionalInfo(String info) {
+<span class="nc" id="L282">		encryptedContent = info;</span>
+<span class="nc" id="L283">		setAccessible(false);</span>
+<span class="nc" id="L284">		isDecrypted = false;</span>
+<span class="nc" id="L285">	}</span>
+
+	public String getAdditionalInfo() {
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		if (isStoringEncryptedContent()) {</span>
+<span class="nc" id="L289">			return null;</span>
+		}
+<span class="nc" id="L291">		return encryptedContent;</span>
+	}
+
+	/**
+     *  
+     */
+
+	public XMLElement save(Writer writer, MindMapLinkRegistry registry,
+			boolean saveHidden, boolean saveChildren) throws IOException {
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		if (isStoringEncryptedContent()) {</span>
+<span class="nc" id="L301">			return super.save(writer, registry, saveHidden, saveChildren);</span>
+		}
+<span class="nc bnc" id="L303" title="All 2 branches missed.">		if (isDecrypted) {</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">			if (!isAccessible()) {</span>
+<span class="nc" id="L305">				throw new IOException(</span>
+<span class="nc" id="L306">						&quot;Should store contents of encrypted node &quot;</span>
+<span class="nc" id="L307">								+ this.getText()</span>
+<span class="nc" id="L308">								+ &quot;, but it is not accessible.&quot;);</span>
+			}
+<span class="nc" id="L310">			setStoringEncryptedContent(true);</span>
+			try {
+<span class="nc" id="L312">				generateEncryptedContent(registry);</span>
+<span class="nc" id="L313">			} finally {</span>
+<span class="nc" id="L314">				setStoringEncryptedContent(false);</span>
+<span class="nc" id="L315">			}</span>
+		}
+<span class="nc" id="L317">		boolean oldIsVisible = isAccessible();</span>
+<span class="nc" id="L318">		setAccessible(false);</span>
+<span class="nc" id="L319">		XMLElement ret = null;</span>
+		try {
+<span class="nc" id="L321">			ret = super.save(writer, registry, saveHidden, saveChildren);</span>
+<span class="nc" id="L322">		} finally {</span>
+<span class="nc" id="L323">			setAccessible(oldIsVisible);</span>
+<span class="nc" id="L324">		}</span>
+<span class="nc" id="L325">		return ret;</span>
+	}
+
+	/**
+	 * @throws IOException
+	 */
+	private void generateEncryptedContent(MindMapLinkRegistry registry)
+			throws IOException {
+<span class="nc" id="L333">		StringWriter sWriter = new StringWriter();</span>
+<span class="nc" id="L334">		getMindMapMapModel().getXml(sWriter, true, this);</span>
+<span class="nc" id="L335">		StringBuffer childXml = sWriter.getBuffer();</span>
+<span class="nc" id="L336">		encryptedContent = encryptXml(childXml);</span>
+<span class="nc" id="L337">	}</span>
+
+	/**
+     */
+	private String encryptXml(StringBuffer childXml) {
+		try {
+			// Create encrypter/decrypter class
+			// FIXME: Use char[] instead of toString.
+<span class="nc" id="L345">			SingleDesEncrypter encrypter = new SingleDesEncrypter(password);</span>
+
+			// Encrypt
+<span class="nc" id="L348">			String encrypted = encrypter.encrypt(childXml.toString());</span>
+<span class="nc" id="L349">			return encrypted;</span>
+<span class="nc" id="L350">		} catch (Exception e) {</span>
+<span class="nc" id="L351">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L353">		throw new IllegalArgumentException(&quot;Can't encrypt the node.&quot;);</span>
+	}
+
+	/**
+	 * @return null if the password is wrong.
+	 */
+	private String decryptXml(String encryptedString, StringBuffer pwd) {
+<span class="nc" id="L360">		SingleDesEncrypter encrypter = new SingleDesEncrypter(pwd);</span>
+
+		// // Decrypt
+<span class="nc" id="L363">		String decrypted = encrypter.decrypt(encryptedString);</span>
+
+		// fc, only in case, it is needed, we can activate this code.
+		// if (decrypted == null || decrypted.isEmpty()) {
+		// logger.warning(&quot;Perhaps wrong algorithm used (due to a Java bug, in FreeMind 0.8.0 and Java4-5 DES whereas with Java6 Triple DES was used. Trying Triple DES...&quot;);
+		// decrypted = new
+		// Tools.TripleDesEncrypter(pwd).decrypt(encryptedString);
+		// }
+
+<span class="nc" id="L372">		return decrypted;</span>
+	}
+
+	/**
+	 * isShuttingDown is used to fold an encrypted node properly. If it is
+	 * encrypted, it has no children. Thus, the formely existing children can't
+	 * be removed. Thus, this flag postpones the childlessness of a node until it
+	 * tree structure is updated.
+	 * 
+	 * @param isShuttingDown
+	 *            The isShuttingDown to set.
+	 */
+	public void setShuttingDown(boolean isShuttingDown) {
+<span class="nc" id="L385">		this.isShuttingDown = isShuttingDown;</span>
+<span class="nc" id="L386">	}</span>
+
+	/**
+	 * @param isAccessible
+	 *            The isAccessible to set.
+	 */
+	private void setAccessible(boolean isAccessible) {
+<span class="nc" id="L393">		this.isAccessible = isAccessible;</span>
+<span class="nc" id="L394">		updateIcon();</span>
+<span class="nc" id="L395">	}</span>
+
+	/**
+	 * @return Returns the isAccessible (ie. if the node is decrypted
+	 *         (isAccessible==true) or not).
+	 */
+	public boolean isAccessible() {
+<span class="nc" id="L402">		return isAccessible;</span>
+	}
+
+	public void insert(MutableTreeNode pChild, int pIndex) {
+<span class="nc bnc" id="L406" title="All 2 branches missed.">		if (isAccessible()) {</span>
+<span class="nc" id="L407">			super.insert(pChild, pIndex);</span>
+<span class="nc" id="L408">		} else {</span>
+<span class="nc" id="L409">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L410">					&quot;Trying to insert nodes into a ciphered node.&quot;);</span>
+		}
+
+<span class="nc" id="L413">	}</span>
+
+	public boolean isWriteable() {
+<span class="nc bnc" id="L416" title="All 4 branches missed.">		return isAccessible() &amp;&amp; super.isWriteable();</span>
+	}
+
+	public boolean isStoringEncryptedContent() {
+<span class="nc" id="L420">		return isStoringEncryptedContent;</span>
+	}
+
+	public void setStoringEncryptedContent(boolean pIsStoringEncryptedContent) {
+<span class="nc" id="L424">		isStoringEncryptedContent = pIsStoringEncryptedContent;</span>
+<span class="nc" id="L425">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

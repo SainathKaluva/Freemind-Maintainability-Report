@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Writing Descriptions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ExprXML.html">Prev</a> - <a href="Profiles.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > 8.6 Writing Descriptions
+<hr>
+<h2><a name="WriteDesc"></a>8.6 Writing Descriptions</h2>
+
+
+The measurement catalog (see <a href="MetCat.html">Section&nbsp;4.13 "The View 'Catalog'"</a>) provides detailed
+descriptions of the design metrics, rules, and relation matrices,
+complete with literature references and a glossary. These descriptions
+are provided by the definitions in the metric definition file.<p>
+
+Below is an example of a full-fledged metric description. Descriptions
+of rules and matrices follow the exact same scheme.
+
+<pre>
+&lt;metric name="DIT" domain="class"&gt;
+&lt;description&gt;The depth of the class in the inheritance tree.((p))
+This is calculated as the longest glossary://Path/path/ from the class to
+the root of the inheritance tree. The DIT for a class that has no
+parents is 0.((p))
+((ul))
+((li))Defined in ref://CK94/.
+((li))See also metric://class/CLD/.
+((/ul))
+&lt;/description&gt;
+&lt;projection relation="genchild" target="generalization" element="genparent" 
+ eltype="class" nesting="true"/&gt;
+&lt;/metric&gt;
+
+&lt;reference tag="CK94"&gt;S. Chidamber, C. Kemerer, "A Metrics Suite
+  For Object Oriented Design", IEEE Trans. Software Eng., vol. 20, no. 6, 
+  pp. 476-493, 1994.
+&lt;/reference&gt;
+
+&lt;term name="Path"&gt;A sequence of adjacent nodes in a graph. The
+  sequence of nodes n(1), n(2), ..., n(m) is a path if there is an
+  edge from n(i) to n(i+1) for all i from 1 to m-1.
+&lt;term&gt;
+</pre>
+
+Below we explain the various features available for writing
+descriptions.<p>
+
+<b>HTML markup</b><p>
+
+The detailed description is meant to be rendered in HTML. Therefore,
+you can use HTML markups to format your text. However, because the
+description is embedded in an XML file, you cannot use the plain HTML
+tags. They would interfere with the XML structure. Instead of
+enclosing your HTML tags with the usual &lt; and &gt; brackets, use
+two subsequent opening and closing parentheses, like so: <code>Text in
+((i))italics((/i)) or ((b))boldface((/b))</code>.<p>
+
+The example for metric DIT above uses paragraphs and bulleted lists to
+format the text.<p>
+
+<b>Brief description and full description</b><p>
+
+The first sentence of the description should be a short definition
+that states the basic idea what the metric (or rule or matrix) is about.
+It should be brief enough to fit in a single line (about 80
+characters, but that is no hard limit).<p>
+
+This first sentence must be terminated by a period, and must not use
+any HTML markup. The brief descriptions are used in various windows of
+SDMetrics' GUI, to provide short explanations of metrics, rules, and
+matrices. The description then continues with additional explanations,
+and notes about the metric. Together with the brief description, this
+constitutes the full description shown in the measurement catalog.<p>
+
+<b>Cross-references</b><p>
+
+You can reference other metrics, rules, or matrices in the
+description.
+
+<ul>
+
+<li>To cross-reference a metric, use a "metric locator" of the form
+<code>metric://&lt;domain&gt;/&lt;name&gt;/</code>. For example, to
+cross-reference a metric <code>NumOps</code> for elements of type
+<code>class</code>, write <code>metric://class/NumOps/</code>. Note
+the terminating slash at the end of the locator.
+
+<li>Likewise, to cross-reference a rule, use a locator of the form
+<code>rule://&lt;domain&gt;/&lt;name&gt;/</code>. For example, rule
+<code>CyclicInheritance</code> for classes is referenced by
+<code>rule://class/CyclicInheritance/</code>.
+
+<li>To cross-reference a relation matrix, use a locator of the form
+<code>matrix://&lt;matrix&gt;/</code>. A matrix named "Associations"
+would be referenced by <code>matrix://Associations/</code>.</ul>
+
+In the measurement catalog display, the locator will be replaced by an
+HTML hyperlink that takes the user to the specified target.<p>
+
+<b>Literature references</b><p>
+
+To provide literature references, you define a bibliographic citation
+as in the above example for metric DIT. The citation is enclosed in a
+<code>reference</code> XML element. The element has one required
+attribute, <code>tag</code>, which provides a handle for the
+citation.<p>
+
+You can then reference the citation in your metric, rule, and matrix
+descriptions with a locator of the form
+<code>ref://&lt;reference_tag&gt;/</code>, for example
+<code>((li))Suggested in ref://CK94/.((/li))</code>. In the
+measurement catalog display, the locator will be replaced by a
+hyperlink that takes the user to the bibliographic citation of the
+specified reference.<p>
+
+<b>Glossary terms</b><p>
+
+If your description uses any terms that you feel need additional
+explanation, you can define these terms in a glossary. The above
+example for metric DIT shows a definition for the term "Path".<p>
+
+The term definition is enclosed in a <code>term</code> XML
+element. The element has one required attribute, <code>name</code>,
+which is the term that is defined. You can then use the term in your
+description with a locator as follows:
+
+<pre>glossary://&lt;Name&nbsp;of&nbsp;term&gt;/&lt;hyperlink&nbsp;text&gt;/</pre>
+
+In the full description as shown to the user, the locator will be
+replaced by a hyperlink that takes the user to the definition of the
+term. If the name of the glossary term and the hyperlinked text to be
+shown are identical, you can leave the hyperlinked text empty, like
+so: <code>This is a glossary://WFR// of the UML</code> (note the two
+slashes after "WFR").
+
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ExprXML.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="MetricDef.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Profiles.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.5.5 "Expression Terms and XML"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.7 "Defining Metrics for Profiles"</td></tr></table>
+
+</body>
+</html>

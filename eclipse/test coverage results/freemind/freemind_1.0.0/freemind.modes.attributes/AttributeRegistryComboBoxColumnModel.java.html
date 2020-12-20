@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributeRegistryComboBoxColumnModel.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.attributes</a> &gt; <span class="el_source">AttributeRegistryComboBoxColumnModel.java</span></div><h1>AttributeRegistryComboBoxColumnModel.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 08.10.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.modes.attributes;
+
+import javax.swing.AbstractListModel;
+import javax.swing.ComboBoxModel;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+
+import freemind.controller.filter.util.SortedListModel;
+
+class AttributeRegistryComboBoxColumnModel extends AbstractListModel implements
+		TableModelListener, ComboBoxModel, SortedListModel {
+	private final AttributeRegistry model;
+
+	public AttributeRegistryComboBoxColumnModel(AttributeRegistry model) {
+<span class="nc" id="L38">		super();</span>
+<span class="nc" id="L39">		this.model = model;</span>
+<span class="nc" id="L40">		model.getTableModel().addTableModelListener(this);</span>
+<span class="nc" id="L41">	}</span>
+
+	private Object selectedItem;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.ComboBoxModel#setSelectedItem(java.lang.Object)
+	 */
+	public void setSelectedItem(Object o) {
+<span class="nc" id="L51">		selectedItem = o;</span>
+<span class="nc" id="L52">		fireContentsChanged(this, -1, -1);</span>
+<span class="nc" id="L53">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.ComboBoxModel#getSelectedItem()
+	 */
+	public Object getSelectedItem() {
+<span class="nc" id="L61">		return selectedItem;</span>
+	}
+
+	public int getSize() {
+<span class="nc" id="L65">		return model.size();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.ListModel#getElementAt(int)
+	 */
+	public Object getElementAt(int row) {
+<span class="nc" id="L74">		return model.getKey(row);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.event.TableModelListener#tableChanged(javax.swing.event.
+	 * TableModelEvent)
+	 */
+	public void tableChanged(TableModelEvent e) {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (e.getType() == TableModelEvent.DELETE) {</span>
+<span class="nc" id="L85">			fireIntervalRemoved(this, e.getFirstRow(), e.getLastRow());</span>
+<span class="nc" id="L86">			return;</span>
+		}
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (e.getType() == TableModelEvent.UPDATE) {</span>
+<span class="nc" id="L89">			fireContentsChanged(this, e.getFirstRow(), e.getLastRow());</span>
+<span class="nc" id="L90">			return;</span>
+		}
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (e.getType() == TableModelEvent.INSERT) {</span>
+<span class="nc" id="L93">			fireIntervalAdded(this, e.getFirstRow(), e.getLastRow());</span>
+<span class="nc" id="L94">			return;</span>
+		}
+<span class="nc" id="L96">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.filter.util.SortedListModel#clear()
+	 */
+	public void clear() {
+
+<span class="nc" id="L105">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.util.SortedListModel#contains(java.lang.Object
+	 * )
+	 */
+	public boolean contains(Object o) {
+<span class="nc" id="L115">		return model.containsElement(o.toString());</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.util.SortedListModel#add(java.lang.Object)
+	 */
+	public void add(Object o) {
+<span class="nc" id="L125">		String s = o.toString();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (-1 == model.indexOf(s)) {</span>
+<span class="nc" id="L127">			model.getAttributeController().performRegistryAttributeValue(s, &quot;&quot;);</span>
+		}
+<span class="nc" id="L129">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.util.SortedListModel#replace(java.lang.Object,
+	 * java.lang.Object)
+	 */
+	public void replace(Object oldO, Object newO) {
+<span class="nc" id="L139">		model.getAttributeController().performReplaceAtributeName(</span>
+<span class="nc" id="L140">				oldO.toString(), newO.toString());</span>
+<span class="nc" id="L141">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.util.SortedListModel#delete(java.lang.Object)
+	 */
+	public void remove(Object o) {
+<span class="nc" id="L150">		model.removeAtribute(o);</span>
+<span class="nc" id="L151">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.util.SortedListModel#getIndexOf(java.lang.
+	 * Object)
+	 */
+	public int getIndexOf(Object o) {
+<span class="nc" id="L161">		return this.model.indexOf(o.toString());</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

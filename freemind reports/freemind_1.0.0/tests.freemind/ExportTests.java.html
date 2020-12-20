@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExportTests.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">ExportTests.java</span></div><h1>ExportTests.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2011 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package tests.freemind;
+
+import java.awt.BorderLayout;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URISyntaxException;
+
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.WindowConstants;
+
+import freemind.main.XMLParseException;
+import freemind.view.mindmapview.IndependantMapViewCreator;
+import freemind.view.mindmapview.MapView;
+
+/**
+ * @author foltin
+ * @date 12.08.2011
+ */
+<span class="fc" id="L44">public class ExportTests extends FreeMindTestBase {</span>
+	private static final String TESTMAP_MM = &quot;tests/freemind/testmap.mm&quot;;
+
+	public void testExportPng() throws Exception {
+<span class="fc" id="L48">		System.setProperty(&quot;java.awt.headless&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L49">		IndependantMapViewCreator creator = new IndependantMapViewCreator();</span>
+<span class="nc" id="L50">		creator.exportFileToPng(TESTMAP_MM, &quot;/tmp/test.png&quot;, mFreeMindMain);</span>
+
+<span class="nc" id="L52">		System.out.println(&quot;Done.&quot;);</span>
+<span class="nc" id="L53">	}</span>
+
+	public static void main(String[] args) throws FileNotFoundException,
+			XMLParseException, IOException, URISyntaxException {
+<span class="nc" id="L57">		FreeMindMainMock mFreeMindMain = new FreeMindMainMock();</span>
+<span class="nc" id="L58">		JDialog fm = new JDialog();</span>
+<span class="nc" id="L59">		fm.setTitle(&quot;Title&quot;);</span>
+<span class="nc" id="L60">		fm.setModal(true);</span>
+<span class="nc" id="L61">		final Rectangle dim = new Rectangle();</span>
+<span class="nc" id="L62">		JPanel parent = new JPanel() {</span>
+			protected void paintChildren(Graphics pG) {
+<span class="nc" id="L64">				pG.translate(0, -dim.y);</span>
+<span class="nc" id="L65">				super.paintChildren(pG);</span>
+<span class="nc" id="L66">				pG.translate(0, dim.y);</span>
+<span class="nc" id="L67">			}</span>
+		};
+<span class="nc" id="L69">		fm.add(parent, BorderLayout.CENTER);</span>
+<span class="nc" id="L70">		IndependantMapViewCreator creator = new IndependantMapViewCreator();</span>
+<span class="nc" id="L71">		MapView mapView = creator.createMapViewForFile(TESTMAP_MM, parent,</span>
+<span class="nc" id="L72">				mFreeMindMain);</span>
+<span class="nc" id="L73">		parent.add(mapView, BorderLayout.CENTER);</span>
+<span class="nc" id="L74">		mapView.doLayout();</span>
+<span class="nc" id="L75">		Rectangle innerBounds = mapView.getInnerBounds();</span>
+<span class="nc" id="L76">		Rectangle bounds = mapView.getBounds();</span>
+<span class="nc" id="L77">		dim.y = bounds.y + innerBounds.y;</span>
+		// System.out.println(bounds);
+		// System.out.println(innerBounds);
+<span class="nc" id="L80">		fm.setBounds(mapView.getInnerBounds());</span>
+
+<span class="nc" id="L82">		fm.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);</span>
+<span class="nc" id="L83">		fm.addWindowListener(new WindowAdapter() {</span>
+			public void windowClosing(WindowEvent event) {
+<span class="nc" id="L85">				System.exit(0);</span>
+<span class="nc" id="L86">			}</span>
+		});
+
+<span class="nc" id="L89">		fm.setVisible(true);</span>
+
+<span class="nc" id="L91">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

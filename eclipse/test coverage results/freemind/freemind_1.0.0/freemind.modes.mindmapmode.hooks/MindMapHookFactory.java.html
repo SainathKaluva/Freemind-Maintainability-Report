@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapHookFactory.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.hooks</a> &gt; <span class="el_source">MindMapHookFactory.java</span></div><h1>MindMapHookFactory.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.modes.mindmapmode.hooks;
+
+import java.io.InputStream;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
+
+import org.jibx.runtime.IUnmarshallingContext;
+
+import freemind.common.XmlBindingTools;
+import freemind.controller.actions.generated.instance.Plugin;
+import freemind.controller.actions.generated.instance.PluginAction;
+import freemind.controller.actions.generated.instance.PluginClasspath;
+import freemind.controller.actions.generated.instance.PluginMode;
+import freemind.controller.actions.generated.instance.PluginRegistration;
+import freemind.extensions.HookDescriptorPluginAction;
+import freemind.extensions.HookDescriptorRegistration;
+import freemind.extensions.HookFactoryAdapter;
+import freemind.extensions.HookInstanciationMethod;
+import freemind.extensions.ImportWizard;
+import freemind.extensions.MindMapHook;
+import freemind.extensions.MindMapHook.PluginBaseClassSearcher;
+import freemind.extensions.ModeControllerHook;
+import freemind.extensions.NodeHook;
+import freemind.main.FreeMindMain;
+import freemind.modes.mindmapmode.MindMapController;
+
+/**
+ * @author christianfoltin
+ *
+ * @file HookFactory.java
+ * @package freemind.modes
+ */
+/**
+ * @author foltin
+ * 
+ */
+public class MindMapHookFactory extends HookFactoryAdapter {
+	/**
+	 * Match xml files in the accessories/plugin directory and not in its
+	 * subdirectories.
+	 */
+	private final static String pluginPrefixRegEx = &quot;.*(accessories(/|\\\\)|)plugins(/|\\\\)[^/\\\\]*&quot;;
+
+	private FreeMindMain frame;
+
+	// Logging:
+	private java.util.logging.Logger logger;
+
+<span class="nc" id="L78">	private static HashMap pluginInfo = null;</span>
+
+<span class="nc" id="L80">	private static Vector allPlugins = null;</span>
+
+<span class="nc" id="L82">	private static ImportWizard importWizard = null;</span>
+
+	/** Contains PluginRegistrationType -&gt; PluginType relations. */
+<span class="nc" id="L85">	protected static HashSet allRegistrations;</span>
+
+	/**
+	 *
+	 */
+<span class="nc" id="L90">	public MindMapHookFactory(FreeMindMain frame) {</span>
+<span class="nc" id="L91">		this.frame = frame;</span>
+<span class="nc" id="L92">		logger = frame.getLogger(this.getClass().getName());</span>
+<span class="nc" id="L93">		allRegistrationInstances = new HashMap();</span>
+<span class="nc" id="L94">	}</span>
+
+	/**
+	 * @return a string vector with representatives for plugins.
+	 */
+	public Vector getPossibleNodeHooks() {
+<span class="nc" id="L100">		return searchFor(NodeHook.class, MindMapController.class);</span>
+	}
+
+	/**
+	 * @return a string vector with representatives for plugins.
+	 */
+	public Vector getPossibleModeControllerHooks() {
+<span class="nc" id="L107">		return searchFor(ModeControllerHook.class, MindMapController.class);</span>
+	}
+
+	/**
+	 * @return a string vector with representatives for plugins.
+	 */
+	private Vector searchFor(Class baseClass, Class mode) {
+<span class="nc" id="L114">		actualizePlugins();</span>
+<span class="nc" id="L115">		Vector returnValue = new Vector();</span>
+<span class="nc" id="L116">		String modeName = mode.getPackage().getName();</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		for (Iterator i = allPlugins.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L118">			String label = (String) i.next();</span>
+<span class="nc" id="L119">			HookDescriptorPluginAction descriptor = getHookDescriptor(label);</span>
+			// Properties prop = descriptor.properties;
+			try {
+<span class="nc" id="L122">				logger.finest(&quot;Loading: &quot; + label);</span>
+<span class="nc" id="L123">				if (baseClass.isAssignableFrom(Class.forName(descriptor</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">						.getBaseClass()))) {</span>
+					// the plugin inherits from the baseClass, we carry on to
+					// look for the mode
+<span class="nc" id="L127">					for (Iterator j = descriptor.getModes().iterator(); j</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">							.hasNext();) {</span>
+<span class="nc" id="L129">						String pmode = (String) j.next();</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">						if (pmode.equals(modeName)) {</span>
+							// add the class:
+<span class="nc" id="L132">							returnValue.add(label);</span>
+						}
+
+					}
+				}
+<span class="nc" id="L137">			} catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L138">				logger.severe(&quot;Class not found.&quot;);</span>
+<span class="nc" id="L139">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+		}
+<span class="nc" id="L142">		return returnValue;</span>
+	}
+
+	/**
+	 *
+	 */
+	private void actualizePlugins() {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (importWizard == null) {</span>
+<span class="nc" id="L150">			importWizard = new ImportWizard(frame);</span>
+<span class="nc" id="L151">			importWizard.CLASS_LIST.clear();</span>
+<span class="nc" id="L152">			importWizard.buildClassList();</span>
+<span class="nc" id="L153">			pluginInfo = new HashMap();</span>
+<span class="nc" id="L154">			allPlugins = new Vector();</span>
+<span class="nc" id="L155">			allRegistrations = new HashSet();</span>
+			// the unmarshaller:
+<span class="nc" id="L157">			IUnmarshallingContext unmarshaller = XmlBindingTools.getInstance()</span>
+<span class="nc" id="L158">					.createUnmarshaller();</span>
+			// the loop
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			for (Iterator i = importWizard.CLASS_LIST.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L161">				String xmlPluginFile = (String) i.next();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">				if (xmlPluginFile.matches(pluginPrefixRegEx)) {</span>
+					// make file name:
+					/*
+					 * Here, this is not the File.separatorChar!!!
+					 */
+<span class="nc" id="L167">					xmlPluginFile = xmlPluginFile.replace('\\', '/')</span>
+<span class="nc" id="L168">							+ importWizard.lookFor;</span>
+					// this is one of our plugins:
+<span class="nc" id="L170">					URL pluginURL = frame.getFreeMindClassLoader().getResource(</span>
+<span class="nc" id="L171">							xmlPluginFile);</span>
+					// unmarshal xml:
+<span class="nc" id="L173">					Plugin plugin = null;</span>
+					try {
+<span class="nc" id="L175">						logger.finest(&quot;Reading: &quot; + xmlPluginFile + &quot; from &quot;</span>
+<span class="nc" id="L176">								+ pluginURL);</span>
+<span class="nc" id="L177">						InputStream in = pluginURL.openStream();</span>
+<span class="nc" id="L178">						plugin = (Plugin) unmarshaller.unmarshalDocument(in,</span>
+<span class="nc" id="L179">								null);</span>
+<span class="nc" id="L180">					} catch (Exception e) {</span>
+						// error case
+<span class="nc" id="L182">						freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L183">						continue;</span>
+					}
+					// plugin is loaded.
+<span class="nc" id="L186">					for (Iterator j = plugin.getListChoiceList().iterator(); j</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">							.hasNext();) {</span>
+<span class="nc" id="L188">						Object obj = j.next();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">						if (obj instanceof PluginAction) {</span>
+<span class="nc" id="L190">							PluginAction action = (PluginAction) obj;</span>
+<span class="nc" id="L191">							pluginInfo.put(action.getLabel(),</span>
+<span class="nc" id="L192">									new HookDescriptorPluginAction(frame,</span>
+<span class="nc" id="L193">											xmlPluginFile, plugin, action));</span>
+<span class="nc" id="L194">							allPlugins.add(action.getLabel());</span>
+
+<span class="nc bnc" id="L196" title="All 2 branches missed.">						} else if (obj instanceof PluginRegistration) {</span>
+<span class="nc" id="L197">							PluginRegistration registration = (PluginRegistration) obj;</span>
+<span class="nc" id="L198">							allRegistrations</span>
+<span class="nc" id="L199">									.add(new HookDescriptorRegistration(frame,</span>
+<span class="nc" id="L200">											xmlPluginFile, plugin, registration));</span>
+							// logger.info(&quot;Added registration &quot; +
+							// registration.getClassName() +
+							// &quot; to allRegistrations=&quot; + allRegistrations);
+						}
+					}
+				}
+			}
+		}
+<span class="nc" id="L209">	}</span>
+
+	public ModeControllerHook createModeControllerHook(String hookName) {
+<span class="nc" id="L212">		HookDescriptorPluginAction descriptor = getHookDescriptor(hookName);</span>
+<span class="nc" id="L213">		return (ModeControllerHook) createJavaHook(hookName, descriptor);</span>
+	}
+
+	private MindMapHook createJavaHook(String hookName,
+			HookDescriptorPluginAction descriptor) {
+		try {
+			// constructed.
+<span class="nc" id="L220">			ClassLoader loader = descriptor.getPluginClassLoader();</span>
+<span class="nc" id="L221">			Class hookClass = Class.forName(descriptor.getClassName(), true,</span>
+<span class="nc" id="L222">					loader);</span>
+<span class="nc" id="L223">			MindMapHook hook = (MindMapHook) hookClass.newInstance();</span>
+<span class="nc" id="L224">			decorateHook(hookName, descriptor, hook);</span>
+<span class="nc" id="L225">			return hook;</span>
+<span class="nc" id="L226">		} catch (Throwable e) {</span>
+<span class="nc" id="L227">			String path = &quot;&quot;;</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			for (Iterator it = descriptor.getPluginClasspath().iterator(); it.hasNext();) {</span>
+<span class="nc" id="L229">				PluginClasspath plPath = (PluginClasspath) it.next();</span>
+<span class="nc" id="L230">				path += plPath.getJar() + &quot;;&quot;;</span>
+			}
+<span class="nc" id="L232">			freemind.main.Resources.getInstance().logException(</span>
+<span class="nc" id="L233">					e,</span>
+<span class="nc" id="L234">					&quot;Error occurred loading hook: &quot; + descriptor.getClassName()</span>
+<span class="nc" id="L235">							+ &quot;\nClasspath: &quot; + path + &quot;\nException:&quot;);</span>
+<span class="nc" id="L236">			return null;</span>
+		}
+	}
+
+	/**
+	 * Do not call this method directly. Call ModeController.createNodeHook
+	 * instead.
+	 */
+	public NodeHook createNodeHook(String hookName) {
+<span class="nc" id="L245">		logger.finest(&quot;CreateNodeHook: &quot; + hookName);</span>
+<span class="nc" id="L246">		HookDescriptorPluginAction descriptor = getHookDescriptor(hookName);</span>
+<span class="nc" id="L247">		return (NodeHook) createJavaHook(hookName, descriptor);</span>
+	}
+
+	private void decorateHook(String hookName,
+			final HookDescriptorPluginAction descriptor, MindMapHook hook) {
+<span class="nc" id="L252">		hook.setProperties(descriptor.getProperties());</span>
+<span class="nc" id="L253">		hook.setName(hookName);</span>
+<span class="nc" id="L254">		PluginBaseClassSearcher pluginBaseClassSearcher = new PluginBaseClassSearcher() {</span>
+
+			public Object getPluginBaseObject() {
+<span class="nc" id="L257">				return getPluginBaseClass(descriptor);</span>
+			}
+		};
+<span class="nc" id="L260">		hook.setPluginBaseClass(pluginBaseClassSearcher);</span>
+<span class="nc" id="L261">	}</span>
+
+	/**
+	 */
+	public void decorateAction(String hookName, AbstractAction action) {
+<span class="nc" id="L266">		HookDescriptorPluginAction descriptor = getHookDescriptor(hookName);</span>
+<span class="nc" id="L267">		String name = descriptor.getName();</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">		if (name != null) {</span>
+<span class="nc" id="L269">			action.putValue(AbstractAction.NAME, name);</span>
+<span class="nc" id="L270">		} else {</span>
+<span class="nc" id="L271">			action.putValue(AbstractAction.NAME, descriptor.getClassName());</span>
+		}
+<span class="nc" id="L273">		String docu = descriptor.getDocumentation();</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">		if (docu != null) {</span>
+<span class="nc" id="L275">			action.putValue(AbstractAction.SHORT_DESCRIPTION, docu);</span>
+<span class="nc" id="L276">			action.putValue(AbstractAction.LONG_DESCRIPTION, docu);</span>
+		}
+<span class="nc" id="L278">		String icon = descriptor.getIconPath();</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">		if (icon != null) {</span>
+<span class="nc" id="L280">			ImageIcon imageIcon = new ImageIcon(descriptor</span>
+<span class="nc" id="L281">					.getPluginClassLoader().getResource(icon));</span>
+<span class="nc" id="L282">			action.putValue(AbstractAction.SMALL_ICON, imageIcon);</span>
+		}
+<span class="nc" id="L284">		String key = descriptor.getKeyStroke();</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		if (key != null)</span>
+<span class="nc" id="L286">			action.putValue(AbstractAction.ACCELERATOR_KEY,</span>
+<span class="nc" id="L287">					KeyStroke.getKeyStroke(key));</span>
+
+<span class="nc" id="L289">	}</span>
+
+	/**
+	 * @return returns a list of menu position strings for the
+	 *         StructuredMenuHolder.
+	 */
+	public List getHookMenuPositions(String hookName) {
+<span class="nc" id="L296">		HookDescriptorPluginAction descriptor = getHookDescriptor(hookName);</span>
+<span class="nc" id="L297">		return descriptor.menuPositions;</span>
+	}
+
+	/**
+	 */
+	public HookInstanciationMethod getInstanciationMethod(String hookName) {
+<span class="nc" id="L303">		HookDescriptorPluginAction descriptor = getHookDescriptor(hookName);</span>
+<span class="nc" id="L304">		return descriptor.getInstanciationMethod();</span>
+	}
+
+	/**
+	 * Each Plugin can have a list of HookRegistrations that are called after
+	 * the corresponding mode is enabled. (Like singletons.) One of these can
+	 * operate as the pluginBase that is accessible to every normal
+	 * plugin_action via the getPluginBaseClass method.
+	 * 
+	 * @return A list of RegistrationContainer elements. The field
+	 *         hookRegistrationClass of RegistrationContainer is a class that is
+	 *         (probably) of HookRegistration type. You have to register every
+	 *         registration via the registerRegistrationContainer method when
+	 *         instanciated (this is typically done in the ModeController).
+	 */
+	public List getRegistrations() {
+<span class="nc" id="L320">		Class mode = MindMapController.class;</span>
+<span class="nc" id="L321">		actualizePlugins();</span>
+<span class="nc" id="L322">		Vector returnValue = new Vector();</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		for (Iterator i = allRegistrations.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L324">			HookDescriptorRegistration descriptor = (HookDescriptorRegistration) i</span>
+<span class="nc" id="L325">					.next();</span>
+			// PluginRegistration registration =
+			// descriptor.getPluginRegistration();
+<span class="nc" id="L328">			boolean modeFound = false;</span>
+<span class="nc" id="L329">			for (Iterator j = (descriptor.getListPluginModeList()).iterator(); j</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L331">				PluginMode possibleMode = (PluginMode) j.next();</span>
+<span class="nc" id="L332">				if (mode.getPackage().getName()</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">						.equals(possibleMode.getClassName())) {</span>
+<span class="nc" id="L334">					modeFound = true;</span>
+				}
+			}
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			if (!modeFound)</span>
+<span class="nc" id="L338">				continue;</span>
+			try {
+<span class="nc" id="L340">				Plugin plugin = descriptor.getPluginBase();</span>
+<span class="nc" id="L341">				ClassLoader loader = descriptor.getPluginClassLoader();</span>
+<span class="nc" id="L342">				Class hookRegistrationClass = Class.forName(</span>
+<span class="nc" id="L343">						descriptor.getClassName(), true, loader);</span>
+<span class="nc" id="L344">				RegistrationContainer container = new RegistrationContainer();</span>
+<span class="nc" id="L345">				container.hookRegistrationClass = hookRegistrationClass;</span>
+<span class="nc" id="L346">				container.correspondingPlugin = plugin;</span>
+<span class="nc" id="L347">				container.isPluginBase = descriptor.getIsPluginBase();</span>
+<span class="nc" id="L348">				returnValue.add(container);</span>
+<span class="nc" id="L349">			} catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L350">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+		}
+<span class="nc" id="L353">		return returnValue;</span>
+	}
+
+	/**
+	 * A plugin base class is a common registration class of multiple plugins.
+	 * It is useful to embrace several related plugins (example: EncryptedNote
+	 * -&gt; Registration).
+	 * 
+	 * @return the base class if declared and successfully instanciated or NULL.
+	 */
+	public Object getPluginBaseClass(String hookName) {
+<span class="nc" id="L364">		logger.finest(&quot;getPluginBaseClass: &quot; + hookName);</span>
+<span class="nc" id="L365">		HookDescriptorPluginAction descriptor = getHookDescriptor(hookName);</span>
+<span class="nc" id="L366">		return getPluginBaseClass(descriptor);</span>
+	}
+
+	/**
+	 */
+	private Object getPluginBaseClass(HookDescriptorPluginAction descriptor) {
+		// test if registration is present:
+<span class="nc" id="L373">		Object baseClass = null;</span>
+<span class="nc" id="L374">		String label = descriptor.getPluginBase().getLabel();</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">		if (allRegistrationInstances.containsKey(label)) {</span>
+<span class="nc" id="L376">			baseClass = allRegistrationInstances.get(label);</span>
+		}
+<span class="nc" id="L378">		return baseClass;</span>
+	}
+
+	/**
+	 */
+	private HookDescriptorPluginAction getHookDescriptor(String hookName) {
+<span class="nc" id="L384">		HookDescriptorPluginAction descriptor = (HookDescriptorPluginAction) pluginInfo</span>
+<span class="nc" id="L385">				.get(hookName);</span>
+<span class="nc bnc" id="L386" title="All 4 branches missed.">		if (hookName == null || descriptor == null)</span>
+<span class="nc" id="L387">			throw new IllegalArgumentException(&quot;Unknown hook name &quot; + hookName);</span>
+<span class="nc" id="L388">		return descriptor;</span>
+	}
+
+	public JMenuItem getMenuItem(String pHookName, AbstractAction pHookAction) {
+<span class="nc" id="L392">		HookDescriptorPluginAction descriptor = getHookDescriptor(pHookName);</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">		if (descriptor.isSelectable()) {</span>
+<span class="nc" id="L394">			return new JCheckBoxMenuItem(pHookAction);</span>
+		} else {
+<span class="nc" id="L396">			return new JMenuItem(pHookAction);</span>
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

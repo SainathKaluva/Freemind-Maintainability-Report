@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributeRegistry.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.attributes</a> &gt; <span class="el_source">AttributeRegistry.java</span></div><h1>AttributeRegistry.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 08.10.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.modes.attributes;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.NoSuchElementException;
+
+import javax.swing.ComboBoxModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.EventListenerList;
+
+import freemind.controller.filter.util.SortedComboBoxModel;
+import freemind.controller.filter.util.SortedListModel;
+import freemind.controller.filter.util.SortedMapVector;
+import freemind.main.XMLElement;
+import freemind.modes.MapRegistry;
+import freemind.modes.XMLElementAdapter;
+import freemind.modes.mindmapmode.attributeactors.AttributesListener;
+
+/**
+ * @author Dimitri Polivaev 08.10.2005
+ */
+public class AttributeRegistry {
+	/**
+     * 
+     */
+	public AttributeRegistry() {
+<span class="nc" id="L51">		super();</span>
+<span class="nc" id="L52">	}</span>
+
+	private static final int CAPACITY_INCREMENT = 10;
+	protected int visibleElementsNumber;
+	protected MapRegistry registry;
+	protected SortedMapVector elements;
+<span class="nc" id="L58">	private AttributeRegistryComboBoxColumnModel myComboBoxColumnModel = null;</span>
+<span class="nc" id="L59">	private AttributeRegistryTableModel myTableModel = null;</span>
+<span class="nc" id="L60">	private EventListenerList listenerList = null;</span>
+
+	private Boolean restrictionModel;
+	private boolean isRestricted;
+	static public final int GLOBAL = -1;
+	private static final int TABLE_FONT_SIZE = 12;
+<span class="nc" id="L66">	private int fontSize = TABLE_FONT_SIZE;</span>
+	protected boolean isAttributeLayoutChanged;
+	private ChangeEvent changeEvent;
+	private ChangeEvent attributesEvent;
+	private String attributeViewType;
+
+	public int size() {
+<span class="nc" id="L73">		return elements.size();</span>
+	}
+
+	public AttributeRegistry(MapRegistry registry) {
+<span class="nc" id="L77">		super();</span>
+<span class="nc" id="L78">		listenerList = new EventListenerList();</span>
+<span class="nc" id="L79">		isAttributeLayoutChanged = false;</span>
+<span class="nc" id="L80">		this.registry = registry;</span>
+<span class="nc" id="L81">		visibleElementsNumber = 0;</span>
+<span class="nc" id="L82">		elements = new SortedMapVector();</span>
+<span class="nc" id="L83">		myTableModel = new AttributeRegistryTableModel(this);</span>
+<span class="nc" id="L84">		isRestricted = false;</span>
+<span class="nc" id="L85">		restrictionModel = Boolean.FALSE;</span>
+<span class="nc" id="L86">		attributeViewType = AttributeTableLayoutModel.SHOW_ALL;</span>
+<span class="nc" id="L87">	}</span>
+
+	public Comparable getKey(int index) {
+<span class="nc" id="L90">		return elements.getKey(index);</span>
+	}
+
+	public AttributeRegistryElement getElement(int index) {
+<span class="nc" id="L94">		return (AttributeRegistryElement) elements.getValue(index);</span>
+	}
+
+	public AttributeController getAttributeController() {
+<span class="nc" id="L98">		return registry.getModeController().getAttributeController();</span>
+	}
+
+	/**
+     */
+	void removeAtribute(Object o) {
+<span class="nc" id="L104">		getAttributeController().performRemoveAttribute(o.toString());</span>
+<span class="nc" id="L105">	}</span>
+
+	public boolean containsElement(String name) {
+<span class="nc" id="L108">		return elements.containsKey(name);</span>
+	}
+
+	private AttributeRegistryComboBoxColumnModel getCombinedModel() {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (myComboBoxColumnModel == null)</span>
+<span class="nc" id="L113">			myComboBoxColumnModel = new AttributeRegistryComboBoxColumnModel(</span>
+<span class="nc" id="L114">					this);</span>
+<span class="nc" id="L115">		return myComboBoxColumnModel;</span>
+	}
+
+	public ComboBoxModel getComboBoxModel() {
+<span class="nc" id="L119">		return getCombinedModel();</span>
+	}
+
+	public SortedListModel getListBoxModel() {
+<span class="nc" id="L123">		return getCombinedModel();</span>
+	}
+
+	/**
+     */
+	public ComboBoxModel getDefaultComboBoxModel(Comparable attrName) {
+		try {
+<span class="nc" id="L130">			AttributeRegistryElement elem = getElement(attrName);</span>
+<span class="nc" id="L131">			return elem.getValues();</span>
+<span class="nc" id="L132">		} catch (NoSuchElementException ex) {</span>
+<span class="nc" id="L133">			return getComboBoxModel();</span>
+		}
+	}
+
+	public AttributeRegistryElement getElement(Comparable attrName) {
+<span class="nc" id="L138">		AttributeRegistryElement elem = (AttributeRegistryElement) elements</span>
+<span class="nc" id="L139">				.getValue(attrName);</span>
+<span class="nc" id="L140">		return elem;</span>
+	}
+
+	public int getVisibleElementsNumber() {
+<span class="nc" id="L144">		return visibleElementsNumber;</span>
+	}
+
+	public void addChangeListener(ChangeListener l) {
+<span class="nc" id="L148">		listenerList.add(ChangeListener.class, l);</span>
+<span class="nc" id="L149">	}</span>
+
+	public void removeChangeListener(ChangeListener l) {
+<span class="nc" id="L152">		listenerList.remove(ChangeListener.class, l);</span>
+<span class="nc" id="L153">	}</span>
+
+	public void addAttributesListener(AttributesListener l) {
+<span class="nc" id="L156">		listenerList.add(AttributesListener.class, l);</span>
+<span class="nc" id="L157">	}</span>
+
+	public void removeAttributesListener(AttributesListener l) {
+<span class="nc" id="L160">		listenerList.remove(AttributesListener.class, l);</span>
+<span class="nc" id="L161">	}</span>
+
+	public void fireAttributeLayoutChanged() {
+<span class="nc" id="L164">		setAttributeLayoutChanged();</span>
+<span class="nc" id="L165">	}</span>
+
+	public void fireStateChanged() {
+		// Guaranteed to return a non-null array
+<span class="nc" id="L169">		Object[] listeners = listenerList.getListenerList();</span>
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		for (int i = listeners.length - 2; i &gt;= 0; i -= 2) {</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			if (listeners[i] == ChangeListener.class) {</span>
+				// Lazily create the event:
+<span class="nc bnc" id="L175" title="All 2 branches missed.">				if (changeEvent == null)</span>
+<span class="nc" id="L176">					changeEvent = new ChangeEvent(this);</span>
+<span class="nc" id="L177">				((ChangeListener) listeners[i + 1]).stateChanged(changeEvent);</span>
+			}
+		}
+<span class="nc" id="L180">	}</span>
+
+	protected void fireAttributesChanged() {
+		// Guaranteed to return a non-null array
+<span class="nc" id="L184">		Object[] listeners = listenerList.getListenerList();</span>
+		// Process the listeners last to first, notifying
+		// those that are interested in this event
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		for (int i = listeners.length - 2; i &gt;= 0; i -= 2) {</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			if (listeners[i] == AttributesListener.class) {</span>
+				// Lazily create the event:
+<span class="nc bnc" id="L190" title="All 2 branches missed.">				if (attributesEvent == null)</span>
+<span class="nc" id="L191">					attributesEvent = new ChangeEvent(this);</span>
+<span class="nc" id="L192">				((AttributesListener) listeners[i + 1])</span>
+<span class="nc" id="L193">						.attributesChanged(changeEvent);</span>
+			}
+		}
+<span class="nc" id="L196">	}</span>
+
+	/**
+     */
+	public int indexOf(String string) {
+<span class="nc" id="L201">		return elements.indexOf(string);</span>
+	}
+
+	public void setVisibilityModel(int row, Boolean visible) {
+<span class="nc" id="L205">		AttributeRegistryElement element = getElement(row);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if (!element.getVisibilityModel().equals(visible)) {</span>
+<span class="nc" id="L207">			element.setVisibilityModel(visible);</span>
+<span class="nc" id="L208">			setAttributeLayoutChanged();</span>
+<span class="nc" id="L209">			myTableModel.fireVisibilityUpdated(row);</span>
+		}
+<span class="nc" id="L211">	}</span>
+
+	/**
+     */
+	public AttributeRegistryTableModel getTableModel() {
+<span class="nc" id="L216">		return myTableModel;</span>
+	}
+
+	/**
+     */
+	public void setRestrictionModel(int row, Boolean value) {
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		if (row == GLOBAL) {</span>
+<span class="nc" id="L223">			restrictionModel = value;</span>
+<span class="nc" id="L224">		} else {</span>
+<span class="nc" id="L225">			getElement(row).setRestrictionModel(value);</span>
+		}
+<span class="nc" id="L227">		setAttributeLayoutChanged();</span>
+<span class="nc" id="L228">		myTableModel.fireRestrictionsUpdated(row);</span>
+<span class="nc" id="L229">	}</span>
+
+	Boolean getRestriction(int row) {
+<span class="nc bnc" id="L232" title="All 2 branches missed.">		if (row == GLOBAL) {</span>
+<span class="nc" id="L233">			return restrictionModel;</span>
+		} else {
+<span class="nc" id="L235">			return getElement(row).getRestriction();</span>
+		}
+	}
+
+	public boolean isRestricted(String s) {
+<span class="nc" id="L240">		return getRestriction(indexOf(s)).booleanValue();</span>
+	}
+
+	public void setRestricted(String s, boolean b) {
+<span class="nc" id="L244">		setRestricted(indexOf(s), b);</span>
+<span class="nc" id="L245">	}</span>
+
+	/**
+     */
+	private void setRestricted(int row, boolean b) {
+<span class="nc" id="L250">		getElement(row).setRestriction(b);</span>
+<span class="nc" id="L251">	}</span>
+
+	/**
+     */
+	public SortedListModel getValues(int row) {
+<span class="nc bnc" id="L256" title="All 2 branches missed.">		if (row == GLOBAL) {</span>
+<span class="nc" id="L257">			return getListBoxModel();</span>
+		}
+<span class="nc" id="L259">		return getElement(row).getValues();</span>
+	}
+
+	/**
+     */
+	public boolean isRestricted() {
+<span class="nc" id="L265">		return isRestricted;</span>
+	}
+
+	/**
+     */
+	public void setRestricted(boolean b) {
+<span class="nc" id="L271">		isRestricted = b;</span>
+<span class="nc" id="L272">		restrictionModel = Boolean.valueOf(isRestricted);</span>
+<span class="nc" id="L273">		fireAttributesChanged();</span>
+<span class="nc" id="L274">	}</span>
+
+	/**
+	 * @return Returns the fontSize.
+	 */
+	public int getFontSize() {
+<span class="nc" id="L280">		return fontSize;</span>
+	}
+
+	public void setFontSize(int size) {
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		if (fontSize != size) {</span>
+<span class="nc" id="L285">			fontSize = size;</span>
+<span class="nc" id="L286">			fireAttributeLayoutChanged();</span>
+		}
+<span class="nc" id="L288">	}</span>
+
+	/**
+	 * @throws IOException
+	 */
+	public void save(Writer fileout) throws IOException {
+<span class="nc" id="L294">		XMLElement attributeRegistry = new XMLElement();</span>
+<span class="nc" id="L295">		boolean toBeSaved = false;</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		if (isRestricted()) {</span>
+<span class="nc" id="L297">			attributeRegistry.setAttribute(&quot;RESTRICTED&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L298">			toBeSaved = true;</span>
+		}
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		if (!attributeViewType.equals(AttributeTableLayoutModel.SHOW_ALL)) {</span>
+<span class="nc" id="L301">			attributeRegistry</span>
+<span class="nc" id="L302">					.setAttribute(&quot;SHOW_ATTRIBUTES&quot;, attributeViewType);</span>
+<span class="nc" id="L303">			toBeSaved = true;</span>
+		}
+<span class="nc bnc" id="L305" title="All 2 branches missed.">		if (getFontSize() != TABLE_FONT_SIZE) {</span>
+<span class="nc" id="L306">			attributeRegistry.setIntAttribute(&quot;FONT_SIZE&quot;, getFontSize());</span>
+<span class="nc" id="L307">			toBeSaved = true;</span>
+		}
+<span class="nc bnc" id="L309" title="All 2 branches missed.">		for (int i = 0; i &lt; size(); i++) {</span>
+<span class="nc" id="L310">			final AttributeRegistryElement element = getElement(i);</span>
+<span class="nc bnc" id="L311" title="All 4 branches missed.">			if (element.isRestricted() || element.isVisible()) {</span>
+<span class="nc" id="L312">				XMLElement attributeData = element.save();</span>
+<span class="nc" id="L313">				attributeRegistry.addChild(attributeData);</span>
+<span class="nc" id="L314">				toBeSaved = true;</span>
+			}
+		}
+<span class="nc bnc" id="L317" title="All 2 branches missed.">		if (toBeSaved) {</span>
+<span class="nc" id="L318">			attributeRegistry</span>
+<span class="nc" id="L319">					.setName(XMLElementAdapter.XML_NODE_ATTRIBUTE_REGISTRY);</span>
+<span class="nc" id="L320">			attributeRegistry.write(fileout);</span>
+		}
+<span class="nc" id="L322">	}</span>
+
+	/**
+     */
+	public void resetChanges() {
+<span class="nc bnc" id="L327" title="All 2 branches missed.">		if (isAttributeLayoutChanged == false)</span>
+<span class="nc" id="L328">			return;</span>
+<span class="nc" id="L329">		restrictionModel = Boolean.valueOf(isRestricted);</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">		for (int i = 0; i &lt; elements.size(); i++) {</span>
+<span class="nc" id="L331">			AttributeRegistryElement element = getElement(i);</span>
+<span class="nc" id="L332">			element.setVisibilityModel(Boolean.valueOf(element.isVisible()));</span>
+<span class="nc" id="L333">			element.setRestrictionModel(Boolean.valueOf(element.isRestricted()));</span>
+		}
+<span class="nc" id="L335">		isAttributeLayoutChanged = false;</span>
+<span class="nc" id="L336">	}</span>
+
+	public void applyChanges() {
+<span class="nc bnc" id="L339" title="All 2 branches missed.">		if (isAttributeLayoutChanged == false)</span>
+<span class="nc" id="L340">			return;</span>
+<span class="nc" id="L341">		getAttributeController().performSetRestriction(GLOBAL,</span>
+<span class="nc" id="L342">				restrictionModel.booleanValue());</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">		for (int i = 0; i &lt; elements.size(); i++) {</span>
+<span class="nc" id="L344">			AttributeRegistryElement element = getElement(i);</span>
+<span class="nc" id="L345">			getAttributeController().performSetVisibility(i,</span>
+<span class="nc" id="L346">					element.getVisibilityModel().booleanValue());</span>
+<span class="nc" id="L347">			getAttributeController().performSetRestriction(i,</span>
+<span class="nc" id="L348">					element.getRestriction().booleanValue());</span>
+		}
+<span class="nc" id="L350">		isAttributeLayoutChanged = false;</span>
+<span class="nc" id="L351">	}</span>
+
+	public boolean exist(String attributeName, Object element) {
+<span class="nc" id="L354">		int index = indexOf(attributeName);</span>
+<span class="nc bnc" id="L355" title="All 2 branches missed.">		if (index == -1) {</span>
+<span class="nc" id="L356">			return false;</span>
+		}
+<span class="nc" id="L358">		SortedComboBoxModel values = getElement(index).getValues();</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">		for (int i = 0; i &lt; values.getSize(); i++) {</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			if (element.equals(values.getElementAt(i))) {</span>
+<span class="nc" id="L361">				return true;</span>
+			}
+		}
+<span class="nc" id="L364">		return false;</span>
+	}
+
+	public SortedMapVector getElements() {
+<span class="nc" id="L368">		return elements;</span>
+	}
+
+	public void decrementVisibleElementsNumber() {
+<span class="nc" id="L372">		visibleElementsNumber--;</span>
+<span class="nc" id="L373">	}</span>
+
+	public void incrementVisibleElementsNumber() {
+<span class="nc" id="L376">		visibleElementsNumber++;</span>
+<span class="nc" id="L377">	}</span>
+
+	public void registry(Attribute newAttribute) {
+<span class="nc" id="L380">		String name = newAttribute.getName();</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">		if (name.equals(&quot;&quot;))</span>
+<span class="nc" id="L382">			return;</span>
+<span class="nc" id="L383">		String value = newAttribute.getValue();</span>
+		try {
+<span class="nc" id="L385">			AttributeRegistryElement elem = getElement(name);</span>
+<span class="nc" id="L386">			elem.addValue(value);</span>
+<span class="nc" id="L387">		} catch (NoSuchElementException ex) {</span>
+<span class="nc" id="L388">			AttributeRegistryElement attributeRegistryElement = new AttributeRegistryElement(</span>
+<span class="nc" id="L389">					this, name);</span>
+<span class="nc" id="L390">			attributeRegistryElement.addValue(value);</span>
+<span class="nc" id="L391">			int index = getElements().add(name, attributeRegistryElement);</span>
+<span class="nc" id="L392">			getTableModel().fireTableRowsInserted(index, index);</span>
+		}
+		;
+<span class="nc" id="L395">		fireAttributesChanged();</span>
+<span class="nc" id="L396">	}</span>
+
+	public void registry(String name) {
+<span class="nc" id="L399">		AttributeRegistryElement attributeRegistryElement = new AttributeRegistryElement(</span>
+<span class="nc" id="L400">				this, name);</span>
+<span class="nc" id="L401">		int index = getElements().add(name, attributeRegistryElement);</span>
+<span class="nc" id="L402">		getTableModel().fireTableRowsInserted(index, index);</span>
+<span class="nc" id="L403">	}</span>
+
+	public void setAttributeLayoutChanged() {
+<span class="nc" id="L406">		isAttributeLayoutChanged = true;</span>
+<span class="nc" id="L407">	}</span>
+
+	public void unregistry(String name) {
+<span class="nc" id="L410">		int index = elements.indexOf(name);</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">		if (getElement(index).isVisible())</span>
+<span class="nc" id="L412">			decrementVisibleElementsNumber();</span>
+<span class="nc" id="L413">		elements.remove(index);</span>
+<span class="nc" id="L414">		getTableModel().fireTableRowsDeleted(index, index);</span>
+<span class="nc" id="L415">		fireAttributesChanged();</span>
+<span class="nc" id="L416">	}</span>
+
+	public String getAttributeViewType() {
+<span class="nc" id="L419">		return attributeViewType;</span>
+	}
+
+	public void setAttributeViewType(String attributeViewType) {
+<span class="nc" id="L423">		this.attributeViewType = attributeViewType;</span>
+<span class="nc" id="L424">		fireStateChanged();</span>
+<span class="nc" id="L425">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

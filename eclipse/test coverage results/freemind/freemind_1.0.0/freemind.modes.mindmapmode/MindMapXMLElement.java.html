@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapXMLElement.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode</a> &gt; <span class="el_source">MindMapXMLElement.java</span></div><h1>MindMapXMLElement.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.mindmapmode;
+
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Vector;
+
+import freemind.main.FreeMindMain;
+import freemind.main.XMLElement;
+import freemind.modes.ArrowLinkAdapter;
+import freemind.modes.ArrowLinkTarget;
+import freemind.modes.CloudAdapter;
+import freemind.modes.EdgeAdapter;
+import freemind.modes.MindMap;
+import freemind.modes.ModeController;
+import freemind.modes.NodeAdapter;
+import freemind.modes.XMLElementAdapter;
+
+public class MindMapXMLElement extends XMLElementAdapter {
+
+	// Logging:
+	private static java.util.logging.Logger logger;
+
+	public MindMapXMLElement(ModeController pModeController) {
+<span class="nc" id="L44">		super(pModeController);</span>
+<span class="nc" id="L45">		init();</span>
+<span class="nc" id="L46">	}</span>
+
+	protected MindMapXMLElement(ModeController pModeController,
+			Vector ArrowLinkAdapters, HashMap IDToTarget) {
+<span class="nc" id="L50">		super(pModeController, ArrowLinkAdapters, IDToTarget);</span>
+<span class="nc" id="L51">		init();</span>
+<span class="nc" id="L52">	}</span>
+
+	/**
+     *
+     */
+	private void init() {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L59">			logger = getFrame().getLogger(this.getClass().getName());</span>
+		}
+<span class="nc" id="L61">	}</span>
+
+	/** abstract method to create elements of my type (factory). */
+	protected XMLElement createAnotherElement() {
+		// We do not need to initialize the things of XMLElement.
+<span class="nc" id="L66">		return new MindMapXMLElement(mModeController, mArrowLinkAdapters,</span>
+<span class="nc" id="L67">				mIdToTarget);</span>
+	}
+
+	protected NodeAdapter createNodeAdapter(FreeMindMain frame, String nodeClass) {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (nodeClass == null) {</span>
+<span class="nc" id="L72">			return new MindMapNodeModel(frame, getMap());</span>
+		}
+		// reflection:
+		try {
+			// construct class loader:
+<span class="nc" id="L77">			ClassLoader loader = this.getClass().getClassLoader();</span>
+			// constructed.
+<span class="nc" id="L79">			Class nodeJavaClass = Class.forName(nodeClass, true, loader);</span>
+<span class="nc" id="L80">			Class[] constrArgs = new Class[] { Object.class,</span>
+<span class="nc" id="L81">					FreeMindMain.class, MindMap.class };</span>
+<span class="nc" id="L82">			Object[] constrObjs = new Object[] { null, frame, getMap() };</span>
+<span class="nc" id="L83">			Constructor constructor = nodeJavaClass.getConstructor(constrArgs);</span>
+<span class="nc" id="L84">			NodeAdapter nodeImplementor = (NodeAdapter) constructor</span>
+<span class="nc" id="L85">					.newInstance(constrObjs);</span>
+<span class="nc" id="L86">			return nodeImplementor;</span>
+<span class="nc" id="L87">		} catch (Exception e) {</span>
+<span class="nc" id="L88">			freemind.main.Resources.getInstance().logException(e,</span>
+<span class="nc" id="L89">					&quot;Error occurred loading node implementor: &quot; + nodeClass);</span>
+			// the best we can do is to return the normal class:
+<span class="nc" id="L91">			NodeAdapter node = new MindMapNodeModel(frame, getMap());</span>
+<span class="nc" id="L92">			return node;</span>
+		}
+	}
+
+	protected EdgeAdapter createEdgeAdapter(NodeAdapter node, FreeMindMain frame) {
+<span class="nc" id="L97">		return new MindMapEdgeModel(node, frame);</span>
+	}
+
+	protected CloudAdapter createCloudAdapter(NodeAdapter node,
+			FreeMindMain frame) {
+<span class="nc" id="L102">		return new MindMapCloudModel(node, frame);</span>
+	}
+
+	protected ArrowLinkAdapter createArrowLinkAdapter(NodeAdapter source,
+			NodeAdapter target, FreeMindMain frame) {
+<span class="nc" id="L107">		return new MindMapArrowLinkModel(source, target, frame);</span>
+	}
+
+	protected ArrowLinkTarget createArrowLinkTarget(NodeAdapter source,
+			NodeAdapter target, FreeMindMain frame) {
+<span class="nc" id="L112">		return new ArrowLinkTarget(source, target, frame);</span>
+	}
+	
+	protected NodeAdapter createEncryptedNode(String additionalInfo) {
+<span class="nc" id="L116">		NodeAdapter node = createNodeAdapter(frame,</span>
+<span class="nc" id="L117">				EncryptedMindMapNode.class.getName());</span>
+<span class="nc" id="L118">		setUserObject(node);</span>
+<span class="nc" id="L119">		copyAttributesToNode(node);</span>
+<span class="nc" id="L120">		node.setAdditionalInfo(additionalInfo);</span>
+<span class="nc" id="L121">		return node;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

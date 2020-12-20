@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Set Functions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="CustScalarFunc.html">Prev</a> - <a href="EngineExRemarks.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="ExtendME.html">9 Extending the Metrics and Rule Engine</a> > 9.6 Set Functions
+<hr>
+<h2><a name="CustSetFunc"></a>9.6 Set Functions</h2>
+
+A set function is used in set expressions (see <a href="ExpTerms.html">Section&nbsp;8.5 "Expression Terms"</a>) and yields
+an element set or a value set. To illustrate the implementation of set
+functions, we'll define one to calculate the symmetric difference
+of two sets.<p>
+
+The symmetric difference of two sets <tt>A</tt> and <tt>B</tt> is the set
+of elements contained in either <tt>A</tt> or <tt>B</tt>, but not both.
+For regular sets, we could express the symmetric difference in terms
+of the existing set operations as <tt>(A+B)-(A*B)</tt>
+(i.e., the union of the sets without the intersection of the sets,
+see <a href="DefSetExp.html">Section&nbsp;8.5.3 "Set Expressions"</a>).
+For multisets, however, we must take the cardinality of
+elements into account: the cardinality of an element in the symmetric
+difference is the absolute difference of the cardinality of the
+element in sets <tt>A</tt> and <tt>B</tt>. For example, if the cardinality 
+of element <tt>e</tt> is five in set <tt>A</tt> and three in set <tt>B</tt>,
+the cardinality of element <tt>e</tt> in the symmetric difference is two.
+The formula <tt>(A+B)-(A*B)</tt> would yield cardinality (5+3)-3=5 for
+element <tt>e</tt> and therefore cannot be used for multisets.
+<p>
+
+The following implementation handles both regular and multisets.
+
+<pre>
+   packacke com.acme;
+   import java.util.Collection;
+   import java.util.Iterator;
+
+   import com.sdmetrics.math.ExpressionNode;
+   import com.sdmetrics.metrics.MetricTools;
+   import com.sdmetrics.metrics.SDMetricsException;
+   import com.sdmetrics.metrics.SetOperation;
+   import com.sdmetrics.metrics.Variables;
+   import com.sdmetrics.model.ModelElement;
+
+01 public class SetOperationSymmDiff extends SetOperation {
+
+   @Override
+02 public Collection&lt;?&gt; calculateValue(ModelElement element,
+      ExpressionNode node, Variables vars) throws SDMetricsException {
+
+03   Collection&lt;?&gt; left = evalSetExpression(element, node.getOperand(0),
+         vars);
+04   Collection&lt;?&gt; right = evalSetExpression(element, node.getOperand(1),
+         vars);
+
+05   boolean isMultiSet = MetricTools.isMultiSet(right)
+         || MetricTools.isMultiSet(left);
+06   Collection&lt;?&gt; result = MetricTools.createHashSet(isMultiSet);
+
+     // process elements from the first set
+07   Iterator&lt;?&gt; it = MetricTools.getFlatIterator(left);
+08   while (it.hasNext()) {
+09     processElement(it.next(), result, left, right);
+     }
+
+     // process additional elements from the second set
+10   it = MetricTools.getFlatIterator(right);
+11   while (it.hasNext()) {
+12     Object o = it.next();
+13     if (!left.contains(o)) {
+14       processElement(o, result, left, right);
+       }
+     }
+15   return result;
+   }
+
+   @SuppressWarnings({ "unchecked", "rawtypes" })
+16 private void processElement(Object o, Collection col, 
+        Collection&lt;?&gt; left, Collection&lt;?&gt; right) {
+17   int leftCount = MetricTools.elementCount(left, o);
+18   int rightCount = MetricTools.elementCount(right, o);
+19   int count = Math.abs(leftCount - rightCount);
+20   for (int i = 0; i < count; i++)
+21     col.add(o);
+    }
+}
+</pre>
+
+Once more, we discuss the salient features of this implementation, line by line.
+
+<ul>
+<li>01: The class must have public visibility, a standard constructor, and extend the 
+abstract class <tt>com.sdmetrics.metrics.SetOperation</tt>.
+<li>02: Like Boolean and scalar functions (cf. <a href="BoolFuncImpl.html">Section&nbsp;9.4.2 "Implementation of the Boolean Function"</a>), the base class 
+defines an abstract method <tt>calculateValue</tt>, with identical input parameters.
+The return value of the method is of type <tt>java.util.Collection</tt> and provides
+the result set of the function. Regular sets must be represented by
+instances of <tt>java.util.HashSet</tt>, multiset must be instances of <tt>com.sdmetrics.math.HashMultiSet</tt>.
+An "element set" (see <a href="DefSets.html">Section&nbsp;8.2 "Definition of Sets"</a>) contains instances of <tt>ModelElement</tt>. 
+A "value set" contains instances of <tt>java.lang.Number</tt>
+(<tt>Integer</tt> or <tt>Float</tt>), or strings.
+<li>03-04: Method <tt>evalSetExpression</tt> evaluates set expressions.
+We use it to calculate the two input sets passed as arguments into the function.
+<li>05: Class <tt>MetricTools</tt> contains a number of static methods that are useful
+when dealing with sets that may be either regular or multisets. 
+Method <tt>isMultiSet</tt> checks if a set is a multiset or a regular set.
+<li>06: Method <tt>MetricTools.createHashSet(boolean)</tt> creates a new, empty 
+regular set or multiset. The Boolean parameter determines the type of set created.
+In our example, we create a multiset if at least one of the input sets is a multiset.
+<li>07: Method <tt>MetricTools.getFlatIterator(Collection)</tt> obtains an iterator 
+over the elements in a set that returns each element in the set exactly once,
+even if the set is a multiset and the cardinality of the element is greater than one.
+<li>17: Method <tt>MetricTools.elementCount(Collection, Object)</tt> determines the
+cardinality of an element in a set. For regular sets, the method returns 1 if the
+element is contained in the set, else 0. 
+<li>20-21: The element is added to the result set, multiple times if necessary to
+get the cardinality of the element right. This implementation does not check
+the types of the elements added to the result set. That way, the types of the 
+elements in the input sets determines if the result set is an element set or a 
+value set. 
+</ul>
+
+To use the set function, we register it with the metrics engine as follows:
+
+<pre>
+&lt;setoperationdefinition name="symmdiff" 
+   class="com.acme.SetOperationSymmDiff" /&gt;
+</pre>
+
+Again, we deploy the class file of the class in the "bin" folder of
+our SDMetrics installation (path <tt>com/acme/SetOperationSymmDiff.class</tt>).
+After that, we can write set expressions using the new function. For example:
+
+<pre>
+&lt;metric name="FooBar" domain="package"&gt;
+&lt;compoundmetric term="size(symmdiff(FooBarClassesSet, FooBazClassesSet))" /&gt;
+&lt;/metric&gt;
+</pre>
+
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="CustScalarFunc.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="ExtendME.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="EngineExRemarks.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;9.5 "Scalar Functions"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;9.7 "Metrics Engine Extension Guidelines"</td></tr></table>
+
+</body>
+</html>

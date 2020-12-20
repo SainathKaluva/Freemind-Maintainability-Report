@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributeTableModelDecoratorAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview.attributeview</a> &gt; <span class="el_source">AttributeTableModelDecoratorAdapter.java</span></div><h1>AttributeTableModelDecoratorAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 18.06.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.view.mindmapview.attributeview;
+
+import javax.swing.event.ChangeListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.AbstractTableModel;
+
+import freemind.modes.MindMapNode;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.attributes.AttributeTableModel;
+import freemind.modes.attributes.NodeAttributeTableModel;
+
+/**
+ * @author Dimitri Polivaev 18.06.2005
+ */
+abstract class AttributeTableModelDecoratorAdapter extends AbstractTableModel
+		implements AttributeTableModel, TableModelListener, ChangeListener {
+	protected NodeAttributeTableModel nodeAttributeModel;
+	protected AttributeRegistry attributeRegistry;
+
+	public AttributeTableModelDecoratorAdapter(AttributeView attrView) {
+<span class="nc" id="L45">		super();</span>
+<span class="nc" id="L46">		this.nodeAttributeModel = attrView.getAttributes();</span>
+<span class="nc" id="L47">		this.attributeRegistry = attrView.getAttributeRegistry();</span>
+<span class="nc" id="L48">		MindMapNode node = nodeAttributeModel.getNode();</span>
+<span class="nc" id="L49">		addListeners();</span>
+<span class="nc" id="L50">	}</span>
+
+	public MindMapNode getNode() {
+<span class="nc" id="L53">		return nodeAttributeModel.getNode();</span>
+	}
+
+	public int getColumnCount() {
+<span class="nc" id="L57">		return 2;</span>
+	}
+
+	public Class getColumnClass(int columnIndex) {
+<span class="nc" id="L61">		return nodeAttributeModel.getColumnClass(columnIndex);</span>
+	}
+
+	public String getColumnName(int columnIndex) {
+<span class="nc" id="L65">		return nodeAttributeModel.getColumnName(columnIndex);</span>
+	}
+
+	public int getColumnWidth(int col) {
+<span class="nc" id="L69">		return nodeAttributeModel.getColumnWidth(col);</span>
+	}
+
+	public void setColumnWidth(int col, int width) {
+<span class="nc" id="L73">		nodeAttributeModel.setColumnWidth(col, width);</span>
+<span class="nc" id="L74">	}</span>
+
+	private void addListeners() {
+<span class="nc" id="L77">		nodeAttributeModel.addTableModelListener(this);</span>
+<span class="nc" id="L78">		this.attributeRegistry.addChangeListener(this);</span>
+<span class="nc" id="L79">	}</span>
+
+	private void removeListeners() {
+<span class="nc" id="L82">		nodeAttributeModel.removeTableModelListener(this);</span>
+<span class="nc" id="L83">		this.attributeRegistry.removeChangeListener(this);</span>
+<span class="nc" id="L84">	}</span>
+
+	public void viewRemoved() {
+<span class="nc" id="L87">		removeListeners();</span>
+<span class="nc" id="L88">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.event.TableModelListener#tableChanged(javax.swing.event.
+	 * TableModelEvent)
+	 */
+	public void tableChanged(TableModelEvent e) {
+<span class="nc" id="L97">		fireTableDataChanged();</span>
+<span class="nc" id="L98">	}</span>
+
+	public void editingCanceled() {
+<span class="nc" id="L101">	}</span>
+
+	/**
+	 * @param view
+	 */
+	public abstract boolean areAttributesVisible();
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FilterToolbar.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter</a> &gt; <span class="el_source">FilterToolbar.java</span></div><h1>FilterToolbar.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 05.05.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.controller.filter;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.util.Iterator;
+
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+
+import freemind.controller.Controller;
+import freemind.controller.FreeMindToolBar;
+import freemind.controller.filter.condition.Condition;
+import freemind.controller.filter.condition.NoFilteringCondition;
+import freemind.controller.filter.condition.SelectedViewCondition;
+import freemind.main.Resources;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+
+class FilterToolbar extends FreeMindToolBar {
+	private FilterController fc;
+<span class="nc" id="L57">	private FilterComposerDialog filterDialog = null;</span>
+	private JComboBox activeFilterConditionComboBox;
+	private JCheckBox showAncestors;
+	private JCheckBox showDescendants;
+	private Filter activeFilter;
+	private JButton btnEdit;
+	private JButton btnUnfoldAncestors;
+	private Controller c;
+<span class="nc" id="L65">	private static Color filterInactiveColor = null;</span>
+	private String pathToFilterFile;
+	private FilterChangeListener filterChangeListener;
+
+	private class FilterChangeListener extends AbstractAction implements
+			ItemListener, PropertyChangeListener {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+<span class="nc" id="L78">		public FilterChangeListener() {</span>
+<span class="nc" id="L79">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L82">			resetFilter();</span>
+<span class="nc" id="L83">			setMapFilter();</span>
+<span class="nc" id="L84">			refreshMap();</span>
+<span class="nc" id="L85">			DefaultFilter.selectVisibleNode(c.getView());</span>
+<span class="nc" id="L86">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ItemListener#itemStateChanged(java.awt.event.ItemEvent
+		 * )
+		 */
+		public void itemStateChanged(ItemEvent e) {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (e.getStateChange() == ItemEvent.SELECTED)</span>
+<span class="nc" id="L97">				filterChanged();</span>
+<span class="nc" id="L98">		}</span>
+
+		private void filterChanged() {
+<span class="nc" id="L101">			resetFilter();</span>
+<span class="nc" id="L102">			setMapFilter();</span>
+<span class="nc" id="L103">			final MindMap map = fc.getMap();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			if (map != null) {</span>
+<span class="nc" id="L105">				activeFilter.applyFilter(c);</span>
+<span class="nc" id="L106">				refreshMap();</span>
+<span class="nc" id="L107">				DefaultFilter.selectVisibleNode(c.getView());</span>
+			}
+<span class="nc" id="L109">		}</span>
+
+		public void propertyChange(PropertyChangeEvent evt) {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			if (evt.getPropertyName().equals(&quot;model&quot;)) {</span>
+<span class="nc" id="L113">				addStandardConditions();</span>
+<span class="nc" id="L114">				filterChanged();</span>
+			}
+<span class="nc" id="L116">		}</span>
+
+	}
+
+	private class EditFilterAction extends AbstractAction {
+<span class="nc" id="L121">		EditFilterAction() {</span>
+<span class="nc" id="L122">			super(&quot;&quot;, new ImageIcon(Resources.getInstance().getResource(</span>
+<span class="nc" id="L123">					&quot;images/Btn_edit.gif&quot;)));</span>
+<span class="nc" id="L124">			putValue(SHORT_DESCRIPTION, Resources.getInstance()</span>
+<span class="nc" id="L125">					.getResourceString(&quot;filter_edit_description&quot;));</span>
+<span class="nc" id="L126">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+		private FilterComposerDialog getFilterDialog() {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (filterDialog == null) {</span>
+<span class="nc" id="L137">				filterDialog = new FilterComposerDialog(c, FilterToolbar.this);</span>
+<span class="nc" id="L138">				getFilterDialog().setLocationRelativeTo(FilterToolbar.this);</span>
+			}
+<span class="nc" id="L140">			return filterDialog;</span>
+		}
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L144">			Object selectedItem = getFilterConditionModel().getSelectedItem();</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (selectedItem != null) {</span>
+<span class="nc" id="L146">				getFilterDialog().setSelectedItem(selectedItem);</span>
+			}
+<span class="nc" id="L148">			getFilterDialog().show();</span>
+<span class="nc" id="L149">		}</span>
+
+	}
+
+	private class UnfoldAncestorsAction extends AbstractAction {
+		/**
+         *
+         */
+<span class="nc" id="L157">		UnfoldAncestorsAction() {</span>
+<span class="nc" id="L158">			super(&quot;&quot;, new ImageIcon(Resources.getInstance().getResource(</span>
+<span class="nc" id="L159">					&quot;images/unfold.png&quot;)));</span>
+<span class="nc" id="L160">		}</span>
+
+		private void unfoldAncestors(MindMapNode parent) {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			for (Iterator i = parent.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L164">				MindMapNode node = (MindMapNode) i.next();</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">				if (showDescendants.isSelected()</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">						|| node.getFilterInfo().isAncestor()) {</span>
+<span class="nc" id="L167">					setFolded(node, false);</span>
+<span class="nc" id="L168">					unfoldAncestors(node);</span>
+				}
+			}
+<span class="nc" id="L171">		}</span>
+
+		private void setFolded(MindMapNode node, boolean state) {
+<span class="nc bnc" id="L174" title="All 4 branches missed.">			if (node.hasChildren() &amp;&amp; (node.isFolded() != state)) {</span>
+<span class="nc" id="L175">				c.getModeController().setFolded(node, state);</span>
+			}
+<span class="nc" id="L177">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			if (getSelectedCondition() != null) {</span>
+<span class="nc" id="L181">				unfoldAncestors(c.getModel().getRootNode());</span>
+			}
+<span class="nc" id="L183">		}</span>
+	}
+
+	FilterToolbar(final Controller c) {
+<span class="nc" id="L187">		super();</span>
+<span class="nc" id="L188">		this.fc = c.getFilterController();</span>
+<span class="nc" id="L189">		this.c = c;</span>
+<span class="nc" id="L190">		setVisible(false);</span>
+<span class="nc" id="L191">		setFocusable(false);</span>
+<span class="nc" id="L192">		setRollover(true);</span>
+<span class="nc" id="L193">		filterChangeListener = new FilterChangeListener();</span>
+<span class="nc" id="L194">		add(new JLabel(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L195">				&quot;filter_toolbar&quot;)</span>
+<span class="nc" id="L196">				+ &quot; &quot;));</span>
+
+<span class="nc" id="L198">		activeFilter = null;</span>
+<span class="nc" id="L199">		activeFilterConditionComboBox = new JComboBox() {</span>
+			public Dimension getMaximumSize() {
+<span class="nc" id="L201">				return getPreferredSize();</span>
+			}
+		};
+<span class="nc" id="L204">		activeFilterConditionComboBox.setFocusable(false);</span>
+<span class="nc" id="L205">		pathToFilterFile = c.getFrame().getFreemindDirectory() + File.separator</span>
+<span class="nc" id="L206">				+ &quot;auto.&quot;</span>
+<span class="nc" id="L207">				+ FilterController.FREEMIND_FILTER_EXTENSION_WITHOUT_DOT;</span>
+
+<span class="nc" id="L209">		btnEdit = add(new EditFilterAction());</span>
+<span class="nc" id="L210">		add(btnEdit);</span>
+
+<span class="nc" id="L212">		btnUnfoldAncestors = add(new UnfoldAncestorsAction());</span>
+<span class="nc" id="L213">		btnUnfoldAncestors.setToolTipText(Resources.getInstance()</span>
+<span class="nc" id="L214">				.getResourceString(&quot;filter_unfold_ancestors&quot;));</span>
+<span class="nc" id="L215">		add(btnUnfoldAncestors);</span>
+
+<span class="nc" id="L217">		showAncestors = new JCheckBox(Resources.getInstance()</span>
+<span class="nc" id="L218">				.getResourceString(&quot;filter_show_ancestors&quot;), true);</span>
+<span class="nc" id="L219">		add(showAncestors);</span>
+<span class="nc" id="L220">		showAncestors.getModel().addActionListener(filterChangeListener);</span>
+
+<span class="nc" id="L222">		showDescendants = new JCheckBox(Resources.getInstance()</span>
+<span class="nc" id="L223">				.getResourceString(&quot;filter_show_descendants&quot;), false);</span>
+<span class="nc" id="L224">		add(showDescendants);</span>
+<span class="nc" id="L225">		showDescendants.getModel().addActionListener(filterChangeListener);</span>
+
+<span class="nc" id="L227">	}</span>
+
+	void addStandardConditions() {
+<span class="nc" id="L230">		DefaultComboBoxModel filterConditionModel = fc</span>
+<span class="nc" id="L231">				.getFilterConditionModel();</span>
+<span class="nc" id="L232">		final Condition noFiltering = NoFilteringCondition.createCondition();</span>
+<span class="nc" id="L233">		filterConditionModel.insertElementAt(noFiltering, 0);</span>
+<span class="nc" id="L234">		filterConditionModel.insertElementAt(</span>
+<span class="nc" id="L235">				SelectedViewCondition.CreateCondition(), 1);</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		if (filterConditionModel.getSelectedItem() == null) {</span>
+<span class="nc" id="L237">			filterConditionModel.setSelectedItem(noFiltering);</span>
+		}
+<span class="nc" id="L239">	}</span>
+
+	void initConditions() {
+		try {
+<span class="nc" id="L243">			fc.loadConditions(fc.getFilterConditionModel(), pathToFilterFile);</span>
+
+<span class="nc" id="L245">		} catch (Exception e) {</span>
+		}
+<span class="nc" id="L247">		addStandardConditions();</span>
+<span class="nc" id="L248">		activeFilterConditionComboBox.setSelectedIndex(0);</span>
+<span class="nc" id="L249">		activeFilterConditionComboBox.setRenderer(fc.getConditionRenderer());</span>
+
+<span class="nc" id="L251">		add(activeFilterConditionComboBox);</span>
+<span class="nc" id="L252">		add(Box.createHorizontalGlue());</span>
+
+<span class="nc" id="L254">		activeFilterConditionComboBox.addItemListener(filterChangeListener);</span>
+<span class="nc" id="L255">		activeFilterConditionComboBox</span>
+<span class="nc" id="L256">				.addPropertyChangeListener(filterChangeListener);</span>
+<span class="nc" id="L257">	}</span>
+
+	/**
+     *
+     */
+	public void resetFilter() {
+<span class="nc" id="L263">		activeFilter = null;</span>
+
+<span class="nc" id="L265">	}</span>
+
+	private Condition getSelectedCondition() {
+<span class="nc" id="L268">		return (Condition) activeFilterConditionComboBox.getSelectedItem();</span>
+	}
+
+	void setMapFilter() {
+<span class="nc bnc" id="L272" title="All 2 branches missed.">		if (activeFilter == null)</span>
+<span class="nc" id="L273">			activeFilter = new DefaultFilter(getSelectedCondition(),</span>
+<span class="nc" id="L274">					showAncestors.getModel().isSelected(), showDescendants</span>
+<span class="nc" id="L275">							.getModel().isSelected());</span>
+<span class="nc" id="L276">		final MindMap map = fc.getMap();</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">		if (map != null) {</span>
+<span class="nc" id="L278">			map.setFilter(activeFilter);</span>
+		}
+<span class="nc" id="L280">	}</span>
+
+	/**
+     */
+	FilterComposerDialog getFilterDialog() {
+<span class="nc" id="L285">		return filterDialog;</span>
+	}
+
+	/**
+     */
+	void mapChanged(MindMap newMap) {
+<span class="nc bnc" id="L291" title="All 2 branches missed.">		if (!isVisible())</span>
+<span class="nc" id="L292">			return;</span>
+		Filter filter;
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		if (newMap != null) {</span>
+<span class="nc" id="L295">			filter = newMap.getFilter();</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">			if (filter != activeFilter) {</span>
+<span class="nc" id="L297">				activeFilter = filter;</span>
+<span class="nc" id="L298">				activeFilterConditionComboBox.setSelectedItem(filter</span>
+<span class="nc" id="L299">						.getCondition());</span>
+<span class="nc" id="L300">				showAncestors.setSelected(filter.areAncestorsShown());</span>
+<span class="nc" id="L301">				showDescendants.setSelected(filter.areDescendantsShown());</span>
+			}
+<span class="nc" id="L303">		} else {</span>
+<span class="nc" id="L304">			filter = null;</span>
+<span class="nc" id="L305">			activeFilterConditionComboBox.setSelectedIndex(0);</span>
+		}
+<span class="nc" id="L307">	}</span>
+
+	private void refreshMap() {
+<span class="nc" id="L310">		fc.refreshMap();</span>
+<span class="nc" id="L311">	}</span>
+
+	void saveConditions() {
+		try {
+<span class="nc" id="L315">			fc.saveConditions(fc.getFilterConditionModel(), pathToFilterFile);</span>
+<span class="nc" id="L316">		} catch (Exception e) {</span>
+		}
+<span class="nc" id="L318">	}</span>
+
+	ComboBoxModel getFilterConditionModel() {
+<span class="nc" id="L321">		return activeFilterConditionComboBox.getModel();</span>
+	}
+
+	void setFilterConditionModel(ComboBoxModel filterConditionModel) {
+<span class="nc" id="L325">		activeFilterConditionComboBox.setModel(filterConditionModel);</span>
+<span class="nc" id="L326">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

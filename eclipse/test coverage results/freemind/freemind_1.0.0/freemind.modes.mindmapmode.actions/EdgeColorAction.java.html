@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>EdgeColorAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">EdgeColorAction.java</span></div><h1>EdgeColorAction.java</h1><pre class="source lang-java linenums">/*
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2004 Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ * 
+ * See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 
+ * Created on 25.08.2004
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.util.ListIterator;
+
+import javax.swing.AbstractAction;
+
+import freemind.controller.Controller;
+import freemind.controller.actions.generated.instance.EdgeColorFormatAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Tools;
+import freemind.modes.EdgeAdapter;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapEdgeModel;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+
+public class EdgeColorAction extends AbstractAction implements ActorXml {
+	private final MindMapController controller;
+
+	public EdgeColorAction(MindMapController controller) {
+<span class="nc" id="L48">		super(controller.getText(&quot;edge_color&quot;));</span>
+<span class="nc" id="L49">		this.controller = controller;</span>
+<span class="nc" id="L50">		controller.getActionFactory().registerActor(this, getDoActionClass());</span>
+<span class="nc" id="L51">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L54">		Color color = Controller.showCommonJColorChooserDialog(controller</span>
+<span class="nc" id="L55">				.getView().getSelected(), controller</span>
+<span class="nc" id="L56">				.getText(&quot;choose_edge_color&quot;), controller.getSelected()</span>
+<span class="nc" id="L57">				.getEdge().getColor());</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (color == null)</span>
+<span class="nc" id="L59">			return;</span>
+<span class="nc" id="L60">		for (ListIterator it = controller.getSelecteds().listIterator(); it</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L62">			MindMapNodeModel selected = (MindMapNodeModel) it.next();</span>
+<span class="nc" id="L63">			setEdgeColor(selected, color);</span>
+		}
+<span class="nc" id="L65">	}</span>
+
+	public void setEdgeColor(MindMapNode node, Color color) {
+<span class="nc" id="L68">		EdgeColorFormatAction doAction = createEdgeColorFormatAction(node,</span>
+<span class="nc" id="L69">				color);</span>
+<span class="nc" id="L70">		EdgeColorFormatAction undoAction = createEdgeColorFormatAction(node,</span>
+<span class="nc" id="L71">				((EdgeAdapter) node.getEdge()).getRealColor());</span>
+<span class="nc" id="L72">		controller.doTransaction(this.getClass().getName(),</span>
+<span class="nc" id="L73">				new ActionPair(doAction, undoAction));</span>
+
+<span class="nc" id="L75">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.actions.ActorXml#act(freemind.controller.actions.
+	 * generated.instance.XmlAction)
+	 */
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (action instanceof EdgeColorFormatAction) {</span>
+<span class="nc" id="L86">			EdgeColorFormatAction edgeAction = (EdgeColorFormatAction) action;</span>
+<span class="nc" id="L87">			Color color = Tools.xmlToColor(edgeAction.getColor());</span>
+<span class="nc" id="L88">			MindMapNode node = controller.getNodeFromID(edgeAction.getNode());</span>
+<span class="nc" id="L89">			Color oldColor = ((EdgeAdapter) node.getEdge()).getRealColor();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (!Tools.safeEquals(color, oldColor)) {</span>
+<span class="nc" id="L91">				((MindMapEdgeModel) node.getEdge()).setColor(color);</span>
+<span class="nc" id="L92">				controller.nodeChanged(node);</span>
+			}
+		}
+<span class="nc" id="L95">	}</span>
+
+	public EdgeColorFormatAction createEdgeColorFormatAction(MindMapNode node,
+			Color color) {
+<span class="nc" id="L99">		EdgeColorFormatAction edgeAction = new EdgeColorFormatAction();</span>
+<span class="nc" id="L100">		edgeAction.setNode(node.getObjectId(controller));</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (color != null) {</span>
+<span class="nc" id="L102">			edgeAction.setColor(Tools.colorToXml(color));</span>
+		}
+<span class="nc" id="L104">		return edgeAction;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.actions.ActorXml#getDoActionClass()
+	 */
+	public Class getDoActionClass() {
+<span class="nc" id="L113">		return EdgeColorFormatAction.class;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

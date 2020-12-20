@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExportPdfDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.svg</a> &gt; <span class="el_source">ExportPdfDialog.java</span></div><h1>ExportPdfDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/**</span>
+ * 
+ */
+package plugins.svg;
+
+import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.print.PageFormat;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+
+import freemind.controller.Controller;
+import freemind.main.Tools;
+
+/**
+ * @author Andy
+ * 
+ *         Class is responsible for a dialog to input all pdf export parameters
+ *         like page orientation or format
+ */
+public class ExportPdfDialog extends JDialog {
+
+	private static final String PORTRAIT = &quot;portrait&quot;;
+
+	private static final String LANDSCAPE = &quot;landscape&quot;;
+
+	private static final String PROP_PDF_PAGE_FORMAT = &quot;pdf_page_format&quot;;
+
+	private static final String PROP_PDF_PAGE_ORIENTATION = &quot;pdf_page_orientation&quot;;
+
+	/**
+	 * Chosen format
+	 */
+	private String format;
+
+	/**
+	 * list of available formats
+	 */
+	private String[] formatsCollection;
+
+	/**
+	 * reference to the freemind controller
+	 */
+	private Controller controller;
+
+	/**
+	 * chosen orientation
+	 */
+	private int orientation;
+
+	private JComboBox listBox;
+
+	private JRadioButton birdButtonLandscape;
+
+	private JRadioButton birdButtonPortrait;
+
+	private ButtonGroup group;
+
+<span class="nc" id="L71">	private boolean mResult = true;</span>
+
+	/**
+	 * 
+	 * @return the format of the page format as text &quot;A3&quot;,&quot;A4&quot; defined in
+	 *         ExportPdfPapers
+	 */
+	public String getFormat() {
+<span class="nc" id="L79">		return format;</span>
+	}
+
+	/**
+	 * 
+	 * @return the pageformat PageFormat.LANDSCAPE or PageFormat.PORTRAIT
+	 */
+	public int getOrientation() {
+<span class="nc" id="L87">		return orientation;</span>
+	}
+
+	public void setOrientation(int orientation) {
+<span class="nc" id="L91">		this.orientation = orientation;</span>
+<span class="nc" id="L92">	}</span>
+
+	/**
+	 * Constructor
+	 * 
+	 * @param owner
+	 * @param formats
+	 * @param controller
+	 */
+	public ExportPdfDialog(Frame owner, String[] formats, Controller controller) {
+<span class="nc" id="L102">		super(owner);</span>
+<span class="nc" id="L103">		this.formatsCollection = formats;</span>
+<span class="nc" id="L104">		this.controller = controller;</span>
+<span class="nc" id="L105">		initialize();</span>
+<span class="nc" id="L106">	}</span>
+
+	/**
+	 * Initialize the dialog elements
+	 */
+	private void initialize() {
+<span class="nc" id="L112">		this.setModal(true);</span>
+<span class="nc" id="L113">		this.setTitle(controller.getResourceString(&quot;ExportPdfDialog.PDF_Export_Settings&quot;));</span>
+
+<span class="nc" id="L115">		this.setPreferredSize(new Dimension(400, 150));</span>
+		// Page size
+<span class="nc" id="L117">		JLabel labelPaper = new JLabel(controller.getResourceString(&quot;ExportPdfDialog.Size_&quot;));</span>
+<span class="nc" id="L118">		java.util.Arrays.sort(formatsCollection);</span>
+<span class="nc" id="L119">		listBox = new JComboBox(formatsCollection);</span>
+<span class="nc" id="L120">		listBox.setEditable(false);</span>
+<span class="nc" id="L121">		listBox.setPreferredSize(new Dimension(100, 25));</span>
+
+		// Page orientation
+<span class="nc" id="L124">		birdButtonLandscape = new JRadioButton(controller.getResourceString(&quot;ExportPdfDialog.Landscape&quot;));</span>
+<span class="nc" id="L125">		birdButtonLandscape.setMnemonic(KeyEvent.VK_L);</span>
+<span class="nc" id="L126">		birdButtonLandscape.setSelected(true);</span>
+
+<span class="nc" id="L128">		birdButtonPortrait = new JRadioButton(controller.getResourceString(&quot;ExportPdfDialog.Portrait&quot;));</span>
+<span class="nc" id="L129">		birdButtonPortrait.setMnemonic(KeyEvent.VK_P);</span>
+
+<span class="nc" id="L131">		group = new ButtonGroup();</span>
+<span class="nc" id="L132">		group.add(birdButtonLandscape);</span>
+<span class="nc" id="L133">		group.add(birdButtonPortrait);</span>
+
+		// ok button
+<span class="nc" id="L136">		JButton jOKButton = new JButton();</span>
+<span class="nc" id="L137">		jOKButton.setPreferredSize(new Dimension(100, 20));</span>
+<span class="nc" id="L138">		jOKButton.setAction(new AbstractAction() {</span>
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L140">				okPressed();</span>
+<span class="nc" id="L141">			}</span>
+
+		});
+<span class="nc" id="L144">		jOKButton.setText(controller.getResourceString(&quot;ExportPdfDialog.OK&quot;));</span>
+
+		// panels and layout
+<span class="nc" id="L147">		JPanel panel1 = new JPanel();</span>
+<span class="nc" id="L148">		panel1.setBorder(BorderFactory.createTitledBorder(controller.getResourceString(&quot;ExportPdfDialog.Paper&quot;)));</span>
+<span class="nc" id="L149">		GridBagLayout gridbag1 = new GridBagLayout();</span>
+<span class="nc" id="L150">		panel1.setLayout(gridbag1);</span>
+
+<span class="nc" id="L152">		JPanel panel2 = new JPanel();</span>
+<span class="nc" id="L153">		panel2.setBorder(BorderFactory.createTitledBorder(controller.getResourceString(&quot;ExportPdfDialog.Orientation&quot;)));</span>
+
+<span class="nc" id="L155">		GridBagLayout gridbag = new GridBagLayout();</span>
+<span class="nc" id="L156">		GridBagConstraints c = new GridBagConstraints();</span>
+
+<span class="nc" id="L158">		c.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L159">		c.gridx = 0;</span>
+<span class="nc" id="L160">		c.gridy = 0;</span>
+<span class="nc" id="L161">		panel1.add(labelPaper, c);</span>
+<span class="nc" id="L162">		c.gridx = 1;</span>
+<span class="nc" id="L163">		panel1.add(listBox, c);</span>
+<span class="nc" id="L164">		panel2.add(birdButtonLandscape);</span>
+<span class="nc" id="L165">		panel2.add(birdButtonPortrait);</span>
+
+<span class="nc" id="L167">		JPanel panel = new JPanel();</span>
+<span class="nc" id="L168">		panel.setLayout(gridbag);</span>
+<span class="nc" id="L169">		c.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L170">		c.gridx = 0;</span>
+<span class="nc" id="L171">		c.gridy = 0;</span>
+<span class="nc" id="L172">		panel.add(panel1, c);</span>
+<span class="nc" id="L173">		c.gridx = 1;</span>
+<span class="nc" id="L174">		c.gridy = 0;</span>
+<span class="nc" id="L175">		panel.add(panel2, c);</span>
+<span class="nc" id="L176">		c.fill = GridBagConstraints.CENTER;</span>
+<span class="nc" id="L177">		c.anchor = GridBagConstraints.PAGE_END;</span>
+<span class="nc" id="L178">		c.gridwidth = 2;</span>
+<span class="nc" id="L179">		c.gridx = 0;</span>
+<span class="nc" id="L180">		c.gridy = 1;</span>
+<span class="nc" id="L181">		panel.add(jOKButton, c);</span>
+
+		// set default user values
+<span class="nc" id="L184">		initDefaults();</span>
+
+		// add escape action
+<span class="nc" id="L187">		freemind.main.Tools.addEscapeActionToDialog(this);</span>
+
+		// finish dialog
+<span class="nc" id="L190">		this.setLocationRelativeTo(this.getParent());</span>
+<span class="nc" id="L191">		this.setContentPane(panel);</span>
+<span class="nc" id="L192">		this.getRootPane().setDefaultButton(jOKButton);</span>
+
+<span class="nc" id="L194">		this.pack();</span>
+
+<span class="nc" id="L196">	}</span>
+
+	/**
+	 * Initialize the dialog elements with default values from the user settings
+	 */
+	private void initDefaults() {
+		// page orientation
+<span class="nc" id="L203">		String storedOrientation = controller</span>
+<span class="nc" id="L204">				.getProperty(PROP_PDF_PAGE_ORIENTATION);</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		if (storedOrientation != null) // property found</span>
+		{
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			if (Tools.safeEquals(storedOrientation, LANDSCAPE)) {</span>
+<span class="nc" id="L208">				birdButtonLandscape.setSelected(true);</span>
+<span class="nc" id="L209">			} else {</span>
+<span class="nc" id="L210">				birdButtonPortrait.setSelected(true);</span>
+			}
+		}
+
+		// page format
+<span class="nc" id="L215">		String storedFormat = controller.getProperty(PROP_PDF_PAGE_FORMAT);</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if (storedFormat != null) // property found</span>
+		{
+<span class="nc" id="L218">			listBox.setSelectedItem(storedFormat);</span>
+		}
+
+<span class="nc" id="L221">	}</span>
+
+	/**
+	 * stores the inputs as defaults in user settings
+	 */
+	private void storeDefaults() {
+		// page orientation
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		if (orientation == PageFormat.LANDSCAPE)</span>
+<span class="nc" id="L229">			controller.setProperty(PROP_PDF_PAGE_ORIENTATION, LANDSCAPE);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		else if (orientation == PageFormat.PORTRAIT)</span>
+<span class="nc" id="L231">			controller.setProperty(PROP_PDF_PAGE_ORIENTATION, PORTRAIT);</span>
+
+		// page format
+<span class="nc" id="L234">		controller.setProperty(PROP_PDF_PAGE_FORMAT, format);</span>
+<span class="nc" id="L235">	}</span>
+
+	/**
+	 * button ok pressed, will close the dialog and store the values
+	 */
+	private void okPressed() {
+<span class="nc" id="L241">		format = (String) listBox.getSelectedItem();</span>
+
+<span class="nc bnc" id="L243" title="All 2 branches missed.">		if (birdButtonLandscape.isSelected()) {</span>
+<span class="nc" id="L244">			orientation = PageFormat.LANDSCAPE;</span>
+<span class="nc" id="L245">		} else {</span>
+<span class="nc" id="L246">			orientation = PageFormat.PORTRAIT;</span>
+		}
+
+<span class="nc" id="L249">		storeDefaults();</span>
+<span class="nc" id="L250">		this.setVisible(false);</span>
+<span class="nc" id="L251">	}</span>
+
+	public void dispose() {
+<span class="nc" id="L254">		mResult = false;</span>
+<span class="nc" id="L255">		super.dispose();</span>
+<span class="nc" id="L256">	}</span>
+
+	public boolean getResult() {
+<span class="nc" id="L259">		return mResult;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Component Metrics</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Metrics_activity.html">Prev</a> - <a href="Metrics_node.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LOMetrics.html">B: List of Design Metrics</a> > B.8 Component Metrics
+<hr>
+<h2><a name="Metrics_component"></a>B.8 Component Metrics</h2>
+<a name="Metrics_component_NumOps"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumOps</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of operations of the component. <ul><li>See also metric <a href="Metrics_class.html#Metrics_class_NumOps">NumOps</a> for classes.</ul>
+</td></tr></table><hr><p>
+<a name="Metrics_component_NumComp"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumComp</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of subcomponents of the component.<p> Counts components directly owned by this component; sub-sub-components etc. are not included in this count.
+</td></tr></table><hr><p>
+<a name="Metrics_component_NumPack"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumPack</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of packages of the component.<p> This only counts packages directly owned by the component; any sub-packages etc. of these packages are not included in this count.
+</td></tr></table><hr><p>
+<a name="Metrics_component_NumCls"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumCls</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of classes of the component.<p> This only counts classes directly owned by the component; nested classes, classes in packages, subcomponents, etc. are not included in this count. <ul><li>See also metric <a href="Metrics_package.html#Metrics_package_NumCls">NumCls</a> for packages.</ul>
+</td></tr></table><hr><p>
+<a name="Metrics_component_NumInterf"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumInterf</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of interfaces of the component.<p> This only counts interfaces directly owned by the component;  interfaces in packages, sub-components, etc. are not included in this count. <ul><li>See also metric <a href="Metrics_package.html#Metrics_package_NumInterf">NumInterf</a> for packages.</ul>
+</td></tr></table><hr><p>
+<a name="Metrics_component_NumManifest"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumManifest</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">The number of artifacts of which this component is a manifestation.<p>
+</td></tr></table><hr><p>
+<a name="Metrics_component_Connectors"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Connectors</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of connectors owned by the component.
+</td></tr></table><hr><p>
+<a name="Metrics_component_ProvidedIF"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>ProvidedIF</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">The number of interfaces the component provides.<p> A component provides an interface if there is a plain or interface realization to the interface, or if a port of the component provides the interface. <ul><li>See also metric <a href="Metrics_class.html#Metrics_class_IFImpl">IFImpl</a> for classes.</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_component_RequiredIF"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>RequiredIF</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">The number of interfaces the component requires.<p> The component requires an interface if there is a dependency, usage dependency, or an association to the interface, or if a port of the component requires the interface. 
+</td></tr></table><hr><p>
+<a name="Metrics_component_Dep_Out"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Dep_Out</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of outgoing UML dependencies (component is the client).<p> See also <a href="Metrics_class.html#Metrics_class_Dep_Out">Dep_Out</a> for classes.
+</td></tr></table><hr><p>
+<a name="Metrics_component_Dep_In"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Dep_In</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (export)">Coupling (export)</a></td></tr><tr><td colspan="2">The number of incoming UML dependencies (component is the supplier).<p> See also <a href="Metrics_class.html#Metrics_class_Dep_In">Dep_In</a> for classes.
+</td></tr></table><hr><p>
+<a name="Metrics_component_Assoc_Out"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Assoc_Out</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of associated elements via outgoing associations.<p> Takes associations, aggregations, and compositions with navigability away from the component into account, i.e., elements the component knows.
+</td></tr></table><hr><p>
+<a name="Metrics_component_Assoc_In"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Assoc_In</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of associated elements via incoming associations.<p> Takes associations, aggregations, and compositions with navigability  to the component into account, i.e., elements that know the component.
+</td></tr></table><hr><p>
+<a name="Metrics_component_Diags"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Diags</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Diagram">Diagram</a></td></tr><tr><td colspan="2">The number of times the component appears on a diagram.
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Metrics_activity.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LOMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Metrics_node.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;B.7 "Activity Metrics"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;B.9 "Node Metrics"</td></tr></table>
+
+</body>
+</html>

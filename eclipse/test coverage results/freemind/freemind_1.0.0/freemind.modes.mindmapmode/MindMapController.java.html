@@ -1,0 +1,2349 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapController.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode</a> &gt; <span class="el_source">MindMapController.java</span></div><h1>MindMapController.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.mindmapmode;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.lang.reflect.Constructor;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ButtonGroup;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
+
+import org.jibx.runtime.IUnmarshallingContext;
+import org.jibx.runtime.JiBXException;
+
+import freemind.common.OptionalDontShowMeAgainDialog;
+import freemind.common.XmlBindingTools;
+import freemind.controller.MenuBar;
+import freemind.controller.MenuItemEnabledListener;
+import freemind.controller.MindMapNodesSelection;
+import freemind.controller.StructuredMenuHolder;
+import freemind.controller.actions.generated.instance.EditNoteToNodeAction;
+import freemind.controller.actions.generated.instance.MenuActionBase;
+import freemind.controller.actions.generated.instance.MenuCategoryBase;
+import freemind.controller.actions.generated.instance.MenuCheckedAction;
+import freemind.controller.actions.generated.instance.MenuRadioAction;
+import freemind.controller.actions.generated.instance.MenuSeparator;
+import freemind.controller.actions.generated.instance.MenuStructure;
+import freemind.controller.actions.generated.instance.MenuSubmenu;
+import freemind.controller.actions.generated.instance.Pattern;
+import freemind.controller.actions.generated.instance.PatternEdgeColor;
+import freemind.controller.actions.generated.instance.PatternEdgeStyle;
+import freemind.controller.actions.generated.instance.PatternEdgeWidth;
+import freemind.controller.actions.generated.instance.PatternIcon;
+import freemind.controller.actions.generated.instance.PatternNodeBackgroundColor;
+import freemind.controller.actions.generated.instance.PatternNodeColor;
+import freemind.controller.actions.generated.instance.PatternNodeFontBold;
+import freemind.controller.actions.generated.instance.PatternNodeFontItalic;
+import freemind.controller.actions.generated.instance.PatternNodeFontName;
+import freemind.controller.actions.generated.instance.PatternNodeFontSize;
+import freemind.controller.actions.generated.instance.PatternNodeStyle;
+import freemind.controller.actions.generated.instance.PatternNodeText;
+import freemind.controller.actions.generated.instance.WindowConfigurationStorage;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.extensions.HookFactory;
+import freemind.extensions.HookFactory.RegistrationContainer;
+import freemind.extensions.HookRegistration;
+import freemind.extensions.ModeControllerHook;
+import freemind.extensions.NodeHook;
+import freemind.extensions.PermanentNodeHook;
+import freemind.extensions.UndoEventReceiver;
+import freemind.main.ExampleFileFilter;
+import freemind.main.FixedHTMLWriter;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindCommon;
+import freemind.main.HtmlTools;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.ControllerAdapter;
+import freemind.modes.EdgeAdapter;
+import freemind.modes.FreeMindFileDialog;
+import freemind.modes.MapAdapter;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMap;
+import freemind.modes.MindMap.MapSourceChangedObserver;
+import freemind.modes.MindMapArrowLink;
+import freemind.modes.MindMapLink;
+import freemind.modes.MindMapNode;
+import freemind.modes.Mode;
+import freemind.modes.ModeController;
+import freemind.modes.NodeAdapter;
+import freemind.modes.NodeDownAction;
+import freemind.modes.StylePatternFactory;
+import freemind.modes.attributes.Attribute;
+import freemind.modes.attributes.AttributeController;
+import freemind.modes.attributes.NodeAttributeTableModel;
+import freemind.modes.common.CommonNodeKeyListener;
+import freemind.modes.common.CommonNodeKeyListener.EditHandler;
+import freemind.modes.common.GotoLinkNodeAction;
+import freemind.modes.common.actions.FindAction;
+import freemind.modes.common.actions.FindAction.FindNextAction;
+import freemind.modes.common.actions.NewMapAction;
+import freemind.modes.common.listeners.CommonNodeMouseMotionListener;
+import freemind.modes.mindmapmode.actions.AddArrowLinkAction;
+import freemind.modes.mindmapmode.actions.AddLocalLinkAction;
+import freemind.modes.mindmapmode.actions.ApplyPatternAction;
+import freemind.modes.mindmapmode.actions.BoldAction;
+import freemind.modes.mindmapmode.actions.ChangeArrowLinkEndPoints;
+import freemind.modes.mindmapmode.actions.ChangeArrowsInArrowLinkAction;
+import freemind.modes.mindmapmode.actions.CloudAction;
+import freemind.modes.mindmapmode.actions.ColorArrowLinkAction;
+import freemind.modes.mindmapmode.actions.CompoundActionHandler;
+import freemind.modes.mindmapmode.actions.CopyAction;
+import freemind.modes.mindmapmode.actions.CopySingleAction;
+import freemind.modes.mindmapmode.actions.CutAction;
+import freemind.modes.mindmapmode.actions.DeleteChildAction;
+import freemind.modes.mindmapmode.actions.EdgeColorAction;
+import freemind.modes.mindmapmode.actions.EdgeStyleAction;
+import freemind.modes.mindmapmode.actions.EdgeWidthAction;
+import freemind.modes.mindmapmode.actions.EditAction;
+import freemind.modes.mindmapmode.actions.ExportBranchAction;
+import freemind.modes.mindmapmode.actions.FontFamilyAction;
+import freemind.modes.mindmapmode.actions.FontSizeAction;
+import freemind.modes.mindmapmode.actions.HookAction;
+import freemind.modes.mindmapmode.actions.IconAction;
+import freemind.modes.mindmapmode.actions.ImportExplorerFavoritesAction;
+import freemind.modes.mindmapmode.actions.ImportFolderStructureAction;
+import freemind.modes.mindmapmode.actions.ItalicAction;
+import freemind.modes.mindmapmode.actions.JoinNodesAction;
+import freemind.modes.mindmapmode.actions.MindMapActions;
+import freemind.modes.mindmapmode.actions.MindMapControllerHookAction;
+import freemind.modes.mindmapmode.actions.ModeControllerActionHandler;
+import freemind.modes.mindmapmode.actions.MoveNodeAction;
+import freemind.modes.mindmapmode.actions.NewChildAction;
+import freemind.modes.mindmapmode.actions.NewPreviousSiblingAction;
+import freemind.modes.mindmapmode.actions.NewSiblingAction;
+import freemind.modes.mindmapmode.actions.NodeBackgroundColorAction;
+import freemind.modes.mindmapmode.actions.NodeBackgroundColorAction.RemoveNodeBackgroundColorAction;
+import freemind.modes.mindmapmode.actions.NodeColorAction;
+import freemind.modes.mindmapmode.actions.NodeColorBlendAction;
+import freemind.modes.mindmapmode.actions.NodeGeneralAction;
+import freemind.modes.mindmapmode.actions.NodeHookAction;
+import freemind.modes.mindmapmode.actions.NodeStyleAction;
+import freemind.modes.mindmapmode.actions.NodeUpAction;
+import freemind.modes.mindmapmode.actions.PasteAction;
+import freemind.modes.mindmapmode.actions.PasteAsPlainTextAction;
+import freemind.modes.mindmapmode.actions.RedoAction;
+import freemind.modes.mindmapmode.actions.RemoveAllIconsAction;
+import freemind.modes.mindmapmode.actions.RemoveArrowLinkAction;
+import freemind.modes.mindmapmode.actions.RemoveIconAction;
+import freemind.modes.mindmapmode.actions.RevertAction;
+import freemind.modes.mindmapmode.actions.SelectAllAction;
+import freemind.modes.mindmapmode.actions.SelectBranchAction;
+import freemind.modes.mindmapmode.actions.SetLinkByTextFieldAction;
+import freemind.modes.mindmapmode.actions.SingleNodeOperation;
+import freemind.modes.mindmapmode.actions.ToggleChildrenFoldedAction;
+import freemind.modes.mindmapmode.actions.ToggleFoldedAction;
+import freemind.modes.mindmapmode.actions.UnderlinedAction;
+import freemind.modes.mindmapmode.actions.UndoAction;
+import freemind.modes.mindmapmode.actions.UsePlainTextAction;
+import freemind.modes.mindmapmode.actions.UseRichFormattingAction;
+import freemind.modes.mindmapmode.actions.xml.ActionFactory;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.UndoActionHandler;
+import freemind.modes.mindmapmode.attributeactors.AssignAttributeDialog;
+import freemind.modes.mindmapmode.attributeactors.MindMapModeAttributeController;
+import freemind.modes.mindmapmode.hooks.MindMapHookFactory;
+import freemind.modes.mindmapmode.listeners.MindMapMouseMotionManager;
+import freemind.modes.mindmapmode.listeners.MindMapNodeDropListener;
+import freemind.modes.mindmapmode.listeners.MindMapNodeMotionListener;
+import freemind.view.MapModule;
+import freemind.view.mindmapview.MainView;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.NodeView;
+import freemind.view.mindmapview.attributeview.AttributePopupMenu;
+
+public class MindMapController extends ControllerAdapter implements
+		MindMapActions, MapSourceChangedObserver {
+
+	private static final String ACCESSORIES_PLUGINS_NODE_NOTE = &quot;accessories.plugins.NodeNote&quot;;
+
+	/**
+	 * @author foltin
+	 * @date 24.01.2012
+	 */
+	private final class MapSourceChangeDialog implements Runnable {
+		/**
+		 * 
+		 */
+<span class="nc" id="L235">		private boolean mReturnValue = true;</span>
+
+		/**
+		 * @param pReturnValue
+		 */
+<span class="nc" id="L240">		private MapSourceChangeDialog() {</span>
+<span class="nc" id="L241">		}</span>
+
+		public void run() {
+<span class="nc" id="L244">			int showResult = new OptionalDontShowMeAgainDialog(</span>
+<span class="nc" id="L245">					getFrame().getJFrame(),</span>
+<span class="nc" id="L246">					getSelectedView(),</span>
+<span class="nc" id="L247">					&quot;file_changed_on_disk_reload&quot;,</span>
+<span class="nc" id="L248">					&quot;confirmation&quot;,</span>
+<span class="nc" id="L249">					MindMapController.this,</span>
+<span class="nc" id="L250">					new OptionalDontShowMeAgainDialog.StandardPropertyHandler(</span>
+<span class="nc" id="L251">							getController(),</span>
+<span class="nc" id="L252">							FreeMind.RESOURCES_RELOAD_FILES_WITHOUT_QUESTION),</span>
+<span class="nc" id="L253">					OptionalDontShowMeAgainDialog.BOTH_OK_AND_CANCEL_OPTIONS_ARE_STORED)</span>
+<span class="nc" id="L254">					.show().getResult();</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">			if (showResult != JOptionPane.OK_OPTION) {</span>
+<span class="nc" id="L256">				getFrame().out(</span>
+<span class="nc" id="L257">						Tools.expandPlaceholders(getText(&quot;file_not_reloaded&quot;),</span>
+<span class="nc" id="L258">								getMap().getFile().toString()));</span>
+<span class="nc" id="L259">				mReturnValue = false;</span>
+<span class="nc" id="L260">				return;</span>
+			}
+<span class="nc" id="L262">			revertAction.actionPerformed(null);</span>
+<span class="nc" id="L263">		}</span>
+
+		public boolean getReturnValue() {
+<span class="nc" id="L266">			return mReturnValue;</span>
+		}
+	}
+
+	protected class AssignAttributesAction extends AbstractAction {
+<span class="nc" id="L271">		public AssignAttributesAction() {</span>
+<span class="nc" id="L272">			super(getText(&quot;attributes_assign_dialog&quot;));</span>
+<span class="nc" id="L273">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L276" title="All 2 branches missed.">			if (assignAttributeDialog == null) {</span>
+<span class="nc" id="L277">				assignAttributeDialog = new AssignAttributeDialog(getView());</span>
+			}
+<span class="nc" id="L279">			assignAttributeDialog.show();</span>
+<span class="nc" id="L280">		}</span>
+	}
+
+	public interface MindMapControllerPlugin {
+
+	}
+
+	private static final String RESOURCE_UNFOLD_ON_PASTE = &quot;unfold_on_paste&quot;;
+	private static Logger logger;
+	// for MouseEventHandlers
+<span class="nc" id="L290">	private HashSet mRegisteredMouseWheelEventHandler = new HashSet();</span>
+
+	private ActionFactory actionFactory;
+	private Vector hookActions;
+	// Mode mode;
+	private MindMapPopupMenu popupmenu;
+	// private JToolBar toolbar;
+	private MindMapToolBar toolbar;
+<span class="nc" id="L298">	private boolean addAsChildMode = false;</span>
+<span class="nc" id="L299">	private Clipboard clipboard = null;</span>
+<span class="nc" id="L300">	private Clipboard selection = null;</span>
+
+	private HookFactory nodeHookFactory;
+
+	/**
+	 * This handler evaluates the compound xml actions. Don't delete it!
+	 */
+<span class="nc" id="L307">	private CompoundActionHandler compound = null;</span>
+
+<span class="nc" id="L309">	public ApplyPatternAction patterns[] = new ApplyPatternAction[0]; // Make</span>
+																		// sure
+																		// it is
+																		// initialized
+<span class="nc" id="L313">	public Action newMap = new NewMapAction(this);</span>
+<span class="nc" id="L314">	public Action open = new OpenAction(this);</span>
+<span class="nc" id="L315">	public Action save = new SaveAction(this);</span>
+<span class="nc" id="L316">	public Action saveAs = new SaveAsAction(this);</span>
+<span class="nc" id="L317">	public Action exportToHTML = new ExportToHTMLAction(this);</span>
+<span class="nc" id="L318">	public Action exportBranchToHTML = new ExportBranchToHTMLAction(this);</span>
+
+<span class="nc" id="L320">	public Action editLong = new EditLongAction();</span>
+<span class="nc" id="L321">	public Action editAttributes = new EditAttributesAction();</span>
+<span class="nc" id="L322">	protected AssignAttributeDialog assignAttributeDialog = null;</span>
+<span class="nc" id="L323">	public Action assignAttributes = new AssignAttributesAction();</span>
+<span class="nc" id="L324">	public Action newSibling = new NewSiblingAction(this);</span>
+<span class="nc" id="L325">	public Action newPreviousSibling = new NewPreviousSiblingAction(this);</span>
+<span class="nc" id="L326">	public Action setLinkByFileChooser = new SetLinkByFileChooserAction();</span>
+<span class="nc" id="L327">	public Action setImageByFileChooser = new SetImageByFileChooserAction();</span>
+<span class="nc" id="L328">	public Action followLink = new FollowLinkAction();</span>
+<span class="nc" id="L329">	public Action openLinkDirectory = new OpenLinkDirectoryAction();</span>
+<span class="nc" id="L330">	public Action exportBranch = new ExportBranchAction(this);</span>
+<span class="nc" id="L331">	public Action importBranch = new ImportBranchAction();</span>
+<span class="nc" id="L332">	public Action importLinkedBranch = new ImportLinkedBranchAction();</span>
+<span class="nc" id="L333">	public Action importLinkedBranchWithoutRoot = new ImportLinkedBranchWithoutRootAction();</span>
+
+<span class="nc" id="L335">	public Action showAttributeManagerAction = null;</span>
+<span class="nc" id="L336">	public Action propertyAction = null;</span>
+
+<span class="nc" id="L338">	public Action increaseNodeFont = new NodeGeneralAction(this,</span>
+<span class="nc" id="L339">			&quot;increase_node_font_size&quot;, null, new SingleNodeOperation() {</span>
+				public void apply(MindMapMapModel map, MindMapNodeModel node) {
+<span class="nc" id="L341">					increaseFontSize(node, 1);</span>
+<span class="nc" id="L342">				}</span>
+			});
+<span class="nc" id="L344">	public Action decreaseNodeFont = new NodeGeneralAction(this,</span>
+<span class="nc" id="L345">			&quot;decrease_node_font_size&quot;, null, new SingleNodeOperation() {</span>
+				public void apply(MindMapMapModel map, MindMapNodeModel node) {
+<span class="nc" id="L347">					increaseFontSize(node, -1);</span>
+<span class="nc" id="L348">				}</span>
+			});
+
+<span class="nc" id="L351">	public UndoAction undo = null;</span>
+<span class="nc" id="L352">	public RedoAction redo = null;</span>
+<span class="nc" id="L353">	public CopyAction copy = null;</span>
+<span class="nc" id="L354">	public Action copySingle = null;</span>
+<span class="nc" id="L355">	public CutAction cut = null;</span>
+<span class="nc" id="L356">	public PasteAction paste = null;</span>
+<span class="nc" id="L357">	public PasteAsPlainTextAction pasteAsPlainText = null;</span>
+<span class="nc" id="L358">	public BoldAction bold = null;</span>
+<span class="nc" id="L359">	public ItalicAction italic = null;</span>
+<span class="nc" id="L360">	public UnderlinedAction underlined = null;</span>
+<span class="nc" id="L361">	public FontSizeAction fontSize = null;</span>
+<span class="nc" id="L362">	public FontFamilyAction fontFamily = null;</span>
+<span class="nc" id="L363">	public NodeColorAction nodeColor = null;</span>
+<span class="nc" id="L364">	public EditAction edit = null;</span>
+<span class="nc" id="L365">	public NewChildAction newChild = null;</span>
+<span class="nc" id="L366">	public DeleteChildAction deleteChild = null;</span>
+<span class="nc" id="L367">	public ToggleFoldedAction toggleFolded = null;</span>
+<span class="nc" id="L368">	public ToggleChildrenFoldedAction toggleChildrenFolded = null;</span>
+<span class="nc" id="L369">	public UseRichFormattingAction useRichFormatting = null;</span>
+<span class="nc" id="L370">	public UsePlainTextAction usePlainText = null;</span>
+<span class="nc" id="L371">	public NodeUpAction nodeUp = null;</span>
+<span class="nc" id="L372">	public NodeDownAction nodeDown = null;</span>
+<span class="nc" id="L373">	public EdgeColorAction edgeColor = null;</span>
+<span class="nc" id="L374">	public EdgeWidthAction EdgeWidth_WIDTH_PARENT = null;</span>
+<span class="nc" id="L375">	public EdgeWidthAction EdgeWidth_WIDTH_THIN = null;</span>
+<span class="nc" id="L376">	public EdgeWidthAction EdgeWidth_1 = null;</span>
+<span class="nc" id="L377">	public EdgeWidthAction EdgeWidth_2 = null;</span>
+<span class="nc" id="L378">	public EdgeWidthAction EdgeWidth_4 = null;</span>
+<span class="nc" id="L379">	public EdgeWidthAction EdgeWidth_8 = null;</span>
+<span class="nc" id="L380">	public EdgeWidthAction edgeWidths[] = null;</span>
+<span class="nc" id="L381">	public EdgeStyleAction EdgeStyle_linear = null;</span>
+<span class="nc" id="L382">	public EdgeStyleAction EdgeStyle_bezier = null;</span>
+<span class="nc" id="L383">	public EdgeStyleAction EdgeStyle_sharp_linear = null;</span>
+<span class="nc" id="L384">	public EdgeStyleAction EdgeStyle_sharp_bezier = null;</span>
+<span class="nc" id="L385">	public EdgeStyleAction edgeStyles[] = null;</span>
+<span class="nc" id="L386">	public NodeColorBlendAction nodeColorBlend = null;</span>
+<span class="nc" id="L387">	public NodeStyleAction fork = null;</span>
+<span class="nc" id="L388">	public NodeStyleAction bubble = null;</span>
+<span class="nc" id="L389">	public CloudAction cloud = null;</span>
+<span class="nc" id="L390">	public freemind.modes.mindmapmode.actions.CloudColorAction cloudColor = null;</span>
+<span class="nc" id="L391">	public AddArrowLinkAction addArrowLinkAction = null;</span>
+<span class="nc" id="L392">	public RemoveArrowLinkAction removeArrowLinkAction = null;</span>
+<span class="nc" id="L393">	public ColorArrowLinkAction colorArrowLinkAction = null;</span>
+<span class="nc" id="L394">	public ChangeArrowsInArrowLinkAction changeArrowsInArrowLinkAction = null;</span>
+<span class="nc" id="L395">	public NodeBackgroundColorAction nodeBackgroundColor = null;</span>
+<span class="nc" id="L396">	public RemoveNodeBackgroundColorAction removeNodeBackgroundColor = null;</span>
+
+<span class="nc" id="L398">	public IconAction unknownIconAction = null;</span>
+<span class="nc" id="L399">	public RemoveIconAction removeLastIconAction = null;</span>
+<span class="nc" id="L400">	public RemoveAllIconsAction removeAllIconsAction = null;</span>
+<span class="nc" id="L401">	public SetLinkByTextFieldAction setLinkByTextField = null;</span>
+<span class="nc" id="L402">	public AddLocalLinkAction addLocalLinkAction = null;</span>
+<span class="nc" id="L403">	public GotoLinkNodeAction gotoLinkNodeAction = null;</span>
+<span class="nc" id="L404">	public JoinNodesAction joinNodes = null;</span>
+<span class="nc" id="L405">	public MoveNodeAction moveNodeAction = null;</span>
+<span class="nc" id="L406">	public ImportExplorerFavoritesAction importExplorerFavorites = null;</span>
+<span class="nc" id="L407">	public ImportFolderStructureAction importFolderStructure = null;</span>
+<span class="nc" id="L408">	public ChangeArrowLinkEndPoints changeArrowLinkEndPoints = null;</span>
+
+<span class="nc" id="L410">	public FindAction find = null;</span>
+<span class="nc" id="L411">	public FindNextAction findNext = null;</span>
+<span class="nc" id="L412">	public NodeHookAction nodeHookAction = null;</span>
+<span class="nc" id="L413">	public RevertAction revertAction = null;</span>
+<span class="nc" id="L414">	public SelectBranchAction selectBranchAction = null;</span>
+<span class="nc" id="L415">	public SelectAllAction selectAllAction = null;</span>
+
+	// Extension Actions
+<span class="nc" id="L418">	public Vector iconActions = new Vector(); // fc</span>
+
+<span class="nc" id="L420">	FileFilter filefilter = new MindMapFilter();</span>
+
+	private MenuStructure mMenuStructure;
+	private List mRegistrations;
+<span class="nc" id="L424">	private List mPatternsList = new Vector();</span>
+<span class="nc" id="L425">	private long mGetEventIfChangedAfterThisTimeInMillies = 0;</span>
+
+	public MindMapController(Mode mode) {
+<span class="nc" id="L428">		super(mode);</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L430">			logger = getFrame().getLogger(this.getClass().getName());</span>
+		}
+		// create action factory:
+<span class="nc" id="L433">		actionFactory = new ActionFactory(getController());</span>
+		// create compound handler, that evaluates the compound xml actions.
+<span class="nc" id="L435">		compound = new CompoundActionHandler(this);</span>
+
+<span class="nc" id="L437">		init();</span>
+<span class="nc" id="L438">	}</span>
+
+	protected void init() {
+<span class="nc" id="L441">		logger.info(&quot;createIconActions&quot;);</span>
+		// create standard actions:
+<span class="nc" id="L443">		createStandardActions();</span>
+		// icon actions:
+<span class="nc" id="L445">		createIconActions();</span>
+<span class="nc" id="L446">		logger.info(&quot;createNodeHookActions&quot;);</span>
+		// node hook actions:
+<span class="nc" id="L448">		createNodeHookActions();</span>
+
+<span class="nc" id="L450">		logger.info(&quot;mindmap_menus&quot;);</span>
+		// load menus:
+		try {
+			InputStream in;
+<span class="nc" id="L454">			in = this.getFrame().getResource(&quot;mindmap_menus.xml&quot;).openStream();</span>
+<span class="nc" id="L455">			mMenuStructure = updateMenusFromXml(in);</span>
+<span class="nc" id="L456">		} catch (IOException e) {</span>
+			// TODO Auto-generated catch block
+<span class="nc" id="L458">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+
+<span class="nc" id="L461">		logger.info(&quot;MindMapPopupMenu&quot;);</span>
+<span class="nc" id="L462">		popupmenu = new MindMapPopupMenu(this);</span>
+<span class="nc" id="L463">		logger.info(&quot;MindMapToolBar&quot;);</span>
+<span class="nc" id="L464">		toolbar = new MindMapToolBar(this);</span>
+
+		// addAsChildMode (use old model of handling CtrN) (PN)
+<span class="nc" id="L467">		addAsChildMode = Resources.getInstance()</span>
+<span class="nc" id="L468">				.getBoolProperty(&quot;add_as_child&quot;);</span>
+<span class="nc" id="L469">		mRegistrations = new Vector();</span>
+
+<span class="nc" id="L471">		attributeController = new MindMapModeAttributeController(this);</span>
+<span class="nc" id="L472">		showAttributeManagerAction = getController().showAttributeManagerAction;</span>
+<span class="nc" id="L473">		propertyAction = getController().propertyAction;</span>
+<span class="nc" id="L474">	}</span>
+
+	private void createStandardActions() {
+		// prepare undo:
+<span class="nc" id="L478">		undo = new UndoAction(this);</span>
+<span class="nc" id="L479">		redo = new RedoAction(this);</span>
+		// register default action handler:
+		// the executor must be the first here, because it is executed last
+		// then.
+<span class="nc" id="L483">		getActionFactory().registerHandler(</span>
+<span class="nc" id="L484">				new ModeControllerActionHandler(getActionFactory()));</span>
+<span class="nc" id="L485">		getActionFactory().registerUndoHandler(</span>
+<span class="nc" id="L486">				new UndoActionHandler(this, undo, redo));</span>
+		// debug:
+//		getActionFactory().registerHandler(
+//				new freemind.modes.mindmapmode.actions.xml.PrintActionHandler(
+//						this));
+
+<span class="nc" id="L492">		cut = new CutAction(this);</span>
+<span class="nc" id="L493">		paste = new PasteAction(this);</span>
+<span class="nc" id="L494">		pasteAsPlainText = new PasteAsPlainTextAction(this);</span>
+<span class="nc" id="L495">		copy = new CopyAction(this);</span>
+<span class="nc" id="L496">		copySingle = new CopySingleAction(this);</span>
+<span class="nc" id="L497">		bold = new BoldAction(this);</span>
+<span class="nc" id="L498">		italic = new ItalicAction(this);</span>
+<span class="nc" id="L499">		underlined = new UnderlinedAction(this);</span>
+<span class="nc" id="L500">		fontSize = new FontSizeAction(this);</span>
+<span class="nc" id="L501">		fontFamily = new FontFamilyAction(this);</span>
+<span class="nc" id="L502">		edit = new EditAction(this);</span>
+<span class="nc" id="L503">		useRichFormatting = new UseRichFormattingAction(this);</span>
+<span class="nc" id="L504">		usePlainText = new UsePlainTextAction(this);</span>
+<span class="nc" id="L505">		newChild = new NewChildAction(this);</span>
+<span class="nc" id="L506">		deleteChild = new DeleteChildAction(this);</span>
+<span class="nc" id="L507">		toggleFolded = new ToggleFoldedAction(this);</span>
+<span class="nc" id="L508">		toggleChildrenFolded = new ToggleChildrenFoldedAction(this);</span>
+<span class="nc" id="L509">		nodeUp = new NodeUpAction(this);</span>
+<span class="nc" id="L510">		nodeDown = new NodeDownAction(this);</span>
+<span class="nc" id="L511">		edgeColor = new EdgeColorAction(this);</span>
+<span class="nc" id="L512">		nodeColor = new NodeColorAction(this);</span>
+<span class="nc" id="L513">		nodeColorBlend = new NodeColorBlendAction(this);</span>
+<span class="nc" id="L514">		fork = new NodeStyleAction(this, MindMapNode.STYLE_FORK);</span>
+<span class="nc" id="L515">		bubble = new NodeStyleAction(this, MindMapNode.STYLE_BUBBLE);</span>
+		// this is an unknown icon and thus corrected by mindicon:
+<span class="nc" id="L517">		removeLastIconAction = new RemoveIconAction(this);</span>
+		// this action handles the xml stuff: (undo etc.)
+<span class="nc" id="L519">		unknownIconAction = new IconAction(this,</span>
+<span class="nc" id="L520">				MindIcon.factory((String) MindIcon.getAllIconNames().get(0)),</span>
+<span class="nc" id="L521">				removeLastIconAction);</span>
+<span class="nc" id="L522">		removeLastIconAction.setIconAction(unknownIconAction);</span>
+<span class="nc" id="L523">		removeAllIconsAction = new RemoveAllIconsAction(this, unknownIconAction);</span>
+		// load pattern actions:
+<span class="nc" id="L525">		loadPatternActions();</span>
+<span class="nc" id="L526">		EdgeWidth_WIDTH_PARENT = new EdgeWidthAction(this,</span>
+<span class="nc" id="L527">				EdgeAdapter.WIDTH_PARENT);</span>
+<span class="nc" id="L528">		EdgeWidth_WIDTH_THIN = new EdgeWidthAction(this, EdgeAdapter.WIDTH_THIN);</span>
+<span class="nc" id="L529">		EdgeWidth_1 = new EdgeWidthAction(this, 1);</span>
+<span class="nc" id="L530">		EdgeWidth_2 = new EdgeWidthAction(this, 2);</span>
+<span class="nc" id="L531">		EdgeWidth_4 = new EdgeWidthAction(this, 4);</span>
+<span class="nc" id="L532">		EdgeWidth_8 = new EdgeWidthAction(this, 8);</span>
+<span class="nc" id="L533">		edgeWidths = new EdgeWidthAction[] { EdgeWidth_WIDTH_PARENT,</span>
+<span class="nc" id="L534">				EdgeWidth_WIDTH_THIN, EdgeWidth_1, EdgeWidth_2, EdgeWidth_4,</span>
+<span class="nc" id="L535">				EdgeWidth_8 };</span>
+<span class="nc" id="L536">		EdgeStyle_linear = new EdgeStyleAction(this,</span>
+<span class="nc" id="L537">				EdgeAdapter.EDGESTYLE_LINEAR);</span>
+<span class="nc" id="L538">		EdgeStyle_bezier = new EdgeStyleAction(this,</span>
+<span class="nc" id="L539">				EdgeAdapter.EDGESTYLE_BEZIER);</span>
+<span class="nc" id="L540">		EdgeStyle_sharp_linear = new EdgeStyleAction(this,</span>
+<span class="nc" id="L541">				EdgeAdapter.EDGESTYLE_SHARP_LINEAR);</span>
+<span class="nc" id="L542">		EdgeStyle_sharp_bezier = new EdgeStyleAction(this,</span>
+<span class="nc" id="L543">				EdgeAdapter.EDGESTYLE_SHARP_BEZIER);</span>
+<span class="nc" id="L544">		edgeStyles = new EdgeStyleAction[] { EdgeStyle_linear,</span>
+<span class="nc" id="L545">				EdgeStyle_bezier, EdgeStyle_sharp_linear,</span>
+<span class="nc" id="L546">				EdgeStyle_sharp_bezier };</span>
+<span class="nc" id="L547">		cloud = new CloudAction(this);</span>
+<span class="nc" id="L548">		cloudColor = new freemind.modes.mindmapmode.actions.CloudColorAction(</span>
+<span class="nc" id="L549">				this);</span>
+<span class="nc" id="L550">		addArrowLinkAction = new AddArrowLinkAction(this);</span>
+<span class="nc" id="L551">		removeArrowLinkAction = new RemoveArrowLinkAction(this, null);</span>
+<span class="nc" id="L552">		addArrowLinkAction.setRemoveAction(removeArrowLinkAction);</span>
+<span class="nc" id="L553">		colorArrowLinkAction = new ColorArrowLinkAction(this, null);</span>
+<span class="nc" id="L554">		changeArrowsInArrowLinkAction = new ChangeArrowsInArrowLinkAction(this,</span>
+<span class="nc" id="L555">				&quot;none&quot;, null, null, true, true);</span>
+<span class="nc" id="L556">		nodeBackgroundColor = new NodeBackgroundColorAction(this);</span>
+<span class="nc" id="L557">		removeNodeBackgroundColor = new RemoveNodeBackgroundColorAction(this);</span>
+<span class="nc" id="L558">		setLinkByTextField = new SetLinkByTextFieldAction(this);</span>
+<span class="nc" id="L559">		addLocalLinkAction = new AddLocalLinkAction(this);</span>
+<span class="nc" id="L560">		gotoLinkNodeAction = new GotoLinkNodeAction(this, null);</span>
+<span class="nc" id="L561">		moveNodeAction = new MoveNodeAction(this);</span>
+<span class="nc" id="L562">		joinNodes = new JoinNodesAction(this);</span>
+<span class="nc" id="L563">		importExplorerFavorites = new ImportExplorerFavoritesAction(this);</span>
+<span class="nc" id="L564">		importFolderStructure = new ImportFolderStructureAction(this);</span>
+<span class="nc" id="L565">		changeArrowLinkEndPoints = new ChangeArrowLinkEndPoints(this);</span>
+<span class="nc" id="L566">		find = new FindAction(this);</span>
+<span class="nc" id="L567">		findNext = new FindNextAction(this, find);</span>
+<span class="nc" id="L568">		nodeHookAction = new NodeHookAction(&quot;no_title&quot;, this);</span>
+<span class="nc" id="L569">		revertAction = new RevertAction(this);</span>
+<span class="nc" id="L570">		selectBranchAction = new SelectBranchAction(this);</span>
+<span class="nc" id="L571">		selectAllAction = new SelectAllAction(this);</span>
+
+<span class="nc" id="L573">	}</span>
+
+	/**
+	 * Tries to load the user patterns and proposes an update to the new format,
+	 * if they are old fashioned (this is determined by having an exception
+	 * while reading the pattern file).
+	 */
+	private void loadPatternActions() {
+		try {
+<span class="nc" id="L582">			loadPatterns(getPatternReader());</span>
+<span class="nc" id="L583">		} catch (Exception ex) {</span>
+<span class="nc" id="L584">			System.err.println(&quot;Patterns not loaded:&quot; + ex);</span>
+			// repair old patterns:
+<span class="nc" id="L586">			String repairTitle = &quot;Repair patterns&quot;;</span>
+<span class="nc" id="L587">			File patternsFile = getFrame().getPatternsFile();</span>
+<span class="nc" id="L588">			int result = JOptionPane</span>
+<span class="nc" id="L589">					.showConfirmDialog(</span>
+<span class="nc" id="L590">							null,</span>
+<span class="nc" id="L591">							&quot;&lt;html&gt;The pattern file format has changed, &lt;br&gt;&quot;</span>
+									+ &quot;and it seems, that your pattern file&lt;br&gt;&quot;
+									+ &quot;'&quot;
+<span class="nc" id="L594">									+ patternsFile.getAbsolutePath()</span>
+<span class="nc" id="L595">									+ &quot;'&lt;br&gt; is formatted in the old way. &lt;br&gt;&quot;</span>
+<span class="nc" id="L596">									+ &quot;Should I try to repair the pattern file &lt;br&gt;&quot;</span>
+<span class="nc" id="L597">									+ &quot;(otherwise, you should update it by hand or delete it)?&quot;,</span>
+<span class="nc" id="L598">							repairTitle, JOptionPane.YES_NO_OPTION);</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">			if (result == JOptionPane.YES_OPTION) {</span>
+				// try xslt script:
+<span class="nc" id="L601">				boolean success = false;</span>
+				try {
+<span class="nc" id="L603">					loadPatterns(Tools.getUpdateReader(</span>
+<span class="nc" id="L604">							Tools.getReaderFromFile(patternsFile),</span>
+<span class="nc" id="L605">							&quot;patterns_updater.xslt&quot;, getFrame()));</span>
+					// save patterns directly:
+<span class="nc" id="L607">					StylePatternFactory.savePatterns(new FileWriter(</span>
+<span class="nc" id="L608">							patternsFile), mPatternsList);</span>
+<span class="nc" id="L609">					success = true;</span>
+<span class="nc" id="L610">				} catch (Exception e) {</span>
+<span class="nc" id="L611">					freemind.main.Resources.getInstance().logException(e);</span>
+				}
+<span class="nc bnc" id="L613" title="All 2 branches missed.">				if (success) {</span>
+<span class="nc" id="L614">					JOptionPane.showMessageDialog(null,</span>
+<span class="nc" id="L615">							&quot;Successfully repaired the pattern file.&quot;,</span>
+<span class="nc" id="L616">							repairTitle, JOptionPane.PLAIN_MESSAGE);</span>
+<span class="nc" id="L617">				} else {</span>
+<span class="nc" id="L618">					JOptionPane.showMessageDialog(null,</span>
+<span class="nc" id="L619">							&quot;An error occured repairing the pattern file.&quot;,</span>
+<span class="nc" id="L620">							repairTitle, JOptionPane.WARNING_MESSAGE);</span>
+				}
+			}
+		}
+<span class="nc" id="L624">	}</span>
+
+	/**
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
+	public Reader getPatternReader() throws FileNotFoundException, IOException {
+<span class="nc" id="L631">		Reader reader = null;</span>
+<span class="nc" id="L632">		File patternsFile = getFrame().getPatternsFile();</span>
+<span class="nc bnc" id="L633" title="All 4 branches missed.">		if (patternsFile != null &amp;&amp; patternsFile.exists()) {</span>
+<span class="nc" id="L634">			reader = new FileReader(patternsFile);</span>
+<span class="nc" id="L635">		} else {</span>
+<span class="nc" id="L636">			System.out.println(&quot;User patterns file &quot; + patternsFile</span>
+<span class="nc" id="L637">					+ &quot; not found.&quot;);</span>
+<span class="nc" id="L638">			reader = new InputStreamReader(getResource(&quot;patterns.xml&quot;)</span>
+<span class="nc" id="L639">					.openStream());</span>
+		}
+<span class="nc" id="L641">		return reader;</span>
+	}
+
+	public boolean isUndoAction() {
+<span class="nc bnc" id="L645" title="All 4 branches missed.">		return undo.isUndoAction() || redo.isUndoAction();</span>
+	}
+
+	public boolean load(String xmlMapContents, String filePrefix) {
+		try {
+<span class="nc" id="L650">			File tempFile = File.createTempFile(filePrefix,</span>
+<span class="nc" id="L651">					freemind.main.FreeMindCommon.FREEMIND_FILE_EXTENSION,</span>
+<span class="nc" id="L652">					new File(getFrame().getFreemindDirectory()));</span>
+<span class="nc" id="L653">			FileWriter fw = new FileWriter(tempFile);</span>
+<span class="nc" id="L654">			fw.write(xmlMapContents);</span>
+<span class="nc" id="L655">			fw.close();</span>
+<span class="nc" id="L656">			load(tempFile);</span>
+<span class="nc" id="L657">			return true;</span>
+<span class="nc" id="L658">		} catch (Exception e) {</span>
+<span class="nc" id="L659">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L661">		return false;</span>
+	}
+
+	/**
+	 * Creates the patterns actions (saved in array patterns), and the pure
+	 * patterns list (saved in mPatternsList).
+	 * 
+	 * @throws Exception
+	 */
+	public void loadPatterns(Reader reader) throws Exception {
+<span class="nc" id="L671">		createPatterns(StylePatternFactory.loadPatterns(reader));</span>
+<span class="nc" id="L672">	}</span>
+
+	private void createPatterns(List patternsList) throws Exception {
+<span class="nc" id="L675">		mPatternsList = patternsList;</span>
+<span class="nc" id="L676">		patterns = new ApplyPatternAction[patternsList.size()];</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">		for (int i = 0; i &lt; patterns.length; i++) {</span>
+<span class="nc" id="L678">			Pattern actualPattern = (Pattern) patternsList.get(i);</span>
+<span class="nc" id="L679">			patterns[i] = new ApplyPatternAction(this, actualPattern);</span>
+
+			// search icons for patterns:
+<span class="nc" id="L682">			PatternIcon patternIcon = actualPattern.getPatternIcon();</span>
+<span class="nc bnc" id="L683" title="All 4 branches missed.">			if (patternIcon != null &amp;&amp; patternIcon.getValue() != null) {</span>
+<span class="nc" id="L684">				patterns[i].putValue(Action.SMALL_ICON,</span>
+<span class="nc" id="L685">						MindIcon.factory(patternIcon.getValue()).getIcon());</span>
+			}
+		}
+<span class="nc" id="L688">	}</span>
+
+	/**
+	 * This method is called after and before a change of the map module. Use it
+	 * to perform the actions that cannot be performed at creation time.
+	 * 
+	 */
+	public void startupController() {
+<span class="nc" id="L696">		super.startupController();</span>
+<span class="nc" id="L697">		getToolBar().startup();</span>
+<span class="nc" id="L698">		HookFactory hookFactory = getHookFactory();</span>
+<span class="nc" id="L699">		List pluginRegistrations = hookFactory.getRegistrations();</span>
+<span class="nc" id="L700">		logger.fine(&quot;mScheduledActions are executed: &quot;</span>
+<span class="nc" id="L701">				+ pluginRegistrations.size());</span>
+<span class="nc bnc" id="L702" title="All 2 branches missed.">		for (Iterator i = pluginRegistrations.iterator(); i.hasNext();) {</span>
+			// call constructor:
+			try {
+<span class="nc" id="L705">				RegistrationContainer container = (RegistrationContainer) i</span>
+<span class="nc" id="L706">						.next();</span>
+<span class="nc" id="L707">				Class registrationClass = container.hookRegistrationClass;</span>
+<span class="nc" id="L708">				Constructor hookConstructor = registrationClass</span>
+<span class="nc" id="L709">						.getConstructor(new Class[] { ModeController.class,</span>
+<span class="nc" id="L710">								MindMap.class });</span>
+<span class="nc" id="L711">				HookRegistration registrationInstance = (HookRegistration) hookConstructor</span>
+<span class="nc" id="L712">						.newInstance(new Object[] { this, getMap() });</span>
+				// register the instance to enable basePlugins.
+<span class="nc" id="L714">				hookFactory.registerRegistrationContainer(container,</span>
+<span class="nc" id="L715">						registrationInstance);</span>
+<span class="nc" id="L716">				registrationInstance.register();</span>
+<span class="nc" id="L717">				mRegistrations.add(registrationInstance);</span>
+<span class="nc" id="L718">			} catch (Exception e) {</span>
+<span class="nc" id="L719">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+		}
+<span class="nc" id="L722">		invokeHooksRecursively((NodeAdapter) getRootNode(), getMap());</span>
+
+		// register mouse motion handler:
+<span class="nc" id="L725">		getController().getMapMouseMotionListener().register(</span>
+<span class="nc" id="L726">				new MindMapMouseMotionManager(this));</span>
+<span class="nc" id="L727">		getController().getNodeDropListener().register(</span>
+<span class="nc" id="L728">				new MindMapNodeDropListener(this));</span>
+<span class="nc" id="L729">		getController().getNodeKeyListener().register(</span>
+<span class="nc" id="L730">				new CommonNodeKeyListener(this, new EditHandler() {</span>
+
+					public void edit(KeyEvent e, boolean addNew,
+							boolean editLong) {
+<span class="nc" id="L734">						MindMapController.this.edit(e, addNew, editLong);</span>
+
+<span class="nc" id="L736">					}</span>
+				}));
+<span class="nc" id="L738">		getController().getNodeMotionListener().register(</span>
+<span class="nc" id="L739">				new MindMapNodeMotionListener(this));</span>
+<span class="nc" id="L740">		getController().getNodeMouseMotionListener().register(</span>
+<span class="nc" id="L741">				new CommonNodeMouseMotionListener(this));</span>
+<span class="nc" id="L742">		getMap().registerMapSourceChangedObserver(this,</span>
+<span class="nc" id="L743">				mGetEventIfChangedAfterThisTimeInMillies);</span>
+<span class="nc" id="L744">	}</span>
+
+	public void shutdownController() {
+<span class="nc" id="L747">		super.shutdownController();</span>
+<span class="nc bnc" id="L748" title="All 2 branches missed.">		for (Iterator i = mRegistrations.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L749">			HookRegistration registrationInstance = (HookRegistration) i.next();</span>
+<span class="nc" id="L750">			registrationInstance.deRegister();</span>
+		}
+<span class="nc" id="L752">		getHookFactory().deregisterAllRegistrationContainer();</span>
+<span class="nc" id="L753">		mRegistrations.clear();</span>
+		// deregister motion handler
+<span class="nc" id="L755">		getController().getMapMouseMotionListener().deregister();</span>
+<span class="nc" id="L756">		getController().getNodeDropListener().deregister();</span>
+<span class="nc" id="L757">		getController().getNodeKeyListener().deregister();</span>
+<span class="nc" id="L758">		getController().getNodeMotionListener().deregister();</span>
+<span class="nc" id="L759">		getController().getNodeMouseMotionListener().deregister();</span>
+<span class="nc" id="L760">		mGetEventIfChangedAfterThisTimeInMillies = getMap()</span>
+<span class="nc" id="L761">				.deregisterMapSourceChangedObserver(this);</span>
+<span class="nc" id="L762">		getToolBar().shutdown();</span>
+
+<span class="nc" id="L764">	}</span>
+
+	public MapAdapter newModel(ModeController modeController) {
+<span class="nc" id="L767">		return new MindMapMapModel(getFrame(), modeController);</span>
+	}
+
+	private void createIconActions() {
+<span class="nc" id="L771">		Vector iconNames = MindIcon.getAllIconNames();</span>
+<span class="nc" id="L772">		File iconDir = new File(Resources.getInstance().getFreemindDirectory(),</span>
+<span class="nc" id="L773">				&quot;icons&quot;);</span>
+<span class="nc bnc" id="L774" title="All 2 branches missed.">		if (iconDir.exists()) {</span>
+<span class="nc" id="L775">			String[] userIconArray = iconDir.list(new FilenameFilter() {</span>
+				public boolean accept(File dir, String name) {
+<span class="nc" id="L777">					return name.matches(&quot;.*\\.png&quot;);</span>
+				}
+			});
+<span class="nc bnc" id="L780" title="All 2 branches missed.">			if (userIconArray != null)</span>
+<span class="nc bnc" id="L781" title="All 2 branches missed.">				for (int i = 0; i &lt; userIconArray.length; ++i) {</span>
+<span class="nc" id="L782">					String iconName = userIconArray[i];</span>
+<span class="nc" id="L783">					iconName = iconName.substring(0, iconName.length() - 4);</span>
+<span class="nc bnc" id="L784" title="All 2 branches missed.">					if (iconName.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L785">						continue;</span>
+					}
+<span class="nc" id="L787">					iconNames.add(iconName);</span>
+				}
+		}
+<span class="nc bnc" id="L790" title="All 2 branches missed.">		for (int i = 0; i &lt; iconNames.size(); ++i) {</span>
+<span class="nc" id="L791">			String iconName = ((String) iconNames.get(i));</span>
+<span class="nc" id="L792">			MindIcon myIcon = MindIcon.factory(iconName);</span>
+<span class="nc" id="L793">			IconAction myAction = new IconAction(this, myIcon,</span>
+<span class="nc" id="L794">					removeLastIconAction);</span>
+<span class="nc" id="L795">			iconActions.add(myAction);</span>
+		}
+<span class="nc" id="L797">	}</span>
+
+	/**
+	 *
+	 */
+	protected void createNodeHookActions() {
+<span class="nc bnc" id="L803" title="All 2 branches missed.">		if (hookActions == null) {</span>
+<span class="nc" id="L804">			hookActions = new Vector();</span>
+			// HOOK TEST
+<span class="nc" id="L806">			MindMapHookFactory factory = (MindMapHookFactory) getHookFactory();</span>
+<span class="nc" id="L807">			List nodeHookNames = factory.getPossibleNodeHooks();</span>
+<span class="nc bnc" id="L808" title="All 2 branches missed.">			for (Iterator i = nodeHookNames.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L809">				String hookName = (String) i.next();</span>
+				// create hook action.
+<span class="nc" id="L811">				NodeHookAction action = new NodeHookAction(hookName, this);</span>
+<span class="nc" id="L812">				hookActions.add(action);</span>
+			}
+<span class="nc" id="L814">			List modeControllerHookNames = factory</span>
+<span class="nc" id="L815">					.getPossibleModeControllerHooks();</span>
+<span class="nc bnc" id="L816" title="All 2 branches missed.">			for (Iterator i = modeControllerHookNames.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L817">				String hookName = (String) i.next();</span>
+<span class="nc" id="L818">				MindMapControllerHookAction action = new MindMapControllerHookAction(</span>
+<span class="nc" id="L819">						hookName, this);</span>
+<span class="nc" id="L820">				hookActions.add(action);</span>
+			}
+			// HOOK TEST END
+		}
+<span class="nc" id="L824">	}</span>
+
+	public FileFilter getFileFilter() {
+<span class="nc" id="L827">		return filefilter;</span>
+	}
+
+	public void nodeChanged(MindMapNode n) {
+<span class="nc" id="L831">		super.nodeChanged(n);</span>
+<span class="nc" id="L832">		final MapModule mapModule = getController().getMapModule();</span>
+		// only for the selected node (fc, 2.5.2004)
+<span class="nc bnc" id="L834" title="All 4 branches missed.">		if (mapModule != null &amp;&amp; n == mapModule.getModeController().getSelected()) {</span>
+<span class="nc" id="L835">			updateToolbar(n);</span>
+		}
+<span class="nc" id="L837">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.modes.ControllerAdapter#onFocusNode(freemind.view.mindmapview.NodeView)
+	 */
+	public void onFocusNode(NodeView pNode) {
+<span class="nc" id="L843">		super.onFocusNode(pNode);</span>
+<span class="nc" id="L844">		updateToolbar(pNode.getModel());</span>
+<span class="nc" id="L845">	}</span>
+
+	private void updateToolbar(MindMapNode n) {
+<span class="nc" id="L848">		toolbar.selectFontSize(n.getFontSize());</span>
+<span class="nc" id="L849">		toolbar.selectFontName(n.getFontFamilyName());</span>
+<span class="nc" id="L850">	}</span>
+
+	// fc, 14.12.2004: changes, such that different models can be used:
+<span class="nc" id="L853">	private NewNodeCreator myNewNodeCreator = null;</span>
+	private MindMapModeAttributeController attributeController;
+	/**
+	 * A general list of MindMapControllerPlugin s. Members need to be tested
+	 * for the right class and casted to be applied.
+	 */
+<span class="nc" id="L859">	private HashSet mPlugins = new HashSet();</span>
+
+	public interface NewNodeCreator {
+		MindMapNode createNode(Object userObject, MindMap map);
+	}
+
+<span class="nc" id="L865">	public class DefaultMindMapNodeCreator implements NewNodeCreator {</span>
+
+		public MindMapNode createNode(Object userObject, MindMap map) {
+<span class="nc" id="L868">			return new MindMapNodeModel(userObject, getFrame(), map);</span>
+		}
+
+	}
+
+	public void setNewNodeCreator(NewNodeCreator creator) {
+<span class="nc" id="L874">		myNewNodeCreator = creator;</span>
+<span class="nc" id="L875">	}</span>
+
+	public MindMapNode newNode(Object userObject, MindMap map) {
+		// singleton default:
+<span class="nc bnc" id="L879" title="All 2 branches missed.">		if (myNewNodeCreator == null) {</span>
+<span class="nc" id="L880">			myNewNodeCreator = new DefaultMindMapNodeCreator();</span>
+		}
+<span class="nc" id="L882">		return myNewNodeCreator.createNode(userObject, map);</span>
+	}
+
+	// fc, 14.12.2004: end &quot;different models&quot; change
+
+	// get/set methods
+
+	/**
+	 */
+	public void updateMenus(StructuredMenuHolder holder) {
+
+<span class="nc" id="L893">		processMenuCategory(holder, mMenuStructure.getListChoiceList(), &quot;&quot;); /*</span>
+																			 * MenuBar
+																			 * .
+																			 * MENU_BAR_PREFIX
+																			 */
+		// add hook actions to this holder.
+		// hooks, fc, 1.3.2004:
+<span class="nc" id="L900">		MindMapHookFactory hookFactory = (MindMapHookFactory) getHookFactory();</span>
+<span class="nc bnc" id="L901" title="All 2 branches missed.">		for (int i = 0; i &lt; hookActions.size(); ++i) {</span>
+<span class="nc" id="L902">			AbstractAction hookAction = (AbstractAction) hookActions.get(i);</span>
+<span class="nc" id="L903">			String hookName = ((HookAction) hookAction).getHookName();</span>
+<span class="nc" id="L904">			hookFactory.decorateAction(hookName, hookAction);</span>
+<span class="nc" id="L905">			List hookMenuPositions = hookFactory.getHookMenuPositions(hookName);</span>
+<span class="nc bnc" id="L906" title="All 2 branches missed.">			for (Iterator j = hookMenuPositions.iterator(); j.hasNext();) {</span>
+<span class="nc" id="L907">				String pos = (String) j.next();</span>
+<span class="nc" id="L908">				holder.addMenuItem(</span>
+<span class="nc" id="L909">						hookFactory.getMenuItem(hookName, hookAction), pos);</span>
+			}
+		}
+		// update popup and toolbar:
+<span class="nc" id="L913">		popupmenu.update(holder);</span>
+<span class="nc" id="L914">		toolbar.update(holder);</span>
+
+		// editMenu.add(getExtensionMenu());
+<span class="nc" id="L917">		String formatMenuString = MenuBar.FORMAT_MENU;</span>
+<span class="nc" id="L918">		createPatternSubMenu(holder, formatMenuString);</span>
+
+		// editMenu.add(getIconMenu());
+<span class="nc" id="L921">		addIconsToMenu(holder, MenuBar.INSERT_MENU + &quot;icons&quot;);</span>
+
+<span class="nc" id="L923">	}</span>
+
+	public void addIconsToMenu(StructuredMenuHolder holder,
+			String iconMenuString) {
+<span class="nc" id="L927">		JMenu iconMenu = holder.addMenu(new JMenu(getText(&quot;icon_menu&quot;)),</span>
+<span class="nc" id="L928">				iconMenuString + &quot;/.&quot;);</span>
+<span class="nc" id="L929">		holder.addAction(removeLastIconAction, iconMenuString</span>
+<span class="nc" id="L930">				+ &quot;/removeLastIcon&quot;);</span>
+<span class="nc" id="L931">		holder.addAction(removeAllIconsAction, iconMenuString</span>
+<span class="nc" id="L932">				+ &quot;/removeAllIcons&quot;);</span>
+<span class="nc" id="L933">		holder.addSeparator(iconMenuString);</span>
+<span class="nc bnc" id="L934" title="All 2 branches missed.">		for (int i = 0; i &lt; iconActions.size(); ++i) {</span>
+<span class="nc" id="L935">			JMenuItem item = holder.addAction((Action) iconActions.get(i),</span>
+<span class="nc" id="L936">					iconMenuString + &quot;/&quot; + i);</span>
+		}
+<span class="nc" id="L938">	}</span>
+
+	/**
+     */
+	public void createPatternSubMenu(StructuredMenuHolder holder,
+			String formatMenuString) {
+<span class="nc bnc" id="L944" title="All 2 branches missed.">		for (int i = 0; i &lt; patterns.length; ++i) {</span>
+<span class="nc" id="L945">			JMenuItem item = holder.addAction(patterns[i], formatMenuString</span>
+<span class="nc" id="L946">					+ &quot;patterns/patterns/&quot; + i);</span>
+<span class="nc" id="L947">			item.setAccelerator(KeyStroke</span>
+<span class="nc" id="L948">					.getKeyStroke(getFrame().getAdjustableProperty(</span>
+<span class="nc" id="L949">							&quot;keystroke_apply_pattern_&quot; + (i + 1))));</span>
+		}
+<span class="nc" id="L951">	}</span>
+
+	public MenuStructure updateMenusFromXml(InputStream in) {
+		// get from resources:
+		try {
+<span class="nc" id="L956">			IUnmarshallingContext unmarshaller = XmlBindingTools.getInstance()</span>
+<span class="nc" id="L957">					.createUnmarshaller();</span>
+<span class="nc" id="L958">			MenuStructure menus = (MenuStructure) unmarshaller</span>
+<span class="nc" id="L959">					.unmarshalDocument(in, null);</span>
+<span class="nc" id="L960">			return menus;</span>
+<span class="nc" id="L961">		} catch (JiBXException e) {</span>
+<span class="nc" id="L962">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L963">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L964">					&quot;Menu structure could not be read.&quot;);</span>
+		}
+	}
+
+	/**
+     */
+	public void processMenuCategory(StructuredMenuHolder holder, List list,
+			String category) {
+<span class="nc" id="L972">		String categoryCopy = category;</span>
+<span class="nc" id="L973">		ButtonGroup buttonGroup = null;</span>
+<span class="nc bnc" id="L974" title="All 2 branches missed.">		for (Iterator i = list.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L975">			Object obj = (Object) i.next();</span>
+<span class="nc bnc" id="L976" title="All 2 branches missed.">			if (obj instanceof MenuCategoryBase) {</span>
+<span class="nc" id="L977">				MenuCategoryBase cat = (MenuCategoryBase) obj;</span>
+<span class="nc" id="L978">				String newCategory = categoryCopy + &quot;/&quot; + cat.getName();</span>
+<span class="nc" id="L979">				holder.addCategory(newCategory);</span>
+<span class="nc bnc" id="L980" title="All 2 branches missed.">				if (cat instanceof MenuSubmenu) {</span>
+<span class="nc" id="L981">					MenuSubmenu submenu = (MenuSubmenu) cat;</span>
+<span class="nc" id="L982">					holder.addMenu(new JMenu(getText(submenu.getNameRef())),</span>
+<span class="nc" id="L983">							newCategory + &quot;/.&quot;);</span>
+				}
+<span class="nc" id="L985">				processMenuCategory(holder, cat.getListChoiceList(),</span>
+<span class="nc" id="L986">						newCategory);</span>
+<span class="nc bnc" id="L987" title="All 2 branches missed.">			} else if (obj instanceof MenuActionBase) {</span>
+<span class="nc" id="L988">				MenuActionBase action = (MenuActionBase) obj;</span>
+<span class="nc" id="L989">				String field = action.getField();</span>
+<span class="nc" id="L990">				String name = action.getName();</span>
+<span class="nc bnc" id="L991" title="All 2 branches missed.">				if (name == null) {</span>
+<span class="nc" id="L992">					name = field;</span>
+				}
+<span class="nc" id="L994">				String keystroke = action.getKeyRef();</span>
+				try {
+<span class="nc" id="L996">					Action theAction = (Action) Tools.getField(new Object[] {</span>
+<span class="nc" id="L997">							this, getController() }, field);</span>
+<span class="nc" id="L998">					String theCategory = categoryCopy + &quot;/&quot; + name;</span>
+<span class="nc bnc" id="L999" title="All 2 branches missed.">					if (obj instanceof MenuCheckedAction) {</span>
+<span class="nc" id="L1000">						addCheckBox(holder, theCategory, theAction, keystroke);</span>
+<span class="nc bnc" id="L1001" title="All 2 branches missed.">					} else if (obj instanceof MenuRadioAction) {</span>
+<span class="nc" id="L1002">						final JRadioButtonMenuItem item = (JRadioButtonMenuItem) addRadioItem(</span>
+<span class="nc" id="L1003">								holder, theCategory, theAction, keystroke,</span>
+<span class="nc" id="L1004">								((MenuRadioAction) obj).getSelected());</span>
+<span class="nc bnc" id="L1005" title="All 2 branches missed.">						if (buttonGroup == null)</span>
+<span class="nc" id="L1006">							buttonGroup = new ButtonGroup();</span>
+<span class="nc" id="L1007">						buttonGroup.add(item);</span>
+
+<span class="nc" id="L1009">					} else {</span>
+<span class="nc" id="L1010">						add(holder, theCategory, theAction, keystroke);</span>
+					}
+<span class="nc" id="L1012">				} catch (Exception e1) {</span>
+<span class="nc" id="L1013">					freemind.main.Resources.getInstance().logException(e1);</span>
+				}
+<span class="nc bnc" id="L1015" title="All 2 branches missed.">			} else if (obj instanceof MenuSeparator) {</span>
+<span class="nc" id="L1016">				holder.addSeparator(categoryCopy);</span>
+			} /* else exception */
+		}
+<span class="nc" id="L1019">	}</span>
+
+	public JPopupMenu getPopupMenu() {
+<span class="nc" id="L1022">		return popupmenu;</span>
+	}
+
+	/**
+	 * Link implementation: If this is a link, we want to make a popup with at
+	 * least removelink available.
+	 */
+	public JPopupMenu getPopupForModel(java.lang.Object obj) {
+<span class="nc bnc" id="L1030" title="All 2 branches missed.">		if (obj instanceof MindMapArrowLinkModel) {</span>
+			// yes, this is a link.
+<span class="nc" id="L1032">			MindMapArrowLinkModel link = (MindMapArrowLinkModel) obj;</span>
+<span class="nc" id="L1033">			JPopupMenu arrowLinkPopup = new JPopupMenu();</span>
+			// block the screen while showing popup.
+<span class="nc" id="L1035">			arrowLinkPopup.addPopupMenuListener(this.popupListenerSingleton);</span>
+<span class="nc" id="L1036">			removeArrowLinkAction.setArrowLink(link);</span>
+<span class="nc" id="L1037">			arrowLinkPopup.add(new RemoveArrowLinkAction(this, link));</span>
+<span class="nc" id="L1038">			arrowLinkPopup.add(new ColorArrowLinkAction(this, link));</span>
+<span class="nc" id="L1039">			arrowLinkPopup.addSeparator();</span>
+			/* The arrow state as radio buttons: */
+<span class="nc" id="L1041">			JRadioButtonMenuItem itemnn = new JRadioButtonMenuItem(</span>
+<span class="nc" id="L1042">					new ChangeArrowsInArrowLinkAction(this, &quot;none&quot;,</span>
+<span class="nc" id="L1043">							&quot;images/arrow-mode-none.png&quot;, link, false, false));</span>
+<span class="nc" id="L1044">			JRadioButtonMenuItem itemnt = new JRadioButtonMenuItem(</span>
+<span class="nc" id="L1045">					new ChangeArrowsInArrowLinkAction(this, &quot;forward&quot;,</span>
+<span class="nc" id="L1046">							&quot;images/arrow-mode-forward.png&quot;, link, false, true));</span>
+<span class="nc" id="L1047">			JRadioButtonMenuItem itemtn = new JRadioButtonMenuItem(</span>
+<span class="nc" id="L1048">					new ChangeArrowsInArrowLinkAction(this, &quot;backward&quot;,</span>
+<span class="nc" id="L1049">							&quot;images/arrow-mode-backward.png&quot;, link, true, false));</span>
+<span class="nc" id="L1050">			JRadioButtonMenuItem itemtt = new JRadioButtonMenuItem(</span>
+<span class="nc" id="L1051">					new ChangeArrowsInArrowLinkAction(this, &quot;both&quot;,</span>
+<span class="nc" id="L1052">							&quot;images/arrow-mode-both.png&quot;, link, true, true));</span>
+<span class="nc" id="L1053">			itemnn.setText(null);</span>
+<span class="nc" id="L1054">			itemnt.setText(null);</span>
+<span class="nc" id="L1055">			itemtn.setText(null);</span>
+<span class="nc" id="L1056">			itemtt.setText(null);</span>
+<span class="nc" id="L1057">			arrowLinkPopup.add(itemnn);</span>
+<span class="nc" id="L1058">			arrowLinkPopup.add(itemnt);</span>
+<span class="nc" id="L1059">			arrowLinkPopup.add(itemtn);</span>
+<span class="nc" id="L1060">			arrowLinkPopup.add(itemtt);</span>
+			// select the right one:
+<span class="nc bnc" id="L1062" title="All 2 branches missed.">			boolean a = !link.getStartArrow().equals(&quot;None&quot;);</span>
+<span class="nc bnc" id="L1063" title="All 2 branches missed.">			boolean b = !link.getEndArrow().equals(&quot;None&quot;);</span>
+<span class="nc bnc" id="L1064" title="All 4 branches missed.">			itemtt.setSelected(a &amp;&amp; b);</span>
+<span class="nc bnc" id="L1065" title="All 4 branches missed.">			itemnt.setSelected(!a &amp;&amp; b);</span>
+<span class="nc bnc" id="L1066" title="All 4 branches missed.">			itemtn.setSelected(a &amp;&amp; !b);</span>
+<span class="nc bnc" id="L1067" title="All 4 branches missed.">			itemnn.setSelected(!a &amp;&amp; !b);</span>
+
+<span class="nc" id="L1069">			arrowLinkPopup.addSeparator();</span>
+
+<span class="nc" id="L1071">			arrowLinkPopup.add(new GotoLinkNodeAction(this, link.getSource()));</span>
+<span class="nc" id="L1072">			arrowLinkPopup.add(new GotoLinkNodeAction(this, link.getTarget()));</span>
+
+<span class="nc" id="L1074">			arrowLinkPopup.addSeparator();</span>
+			// add all links from target and from source:
+<span class="nc" id="L1076">			HashSet NodeAlreadyVisited = new HashSet();</span>
+<span class="nc" id="L1077">			NodeAlreadyVisited.add(link.getSource());</span>
+<span class="nc" id="L1078">			NodeAlreadyVisited.add(link.getTarget());</span>
+<span class="nc" id="L1079">			Vector links = getMindMapMapModel().getLinkRegistry().getAllLinks(</span>
+<span class="nc" id="L1080">					link.getSource());</span>
+<span class="nc" id="L1081">			links.addAll(getMindMapMapModel().getLinkRegistry().getAllLinks(</span>
+<span class="nc" id="L1082">					link.getTarget()));</span>
+<span class="nc bnc" id="L1083" title="All 2 branches missed.">			for (int i = 0; i &lt; links.size(); ++i) {</span>
+<span class="nc" id="L1084">				MindMapArrowLinkModel foreign_link = (MindMapArrowLinkModel) links</span>
+<span class="nc" id="L1085">						.get(i);</span>
+<span class="nc bnc" id="L1086" title="All 2 branches missed.">				if (NodeAlreadyVisited.add(foreign_link.getTarget())) {</span>
+<span class="nc" id="L1087">					arrowLinkPopup.add(new GotoLinkNodeAction(this,</span>
+<span class="nc" id="L1088">							foreign_link.getTarget()));</span>
+				}
+<span class="nc bnc" id="L1090" title="All 2 branches missed.">				if (NodeAlreadyVisited.add(foreign_link.getSource())) {</span>
+<span class="nc" id="L1091">					arrowLinkPopup.add(new GotoLinkNodeAction(this,</span>
+<span class="nc" id="L1092">							foreign_link.getSource()));</span>
+				}
+			}
+<span class="nc" id="L1095">			return arrowLinkPopup;</span>
+		}
+<span class="nc" id="L1097">		return null;</span>
+	}
+
+	// convenience methods
+	public MindMapMapModel getMindMapMapModel() {
+<span class="nc" id="L1102">		return (MindMapMapModel) getMap();</span>
+	}
+
+	public JToolBar getModeToolBar() {
+<span class="nc" id="L1106">		return getToolBar();</span>
+	}
+
+	MindMapToolBar getToolBar() {
+<span class="nc" id="L1110">		return toolbar;</span>
+	}
+
+	public Component getLeftToolBar() {
+<span class="nc" id="L1114">		return toolbar.getLeftToolBar();</span>
+	}
+
+	/**
+	 * Enabled/Disabled all actions that are dependent on whether there is a map
+	 * open or not.
+	 */
+	protected void setAllActions(boolean enabled) {
+<span class="nc" id="L1122">		logger.fine(&quot;setAllActions:&quot; + enabled);</span>
+<span class="nc" id="L1123">		super.setAllActions(enabled);</span>
+		// own actions
+<span class="nc" id="L1125">		increaseNodeFont.setEnabled(enabled);</span>
+<span class="nc" id="L1126">		decreaseNodeFont.setEnabled(enabled);</span>
+<span class="nc" id="L1127">		exportBranch.setEnabled(enabled);</span>
+<span class="nc" id="L1128">		exportBranchToHTML.setEnabled(enabled);</span>
+<span class="nc" id="L1129">		editLong.setEnabled(enabled);</span>
+<span class="nc" id="L1130">		newSibling.setEnabled(enabled);</span>
+<span class="nc" id="L1131">		newPreviousSibling.setEnabled(enabled);</span>
+<span class="nc" id="L1132">		setLinkByFileChooser.setEnabled(enabled);</span>
+<span class="nc" id="L1133">		setImageByFileChooser.setEnabled(enabled);</span>
+<span class="nc" id="L1134">		followLink.setEnabled(enabled);</span>
+<span class="nc bnc" id="L1135" title="All 2 branches missed.">		for (int i = 0; i &lt; iconActions.size(); ++i) {</span>
+<span class="nc" id="L1136">			((Action) iconActions.get(i)).setEnabled(enabled);</span>
+		}
+<span class="nc" id="L1138">		save.setEnabled(enabled);</span>
+<span class="nc" id="L1139">		saveAs.setEnabled(enabled);</span>
+<span class="nc" id="L1140">		getToolBar().setAllActions(enabled);</span>
+<span class="nc" id="L1141">		exportBranch.setEnabled(enabled);</span>
+<span class="nc" id="L1142">		exportToHTML.setEnabled(enabled);</span>
+<span class="nc" id="L1143">		importBranch.setEnabled(enabled);</span>
+<span class="nc" id="L1144">		importLinkedBranch.setEnabled(enabled);</span>
+<span class="nc" id="L1145">		importLinkedBranchWithoutRoot.setEnabled(enabled);</span>
+		// hooks:
+<span class="nc bnc" id="L1147" title="All 2 branches missed.">		for (int i = 0; i &lt; hookActions.size(); ++i) {</span>
+<span class="nc" id="L1148">			((Action) hookActions.get(i)).setEnabled(enabled);</span>
+		}
+<span class="nc" id="L1150">		cut.setEnabled(enabled);</span>
+<span class="nc" id="L1151">		copy.setEnabled(enabled);</span>
+<span class="nc" id="L1152">		copySingle.setEnabled(enabled);</span>
+<span class="nc" id="L1153">		paste.setEnabled(enabled);</span>
+<span class="nc" id="L1154">		pasteAsPlainText.setEnabled(enabled);</span>
+<span class="nc" id="L1155">		undo.setEnabled(enabled);</span>
+<span class="nc" id="L1156">		redo.setEnabled(enabled);</span>
+<span class="nc" id="L1157">		edit.setEnabled(enabled);</span>
+<span class="nc" id="L1158">		newChild.setEnabled(enabled);</span>
+<span class="nc" id="L1159">		toggleFolded.setEnabled(enabled);</span>
+<span class="nc" id="L1160">		toggleChildrenFolded.setEnabled(enabled);</span>
+<span class="nc" id="L1161">		setLinkByTextField.setEnabled(enabled);</span>
+<span class="nc" id="L1162">		italic.setEnabled(enabled);</span>
+<span class="nc" id="L1163">		bold.setEnabled(enabled);</span>
+<span class="nc" id="L1164">		find.setEnabled(enabled);</span>
+<span class="nc" id="L1165">		findNext.setEnabled(enabled);</span>
+<span class="nc" id="L1166">		addArrowLinkAction.setEnabled(enabled);</span>
+<span class="nc" id="L1167">		addLocalLinkAction.setEnabled(enabled);</span>
+<span class="nc" id="L1168">		nodeColorBlend.setEnabled(enabled);</span>
+<span class="nc" id="L1169">		nodeUp.setEnabled(enabled);</span>
+<span class="nc" id="L1170">		nodeBackgroundColor.setEnabled(enabled);</span>
+<span class="nc" id="L1171">		nodeDown.setEnabled(enabled);</span>
+<span class="nc" id="L1172">		importExplorerFavorites.setEnabled(enabled);</span>
+<span class="nc" id="L1173">		importFolderStructure.setEnabled(enabled);</span>
+<span class="nc" id="L1174">		joinNodes.setEnabled(enabled);</span>
+<span class="nc" id="L1175">		deleteChild.setEnabled(enabled);</span>
+<span class="nc" id="L1176">		cloud.setEnabled(enabled);</span>
+<span class="nc" id="L1177">		cloudColor.setEnabled(enabled);</span>
+		// normalFont.setEnabled(enabled);
+<span class="nc" id="L1179">		nodeColor.setEnabled(enabled);</span>
+<span class="nc" id="L1180">		edgeColor.setEnabled(enabled);</span>
+<span class="nc" id="L1181">		removeLastIconAction.setEnabled(enabled);</span>
+<span class="nc" id="L1182">		removeAllIconsAction.setEnabled(enabled);</span>
+<span class="nc" id="L1183">		selectAllAction.setEnabled(enabled);</span>
+<span class="nc" id="L1184">		selectBranchAction.setEnabled(enabled);</span>
+<span class="nc" id="L1185">		removeNodeBackgroundColor.setEnabled(enabled);</span>
+<span class="nc" id="L1186">		moveNodeAction.setEnabled(enabled);</span>
+<span class="nc" id="L1187">		revertAction.setEnabled(enabled);</span>
+<span class="nc bnc" id="L1188" title="All 2 branches missed.">		for (int i = 0; i &lt; edgeWidths.length; ++i) {</span>
+<span class="nc" id="L1189">			edgeWidths[i].setEnabled(enabled);</span>
+		}
+<span class="nc" id="L1191">		fork.setEnabled(enabled);</span>
+<span class="nc" id="L1192">		bubble.setEnabled(enabled);</span>
+<span class="nc bnc" id="L1193" title="All 2 branches missed.">		for (int i = 0; i &lt; edgeStyles.length; ++i) {</span>
+<span class="nc" id="L1194">			edgeStyles[i].setEnabled(enabled);</span>
+		}
+<span class="nc bnc" id="L1196" title="All 2 branches missed.">		for (int i = 0; i &lt; patterns.length; ++i) {</span>
+<span class="nc" id="L1197">			patterns[i].setEnabled(enabled);</span>
+		}
+<span class="nc" id="L1199">		useRichFormatting.setEnabled(enabled);</span>
+<span class="nc" id="L1200">		usePlainText.setEnabled(enabled);</span>
+<span class="nc" id="L1201">		editAttributes.setEnabled(enabled);</span>
+<span class="nc" id="L1202">		assignAttributes.setEnabled(enabled);</span>
+<span class="nc" id="L1203">	}</span>
+
+	//
+	// Actions
+	// _______________________________________________________________________________
+
+	// This may later be moved to ControllerAdapter. So far there is no reason
+	// for it.
+	protected class ExportToHTMLAction extends AbstractAction {
+		MindMapController c;
+
+<span class="nc" id="L1214">		public ExportToHTMLAction(MindMapController controller) {</span>
+<span class="nc" id="L1215">			super(getText(&quot;export_to_html&quot;));</span>
+<span class="nc" id="L1216">			c = controller;</span>
+<span class="nc" id="L1217">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+			// from
+			// https://sourceforge.net/tracker2/?func=detail&amp;atid=307118&amp;aid=1789765&amp;group_id=7118
+<span class="nc bnc" id="L1222" title="All 2 branches missed.">			if (getMap().getFile() == null) {</span>
+<span class="nc" id="L1223">				JOptionPane.showMessageDialog(getFrame().getContentPane(),</span>
+<span class="nc" id="L1224">						getText(&quot;map_not_saved&quot;), &quot;FreeMind&quot;,</span>
+<span class="nc" id="L1225">						JOptionPane.WARNING_MESSAGE);</span>
+<span class="nc" id="L1226">				return;</span>
+			}
+			try {
+<span class="nc" id="L1229">				File file = new File(c.getMindMapMapModel().getFile() + &quot;.html&quot;);</span>
+<span class="nc" id="L1230">				saveHTML((MindMapNodeModel) c.getMindMapMapModel().getRoot(),</span>
+<span class="nc" id="L1231">						file);</span>
+<span class="nc" id="L1232">				loadURL(file.toString());</span>
+<span class="nc" id="L1233">			} catch (IOException ex) {</span>
+<span class="nc" id="L1234">				freemind.main.Resources.getInstance().logException(ex);</span>
+			}
+<span class="nc" id="L1236">		}</span>
+	}
+
+	protected class ExportBranchToHTMLAction extends AbstractAction {
+		MindMapController c;
+
+<span class="nc" id="L1242">		public ExportBranchToHTMLAction(MindMapController controller) {</span>
+<span class="nc" id="L1243">			super(getText(&quot;export_branch_to_html&quot;));</span>
+<span class="nc" id="L1244">			c = controller;</span>
+<span class="nc" id="L1245">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1248">			File mindmapFile = getMap().getFile();</span>
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">			if (mindmapFile == null) {</span>
+<span class="nc" id="L1250">				JOptionPane.showMessageDialog(getFrame().getContentPane(),</span>
+<span class="nc" id="L1251">						getText(&quot;map_not_saved&quot;), &quot;FreeMind&quot;,</span>
+<span class="nc" id="L1252">						JOptionPane.WARNING_MESSAGE);</span>
+<span class="nc" id="L1253">				return;</span>
+			}
+			try {
+<span class="nc" id="L1256">				File file = File.createTempFile(</span>
+<span class="nc" id="L1257">						mindmapFile.getName().replace(</span>
+<span class="nc" id="L1258">								FreeMindCommon.FREEMIND_FILE_EXTENSION, &quot;_&quot;),</span>
+<span class="nc" id="L1259">						&quot;.html&quot;, mindmapFile.getParentFile());</span>
+<span class="nc" id="L1260">				saveHTML((MindMapNodeModel) getSelected(), file);</span>
+<span class="nc" id="L1261">				loadURL(file.toString());</span>
+<span class="nc" id="L1262">			} catch (IOException ex) {</span>
+			}
+<span class="nc" id="L1264">		}</span>
+	}
+
+	private class ImportBranchAction extends AbstractAction {
+<span class="nc" id="L1268">		ImportBranchAction() {</span>
+<span class="nc" id="L1269">			super(getText(&quot;import_branch&quot;));</span>
+<span class="nc" id="L1270">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1273">			MindMapNodeModel parent = (MindMapNodeModel) getSelected();</span>
+<span class="nc bnc" id="L1274" title="All 2 branches missed.">			if (parent == null) {</span>
+<span class="nc" id="L1275">				return;</span>
+			}
+<span class="nc" id="L1277">			FreeMindFileDialog chooser = getFileChooser();</span>
+<span class="nc" id="L1278">			int returnVal = chooser.showOpenDialog(getFrame().getContentPane());</span>
+<span class="nc bnc" id="L1279" title="All 2 branches missed.">			if (returnVal == JFileChooser.APPROVE_OPTION) {</span>
+				try {
+<span class="nc" id="L1281">					MindMapNodeModel node = getMindMapMapModel().loadTree(</span>
+<span class="nc" id="L1282">							chooser.getSelectedFile());</span>
+<span class="nc" id="L1283">					paste(node, parent);</span>
+<span class="nc" id="L1284">					invokeHooksRecursively(node, getMindMapMapModel());</span>
+<span class="nc" id="L1285">				} catch (Exception ex) {</span>
+<span class="nc" id="L1286">					handleLoadingException(ex);</span>
+				}
+			}
+<span class="nc" id="L1289">		}</span>
+	}
+
+	private class ImportLinkedBranchAction extends AbstractAction {
+<span class="nc" id="L1293">		ImportLinkedBranchAction() {</span>
+<span class="nc" id="L1294">			super(getText(&quot;import_linked_branch&quot;));</span>
+<span class="nc" id="L1295">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1298">			MindMapNodeModel selected = (MindMapNodeModel) getSelected();</span>
+<span class="nc bnc" id="L1299" title="All 4 branches missed.">			if (selected == null || selected.getLink() == null) {</span>
+<span class="nc" id="L1300">				JOptionPane.showMessageDialog(getView(),</span>
+<span class="nc" id="L1301">						getText(&quot;import_linked_branch_no_link&quot;));</span>
+<span class="nc" id="L1302">				return;</span>
+			}
+<span class="nc" id="L1304">			URL absolute = null;</span>
+			try {
+<span class="nc" id="L1306">				String relative = selected.getLink();</span>
+<span class="nc" id="L1307">				absolute = new URL(Tools.fileToUrl(getMap().getFile()),</span>
+<span class="nc" id="L1308">						relative);</span>
+<span class="nc" id="L1309">			} catch (MalformedURLException ex) {</span>
+<span class="nc" id="L1310">				JOptionPane.showMessageDialog(getView(),</span>
+<span class="nc" id="L1311">						&quot;Couldn't create valid URL for:&quot; + getMap().getFile());</span>
+<span class="nc" id="L1312">				freemind.main.Resources.getInstance().logException(ex);</span>
+<span class="nc" id="L1313">				return;</span>
+			}
+			try {
+<span class="nc" id="L1316">				MindMapNodeModel node = getMindMapMapModel().loadTree(</span>
+<span class="nc" id="L1317">						Tools.urlToFile(absolute));</span>
+<span class="nc" id="L1318">				paste(node, selected);</span>
+<span class="nc" id="L1319">				invokeHooksRecursively(node, getMindMapMapModel());</span>
+<span class="nc" id="L1320">			} catch (Exception ex) {</span>
+<span class="nc" id="L1321">				handleLoadingException(ex);</span>
+			}
+<span class="nc" id="L1323">		}</span>
+	}
+
+	/**
+	 * This is exactly the opposite of exportBranch.
+	 */
+	private class ImportLinkedBranchWithoutRootAction extends AbstractAction {
+<span class="nc" id="L1330">		ImportLinkedBranchWithoutRootAction() {</span>
+<span class="nc" id="L1331">			super(getText(&quot;import_linked_branch_without_root&quot;));</span>
+<span class="nc" id="L1332">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1335">			MindMapNodeModel selected = (MindMapNodeModel) getSelected();</span>
+<span class="nc bnc" id="L1336" title="All 4 branches missed.">			if (selected == null || selected.getLink() == null) {</span>
+<span class="nc" id="L1337">				JOptionPane.showMessageDialog(getView(),</span>
+<span class="nc" id="L1338">						getText(&quot;import_linked_branch_no_link&quot;));</span>
+<span class="nc" id="L1339">				return;</span>
+			}
+<span class="nc" id="L1341">			URL absolute = null;</span>
+			try {
+<span class="nc" id="L1343">				String relative = selected.getLink();</span>
+<span class="nc" id="L1344">				absolute = new URL(Tools.fileToUrl(getMap().getFile()),</span>
+<span class="nc" id="L1345">						relative);</span>
+<span class="nc" id="L1346">			} catch (MalformedURLException ex) {</span>
+<span class="nc" id="L1347">				JOptionPane.showMessageDialog(getView(),</span>
+<span class="nc" id="L1348">						&quot;Couldn't create valid URL.&quot;);</span>
+<span class="nc" id="L1349">				return;</span>
+			}
+			try {
+<span class="nc" id="L1352">				MindMapNodeModel node = getMindMapMapModel().loadTree(</span>
+<span class="nc" id="L1353">						Tools.urlToFile(absolute));</span>
+<span class="nc bnc" id="L1354" title="All 2 branches missed.">				for (ListIterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L1355">					MindMapNodeModel importNode = (MindMapNodeModel) i.next();</span>
+<span class="nc" id="L1356">					paste(importNode, selected);</span>
+<span class="nc" id="L1357">					invokeHooksRecursively(importNode, getMindMapMapModel());</span>
+				}
+<span class="nc" id="L1359">			}</span>
+			// getModel().setLink(parent, null); }
+<span class="nc" id="L1361">			catch (Exception ex) {</span>
+<span class="nc" id="L1362">				handleLoadingException(ex);</span>
+			}
+<span class="nc" id="L1364">		}</span>
+	}
+
+	/*
+	 * MindMapController.java private class NodeViewStyleAction extends
+	 * AbstractAction { NodeViewStyleAction(final String style) {
+	 * super(getText(style)); m_style = style; } public void
+	 * actionPerformed(ActionEvent e) { for(ListIterator it =
+	 * getSelecteds().listIterator();it.hasNext();) { MindMapNodeModel selected
+	 * = (MindMapNodeModel)it.next(); getModel().setNodeStyle(selected,
+	 * m_style); }} private String m_style;}
+	 * 
+	 * private class EdgeStyleAction extends AbstractAction { String style;
+	 * EdgeStyleAction(String style) { super(getText(style)); this.style =
+	 * style; } public void actionPerformed(ActionEvent e) { for(ListIterator it
+	 * = getSelecteds().listIterator();it.hasNext();) { MindMapNodeModel
+	 * selected = (MindMapNodeModel)it.next(); getModel().setEdgeStyle(selected,
+	 * style); }}}
+	 * 
+	 * private class ApplyPatternAction extends AbstractAction { StylePattern
+	 * pattern; ApplyPatternAction(StylePattern pattern) {
+	 * super(pattern.getName()); this.pattern=pattern; } public void
+	 * actionPerformed(ActionEvent e) { for(ListIterator it =
+	 * getSelecteds().listIterator();it.hasNext();) { MindMapNodeModel selected
+	 * = (MindMapNodeModel)it.next();
+	 * ((MindMapMapModel)getModel()).applyPattern(selected, pattern); }}}
+	 * 
+	 * 
+	 * 
+	 * 
+	 * // Nonaction classes //
+	 * ________________________________________________________________________
+	 */
+<span class="nc" id="L1397">	private class MindMapFilter extends FileFilter {</span>
+		public boolean accept(File f) {
+<span class="nc bnc" id="L1399" title="All 2 branches missed.">			if (f.isDirectory())</span>
+<span class="nc" id="L1400">				return true;</span>
+<span class="nc" id="L1401">			String extension = Tools.getExtension(f.getName());</span>
+<span class="nc bnc" id="L1402" title="All 2 branches missed.">			if (extension != null) {</span>
+<span class="nc" id="L1403">				if (extension</span>
+<span class="nc bnc" id="L1404" title="All 2 branches missed.">						.equals(freemind.main.FreeMindCommon.FREEMIND_FILE_EXTENSION_WITHOUT_DOT)) {</span>
+<span class="nc" id="L1405">					return true;</span>
+				} else {
+<span class="nc" id="L1407">					return false;</span>
+				}
+			}
+<span class="nc" id="L1410">			return false;</span>
+		}
+
+		public String getDescription() {
+<span class="nc" id="L1414">			return getText(&quot;mindmaps_desc&quot;);</span>
+		}
+	}
+
+	public void setBold(MindMapNode node, boolean bolded) {
+<span class="nc" id="L1419">		bold.setBold(node, bolded);</span>
+<span class="nc" id="L1420">	}</span>
+
+	public void setItalic(MindMapNode node, boolean isItalic) {
+<span class="nc" id="L1423">		italic.setItalic(node, isItalic);</span>
+<span class="nc" id="L1424">	}</span>
+
+	public void setCloud(MindMapNode node, boolean enable) {
+<span class="nc" id="L1427">		cloud.setCloud(node, enable);</span>
+<span class="nc" id="L1428">	}</span>
+
+	public void setCloudColor(MindMapNode node, Color color) {
+<span class="nc" id="L1431">		cloudColor.setCloudColor(node, color);</span>
+<span class="nc" id="L1432">	}</span>
+
+	// Node editing
+	public void setFontSize(MindMapNode node, String fontSizeValue) {
+<span class="nc" id="L1436">		fontSize.setFontSize(node, fontSizeValue);</span>
+<span class="nc" id="L1437">	}</span>
+
+	/**
+     *
+     */
+
+	public void increaseFontSize(MindMapNode node, int increment) {
+<span class="nc" id="L1444">		int newSize = Integer.valueOf(node.getFontSize()).intValue()</span>
+<span class="nc" id="L1445">				+ increment;</span>
+
+<span class="nc bnc" id="L1447" title="All 2 branches missed.">		if (newSize &gt; 0) {</span>
+<span class="nc" id="L1448">			setFontSize(node, Integer.toString(newSize));</span>
+		}
+<span class="nc" id="L1450">	}</span>
+
+	public void setFontFamily(MindMapNode node, String fontFamilyValue) {
+<span class="nc" id="L1453">		fontFamily.setFontFamily(node, fontFamilyValue);</span>
+<span class="nc" id="L1454">	}</span>
+
+	public void setNodeColor(MindMapNode node, Color color) {
+<span class="nc" id="L1457">		nodeColor.setNodeColor(node, color);</span>
+<span class="nc" id="L1458">	}</span>
+
+	public void setNodeBackgroundColor(MindMapNode node, Color color) {
+<span class="nc" id="L1461">		nodeBackgroundColor.setNodeBackgroundColor(node, color);</span>
+<span class="nc" id="L1462">	}</span>
+
+	public void blendNodeColor(MindMapNode node) {
+<span class="nc" id="L1465">		Color mapColor = getView().getBackground();</span>
+<span class="nc" id="L1466">		Color nodeColor = node.getColor();</span>
+<span class="nc bnc" id="L1467" title="All 2 branches missed.">		if (nodeColor == null) {</span>
+<span class="nc" id="L1468">			nodeColor = MapView.standardNodeTextColor;</span>
+		}
+<span class="nc" id="L1470">		setNodeColor(node,</span>
+<span class="nc" id="L1471">				new Color((3 * mapColor.getRed() + nodeColor.getRed()) / 4,</span>
+<span class="nc" id="L1472">						(3 * mapColor.getGreen() + nodeColor.getGreen()) / 4,</span>
+<span class="nc" id="L1473">						(3 * mapColor.getBlue() + nodeColor.getBlue()) / 4));</span>
+<span class="nc" id="L1474">	}</span>
+
+	public void setEdgeColor(MindMapNode node, Color color) {
+<span class="nc" id="L1477">		edgeColor.setEdgeColor(node, color);</span>
+<span class="nc" id="L1478">	}</span>
+
+	public void applyPattern(MindMapNode node, String patternName) {
+<span class="nc bnc" id="L1481" title="All 2 branches missed.">		for (int i = 0; i &lt; patterns.length; i++) {</span>
+<span class="nc" id="L1482">			ApplyPatternAction patternAction = patterns[i];</span>
+<span class="nc bnc" id="L1483" title="All 2 branches missed.">			if (patternAction.getPattern().getName().equals(patternName)) {</span>
+<span class="nc" id="L1484">				patternAction.applyPattern(node, patternAction.getPattern());</span>
+<span class="nc" id="L1485">				break;</span>
+			}
+		}
+<span class="nc" id="L1488">	}</span>
+
+	public void applyPattern(MindMapNode node, Pattern pattern) {
+<span class="nc bnc" id="L1491" title="All 2 branches missed.">		if (patterns.length &gt; 0) {</span>
+<span class="nc" id="L1492">			patterns[0].applyPattern(node, pattern);</span>
+<span class="nc" id="L1493">		} else {</span>
+<span class="nc" id="L1494">			throw new IllegalArgumentException(&quot;No pattern defined.&quot;);</span>
+		}
+<span class="nc" id="L1496">	}</span>
+
+	public void addIcon(MindMapNode node, MindIcon icon) {
+<span class="nc" id="L1499">		unknownIconAction.addIcon(node, icon);</span>
+<span class="nc" id="L1500">	}</span>
+
+	public void removeAllIcons(MindMapNode node) {
+<span class="nc" id="L1503">		removeAllIconsAction.removeAllIcons(node);</span>
+<span class="nc" id="L1504">	}</span>
+
+	public int removeLastIcon(MindMapNode node) {
+<span class="nc" id="L1507">		return removeLastIconAction.removeLastIcon(node);</span>
+	}
+
+	/**
+     *
+     */
+
+	public void addLink(MindMapNode source, MindMapNode target) {
+<span class="nc" id="L1515">		addArrowLinkAction.addLink(source, target);</span>
+<span class="nc" id="L1516">	}</span>
+
+	public void removeReference(MindMapLink arrowLink) {
+<span class="nc" id="L1519">		removeArrowLinkAction.removeReference(arrowLink);</span>
+<span class="nc" id="L1520">	}</span>
+
+	public void setArrowLinkColor(MindMapLink arrowLink, Color color) {
+<span class="nc" id="L1523">		colorArrowLinkAction.setArrowLinkColor(arrowLink, color);</span>
+<span class="nc" id="L1524">	}</span>
+
+	/**
+     *
+     */
+
+	public void changeArrowsOfArrowLink(MindMapArrowLinkModel arrowLink,
+			boolean hasStartArrow, boolean hasEndArrow) {
+<span class="nc" id="L1532">		changeArrowsInArrowLinkAction.changeArrowsOfArrowLink(arrowLink,</span>
+<span class="nc" id="L1533">				hasStartArrow, hasEndArrow);</span>
+<span class="nc" id="L1534">	}</span>
+
+	public void setArrowLinkEndPoints(MindMapArrowLink link, Point startPoint,
+			Point endPoint) {
+<span class="nc" id="L1538">		changeArrowLinkEndPoints.setArrowLinkEndPoints(link, startPoint,</span>
+<span class="nc" id="L1539">				endPoint);</span>
+<span class="nc" id="L1540">	}</span>
+
+	public void setLink(MindMapNode node, String link) {
+<span class="nc" id="L1543">		setLinkByTextField.setLink(node, link);</span>
+<span class="nc" id="L1544">	}</span>
+
+	// edit begins with home/end or typing (PN 6.2)
+	public void edit(KeyEvent e, boolean addNew, boolean editLong) {
+<span class="nc" id="L1548">		edit.edit(e, addNew, editLong);</span>
+<span class="nc" id="L1549">	}</span>
+
+	public void setNodeText(MindMapNode selected, String newText) {
+<span class="nc" id="L1552">		edit.setNodeText(selected, newText);</span>
+<span class="nc" id="L1553">	}</span>
+
+	/**
+     *
+     */
+
+	public void setEdgeWidth(MindMapNode node, int width) {
+<span class="nc" id="L1560">		EdgeWidth_1.setEdgeWidth(node, width);</span>
+<span class="nc" id="L1561">	}</span>
+
+	/**
+     *
+     */
+
+	public void setEdgeStyle(MindMapNode node, String style) {
+<span class="nc" id="L1568">		EdgeStyle_bezier.setEdgeStyle(node, style);</span>
+<span class="nc" id="L1569">	}</span>
+
+	/**
+     *
+     */
+
+	public void setNodeStyle(MindMapNode node, String style) {
+<span class="nc" id="L1576">		fork.setStyle(node, style);</span>
+<span class="nc" id="L1577">	}</span>
+
+	public Transferable copy(MindMapNode node, boolean saveInvisible) {
+<span class="nc" id="L1580">		StringWriter stringWriter = new StringWriter();</span>
+		try {
+<span class="nc" id="L1582">			((MindMapNodeModel) node).save(stringWriter, getMap()</span>
+<span class="nc" id="L1583">					.getLinkRegistry(), saveInvisible, true);</span>
+<span class="nc" id="L1584">		} catch (IOException e) {</span>
+		}
+<span class="nc" id="L1586">		Vector nodeList = Tools.getVectorWithSingleElement(getNodeID(node));</span>
+<span class="nc" id="L1587">		return new MindMapNodesSelection(stringWriter.toString(), null, null,</span>
+<span class="nc" id="L1588">				null, null, null, null, nodeList);</span>
+	}
+
+	public Transferable cut() {
+<span class="nc" id="L1592">		return cut(getView().getSelectedNodesSortedByY());</span>
+	}
+
+	public Transferable cut(List nodeList) {
+<span class="nc" id="L1596">		return cut.cut(nodeList);</span>
+	}
+
+	public void paste(Transferable t, MindMapNode parent) {
+<span class="nc" id="L1600">		paste(t, /* target= */parent, /* asSibling= */false,</span>
+<span class="nc" id="L1601">				parent.isNewChildLeft());</span>
+<span class="nc" id="L1602">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.modes.mindmapmode.actions.MindMapActions#paste(java.awt.datatransfer.Transferable, freemind.modes.MindMapNode, boolean, boolean)
+	 */
+	public boolean paste(Transferable t, MindMapNode target, boolean asSibling,
+			boolean isLeft) {
+<span class="nc bnc" id="L1609" title="All 2 branches missed.">		if (!asSibling</span>
+<span class="nc bnc" id="L1610" title="All 2 branches missed.">				&amp;&amp; target.isFolded()</span>
+<span class="nc" id="L1611">				&amp;&amp; Resources.getInstance().getBoolProperty(</span>
+<span class="nc bnc" id="L1612" title="All 2 branches missed.">						RESOURCE_UNFOLD_ON_PASTE)) {</span>
+<span class="nc" id="L1613">			setFolded(target, false);</span>
+		}
+<span class="nc" id="L1615">		return paste.paste(t, target, asSibling, isLeft);</span>
+	}
+
+	public void paste(MindMapNode node, MindMapNode parent) {
+<span class="nc" id="L1619">		paste.paste(node, parent);</span>
+<span class="nc" id="L1620">	}</span>
+
+	public MindMapNode addNew(final MindMapNode target, final int newNodeMode,
+			final KeyEvent e) {
+<span class="nc" id="L1624">		edit.stopEditing();</span>
+<span class="nc" id="L1625">		return newChild.addNew(target, newNodeMode, e);</span>
+	}
+
+	public MindMapNode addNewNode(MindMapNode parent, int index,
+			boolean newNodeIsLeft) {
+<span class="nc" id="L1630">		return newChild.addNewNode(parent, index, newNodeIsLeft);</span>
+	}
+
+	public void deleteNode(MindMapNode selectedNode) {
+<span class="nc" id="L1634">		deleteChild.deleteNode(selectedNode);</span>
+<span class="nc" id="L1635">	}</span>
+
+	public void toggleFolded() {
+<span class="nc" id="L1638">		toggleFolded.toggleFolded();</span>
+<span class="nc" id="L1639">	}</span>
+
+	public void setFolded(MindMapNode node, boolean folded) {
+<span class="nc" id="L1642">		toggleFolded.setFolded(node, folded);</span>
+<span class="nc" id="L1643">	}</span>
+
+	public void moveNodes(MindMapNode selected, List selecteds, int direction) {
+<span class="nc" id="L1646">		nodeUp.moveNodes(selected, selecteds, direction);</span>
+<span class="nc" id="L1647">	}</span>
+
+	public void joinNodes(MindMapNode selectedNode, List selectedNodes) {
+<span class="nc" id="L1650">		joinNodes.joinNodes(selectedNode, selectedNodes);</span>
+<span class="nc" id="L1651">	}</span>
+
+	protected void setLinkByFileChooser() {
+<span class="nc" id="L1654">		String relative = getLinkByFileChooser(null);</span>
+<span class="nc bnc" id="L1655" title="All 2 branches missed.">		if (relative != null)</span>
+<span class="nc" id="L1656">			setLink((NodeAdapter) getSelected(), relative);</span>
+<span class="nc" id="L1657">	}</span>
+
+	protected void setImageByFileChooser() {
+<span class="nc" id="L1660">		ExampleFileFilter filter = new ExampleFileFilter();</span>
+<span class="nc" id="L1661">		filter.addExtension(&quot;jpg&quot;);</span>
+<span class="nc" id="L1662">		filter.addExtension(&quot;jpeg&quot;);</span>
+<span class="nc" id="L1663">		filter.addExtension(&quot;png&quot;);</span>
+<span class="nc" id="L1664">		filter.addExtension(&quot;gif&quot;);</span>
+<span class="nc" id="L1665">		filter.setDescription(&quot;JPG, PNG and GIF Images&quot;);</span>
+
+<span class="nc" id="L1667">		String relative = getLinkByFileChooser(filter);</span>
+<span class="nc bnc" id="L1668" title="All 2 branches missed.">		if (relative != null) {</span>
+<span class="nc" id="L1669">			String strText = &quot;&lt;html&gt;&lt;body&gt;&lt;img src=\&quot;&quot; + relative</span>
+<span class="nc" id="L1670">					+ &quot;\&quot;/&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+<span class="nc" id="L1671">			setNodeText((MindMapNode) getSelected(), strText);</span>
+		}
+<span class="nc" id="L1673">	}</span>
+
+	protected String getLinkByFileChooser(FileFilter fileFilter) {
+<span class="nc" id="L1676">		String relative = null;</span>
+		File input;
+<span class="nc" id="L1678">		FreeMindFileDialog chooser = getFileChooser(fileFilter);</span>
+<span class="nc bnc" id="L1679" title="All 2 branches missed.">		if (getMap().getFile() == null) {</span>
+<span class="nc" id="L1680">			JOptionPane.showMessageDialog(getFrame().getContentPane(),</span>
+<span class="nc" id="L1681">					getText(&quot;not_saved_for_link_error&quot;), &quot;FreeMind&quot;,</span>
+<span class="nc" id="L1682">					JOptionPane.WARNING_MESSAGE);</span>
+<span class="nc" id="L1683">			return null;</span>
+			// In the previous version Freemind automatically displayed save
+			// dialog. It happened very often, that user took this save
+			// dialog to be an open link dialog; as a result, the new map
+			// overwrote the linked map.
+
+		}
+
+<span class="nc" id="L1691">		int returnVal = chooser.showOpenDialog(getFrame().getContentPane());</span>
+<span class="nc bnc" id="L1692" title="All 2 branches missed.">		if (returnVal == JFileChooser.APPROVE_OPTION) {</span>
+<span class="nc" id="L1693">			input = chooser.getSelectedFile();</span>
+<span class="nc" id="L1694">			relative = Tools.fileToRelativeUrlString(input, getMap().getFile());</span>
+		}
+<span class="nc" id="L1696">		return relative;</span>
+	}
+
+	public void loadURL(String relative) {
+<span class="nc bnc" id="L1700" title="All 2 branches missed.">		if (getMap().getFile() == null) {</span>
+<span class="nc" id="L1701">			getFrame().out(&quot;You must save the current map first!&quot;);</span>
+<span class="nc" id="L1702">			boolean result = save();</span>
+			// canceled??
+<span class="nc bnc" id="L1704" title="All 2 branches missed.">			if (!result) {</span>
+<span class="nc" id="L1705">				return;</span>
+			}
+		}
+<span class="nc" id="L1708">		super.loadURL(relative);</span>
+<span class="nc" id="L1709">	}</span>
+
+	public void addHook(MindMapNode focussed, List selecteds, String hookName, Properties pHookProperties) {
+<span class="nc" id="L1712">		nodeHookAction.addHook(focussed, selecteds, hookName, pHookProperties);</span>
+<span class="nc" id="L1713">	}</span>
+
+	public void removeHook(MindMapNode focussed, List selecteds, String hookName) {
+<span class="nc" id="L1716">		nodeHookAction.removeHook(focussed, selecteds, hookName);</span>
+<span class="nc" id="L1717">	}</span>
+
+	protected class SetLinkByFileChooserAction extends AbstractAction {
+<span class="nc" id="L1720">		public SetLinkByFileChooserAction() {</span>
+<span class="nc" id="L1721">			super(getText(&quot;set_link_by_filechooser&quot;));</span>
+<span class="nc" id="L1722">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1725">			setLinkByFileChooser();</span>
+<span class="nc" id="L1726">		}</span>
+	}
+
+	protected class SetImageByFileChooserAction extends AbstractAction {
+<span class="nc" id="L1730">		public SetImageByFileChooserAction() {</span>
+<span class="nc" id="L1731">			super(getText(&quot;set_image_by_filechooser&quot;));</span>
+<span class="nc" id="L1732">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1735">			setImageByFileChooser();</span>
+<span class="nc" id="L1736">			getController().obtainFocusForSelected();</span>
+<span class="nc" id="L1737">		}</span>
+	}
+
+	protected abstract class LinkActionBase extends AbstractAction implements
+			MenuItemEnabledListener {
+<span class="nc" id="L1742">		public LinkActionBase(String pText) {</span>
+<span class="nc" id="L1743">			super(pText);</span>
+<span class="nc" id="L1744">		}</span>
+
+		public boolean isEnabled(JMenuItem pItem, Action pAction) {
+<span class="nc" id="L1747">			for (Iterator iterator = getSelecteds().iterator(); iterator</span>
+<span class="nc bnc" id="L1748" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L1749">				MindMapNode selNode = (MindMapNode) iterator.next();</span>
+<span class="nc bnc" id="L1750" title="All 2 branches missed.">				if (selNode.getLink() != null)</span>
+<span class="nc" id="L1751">					return true;</span>
+			}
+<span class="nc" id="L1753">			return false;</span>
+		}
+
+	}
+
+	protected class FollowLinkAction extends LinkActionBase {
+<span class="nc" id="L1759">		public FollowLinkAction() {</span>
+<span class="nc" id="L1760">			super(getText(&quot;follow_link&quot;));</span>
+<span class="nc" id="L1761">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1764">			for (Iterator iterator = getSelecteds().iterator(); iterator</span>
+<span class="nc bnc" id="L1765" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L1766">				MindMapNode selNode = (MindMapNode) iterator.next();</span>
+<span class="nc bnc" id="L1767" title="All 2 branches missed.">				if (selNode.getLink() != null) {</span>
+<span class="nc" id="L1768">					loadURL(selNode.getLink());</span>
+				}
+			}
+<span class="nc" id="L1771">		}</span>
+	}
+
+	protected class OpenLinkDirectoryAction extends LinkActionBase {
+<span class="nc" id="L1775">		public OpenLinkDirectoryAction() {</span>
+<span class="nc" id="L1776">			super(getText(&quot;open_link_directory&quot;));</span>
+<span class="nc" id="L1777">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc" id="L1780">			String link = &quot;&quot;;</span>
+<span class="nc" id="L1781">			for (Iterator iterator = getSelecteds().iterator(); iterator</span>
+<span class="nc bnc" id="L1782" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L1783">				MindMapNode selNode = (MindMapNode) iterator.next();</span>
+<span class="nc" id="L1784">				link = selNode.getLink();</span>
+<span class="nc bnc" id="L1785" title="All 2 branches missed.">				if (link != null) {</span>
+					// as link is an URL, '/' is the only correct one.
+<span class="nc" id="L1787">					final int i = link.lastIndexOf('/');</span>
+<span class="nc bnc" id="L1788" title="All 2 branches missed.">					if (i &gt;= 0) {</span>
+<span class="nc" id="L1789">						link = link.substring(0, i + 1);</span>
+					}
+<span class="nc" id="L1791">					logger.info(&quot;Opening link for directory &quot; + link);</span>
+<span class="nc" id="L1792">					loadURL(link);</span>
+				}
+			}
+<span class="nc" id="L1795">		}</span>
+	}
+
+	public void moveNodePosition(MindMapNode node, int parentVGap, int hGap,
+			int shiftY) {
+<span class="nc" id="L1800">		moveNodeAction.moveNodeTo(node, parentVGap, hGap, shiftY);</span>
+<span class="nc" id="L1801">	}</span>
+
+	// ///////////////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////////////
+
+	public void plainClick(MouseEvent e) {
+		/* perform action only if one selected node. */
+<span class="nc bnc" id="L1810" title="All 2 branches missed.">		if (getSelecteds().size() != 1)</span>
+<span class="nc" id="L1811">			return;</span>
+<span class="nc" id="L1812">		final MainView component = (MainView) e.getComponent();</span>
+<span class="nc bnc" id="L1813" title="All 2 branches missed.">		if (component.isInFollowLinkRegion(e.getX())) {</span>
+<span class="nc" id="L1814">			loadURL();</span>
+<span class="nc" id="L1815">		} else {</span>
+<span class="nc" id="L1816">			MindMapNode node = (component).getNodeView().getModel();</span>
+<span class="nc bnc" id="L1817" title="All 2 branches missed.">			if (!node.hasChildren()) {</span>
+				// then emulate the plain click.
+<span class="nc" id="L1819">				doubleClick(e);</span>
+<span class="nc" id="L1820">				return;</span>
+			}
+<span class="nc" id="L1822">			toggleFolded();</span>
+		}
+<span class="nc" id="L1824">	}</span>
+
+	public HookFactory getHookFactory() {
+		// lazy creation.
+<span class="nc bnc" id="L1828" title="All 2 branches missed.">		if (nodeHookFactory == null) {</span>
+<span class="nc" id="L1829">			nodeHookFactory = new MindMapHookFactory(getFrame());</span>
+		}
+<span class="nc" id="L1831">		return nodeHookFactory;</span>
+	}
+
+	public NodeHook createNodeHook(String hookName, MindMapNode node,
+			MindMap map) {
+<span class="nc" id="L1836">		HookFactory hookFactory = getHookFactory();</span>
+<span class="nc" id="L1837">		NodeHook hook = (NodeHook) hookFactory.createNodeHook(hookName);</span>
+<span class="nc" id="L1838">		hook.setController(this);</span>
+<span class="nc" id="L1839">		hook.setMap(map);</span>
+<span class="nc bnc" id="L1840" title="All 2 branches missed.">		if (hook instanceof PermanentNodeHook) {</span>
+<span class="nc" id="L1841">			PermanentNodeHook permHook = (PermanentNodeHook) hook;</span>
+<span class="nc bnc" id="L1842" title="All 2 branches missed.">			if (hookFactory.getInstanciationMethod(hookName).isSingleton()) {</span>
+				// search for already instanciated hooks of this type:
+<span class="nc" id="L1844">				PermanentNodeHook otherHook = hookFactory.getHookInNode(node,</span>
+<span class="nc" id="L1845">						hookName);</span>
+<span class="nc bnc" id="L1846" title="All 2 branches missed.">				if (otherHook != null) {</span>
+<span class="nc" id="L1847">					return otherHook;</span>
+				}
+			}
+<span class="nc" id="L1850">			node.addHook(permHook);</span>
+		}
+<span class="nc" id="L1852">		return hook;</span>
+	}
+
+	public void invokeHook(ModeControllerHook hook) {
+		try {
+<span class="nc" id="L1857">			hook.setController(this);</span>
+			// initialize:
+			// the main invocation:
+<span class="nc" id="L1860">			hook.startupMapHook();</span>
+			// and good bye.
+<span class="nc" id="L1862">			hook.shutdownMapHook();</span>
+<span class="nc" id="L1863">		} catch (Exception e) {</span>
+<span class="nc" id="L1864">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L1866">	}</span>
+
+	public ActionFactory getActionFactory() {
+<span class="nc" id="L1869">		return actionFactory;</span>
+	}
+
+	protected class EditLongAction extends AbstractAction {
+<span class="nc" id="L1873">		public EditLongAction() {</span>
+<span class="nc" id="L1874">			super(getText(&quot;edit_long_node&quot;));</span>
+<span class="nc" id="L1875">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1878">			edit(null, false, true);</span>
+<span class="nc" id="L1879">		}</span>
+	}
+
+	static public void saveHTML(MindMapNodeModel rootNodeOfBranch, File file)
+			throws IOException {
+<span class="nc" id="L1884">		BufferedWriter fileout = new BufferedWriter(new OutputStreamWriter(</span>
+<span class="nc" id="L1885">				new FileOutputStream(file)));</span>
+<span class="nc" id="L1886">		MindMapHTMLWriter htmlWriter = new MindMapHTMLWriter(fileout);</span>
+<span class="nc" id="L1887">		htmlWriter.saveHTML(rootNodeOfBranch);</span>
+<span class="nc" id="L1888">	}</span>
+
+	static public void saveHTML(List mindMapNodes, Writer fileout)
+			throws IOException {
+<span class="nc" id="L1892">		MindMapHTMLWriter htmlWriter = new MindMapHTMLWriter(fileout);</span>
+<span class="nc" id="L1893">		htmlWriter.saveHTML(mindMapNodes);</span>
+<span class="nc" id="L1894">	}</span>
+
+	/**
+     */
+	public void splitNode(MindMapNode node, int caretPosition, String newText) {
+<span class="nc bnc" id="L1899" title="All 2 branches missed.">		if (node.isRoot()) {</span>
+<span class="nc" id="L1900">			return;</span>
+		}
+		// If there are children, they go to the node below
+<span class="nc bnc" id="L1903" title="All 2 branches missed.">		String futureText = newText != null ? newText : node.toString();</span>
+
+<span class="nc" id="L1905">		String[] strings = getContent(futureText, caretPosition);</span>
+<span class="nc bnc" id="L1906" title="All 2 branches missed.">		if (strings == null) { // do nothing</span>
+<span class="nc" id="L1907">			return;</span>
+		}
+<span class="nc" id="L1909">		String newUpperContent = strings[0];</span>
+<span class="nc" id="L1910">		String newLowerContent = strings[1];</span>
+<span class="nc" id="L1911">		setNodeText(node, newUpperContent);</span>
+
+<span class="nc" id="L1913">		MindMapNode parent = node.getParentNode();</span>
+<span class="nc" id="L1914">		MindMapNode lowerNode = addNewNode(parent,</span>
+<span class="nc" id="L1915">				parent.getChildPosition(node) + 1, node.isLeft());</span>
+<span class="nc" id="L1916">		lowerNode.setColor(node.getColor());</span>
+<span class="nc" id="L1917">		lowerNode.setFont(node.getFont());</span>
+<span class="nc" id="L1918">		setNodeText(lowerNode, newLowerContent);</span>
+
+<span class="nc" id="L1920">	}</span>
+
+	private String[] getContent(String text, int pos) {
+<span class="nc bnc" id="L1923" title="All 2 branches missed.">		if (pos &lt;= 0) {</span>
+<span class="nc" id="L1924">			return null;</span>
+		}
+<span class="nc" id="L1926">		String[] strings = new String[2];</span>
+<span class="nc bnc" id="L1927" title="All 2 branches missed.">		if (text.startsWith(&quot;&lt;html&gt;&quot;)) {</span>
+<span class="nc" id="L1928">			HTMLEditorKit kit = new HTMLEditorKit();</span>
+<span class="nc" id="L1929">			HTMLDocument doc = new HTMLDocument();</span>
+<span class="nc" id="L1930">			StringReader buf = new StringReader(text);</span>
+			try {
+<span class="nc" id="L1932">				kit.read(buf, doc, 0);</span>
+<span class="nc" id="L1933">				final char[] firstText = doc.getText(0, pos).toCharArray();</span>
+<span class="nc" id="L1934">				int firstStart = 0;</span>
+<span class="nc" id="L1935">				int firstLen = pos;</span>
+<span class="nc bnc" id="L1936" title="All 4 branches missed.">				while ((firstStart &lt; firstLen)</span>
+<span class="nc" id="L1937">						&amp;&amp; (firstText[firstStart] &lt;= ' ')) {</span>
+<span class="nc" id="L1938">					firstStart++;</span>
+				}
+<span class="nc bnc" id="L1940" title="All 4 branches missed.">				while ((firstStart &lt; firstLen)</span>
+<span class="nc" id="L1941">						&amp;&amp; (firstText[firstLen - 1] &lt;= ' ')) {</span>
+<span class="nc" id="L1942">					firstLen--;</span>
+				}
+<span class="nc" id="L1944">				int secondStart = 0;</span>
+<span class="nc" id="L1945">				int secondLen = doc.getLength() - pos;</span>
+<span class="nc" id="L1946">				final char[] secondText = doc.getText(pos, secondLen)</span>
+<span class="nc" id="L1947">						.toCharArray();</span>
+<span class="nc bnc" id="L1948" title="All 4 branches missed.">				while ((secondStart &lt; secondLen)</span>
+<span class="nc" id="L1949">						&amp;&amp; (secondText[secondStart] &lt;= ' ')) {</span>
+<span class="nc" id="L1950">					secondStart++;</span>
+				}
+<span class="nc bnc" id="L1952" title="All 4 branches missed.">				while ((secondStart &lt; secondLen)</span>
+<span class="nc" id="L1953">						&amp;&amp; (secondText[secondLen - 1] &lt;= ' ')) {</span>
+<span class="nc" id="L1954">					secondLen--;</span>
+				}
+<span class="nc bnc" id="L1956" title="All 4 branches missed.">				if (firstStart == firstLen || secondStart == secondLen) {</span>
+<span class="nc" id="L1957">					return null;</span>
+				}
+<span class="nc" id="L1959">				StringWriter out = new StringWriter();</span>
+<span class="nc" id="L1960">				new FixedHTMLWriter(out, doc, firstStart, firstLen - firstStart)</span>
+<span class="nc" id="L1961">						.write();</span>
+<span class="nc" id="L1962">				strings[0] = out.toString();</span>
+<span class="nc" id="L1963">				out = new StringWriter();</span>
+<span class="nc" id="L1964">				new FixedHTMLWriter(out, doc, pos + secondStart, secondLen</span>
+<span class="nc" id="L1965">						- secondStart).write();</span>
+<span class="nc" id="L1966">				strings[1] = out.toString();</span>
+<span class="nc" id="L1967">				return strings;</span>
+<span class="nc" id="L1968">			} catch (IOException e) {</span>
+				// TODO Auto-generated catch block
+<span class="nc" id="L1970">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L1971">			} catch (BadLocationException e) {</span>
+				// TODO Auto-generated catch block
+<span class="nc" id="L1973">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+<span class="nc" id="L1975">		} else {</span>
+<span class="nc bnc" id="L1976" title="All 2 branches missed.">			if (pos &gt;= text.length()) {</span>
+<span class="nc" id="L1977">				return null;</span>
+			}
+<span class="nc" id="L1979">			strings[0] = text.substring(0, pos);</span>
+<span class="nc" id="L1980">			strings[1] = text.substring(pos);</span>
+		}
+<span class="nc" id="L1982">		return strings;</span>
+	}
+
+	protected void updateNode(MindMapNode node) {
+<span class="nc" id="L1986">		super.updateNode(node);</span>
+<span class="nc" id="L1987">		recursiveCallUpdateHooks((MindMapNode) node, (MindMapNode) node /*</span>
+																		 * self
+																		 * update
+																		 */);
+<span class="nc" id="L1991">	}</span>
+
+	/**
+     */
+	private void recursiveCallUpdateHooks(MindMapNode node,
+			MindMapNode changedNode) {
+		// Tell any node hooks that the node is changed:
+<span class="nc bnc" id="L1998" title="All 2 branches missed.">		if (node instanceof MindMapNode) {</span>
+<span class="nc" id="L1999">			for (Iterator i = ((MindMapNode) node).getActivatedHooks()</span>
+<span class="nc bnc" id="L2000" title="All 2 branches missed.">					.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L2001">				PermanentNodeHook hook = (PermanentNodeHook) i.next();</span>
+<span class="nc bnc" id="L2002" title="All 4 branches missed.">				if ((!isUndoAction()) || hook instanceof UndoEventReceiver) {</span>
+<span class="nc bnc" id="L2003" title="All 2 branches missed.">					if (node == changedNode)</span>
+<span class="nc" id="L2004">						hook.onUpdateNodeHook();</span>
+					else
+<span class="nc" id="L2006">						hook.onUpdateChildrenHook(changedNode);</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L2010" title="All 4 branches missed.">		if (!node.isRoot() &amp;&amp; node.getParentNode() != null)</span>
+<span class="nc" id="L2011">			recursiveCallUpdateHooks(node.getParentNode(), changedNode);</span>
+<span class="nc" id="L2012">	}</span>
+
+	public void doubleClick(MouseEvent e) {
+		/* perform action only if one selected node. */
+<span class="nc bnc" id="L2016" title="All 2 branches missed.">		if (getSelecteds().size() != 1)</span>
+<span class="nc" id="L2017">			return;</span>
+<span class="nc" id="L2018">		MindMapNode node = ((MainView) e.getComponent()).getNodeView()</span>
+<span class="nc" id="L2019">				.getModel();</span>
+		// edit the node only if the node is a leaf (fc 0.7.1), or the root node
+		// (fc 0.9.0)
+<span class="nc bnc" id="L2022" title="All 6 branches missed.">		if (!e.isAltDown() &amp;&amp; !e.isControlDown() &amp;&amp; !e.isShiftDown()</span>
+<span class="nc bnc" id="L2023" title="All 4 branches missed.">				&amp;&amp; !e.isPopupTrigger() &amp;&amp; e.getButton() == MouseEvent.BUTTON1</span>
+<span class="nc bnc" id="L2024" title="All 2 branches missed.">				&amp;&amp; (node.getLink() == null)) {</span>
+<span class="nc" id="L2025">			edit(null, false, false);</span>
+		}
+<span class="nc" id="L2027">	}</span>
+
+	public boolean extendSelection(MouseEvent e) {
+<span class="nc" id="L2030">		NodeView newlySelectedNodeView = ((MainView) e.getComponent())</span>
+<span class="nc" id="L2031">				.getNodeView();</span>
+		// MindMapNode newlySelectedNode = newlySelectedNodeView.getModel();
+<span class="nc" id="L2033">		boolean extend = e.isControlDown();</span>
+		// Fixes Cannot select multiple single nodes *
+		// https://sourceforge.net/tracker/?func=detail&amp;atid=107118&amp;aid=1675829&amp;group_id=7118
+<span class="nc bnc" id="L2036" title="All 2 branches missed.">		if (Tools.isMacOsX()) {</span>
+<span class="nc" id="L2037">			extend |= e.isMetaDown();</span>
+		}
+<span class="nc" id="L2039">		boolean range = e.isShiftDown();</span>
+<span class="nc bnc" id="L2040" title="All 4 branches missed.">		boolean branch = e.isAltGraphDown() || e.isAltDown(); /*</span>
+															 * windows alt,
+															 * linux altgraph
+															 * ....
+															 */
+<span class="nc" id="L2045">		boolean retValue = false;</span>
+
+<span class="nc bnc" id="L2047" title="All 6 branches missed.">		if (extend || range || branch</span>
+<span class="nc bnc" id="L2048" title="All 2 branches missed.">				|| !getView().isSelected(newlySelectedNodeView)) {</span>
+<span class="nc bnc" id="L2049" title="All 2 branches missed.">			if (!range) {</span>
+<span class="nc bnc" id="L2050" title="All 2 branches missed.">				if (extend)</span>
+<span class="nc" id="L2051">					getView().toggleSelected(newlySelectedNodeView);</span>
+				else
+<span class="nc" id="L2053">					select(newlySelectedNodeView);</span>
+<span class="nc" id="L2054">				retValue = true;</span>
+<span class="nc" id="L2055">			} else {</span>
+<span class="nc" id="L2056">				retValue = getView().selectContinuous(newlySelectedNodeView);</span>
+				// /* fc, 25.1.2004: replace getView by controller methods.*/
+				// if (newlySelectedNodeView != getView().getSelected() &amp;&amp;
+				// newlySelectedNodeView.isSiblingOf(getView().getSelected())) {
+				// getView().selectContinuous(newlySelectedNodeView);
+				// retValue = true;
+				// } else {
+				// /* if shift was down, but no range can be selected, then the
+				// new node is simply selected: */
+				// if(!getView().isSelected(newlySelectedNodeView)) {
+				// getView().toggleSelected(newlySelectedNodeView);
+				// retValue = true;
+				// }
+			}
+<span class="nc bnc" id="L2070" title="All 2 branches missed.">			if (branch) {</span>
+<span class="nc" id="L2071">				getView().selectBranch(newlySelectedNodeView, extend);</span>
+<span class="nc" id="L2072">				retValue = true;</span>
+			}
+		}
+
+<span class="nc bnc" id="L2076" title="All 2 branches missed.">		if (retValue) {</span>
+<span class="nc" id="L2077">			e.consume();</span>
+
+			// Display link in status line
+<span class="nc" id="L2080">			String link = newlySelectedNodeView.getModel().getLink();</span>
+<span class="nc bnc" id="L2081" title="All 2 branches missed.">			link = (link != null ? link : &quot; &quot;);</span>
+<span class="nc" id="L2082">			getController().getFrame().out(link);</span>
+		}
+<span class="nc" id="L2084">		logger.fine(&quot;MouseEvent: extend:&quot; + extend + &quot;, range:&quot; + range</span>
+<span class="nc" id="L2085">				+ &quot;, branch:&quot; + branch + &quot;, event:&quot; + e + &quot;, retValue:&quot;</span>
+<span class="nc" id="L2086">				+ retValue);</span>
+<span class="nc" id="L2087">		obtainFocusForSelected();</span>
+<span class="nc" id="L2088">		return retValue;</span>
+	}
+
+	public void registerMouseWheelEventHandler(MouseWheelEventHandler handler) {
+<span class="nc" id="L2092">		logger.fine(&quot;Registered   MouseWheelEventHandler &quot; + handler);</span>
+<span class="nc" id="L2093">		mRegisteredMouseWheelEventHandler.add(handler);</span>
+<span class="nc" id="L2094">	}</span>
+
+	public void deRegisterMouseWheelEventHandler(MouseWheelEventHandler handler) {
+<span class="nc" id="L2097">		logger.fine(&quot;Deregistered MouseWheelEventHandler &quot; + handler);</span>
+<span class="nc" id="L2098">		mRegisteredMouseWheelEventHandler.remove(handler);</span>
+<span class="nc" id="L2099">	}</span>
+
+	public Set getRegisteredMouseWheelEventHandler() {
+<span class="nc" id="L2102">		return Collections.unmodifiableSet(mRegisteredMouseWheelEventHandler);</span>
+
+	}
+
+	public String marshall(XmlAction action) {
+<span class="nc" id="L2107">		return Tools.marshall(action);</span>
+	}
+
+	public XmlAction unMarshall(String inputString) {
+<span class="nc" id="L2111">		return Tools.unMarshall(inputString);</span>
+	}
+
+	public void storeDialogPositions(JDialog dialog,
+			WindowConfigurationStorage pStorage,
+			String window_preference_storage_property) {
+<span class="nc" id="L2117">		XmlBindingTools.getInstance().storeDialogPositions(getController(),</span>
+<span class="nc" id="L2118">				dialog, pStorage, window_preference_storage_property);</span>
+<span class="nc" id="L2119">	}</span>
+
+	public WindowConfigurationStorage decorateDialog(JDialog dialog,
+			String window_preference_storage_property) {
+<span class="nc" id="L2123">		return XmlBindingTools.getInstance().decorateDialog(getController(),</span>
+<span class="nc" id="L2124">				dialog, window_preference_storage_property);</span>
+	}
+
+	public AttributeController getAttributeController() {
+<span class="nc" id="L2128">		return attributeController;</span>
+	}
+
+	public AttributePopupMenu getAttributeTablePopupMenu() {
+<span class="nc" id="L2132">		return new AttributePopupMenu();</span>
+	}
+
+	public XMLElement createXMLElement() {
+<span class="nc" id="L2136">		return new MindMapXMLElement(this);</span>
+	}
+
+	public void setAttribute(MindMapNode pNode, int pPosition,
+			Attribute pAttribute) {
+<span class="nc" id="L2141">		pNode.createAttributeTableModel();</span>
+<span class="nc" id="L2142">		pNode.getAttributes().setValueAt(pAttribute.getName(), pPosition, 0);</span>
+<span class="nc" id="L2143">		pNode.getAttributes().setValueAt(pAttribute.getValue(), pPosition, 1);</span>
+<span class="nc" id="L2144">	}</span>
+
+	public void removeAttribute(MindMapNode pNode, int pPosition) {
+<span class="nc" id="L2147">		pNode.createAttributeTableModel();</span>
+<span class="nc" id="L2148">		pNode.getAttributes().getAttributeController()</span>
+<span class="nc" id="L2149">				.performRemoveRow(pNode.getAttributes(), pPosition);</span>
+<span class="nc" id="L2150">	}</span>
+
+	public int addAttribute(MindMapNode node, Attribute pAttribute) {
+<span class="nc" id="L2153">		node.createAttributeTableModel();</span>
+<span class="nc" id="L2154">		NodeAttributeTableModel attributes = node.getAttributes();</span>
+<span class="nc" id="L2155">		int rowCount = attributes.getRowCount();</span>
+<span class="nc" id="L2156">		attributes.getAttributeController().performInsertRow(attributes,</span>
+<span class="nc" id="L2157">				rowCount, pAttribute.getName(), pAttribute.getValue());</span>
+<span class="nc" id="L2158">		return rowCount;</span>
+	}
+
+	public int editAttribute(MindMapNode pNode, String pName, String pNewValue) {
+<span class="nc" id="L2162">		pNode.createAttributeTableModel();</span>
+<span class="nc" id="L2163">		Attribute newAttribute = new Attribute(pName, pNewValue);</span>
+<span class="nc" id="L2164">		NodeAttributeTableModel attributes = pNode.getAttributes();</span>
+<span class="nc bnc" id="L2165" title="All 2 branches missed.">		for (int i = 0; i &lt; attributes.getRowCount(); i++) {</span>
+<span class="nc bnc" id="L2166" title="All 2 branches missed.">			if (pName.equals(attributes.getAttribute(i).getName())) {</span>
+<span class="nc bnc" id="L2167" title="All 2 branches missed.">				if (pNewValue != null) {</span>
+<span class="nc" id="L2168">					setAttribute(pNode, i, newAttribute);</span>
+<span class="nc" id="L2169">				} else {</span>
+					// remove the attribute:
+<span class="nc" id="L2171">					removeAttribute(pNode, i);</span>
+				}
+<span class="nc" id="L2173">				return i;</span>
+			}
+		}
+<span class="nc bnc" id="L2176" title="All 2 branches missed.">		if (pNewValue == null) {</span>
+			// nothing to remove found.
+<span class="nc" id="L2178">			return -1;</span>
+		}
+<span class="nc" id="L2180">		return addAttribute(pNode, newAttribute);</span>
+	}
+
+	public void insertNodeInto(MindMapNode newNode, MindMapNode parent,
+			int index) {
+<span class="nc" id="L2185">		getModel().setSaved(false);</span>
+<span class="nc" id="L2186">		super.insertNodeInto(newNode, parent, index);</span>
+<span class="nc" id="L2187">	}</span>
+
+	public void removeNodeFromParent(MindMapNode selectedNode) {
+<span class="nc" id="L2190">		getModel().setSaved(false);</span>
+		// first deselect, and then remove. 
+<span class="nc" id="L2192">		NodeView nodeView = getView().getNodeView(selectedNode);</span>
+<span class="nc" id="L2193">		getView().deselect(nodeView);</span>
+<span class="nc" id="L2194">		getModel().removeNodeFromParent(selectedNode);</span>
+<span class="nc" id="L2195">	}</span>
+
+	public void nodeStyleChanged(MindMapNode node) {
+<span class="nc" id="L2198">		nodeChanged(node);</span>
+<span class="nc" id="L2199">		final ListIterator childrenFolded = node.childrenFolded();</span>
+<span class="nc bnc" id="L2200" title="All 2 branches missed.">		while (childrenFolded.hasNext()) {</span>
+<span class="nc" id="L2201">			MindMapNode child = (MindMapNode) childrenFolded.next();</span>
+<span class="nc bnc" id="L2202" title="All 4 branches missed.">			if (!(child.hasStyle() &amp;&amp; child.getEdge().hasStyle())) {</span>
+<span class="nc" id="L2203">				nodeStyleChanged(child);</span>
+			}
+		}
+<span class="nc" id="L2206">	}</span>
+
+	public void repaintMap() {
+<span class="nc" id="L2209">		getView().repaint();</span>
+<span class="nc" id="L2210">	}</span>
+
+	public void clearNodeContents(MindMapNode pNode) {
+<span class="nc" id="L2213">		Pattern erasePattern = new Pattern();</span>
+<span class="nc" id="L2214">		erasePattern.setPatternEdgeColor(new PatternEdgeColor());</span>
+<span class="nc" id="L2215">		erasePattern.setPatternEdgeStyle(new PatternEdgeStyle());</span>
+<span class="nc" id="L2216">		erasePattern.setPatternEdgeWidth(new PatternEdgeWidth());</span>
+<span class="nc" id="L2217">		erasePattern.setPatternIcon(new PatternIcon());</span>
+<span class="nc" id="L2218">		erasePattern</span>
+<span class="nc" id="L2219">				.setPatternNodeBackgroundColor(new PatternNodeBackgroundColor());</span>
+<span class="nc" id="L2220">		erasePattern.setPatternNodeColor(new PatternNodeColor());</span>
+<span class="nc" id="L2221">		erasePattern.setPatternNodeFontBold(new PatternNodeFontBold());</span>
+<span class="nc" id="L2222">		erasePattern.setPatternNodeFontItalic(new PatternNodeFontItalic());</span>
+<span class="nc" id="L2223">		erasePattern.setPatternNodeFontName(new PatternNodeFontName());</span>
+<span class="nc" id="L2224">		erasePattern.setPatternNodeFontSize(new PatternNodeFontSize());</span>
+<span class="nc" id="L2225">		erasePattern.setPatternNodeStyle(new PatternNodeStyle());</span>
+<span class="nc" id="L2226">		erasePattern.setPatternNodeText(new PatternNodeText());</span>
+<span class="nc" id="L2227">		applyPattern(pNode, erasePattern);</span>
+<span class="nc" id="L2228">		List attributeKeyList = pNode.getAttributeKeyList();</span>
+<span class="nc" id="L2229">		for (Iterator iterator = attributeKeyList.iterator(); iterator</span>
+<span class="nc bnc" id="L2230" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L2231">			String key = (String) iterator.next();</span>
+<span class="nc" id="L2232">			this.getAttributeController().performRemoveAttribute(key);</span>
+
+		}
+<span class="nc" id="L2235">		setNoteText(pNode, null);</span>
+<span class="nc" id="L2236">	}</span>
+
+	public EditNoteToNodeAction createEditNoteToNodeAction(MindMapNode node,
+			String text) {
+<span class="nc" id="L2240">		EditNoteToNodeAction nodeAction = new EditNoteToNodeAction();</span>
+<span class="nc" id="L2241">		nodeAction.setNode(node.getObjectId(this));</span>
+<span class="nc bnc" id="L2242" title="All 2 branches missed.">		if (text != null</span>
+<span class="nc bnc" id="L2243" title="All 2 branches missed.">				&amp;&amp; (HtmlTools.htmlToPlain(text).length() != 0 || text</span>
+<span class="nc bnc" id="L2244" title="All 2 branches missed.">						.indexOf(&quot;&lt;img&quot;) &gt;= 0)) {</span>
+<span class="nc" id="L2245">			nodeAction.setText(text);</span>
+<span class="nc" id="L2246">		} else {</span>
+<span class="nc" id="L2247">			nodeAction.setText(null);</span>
+		}
+<span class="nc" id="L2249">		return nodeAction;</span>
+	}
+
+	public void setNoteText(MindMapNode node, String text) {
+<span class="nc" id="L2253">		String oldNoteText = node.getNoteText();</span>
+<span class="nc bnc" id="L2254" title="All 2 branches missed.">		if (Tools.safeEquals(text, oldNoteText)) {</span>
+			// they are equal.
+<span class="nc" id="L2256">			return;</span>
+		}
+<span class="nc" id="L2258">		logger.fine(&quot;Old Note Text:'&quot; + oldNoteText + &quot;, new:'&quot; + text + &quot;'.&quot;);</span>
+<span class="nc" id="L2259">		logger.fine(Tools.compareText(oldNoteText, text));</span>
+<span class="nc" id="L2260">		EditNoteToNodeAction doAction = createEditNoteToNodeAction(node, text);</span>
+<span class="nc" id="L2261">		EditNoteToNodeAction undoAction = createEditNoteToNodeAction(node,</span>
+<span class="nc" id="L2262">				oldNoteText);</span>
+<span class="nc" id="L2263">		getActionFactory().doTransaction(ACCESSORIES_PLUGINS_NODE_NOTE,</span>
+<span class="nc" id="L2264">				new ActionPair(doAction, undoAction));</span>
+<span class="nc" id="L2265">	}</span>
+
+	public void registerPlugin(MindMapControllerPlugin pPlugin) {
+<span class="nc" id="L2268">		mPlugins.add(pPlugin);</span>
+<span class="nc" id="L2269">	}</span>
+
+	public void deregisterPlugin(MindMapControllerPlugin pPlugin) {
+<span class="nc" id="L2272">		mPlugins.remove(pPlugin);</span>
+<span class="nc" id="L2273">	}</span>
+
+	public Set getPlugins() {
+<span class="nc" id="L2276">		return Collections.unmodifiableSet(mPlugins);</span>
+	}
+
+	/**
+	 */
+	public Transferable getClipboardContents() {
+<span class="nc" id="L2282">		getClipboard();</span>
+<span class="nc" id="L2283">		return clipboard.getContents(this);</span>
+	}
+
+	protected void getClipboard() {
+<span class="nc bnc" id="L2287" title="All 2 branches missed.">		if (clipboard == null) {</span>
+<span class="nc" id="L2288">			Toolkit toolkit = Toolkit.getDefaultToolkit();</span>
+<span class="nc" id="L2289">			selection = toolkit.getSystemSelection();</span>
+<span class="nc" id="L2290">			clipboard = toolkit.getSystemClipboard();</span>
+
+		}
+<span class="nc" id="L2293">	}</span>
+
+	/**
+	 */
+	public void setClipboardContents(Transferable t) {
+<span class="nc" id="L2298">		getClipboard();</span>
+<span class="nc" id="L2299">		clipboard.setContents(t, null);</span>
+<span class="nc bnc" id="L2300" title="All 2 branches missed.">		if (selection != null) {</span>
+<span class="nc" id="L2301">			selection.setContents(t, null);</span>
+		}
+<span class="nc" id="L2303">	}</span>
+
+	public void showThisMap() {
+<span class="nc" id="L2306">		getController().getMapModuleManager().changeToMapModule(getMapModule());</span>
+<span class="nc" id="L2307">	}</span>
+
+	public boolean mapSourceChanged(MindMap pMap) throws Exception {
+		// ask the user, if he wants to reload the map.
+<span class="nc" id="L2311">		MapSourceChangeDialog runnable = new MapSourceChangeDialog();</span>
+<span class="nc" id="L2312">		Tools.invokeAndWait(runnable);</span>
+<span class="nc" id="L2313">		return runnable.getReturnValue();</span>
+	}
+
+	public void setNodeHookFactory(HookFactory pNodeHookFactory) {
+<span class="nc" id="L2317">		nodeHookFactory = pNodeHookFactory;</span>
+<span class="nc" id="L2318">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.modes.mindmapmode.actions.MindMapActions#createModeControllerHook
+	 * (java.lang.String)
+	 */
+	public void createModeControllerHook(String pHookName) {
+<span class="nc" id="L2328">		HookFactory hookFactory = getHookFactory();</span>
+		// two different invocation methods:single or selecteds
+<span class="nc" id="L2330">		ModeControllerHook hook = hookFactory</span>
+<span class="nc" id="L2331">				.createModeControllerHook(pHookName);</span>
+<span class="nc" id="L2332">		hook.setController(this);</span>
+<span class="nc" id="L2333">		invokeHook(hook);</span>
+<span class="nc" id="L2334">	}</span>
+
+	/**
+	 * Delegate method to Controller. Must be called after cut.s
+	 */
+	public void obtainFocusForSelected() {
+<span class="nc" id="L2340">		getController().obtainFocusForSelected();</span>
+
+<span class="nc" id="L2342">	}</span>
+
+	public boolean doTransaction(String pName, ActionPair pPair) {
+<span class="nc" id="L2345">		return actionFactory.doTransaction(pName, pPair);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExtendedAttributeTableModelDecorator.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview.attributeview</a> &gt; <span class="el_source">ExtendedAttributeTableModelDecorator.java</span></div><h1>ExtendedAttributeTableModelDecorator.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 18.06.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.view.mindmapview.attributeview;
+
+import javax.swing.event.ChangeEvent;
+
+import freemind.modes.attributes.Attribute;
+
+/**
+ * @author Dimitri Polivaev 18.06.2005
+ */
+class ExtendedAttributeTableModelDecorator extends
+		AttributeTableModelDecoratorAdapter {
+	int newRow;
+	private static final int AFTER_LAST_ROW = Integer.MAX_VALUE;
+
+	public ExtendedAttributeTableModelDecorator(AttributeView attrView) {
+<span class="nc" id="L39">		super(attrView);</span>
+<span class="nc" id="L40">		newRow = AFTER_LAST_ROW;</span>
+<span class="nc" id="L41">	}</span>
+
+	public int getRowCount() {
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if (newRow == AFTER_LAST_ROW)</span>
+<span class="nc" id="L45">			return nodeAttributeModel.getRowCount();</span>
+<span class="nc" id="L46">		return nodeAttributeModel.getRowCount() + 1;</span>
+	}
+
+	public Object getValueAt(int row, int col) {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		if (row &lt; newRow) {</span>
+<span class="nc" id="L51">			return nodeAttributeModel.getValueAt(row, col);</span>
+		}
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (row == newRow) {</span>
+<span class="nc" id="L54">			return &quot;&quot;;</span>
+		}
+<span class="nc" id="L56">		return nodeAttributeModel.getValueAt(row - 1, col);</span>
+	}
+
+	public void insertRow(int index) {
+<span class="nc" id="L60">		newRow = index;</span>
+<span class="nc" id="L61">		fireTableRowsInserted(index, index);</span>
+<span class="nc" id="L62">	}</span>
+
+	public boolean isCellEditable(int row, int col) {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (row != newRow) {</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			int rowInModel = row &lt; newRow ? row : row - 1;</span>
+<span class="nc" id="L67">			return nodeAttributeModel.isCellEditable(rowInModel, col);</span>
+		}
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		return col == 0;</span>
+	}
+
+	public Object removeRow(int index) {
+<span class="nc" id="L73">		return nodeAttributeModel.removeRow(index);</span>
+	}
+
+	public void setValueAt(Object o, int row, int col) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (row != newRow) {</span>
+<span class="nc bnc" id="L78" title="All 4 branches missed.">			if (col == 1 || o.toString().length() &gt; 0) {</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">				int rowInModel = row &lt; newRow ? row : row - 1;</span>
+<span class="nc" id="L80">				nodeAttributeModel.setValueAt(o, rowInModel, col);</span>
+			}
+<span class="nc" id="L82">			return;</span>
+		} else {
+<span class="nc" id="L84">			newRow = AFTER_LAST_ROW;</span>
+<span class="nc" id="L85">			fireTableRowsDeleted(row, row);</span>
+<span class="nc bnc" id="L86" title="All 6 branches missed.">			if (col == 0 &amp;&amp; o != null &amp;&amp; o.toString().length() &gt; 0) {</span>
+<span class="nc" id="L87">				nodeAttributeModel.insertRow(row, o.toString(), &quot;&quot;);</span>
+			}
+<span class="nc" id="L89">			return;</span>
+		}
+
+	}
+
+	public void stateChanged(ChangeEvent e) {
+<span class="nc" id="L95">		fireTableDataChanged();</span>
+<span class="nc" id="L96">	}</span>
+
+	public void editingCanceled() {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (newRow != AFTER_LAST_ROW) {</span>
+<span class="nc" id="L100">			int row = newRow;</span>
+<span class="nc" id="L101">			newRow = AFTER_LAST_ROW;</span>
+<span class="nc" id="L102">			fireTableRowsDeleted(row, row);</span>
+
+		}
+<span class="nc" id="L105">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.view.mindmapview.attributeview.AttributeTableModelDecoratorAdapter
+	 * #areAttributesVisible()
+	 */
+	public boolean areAttributesVisible() {
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		return getRowCount() != 0;</span>
+	}
+
+	/**
+     */
+	public void moveRowUp(int row) {
+<span class="nc" id="L121">		Attribute attribute = (Attribute) nodeAttributeModel.removeRow(row);</span>
+<span class="nc" id="L122">		nodeAttributeModel.insertRow(row - 1, attribute.getName(),</span>
+<span class="nc" id="L123">				attribute.getValue());</span>
+<span class="nc" id="L124">	}</span>
+
+	/**
+     */
+	public void moveRowDown(int row) {
+<span class="nc" id="L129">		Attribute attribute = (Attribute) nodeAttributeModel.removeRow(row);</span>
+<span class="nc" id="L130">		nodeAttributeModel.insertRow(row + 1, attribute.getName(),</span>
+<span class="nc" id="L131">				attribute.getValue());</span>
+<span class="nc" id="L132">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

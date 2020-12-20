@@ -1,0 +1,526 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MapSharingController.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.jabber.mindmap</a> &gt; <span class="el_source">MapSharingController.java</span></div><h1>MapSharingController.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+*Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+*
+*See COPYING for Details
+*
+*This program is free software; you can redistribute it and/or
+*modify it under the terms of the GNU General Public License
+*as published by the Free Software Foundation; either version 2
+*of the License, or (at your option) any later version.
+*
+*This program is distributed in the hope that it will be useful,
+*but WITHOUT ANY WARRANTY; without even the implied warranty of
+*MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*GNU General Public License for more details.
+*
+*You should have received a copy of the GNU General Public License
+*along with this program; if not, write to the Free Software
+*Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+/*
+ * Created on Mar 10, 2004
+ *
+ * To change the template for this generated file go to
+ * Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+package plugins.collaboration.jabber.mindmap;
+
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import plugins.collaboration.jabber.view.MapSharingWizardView;
+import freemind.controller.actions.generated.instance.RevertXmlAction;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+/**
+ * @author RReppel
+ * 
+ * To change the template for this generated type comment go to
+ * Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+public class MapSharingController {
+
+    //The wizard is implemented as a state machine.
+<span class="nc" id="L45">    private final int STATE_NOT_CONNECTED = 1;</span>
+
+<span class="nc" id="L47">    private final int STATE_CONNECTED = 2;</span>
+
+<span class="nc" id="L49">    private final int STATE_SENT_SHARE_REQUEST_PENDING = 3;</span>
+
+    /** Waiting for a user to accept or decline the sharing of a map. */
+<span class="nc" id="L52">    private final int STATE_RECEIVED_SHARE_REQUEST_PENDING = 4;</span>
+
+<span class="nc" id="L54">    private final int STATE_SHARING_MAP = 5;</span>
+
+    //TODO: Make Jabber server port configurable.
+<span class="nc" id="L57">    private final int JABBER_SERVER_PORT = 5222;</span>
+
+    private int state;
+
+    private MapSharingWizardView jabberConnectionWizardView;
+
+    private MapSharingController mapSharingWizardController;
+
+    private MindMapController controller;
+
+    private JabberListener mapSharingListener;
+
+    private JabberSender sender;
+
+    private String mapSharingRequestingUser;
+
+    private String frameTitle; //The title of the FreeMind window.
+
+    //When sharing, the window is postfixed to indicate state, e.g.
+    // &quot;Connected&quot;.
+    //frameTitle is used to re-set the title to its original value later.
+<span class="nc" id="L78">    private boolean isSendingEnabled = true;</span>
+
+    /**
+     * mapContent is the marshalled map of the others party. If we accept
+     * sharing, this map is displayed.
+     */
+    private String mapContent;
+
+    private String mapFileName;
+
+<span class="nc" id="L88">    public MapSharingController(</span>
+            MapSharingWizardView jabberConnectionWizardView,
+            MindMapController controller) {
+<span class="nc" id="L91">        this.jabberConnectionWizardView = jabberConnectionWizardView;</span>
+<span class="nc" id="L92">        this.controller = controller;</span>
+<span class="nc" id="L93">        this.mapSharingWizardController = this; //Need an instance of this in</span>
+        // the listener classes,
+        //to enable JabberListener to react to accepting/declining map share
+        // invitations.
+<span class="nc" id="L97">        setState(STATE_NOT_CONNECTED);</span>
+<span class="nc" id="L98">        addListeners();</span>
+
+        //TODO: Evil hack. Need to retrieve the title here for real
+        // application.
+        //Also, this can change when a new map is created...
+<span class="nc" id="L103">        frameTitle = &quot;Freemind&quot;;</span>
+
+<span class="nc" id="L105">    }</span>
+
+    private void addListeners() {
+<span class="nc" id="L108">        jabberConnectionWizardView</span>
+<span class="nc" id="L109">                .addCloseButtonMouseListener(new CloseButtonClickListener());</span>
+<span class="nc" id="L110">        jabberConnectionWizardView</span>
+<span class="nc" id="L111">                .addNextButtonMouseListener(new NextButtonClickListener());</span>
+<span class="nc" id="L112">        jabberConnectionWizardView</span>
+<span class="nc" id="L113">                .addBackButtonMouseListener(new BackButtonClickListener());</span>
+<span class="nc" id="L114">        jabberConnectionWizardView</span>
+<span class="nc" id="L115">                .addAcceptButtonMouseListener(new AcceptButtonClickListener());</span>
+<span class="nc" id="L116">        jabberConnectionWizardView</span>
+<span class="nc" id="L117">                .addDeclineButtonMouseListener(new DeclineButtonClickListener());</span>
+
+<span class="nc" id="L119">    }</span>
+
+<span class="nc" id="L121">    private class CloseButtonClickListener implements MouseListener {</span>
+
+        public void mouseClicked(MouseEvent arg0) {
+            //TODO: Need to set state to a previous state. Either connected or
+            // not_connected.
+<span class="nc" id="L126">            jabberConnectionWizardView.hide();</span>
+<span class="nc" id="L127">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseEntered(java.awt.event.MouseEvent)
+         */
+        public void mouseEntered(MouseEvent arg0) {
+<span class="nc" id="L135">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseExited(java.awt.event.MouseEvent)
+         */
+        public void mouseExited(MouseEvent arg0) {
+<span class="nc" id="L143">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
+         */
+        public void mousePressed(MouseEvent arg0) {
+<span class="nc" id="L151">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
+         */
+        public void mouseReleased(MouseEvent arg0) {
+
+<span class="nc" id="L160">        }</span>
+    }
+
+<span class="nc" id="L163">    private class NextButtonClickListener implements MouseListener {</span>
+
+        public void mouseClicked(MouseEvent arg0) {
+            if (state == STATE_CONNECTED) {
+<span class="nc" id="L167">                sender = new JabberSender(mapSharingListener.getSession(),</span>
+                        MapSharingController.this);
+                // register action listener:
+                getController().getActionFactory().registerFilter(sender);
+                if (jabberConnectionWizardView.isShareMapSelected()) {
+                    setState(STATE_SENT_SHARE_REQUEST_PENDING);
+                    jabberConnectionWizardView.showSelectUserDialog();
+                } else {
+                    //Close the wizard, wait until somebody shares a map:
+                    //TODO: Information message needed.
+                    jabberConnectionWizardView.hide();
+                } //endif
+            } else if (state == STATE_NOT_CONNECTED) {
+                //TODO: Error handling - what about failed connections, etc.?
+                // Should display error dialog.
+                mapSharingListener = new JabberListener(controller,
+                        mapSharingWizardController, jabberConnectionWizardView
+                                .getServername(), JABBER_SERVER_PORT,
+                        jabberConnectionWizardView.getUsername(),
+                        jabberConnectionWizardView.getPassword());
+                setState(STATE_CONNECTED);
+                jabberConnectionWizardView.showMapSharingSelectionDialog();
+            } else if (state == STATE_SENT_SHARE_REQUEST_PENDING) {
+                //Ask the selected user if map sharing is acceptable.
+                sender.setShareMapUser(jabberConnectionWizardView
+                        .getMapShareUserName());
+                sender.sendMapSharingRequest(jabberConnectionWizardView
+                        .getUsername()
+                        + &quot;@&quot; + jabberConnectionWizardView.getServername(),
+                        jabberConnectionWizardView.getMapShareUserName());
+                jabberConnectionWizardView.showAwaitMapSharingMessage();
+            }
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseEntered(java.awt.event.MouseEvent)
+         */
+        public void mouseEntered(MouseEvent arg0) {
+<span class="nc" id="L207">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseExited(java.awt.event.MouseEvent)
+         */
+        public void mouseExited(MouseEvent arg0) {
+<span class="nc" id="L215">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
+         */
+        public void mousePressed(MouseEvent arg0) {
+<span class="nc" id="L223">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
+         */
+        public void mouseReleased(MouseEvent arg0) {
+
+<span class="nc" id="L232">        }</span>
+    }
+
+<span class="nc" id="L235">    private class BackButtonClickListener implements MouseListener {</span>
+
+        public void mouseClicked(MouseEvent arg0) {
+<span class="nc bnc" id="L238" title="All 2 branches missed.">            if (state == STATE_CONNECTED) {</span>
+<span class="nc" id="L239">                setState(STATE_NOT_CONNECTED);</span>
+<span class="nc" id="L240">                jabberConnectionWizardView.showConnectToServerDialog();</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">            } else if (state == STATE_CONNECTED) {</span>
+                //TODO: Track previous state here (the user could have been
+                // coming from the '&quot;connect to server' dialog.)
+                //For now, always return to the start state.
+<span class="nc" id="L245">                setState(STATE_SENT_SHARE_REQUEST_PENDING);</span>
+<span class="nc" id="L246">                jabberConnectionWizardView.showMapSharingSelectionDialog();</span>
+            }
+<span class="nc" id="L248">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseEntered(java.awt.event.MouseEvent)
+         */
+        public void mouseEntered(MouseEvent arg0) {
+<span class="nc" id="L256">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseExited(java.awt.event.MouseEvent)
+         */
+        public void mouseExited(MouseEvent arg0) {
+<span class="nc" id="L264">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
+         */
+        public void mousePressed(MouseEvent arg0) {
+<span class="nc" id="L272">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
+         */
+        public void mouseReleased(MouseEvent arg0) {
+
+<span class="nc" id="L281">        }</span>
+    }
+
+<span class="nc" id="L284">    private class AcceptButtonClickListener implements MouseListener {</span>
+
+        public void mouseClicked(MouseEvent arg0) {
+            if (state == STATE_RECEIVED_SHARE_REQUEST_PENDING) {
+                //Indicate that the the requested map sharing has been
+                // accepted:
+                sender.sendMapSharingInvitationResponse(
+                        jabberConnectionWizardView.getUsername() + &quot;@&quot;
+                                + jabberConnectionWizardView.getServername(),
+                        mapSharingRequestingUser, true);
+                setState(STATE_SHARING_MAP);
+                sender.setShareMapUser(mapSharingRequestingUser);
+                sender.isMapShared(true);
+                jabberConnectionWizardView.hide();
+                RevertXmlAction action = controller.revertAction
+                        .createRevertXmlAction(mapContent, null,
+                                mapFileName);
+                // no undo possible.
+                ActionPair pair = new ActionPair(action, null);
+<span class="nc" id="L303">                controller.getActionFactory().executeAction(pair);</span>
+            }
+        }
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseEntered(java.awt.event.MouseEvent)
+         */
+        public void mouseEntered(MouseEvent arg0) {
+<span class="nc" id="L313">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseExited(java.awt.event.MouseEvent)
+         */
+        public void mouseExited(MouseEvent arg0) {
+<span class="nc" id="L321">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
+         */
+        public void mousePressed(MouseEvent arg0) {
+<span class="nc" id="L329">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
+         */
+        public void mouseReleased(MouseEvent arg0) {
+
+<span class="nc" id="L338">        }</span>
+    }
+
+<span class="nc" id="L341">    private class DeclineButtonClickListener implements MouseListener {</span>
+
+        public void mouseClicked(MouseEvent arg0) {
+<span class="nc bnc" id="L344" title="All 2 branches missed.">            if (state == STATE_RECEIVED_SHARE_REQUEST_PENDING) {</span>
+<span class="nc" id="L345">                setState(STATE_CONNECTED);</span>
+<span class="nc" id="L346">                sender.sendMapSharingInvitationResponse(</span>
+<span class="nc" id="L347">                        jabberConnectionWizardView.getUsername() + &quot;@&quot;</span>
+<span class="nc" id="L348">                                + jabberConnectionWizardView.getServername(),</span>
+<span class="nc" id="L349">                        mapSharingRequestingUser, false);</span>
+<span class="nc" id="L350">                sender.isMapShared(false);</span>
+<span class="nc" id="L351">                jabberConnectionWizardView.hide();</span>
+            }
+<span class="nc" id="L353">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseEntered(java.awt.event.MouseEvent)
+         */
+        public void mouseEntered(MouseEvent arg0) {
+<span class="nc" id="L361">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseExited(java.awt.event.MouseEvent)
+         */
+        public void mouseExited(MouseEvent arg0) {
+<span class="nc" id="L369">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mousePressed(java.awt.event.MouseEvent)
+         */
+        public void mousePressed(MouseEvent arg0) {
+<span class="nc" id="L377">        }</span>
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.awt.event.MouseListener#mouseReleased(java.awt.event.MouseEvent)
+         */
+        public void mouseReleased(MouseEvent arg0) {
+
+<span class="nc" id="L386">        }</span>
+    }
+
+    /**
+     * Called by the JabberListener to indicate that a user has accepted or
+     * declined an invitation to share a map.
+     * 
+     * @param isAccepted
+     */
+    public void setMapShareRequestAccepted(String userName, boolean isAccepted) {
+<span class="nc bnc" id="L396" title="All 2 branches missed.">        if (state == STATE_SENT_SHARE_REQUEST_PENDING) {</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">            if (isAccepted) {</span>
+<span class="nc" id="L398">                setState(STATE_SHARING_MAP);</span>
+<span class="nc" id="L399">                sender.setShareMapUser(userName);</span>
+<span class="nc" id="L400">                sender.isMapShared(true);</span>
+                //TODO: Send current mind map to share user.
+                /*
+                 * MindMapXMLElement mapElement = new
+                 * MindMapXMLElement(controller.getFrame()); try { StringWriter
+                 * sw = new StringWriter();
+                 * 
+                 * sw.write(&quot; &lt;map version=\&quot;&quot; +
+                 * controller.getFrame().getFreemindVersion()+&quot;\&quot;&gt;\n&quot;);
+                 * MindMapMapModel mindMapNodeModel = (MindMapMapModel)
+                 * controller.getView().getModel();
+                 * mindMapNodeModel.saveInternal(sw, true); // save(sw,
+                 * (MindMapMapModel) controller.getView().getModel().getRoot());
+                 * sw.write(&quot; &lt;/map&gt;\n&quot;);
+                 * 
+                 * sender.sendMap(sw.getBuffer().toString()); } catch(Exception
+                 * e) { freemind.main.Resources.getInstance().logException(e); }
+                 */
+<span class="nc" id="L418">                jabberConnectionWizardView.showSharingAcceptedMessage(userName);</span>
+<span class="nc" id="L419">            } else {</span>
+<span class="nc" id="L420">                setState(STATE_CONNECTED);</span>
+<span class="nc" id="L421">                sender.isMapShared(false);</span>
+<span class="nc" id="L422">                jabberConnectionWizardView.showSharingDeclinedMessage(userName);</span>
+            }
+        } //endif
+<span class="nc" id="L425">    }</span>
+
+    public void setMapSharingRequested(String username, String mapContent,
+            String mapFileName) {
+<span class="nc" id="L429">        setState(STATE_RECEIVED_SHARE_REQUEST_PENDING);</span>
+<span class="nc" id="L430">        mapSharingRequestingUser = username;</span>
+<span class="nc" id="L431">        this.mapContent = mapContent;</span>
+<span class="nc" id="L432">        this.mapFileName = mapFileName;</span>
+<span class="nc" id="L433">        jabberConnectionWizardView</span>
+<span class="nc" id="L434">                .showMapShareAcceptDeclineMessage(mapSharingRequestingUser);</span>
+<span class="nc" id="L435">    }</span>
+
+    public void showMapSharingDialogue() {
+<span class="nc bnc" id="L438" title="All 4 branches missed.">        if (state == STATE_SHARING_MAP || state == STATE_CONNECTED) {</span>
+            //TODO: Ask &quot;Are you sure you want to stop sharing?&quot;
+<span class="nc" id="L440">            sender.sendMapSharingStopRequest();</span>
+<span class="nc" id="L441">            stopSharing();</span>
+<span class="nc" id="L442">        } else {</span>
+<span class="nc" id="L443">            jabberConnectionWizardView.showConnectToServerDialog();</span>
+        }
+<span class="nc" id="L445">    }</span>
+
+    /**
+     * Stops sharing the current map and disconnects from server.
+     *  
+     */
+    private void stopSharing() {
+<span class="nc" id="L452">        mapSharingListener.getSession().disconnect();</span>
+        sender.mapShared = false;
+        setState(STATE_NOT_CONNECTED);
+
+    }
+
+    /**
+     * Called by the JabberListener when the other user no longer shares his/her
+     * map.
+     * 
+     * @param username
+     */
+    public void setSharingStopped(String username) {
+<span class="nc" id="L465">        stopSharing();</span>
+<span class="nc" id="L466">        jabberConnectionWizardView.showSharingStoppedMessage(username);</span>
+<span class="nc" id="L467">    }</span>
+
+    /**
+     * Sets the new state of the map sharing controller and updates the Freemind
+     * window title to indicate the state.
+     * 
+     * @param newState
+     */
+    private void setState(int newState) {
+<span class="nc" id="L476">        state = newState;</span>
+
+        //TODO: Hack alert. Window title setting belongs into a view...
+        //Set the window title:
+<span class="nc bnc" id="L480" title="All 6 branches missed.">        switch (newState) {</span>
+        case STATE_CONNECTED:
+            //TODO: Update resource files.
+<span class="nc" id="L483">            controller.getFrame().setTitle(frameTitle + &quot; - &quot; + &quot;Connected&quot;);</span>
+            //				controller.getFrame().getFreeMindMenuBar().getMenu(0).getItem(7).setText(&quot;Disconnect&quot;);
+<span class="nc" id="L485">            break;</span>
+        case STATE_NOT_CONNECTED:
+<span class="nc" id="L487">            controller.getFrame().setTitle(frameTitle);</span>
+            //TODO: Update resource files.
+            //Change the &quot;File-&gt;Share&quot; menu item to be &quot;File-&gt;Share&quot;
+            //				if(controller.getFrame().getFreeMindMenuBar() != null)
+            //					controller.getFrame().getFreeMindMenuBar().getMenu(0).getItem(7).setText(&quot;Share&quot;);
+
+<span class="nc" id="L493">            break;</span>
+        case STATE_SENT_SHARE_REQUEST_PENDING:
+<span class="nc" id="L495">            break;</span>
+        case STATE_RECEIVED_SHARE_REQUEST_PENDING:
+<span class="nc" id="L497">            break;</span>
+        case STATE_SHARING_MAP:
+            //TODO: Update resource files.
+<span class="nc" id="L500">            controller.getFrame().setTitle(frameTitle + &quot; - &quot; + &quot;Sharing Map&quot;);</span>
+            //Change the &quot;File-&gt;Share&quot; menu item to be &quot;File-&gt;Stop Sharing&quot;
+            //				if(controller.getFrame().getFreeMindMenuBar() != null)
+            //					controller.getFrame().getFreeMindMenuBar().getMenu(0).getItem(7).setText(&quot;Stop
+            // Sharing&quot;);
+            break;
+        default:
+
+        } //endswitch
+<span class="nc" id="L509">    }</span>
+
+    public MindMapController getController() {
+<span class="nc" id="L512">        return controller;</span>
+    }
+
+    /**
+     * @param b
+     */
+    public void setSendingEnabled(boolean b) {
+<span class="nc" id="L519">        this.isSendingEnabled = b;</span>
+<span class="nc" id="L520">    }</span>
+
+    public boolean isSendingEnabled() {
+<span class="nc" id="L523">        return isSendingEnabled;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

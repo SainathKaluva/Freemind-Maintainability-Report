@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>CommunicationBase.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.socket</a> &gt; <span class="el_source">CommunicationBase.java</span></div><h1>CommunicationBase.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2012 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package plugins.collaboration.socket;
+
+import java.awt.EventQueue;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
+
+import freemind.controller.actions.generated.instance.CollaborationActionBase;
+import freemind.controller.actions.generated.instance.CollaborationTransaction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Tools;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+/**
+ * @author foltin
+ * @date 06.09.2012
+ */
+public abstract class CommunicationBase extends TerminateableThread {
+
+	/**
+	 * 
+	 */
+	private static final String STRING_CONTINUATION_SUFFIX = &quot;&lt;cont&gt;&quot;;
+	protected Socket mSocket;
+
+	/**
+	 * @param pName
+	 * @param pClient
+	 * @param pController
+	 * @param pOut
+	 * @param pIn
+	 */
+	public CommunicationBase(String pName, Socket pClient,
+			MindMapController pController, DataOutputStream pOut,
+			DataInputStream pIn) {
+<span class="nc" id="L59">		super(pName);</span>
+<span class="nc" id="L60">		mSocket = pClient;</span>
+<span class="nc" id="L61">		mController = pController;</span>
+<span class="nc" id="L62">		out = pOut;</span>
+<span class="nc" id="L63">		in = pIn;</span>
+<span class="nc" id="L64">	}</span>
+
+	protected MindMapController mController;
+	protected DataOutputStream out;
+	protected DataInputStream in;
+	protected static final int ROUNDTRIP_ROUNDS = 200;
+	protected static final int ROUNDTRIP_TIMEOUT = 20000;
+	protected static final int STATE_IDLE = 0;
+	protected static final int STATE_WAIT_FOR_HELLO = 1;
+	protected static final int STATE_WAIT_FOR_COMMAND = 2;
+	protected static final int STATE_WAIT_FOR_WHO_ARE_YOU = 3;
+	protected static final int STATE_WAIT_FOR_WELCOME = 4;
+	protected static final int STATE_WAIT_FOR_LOCK = 5;
+	protected static final int STATE_LOCK_RECEIVED = 6;
+	private static final int MAX_STRING_LENGTH_TO_SEND = 65500;
+
+<span class="nc" id="L80">	private int mCurrentState = STATE_IDLE;</span>
+<span class="nc" id="L81">	private String mCurrentStateMutex = &quot;lockme&quot;;</span>
+<span class="nc" id="L82">	private StringBuffer mCurrentCommand = new StringBuffer();</span>
+
+	/**
+	 * @param pMessage
+	 * @return true, if successful.
+	 */
+	public synchronized boolean send(CollaborationActionBase pCommand) {
+		try {
+<span class="nc" id="L90">			printCommand(&quot;Send&quot;, pCommand);</span>
+<span class="nc" id="L91">			final String marshalledText = Tools.marshall(pCommand);</span>
+<span class="nc" id="L92">			logger.fine(getName() + &quot; :Sending &quot; + marshalledText);</span>
+<span class="nc" id="L93">			String text = Tools.compress(marshalledText);</span>
+			// split into pieces, as the writeUTF method is only able to send
+			// 65535 bytes...
+<span class="nc" id="L96">			int index = 0;</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			while (index + MAX_STRING_LENGTH_TO_SEND &lt; text.length()) {</span>
+<span class="nc" id="L98">				out.writeUTF(text.substring(index, index</span>
+<span class="nc" id="L99">						+ MAX_STRING_LENGTH_TO_SEND)</span>
+<span class="nc" id="L100">						+ STRING_CONTINUATION_SUFFIX);</span>
+<span class="nc" id="L101">				index += MAX_STRING_LENGTH_TO_SEND;</span>
+			}
+<span class="nc" id="L103">			out.writeUTF(text.substring(index));</span>
+<span class="nc" id="L104">			return true;</span>
+<span class="nc" id="L105">		} catch (IOException e) {</span>
+<span class="nc" id="L106">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L108">		return false;</span>
+	}
+
+	public boolean processAction() throws Exception {
+<span class="nc" id="L112">		boolean didSomething = false;</span>
+		try {
+			// Non blocking!!
+<span class="nc" id="L115">			String text = in.readUTF();</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (text.endsWith(STRING_CONTINUATION_SUFFIX)) {</span>
+<span class="nc" id="L117">				mCurrentCommand.append(text.substring(0, text.length()</span>
+<span class="nc" id="L118">						- STRING_CONTINUATION_SUFFIX.length()));</span>
+<span class="nc" id="L119">				didSomething = true;</span>
+<span class="nc" id="L120">			} else {</span>
+<span class="nc" id="L121">				mCurrentCommand.append(text);</span>
+<span class="nc" id="L122">				final String textValue = mCurrentCommand.toString();</span>
+<span class="nc" id="L123">				mCurrentCommand.setLength(0);</span>
+<span class="nc" id="L124">				final String decompressedText = Tools.decompress(textValue);</span>
+<span class="nc" id="L125">				logger.fine(getName() + &quot; :Received &quot; + decompressedText);</span>
+<span class="nc" id="L126">				final CollaborationActionBase command = (CollaborationActionBase) Tools</span>
+<span class="nc" id="L127">						.unMarshall(decompressedText);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				if (command != null) {</span>
+<span class="nc" id="L129">					printCommand(&quot;Receive&quot;, command);</span>
+<span class="nc" id="L130">					Runnable runnable = new Runnable() {</span>
+						public void run() {
+							try {
+<span class="nc" id="L133">								processCommand(command);</span>
+<span class="nc" id="L134">							} catch (Exception e) {</span>
+<span class="nc" id="L135">								freemind.main.Resources.getInstance().logException(e);</span>
+							}
+<span class="nc" id="L137">						}</span>
+					};
+<span class="nc bnc" id="L139" title="All 2 branches missed.">					if (command instanceof CollaborationTransaction) {</span>
+						// inserted in event queue here, to avoid
+						// concurrency issues.
+<span class="nc" id="L142">						EventQueue.invokeLater(runnable);						</span>
+<span class="nc" id="L143">					} else  {</span>
+						// other commands than transactions are processed directly.
+<span class="nc" id="L145">						runnable.run();</span>
+					}
+<span class="nc" id="L147">					didSomething = true;</span>
+				}
+			}
+<span class="nc" id="L150">		} catch (SocketTimeoutException e) {</span>
+		}
+
+<span class="nc" id="L153">		mCounter--;</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (mCounter &lt;= 0) {</span>
+<span class="nc" id="L155">			mCounter = 10;</span>
+<span class="nc" id="L156">			mController.getController().setTitle();</span>
+		}
+<span class="nc" id="L158">		return didSomething;</span>
+	}
+
+	/**
+	 * @param pDirection
+	 * @param pCommand
+	 */
+	private void printCommand(String pDirection,
+			CollaborationActionBase pCommand) {
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (pCommand instanceof CollaborationTransaction) {</span>
+<span class="nc" id="L168">			CollaborationTransaction trans = (CollaborationTransaction) pCommand;</span>
+<span class="nc" id="L169">			XmlAction doAction = mController.unMarshall(trans.getDoAction());</span>
+<span class="nc" id="L170">			String out = pDirection + &quot;: &quot; + Tools.printXmlAction(doAction)</span>
+<span class="nc" id="L171">					+ &quot; (Id: &quot; + trans.getId() + &quot;)&quot;;</span>
+<span class="nc" id="L172">			logger.info(out);</span>
+		}
+<span class="nc" id="L174">	}</span>
+
+<span class="nc" id="L176">	int mCounter = 1;</span>
+
+	public abstract void processCommand(CollaborationActionBase command)
+			throws Exception;
+
+	protected int getCurrentState() {
+<span class="nc" id="L182">		synchronized (mCurrentStateMutex) {</span>
+<span class="nc" id="L183">			return mCurrentState;</span>
+		}
+	}
+
+	protected void setCurrentState(int pCurrentState) {
+<span class="nc" id="L188">		synchronized (mCurrentStateMutex) {</span>
+<span class="nc" id="L189">			mCurrentState = pCurrentState;</span>
+		}
+<span class="nc" id="L191">	}</span>
+
+	/**
+	 * @param pDoAction
+	 * @param pUndoAction
+	 * @param pLockId
+	 */
+	public void sendCommand(String pDoAction, String pUndoAction, String pLockId) {
+<span class="nc" id="L199">		CollaborationTransaction trans = new CollaborationTransaction();</span>
+<span class="nc" id="L200">		trans.setDoAction(pDoAction);</span>
+<span class="nc" id="L201">		trans.setUndoAction(pUndoAction);</span>
+<span class="nc" id="L202">		trans.setId(pLockId);</span>
+<span class="nc" id="L203">		send(trans);</span>
+<span class="nc" id="L204">	}</span>
+
+	public void close() throws IOException {
+<span class="nc" id="L207">		mSocket.close();</span>
+<span class="nc" id="L208">	}</span>
+
+	public ActionPair getActionPair(CollaborationTransaction trans) {
+<span class="nc" id="L211">		return new ActionPair(mController.unMarshall(trans.getDoAction()),</span>
+<span class="nc" id="L212">				mController.unMarshall(trans.getUndoAction()));</span>
+	}
+
+	public String getIpToSocket() {
+<span class="nc" id="L216">		return mSocket.getLocalAddress().getHostAddress();</span>
+	}
+
+	protected void printWrongState(CollaborationActionBase pCommand) {
+<span class="nc" id="L220">		logger.warning(&quot;Wrong state for &quot; + pCommand.getClass() + &quot;: &quot;</span>
+<span class="nc" id="L221">				+ printState(getCurrentState()));</span>
+<span class="nc" id="L222">	}</span>
+
+	/**
+	 * @param pCurrentState
+	 * @return
+	 */
+	protected String printState(int pCurrentState) {
+<span class="nc bnc" id="L229" title="All 8 branches missed.">		switch (pCurrentState) {</span>
+		case STATE_IDLE:
+<span class="nc" id="L231">			return &quot;STATE_IDLE&quot;;</span>
+		case STATE_WAIT_FOR_HELLO:
+<span class="nc" id="L233">			return &quot;STATE_WAIT_FOR_HELLO&quot;;</span>
+		case STATE_WAIT_FOR_COMMAND:
+<span class="nc" id="L235">			return &quot;STATE_WAIT_FOR_COMMAND&quot;;</span>
+		case STATE_WAIT_FOR_WHO_ARE_YOU:
+<span class="nc" id="L237">			return &quot;STATE_WAIT_FOR_WHO_ARE_YOU&quot;;</span>
+		case STATE_WAIT_FOR_WELCOME:
+<span class="nc" id="L239">			return &quot;STATE_WAIT_FOR_WELCOME&quot;;</span>
+		case STATE_WAIT_FOR_LOCK:
+<span class="nc" id="L241">			return &quot;STATE_WAIT_FOR_LOCK&quot;;</span>
+		case STATE_LOCK_RECEIVED:
+<span class="nc" id="L243">			return &quot;STATE_LOCK_RECEIVED&quot;;</span>
+		}
+<span class="nc" id="L245">		return &quot;UNKNOWN: &quot; + pCurrentState;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

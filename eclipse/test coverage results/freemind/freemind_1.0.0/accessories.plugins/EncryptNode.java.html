@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>EncryptNode.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">EncryptNode.java</span></div><h1>EncryptNode.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+/*
+ * Created on 14.12.2004
+ *
+ */
+package accessories.plugins;
+
+import javax.swing.Action;
+import javax.swing.JFrame;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+
+import freemind.controller.MenuItemEnabledListener;
+import freemind.extensions.HookRegistration;
+import freemind.modes.MapAdapter;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.common.dialogs.EnterPasswordDialog;
+import freemind.modes.mindmapmode.EncryptedMindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapController.NewNodeCreator;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.actions.NodeHookAction;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+import freemind.view.mindmapview.MapView;
+
+/**
+ * @author foltin
+ * 
+ */
+public class EncryptNode extends MindMapNodeHookAdapter {
+	/**
+	 * Enables the encrypt/decrypt menu item only if the map/node is encrypted.
+	 * 
+	 * @author foltin
+	 * 
+	 */
+	public static class Registration implements HookRegistration,
+			MenuItemEnabledListener {
+
+		private final ModeController controller;
+		private final MindMap mMap;
+		private final java.util.logging.Logger logger;
+<span class="nc" id="L64">		private boolean enabled = false;</span>
+
+<span class="nc" id="L66">		public Registration(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L67">			this.controller = controller;</span>
+<span class="nc" id="L68">			mMap = map;</span>
+<span class="nc" id="L69">			logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L70">		}</span>
+
+		public void register() {
+<span class="nc" id="L73">			enabled = true;</span>
+<span class="nc" id="L74">		}</span>
+
+		public void deRegister() {
+<span class="nc" id="L77">			enabled = false;</span>
+<span class="nc" id="L78">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * freemind.controller.MenuItemEnabledListener#isEnabled(javax.swing
+		 * .JMenuItem, javax.swing.Action)
+		 */
+		public boolean isEnabled(JMenuItem item, Action action) {
+<span class="nc" id="L88">			String hookName = ((NodeHookAction) action).getHookName();</span>
+			// the following function does not work without a running valid
+			// controller, so we comment it out.
+			// if(hookName.equals(&quot;accessories/plugins/NewEncryptedMap.properties&quot;))
+			// {
+			// return true;
+			// }
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if (!enabled)</span>
+<span class="nc" id="L96">				return false;</span>
+<span class="nc" id="L97">			boolean isEncryptedNode = false;</span>
+<span class="nc" id="L98">			boolean isOpened = false;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			if (controller.getSelected() != null</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">					&amp;&amp; controller.getSelected() instanceof EncryptedMindMapNode) {</span>
+<span class="nc" id="L101">				isEncryptedNode = true;</span>
+<span class="nc" id="L102">				EncryptedMindMapNode enode = (EncryptedMindMapNode) controller</span>
+<span class="nc" id="L103">						.getSelected();</span>
+<span class="nc" id="L104">				isOpened = enode.isAccessible();</span>
+			}
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (hookName.equals(&quot;accessories/plugins/EnterPassword.properties&quot;)) {</span>
+<span class="nc" id="L107">				return isEncryptedNode;</span>
+			} else {
+				/*
+				 * you can insert an encrypted node, if the current selected
+				 * node is not encrypted, or if it is opened.
+				 */
+<span class="nc bnc" id="L113" title="All 4 branches missed.">				return (!isEncryptedNode || isOpened);</span>
+			}
+		}
+	}
+
+	/**
+     *
+     */
+	public EncryptNode() {
+<span class="nc" id="L122">		super();</span>
+<span class="nc" id="L123">	}</span>
+
+	public void invoke(MindMapNode node) {
+<span class="nc" id="L126">		super.invoke(node);</span>
+<span class="nc" id="L127">		String actionType = getResourceString(&quot;action&quot;);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (actionType.equals(&quot;encrypt&quot;)) {</span>
+<span class="nc" id="L129">			encrypt(node);</span>
+<span class="nc" id="L130">			getController().nodeRefresh(node);</span>
+<span class="nc" id="L131">			return;</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		} else if (actionType.equals(&quot;toggleCryptState&quot;)) {</span>
+<span class="nc" id="L133">			toggleCryptState(node);</span>
+<span class="nc" id="L134">			getController().nodeRefresh(node);</span>
+<span class="nc" id="L135">			return;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		} else if (actionType.equals(&quot;encrypted_map&quot;)) {</span>
+			// new map
+<span class="nc" id="L138">			newEncryptedMap();</span>
+<span class="nc" id="L139">			return;</span>
+		} else {
+<span class="nc" id="L141">			throw new IllegalArgumentException(&quot;Unknown action type:&quot;</span>
+<span class="nc" id="L142">					+ actionType);</span>
+		}
+	}
+
+	/**
+     *
+     */
+	private void newEncryptedMap() {
+<span class="nc" id="L150">		final StringBuffer password = getUsersPassword();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (password == null) {</span>
+<span class="nc" id="L152">			return;</span>
+		}
+<span class="nc" id="L154">		ModeController newModeController = getMindMapController().getMode()</span>
+<span class="nc" id="L155">				.createModeController();</span>
+<span class="nc" id="L156">		EncryptedMindMapNode encryptedMindMapNode = new EncryptedMindMapNode(</span>
+<span class="nc" id="L157">				getMindMapController().getText(</span>
+<span class="nc" id="L158">						&quot;accessories/plugins/EncryptNode.properties_select_me&quot;),</span>
+<span class="nc" id="L159">				getMindMapController().getFrame(), null);</span>
+<span class="nc" id="L160">		encryptedMindMapNode.setPassword(password);</span>
+<span class="nc" id="L161">		MapAdapter newModel = new MindMapMapModel(encryptedMindMapNode,</span>
+<span class="nc" id="L162">				getMindMapController().getFrame(), newModeController);</span>
+<span class="nc" id="L163">		MindMapController mindmapcontroller = getMindMapController();</span>
+<span class="nc" id="L164">		encryptedMindMapNode.setMap(newModel);</span>
+<span class="nc" id="L165">		mindmapcontroller.newMap(newModel);</span>
+<span class="nc" id="L166">	}</span>
+
+	/**
+     */
+	private void encrypt(MindMapNode node) {
+<span class="nc" id="L171">		final StringBuffer password = getUsersPassword();</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		if (password == null) {</span>
+<span class="nc" id="L173">			return;</span>
+		}
+<span class="nc" id="L175">		MindMapController mindmapcontroller = (MindMapController) getMindMapController();</span>
+		// FIXME: not multithreading safe
+<span class="nc" id="L177">		mindmapcontroller.setNewNodeCreator(new NewNodeCreator() {</span>
+
+			public MindMapNode createNode(Object userObject, MindMap map) {
+<span class="nc" id="L180">				EncryptedMindMapNode encryptedMindMapNode = new EncryptedMindMapNode(</span>
+<span class="nc" id="L181">						userObject, getMindMapController().getFrame(), map);</span>
+<span class="nc" id="L182">				encryptedMindMapNode.setPassword(password);</span>
+<span class="nc" id="L183">				return encryptedMindMapNode;</span>
+			}
+		});
+		try {
+<span class="nc" id="L187">			MindMapNode newNode = getMindMapController().addNewNode(node, 0,</span>
+<span class="nc" id="L188">					node.isLeft());</span>
+<span class="nc" id="L189">		} catch (Exception e) {</span>
+		}
+		// normal value:
+<span class="nc" id="L192">		mindmapcontroller.setNewNodeCreator(null);</span>
+<span class="nc" id="L193">	}</span>
+
+	/**
+     */
+	private StringBuffer getUsersPassword() {
+		// get password:
+<span class="nc" id="L199">		final EnterPasswordDialog pwdDialog = new EnterPasswordDialog(</span>
+<span class="nc" id="L200">				(JFrame) getMindMapController().getFrame(),</span>
+<span class="nc" id="L201">				getMindMapController(), true);</span>
+<span class="nc" id="L202">		pwdDialog.setModal(true);</span>
+<span class="nc" id="L203">		pwdDialog.show();</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (pwdDialog.getResult() == EnterPasswordDialog.CANCEL) {</span>
+<span class="nc" id="L205">			return null;</span>
+		}
+<span class="nc" id="L207">		final StringBuffer password = pwdDialog.getPassword();</span>
+<span class="nc" id="L208">		return password;</span>
+	}
+
+	/**
+     */
+	private void toggleCryptState(MindMapNode node) {
+<span class="nc" id="L214">		final MindMapController mindMapController = getMindMapController();</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">		if (node instanceof EncryptedMindMapNode) {</span>
+<span class="nc" id="L216">			EncryptedMindMapNode encNode = (EncryptedMindMapNode) node;</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (encNode.isAccessible()) {</span>
+				// to remove all children views:
+<span class="nc" id="L219">				encNode.encrypt();</span>
+<span class="nc" id="L220">				encNode.setShuttingDown(true);</span>
+<span class="nc" id="L221">			} else {</span>
+<span class="nc" id="L222">				doPasswordCheckAndDecryptNode(encNode);</span>
+			}
+<span class="nc" id="L224">			mindMapController.nodeStructureChanged(encNode);</span>
+<span class="nc" id="L225">			final MapView mapView = mindMapController.getView();</span>
+<span class="nc" id="L226">			mapView.selectAsTheOnlyOneSelected(mapView.getNodeView(encNode));</span>
+<span class="nc" id="L227">			encNode.setShuttingDown(false);</span>
+<span class="nc" id="L228">		} else {</span>
+			// box:
+			JOptionPane
+<span class="nc" id="L231">					.showMessageDialog(</span>
+<span class="nc" id="L232">							mindMapController.getFrame().getContentPane(),</span>
+<span class="nc" id="L233">							mindMapController</span>
+<span class="nc" id="L234">									.getText(&quot;accessories/plugins/EncryptNode.properties_insert_encrypted_node_first&quot;),</span>
+<span class="nc" id="L235">							&quot;Freemind&quot;, JOptionPane.INFORMATION_MESSAGE);</span>
+		}
+<span class="nc" id="L237">	}</span>
+
+	/**
+     */
+	private void doPasswordCheckAndDecryptNode(EncryptedMindMapNode encNode) {
+		while (true) {
+			// get password:
+<span class="nc" id="L244">			final EnterPasswordDialog pwdDialog = new EnterPasswordDialog(</span>
+<span class="nc" id="L245">					(JFrame) getMindMapController().getFrame(),</span>
+<span class="nc" id="L246">					getMindMapController(), false);</span>
+<span class="nc" id="L247">			pwdDialog.setModal(true);</span>
+<span class="nc" id="L248">			pwdDialog.setVisible(true);</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (pwdDialog.getResult() == EnterPasswordDialog.CANCEL) {</span>
+<span class="nc" id="L250">				return;</span>
+			}
+<span class="nc bnc" id="L252" title="All 2 branches missed.">			if (!encNode.decrypt(pwdDialog.getPassword())) {</span>
+				// box:
+				JOptionPane
+<span class="nc" id="L255">						.showMessageDialog(</span>
+<span class="nc" id="L256">								getMindMapController().getFrame()</span>
+<span class="nc" id="L257">										.getContentPane(),</span>
+<span class="nc" id="L258">								getMindMapController()</span>
+<span class="nc" id="L259">										.getText(</span>
+<span class="nc" id="L260">												&quot;accessories/plugins/EncryptNode.properties_wrong_password&quot;),</span>
+<span class="nc" id="L261">								&quot;Freemind&quot;, JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L262">			} else {</span>
+<span class="nc" id="L263">				return; // correct password.</span>
+			}
+		}
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

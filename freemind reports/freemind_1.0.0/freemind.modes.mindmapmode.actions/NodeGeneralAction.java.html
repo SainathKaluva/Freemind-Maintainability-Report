@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeGeneralAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">NodeGeneralAction.java</span></div><h1>NodeGeneralAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 05.05.2004
+ *
+ * To change the template for this generated file go to
+ * Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.event.ActionEvent;
+import java.util.ListIterator;
+import java.util.logging.Logger;
+
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+
+import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+import freemind.modes.mindmapmode.actions.xml.AbstractXmlAction;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+public class NodeGeneralAction extends AbstractXmlAction {
+	protected final MindMapController modeController;
+
+	private freemind.modes.mindmapmode.actions.NodeActorXml actor;
+
+	SingleNodeOperation singleNodeOperation;
+
+	protected static Logger logger;
+
+	/**
+	 * null if you cannot provide a title that is present in the resources. Use
+	 * the setName method to set your not translateble title after that. give a
+	 * resource name for the icon.
+	 */
+	protected NodeGeneralAction(MindMapController modeController,
+			final String textID, String iconPath) {
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		super(null, iconPath != null ? new ImageIcon(</span>
+<span class="nc" id="L63">				modeController.getResource(iconPath)) : null, modeController);</span>
+<span class="nc" id="L64">		this.modeController = modeController;</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (textID != null) {</span>
+<span class="nc" id="L66">			setName(modeController.getText(textID));</span>
+		}
+
+<span class="nc" id="L69">		this.singleNodeOperation = null;</span>
+<span class="nc" id="L70">		this.actor = null;</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L72">			logger = modeController.getFrame().getLogger(</span>
+<span class="nc" id="L73">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L75">	}</span>
+
+	protected void setName(String name) {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (name != null) {</span>
+<span class="nc" id="L79">			putValue(Action.NAME, name);</span>
+<span class="nc" id="L80">			putValue(Action.SHORT_DESCRIPTION, Tools.removeMnemonic(name));</span>
+		}
+
+<span class="nc" id="L83">	}</span>
+
+	public NodeGeneralAction(MindMapController modeController, String textID,
+			String iconPath, SingleNodeOperation singleNodeOperation) {
+<span class="nc" id="L87">		this(modeController, textID, iconPath);</span>
+<span class="nc" id="L88">		this.singleNodeOperation = singleNodeOperation;</span>
+<span class="nc" id="L89">	}</span>
+
+	public NodeGeneralAction(MindMapController modeController, String textID,
+			String iconPath,
+			freemind.modes.mindmapmode.actions.NodeActorXml actor) {
+<span class="nc" id="L94">		this(modeController, textID, iconPath);</span>
+<span class="nc" id="L95">		addActor(actor);</span>
+<span class="nc" id="L96">	}</span>
+
+	public void addActor(NodeActorXml actor) {
+<span class="nc" id="L99">		this.actor = actor;</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (actor != null) {</span>
+<span class="nc" id="L101">			super.addActor(actor);</span>
+		}
+<span class="nc" id="L103">	}</span>
+
+	/**
+	 * The singleNodeOperation to set.
+	 */
+	public void setSingleNodeOperation(SingleNodeOperation singleNodeOperation) {
+<span class="nc" id="L109">		this.singleNodeOperation = singleNodeOperation;</span>
+<span class="nc" id="L110">	}</span>
+
+	public void xmlActionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (singleNodeOperation != null) {</span>
+<span class="nc" id="L114">			for (ListIterator it = modeController.getSelecteds().listIterator(); it</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L116">				MindMapNodeModel selected = (MindMapNodeModel) it.next();</span>
+<span class="nc" id="L117">				singleNodeOperation.apply(</span>
+<span class="nc" id="L118">						(MindMapMapModel) this.modeController.getMap(),</span>
+<span class="nc" id="L119">						selected);</span>
+			}
+<span class="nc" id="L121">		} else {</span>
+			// xml action:
+			// Do-action
+<span class="nc" id="L124">			CompoundAction doAction = new CompoundAction();</span>
+			// Undo-action
+<span class="nc" id="L126">			CompoundAction undo = new CompoundAction();</span>
+			// sort selectedNodes list by depth, in order to guarantee that
+			// sons are deleted first:
+<span class="nc" id="L129">			for (ListIterator it = modeController.getSelecteds().listIterator(); it</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L131">				MindMapNodeModel selected = (MindMapNodeModel) it.next();</span>
+<span class="nc" id="L132">				ActionPair pair = actor.apply(this.modeController.getMap(),</span>
+<span class="nc" id="L133">						selected);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">				if (pair != null) {</span>
+<span class="nc" id="L135">					doAction.addChoice(pair.getDoAction());</span>
+<span class="nc" id="L136">					undo.addAtChoice(0, pair.getUndoAction());</span>
+				}
+			}
+<span class="nc bnc" id="L139" title="All 2 branches missed.">			if (doAction.sizeChoiceList() == 0)</span>
+<span class="nc" id="L140">				return;</span>
+<span class="nc" id="L141">			modeController.doTransaction((String) getValue(NAME),</span>
+<span class="nc" id="L142">					new ActionPair(doAction, undo));</span>
+		}
+
+<span class="nc" id="L145">	}</span>
+
+	protected void execute(ActionPair pair) {
+<span class="nc" id="L148">		modeController.doTransaction(getShortDescription(), pair);</span>
+<span class="nc" id="L149">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.actions.FreeMindAction#act(freemind.controller.actions
+	 * .generated.instance.XmlAction)
+	 */
+	public void act(XmlAction action) {
+<span class="nc" id="L159">	}</span>
+
+	/**
+     */
+	protected NodeAdapter getNodeFromID(String string) {
+<span class="nc" id="L164">		return modeController.getNodeFromID(string);</span>
+	}
+
+	/**
+     */
+	protected String getNodeID(MindMapNode selected) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L171">		return modeController.getNodeID(selected);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

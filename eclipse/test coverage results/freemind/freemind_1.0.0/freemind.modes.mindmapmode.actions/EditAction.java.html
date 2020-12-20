@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>EditAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">EditAction.java</span></div><h1>EditAction.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 05.05.2004
+ *
+ * To change the template for this generated file go to
+ * Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.util.Vector;
+import java.util.regex.Pattern;
+
+import javax.swing.AbstractAction;
+import javax.swing.JOptionPane;
+
+import freemind.common.OptionalDontShowMeAgainDialog;
+import freemind.controller.actions.generated.instance.EditNodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.FreeMind;
+import freemind.main.HtmlTools;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+import freemind.view.mindmapview.EditNodeBase;
+import freemind.view.mindmapview.EditNodeDialog;
+import freemind.view.mindmapview.EditNodeExternalApplication;
+import freemind.view.mindmapview.EditNodeTextField;
+import freemind.view.mindmapview.EditNodeWYSIWYG;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.NodeView;
+
+//
+//Node editing
+//
+
+public class EditAction extends AbstractAction implements ActorXml {
+<span class="nc" id="L60">	private static final Pattern HTML_HEAD = Pattern.compile(</span>
+<span class="nc" id="L61">			&quot;\\s*&lt;head&gt;.*&lt;/head&gt;&quot;, Pattern.DOTALL);</span>
+	private final MindMapController mMindMapController;
+<span class="nc" id="L63">	private EditNodeBase mCurrentEditDialog = null;</span>
+
+	public EditAction(MindMapController modeController) {
+<span class="nc" id="L66">		super(modeController.getText(&quot;edit_node&quot;));</span>
+<span class="nc" id="L67">		this.mMindMapController = modeController;</span>
+<span class="nc" id="L68">		this.mMindMapController.getActionFactory().registerActor(this,</span>
+<span class="nc" id="L69">				getDoActionClass());</span>
+<span class="nc" id="L70">	}</span>
+
+	public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L73">		MindMapNode selected = this.mMindMapController.getSelected();</span>
+<span class="nc" id="L74">		this.mMindMapController.edit(null, false, false);</span>
+<span class="nc" id="L75">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.actions.ActorXml#act(freemind.controller.actions.
+	 * generated.instance.XmlAction)
+	 */
+	public void act(XmlAction action) {
+<span class="nc" id="L85">		EditNodeAction editAction = (EditNodeAction) action;</span>
+<span class="nc" id="L86">		NodeAdapter node = this.mMindMapController.getNodeFromID(editAction</span>
+<span class="nc" id="L87">				.getNode());</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (!node.toString().equals(editAction.getText())) {</span>
+<span class="nc" id="L89">			node.setUserObject(editAction.getText());</span>
+<span class="nc" id="L90">			this.mMindMapController.nodeChanged(node);</span>
+		}
+<span class="nc" id="L92">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.actions.ActorXml#getDoActionClass()
+	 */
+	public Class getDoActionClass() {
+<span class="nc" id="L100">		return EditNodeAction.class;</span>
+	}
+
+	// edit begins with home/end or typing (PN 6.2)
+	public void edit(KeyEvent e, boolean addNew, boolean editLong) {
+<span class="nc" id="L105">		NodeView selectedNodeView = mMindMapController.getView().getSelected();</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (selectedNodeView != null) {</span>
+<span class="nc bnc" id="L107" title="All 4 branches missed.">			if (e == null || !addNew) {</span>
+<span class="nc" id="L108">				edit(selectedNodeView, selectedNodeView, e, false, false,</span>
+<span class="nc" id="L109">						editLong);</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			} else if (!mMindMapController.isBlocked()) {</span>
+<span class="nc" id="L111">				mMindMapController.addNew(mMindMapController.getSelected(),</span>
+<span class="nc" id="L112">						MindMapController.NEW_SIBLING_BEHIND, e);</span>
+			}
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (e != null) {</span>
+<span class="nc" id="L115">				e.consume();</span>
+			}
+		}
+<span class="nc" id="L118">	}</span>
+
+	public void edit(final NodeView node, final NodeView prevSelected,
+			final KeyEvent firstEvent, final boolean isNewNode,
+			final boolean parentFolded, final boolean editLong) {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (node == null) {</span>
+<span class="nc" id="L124">			return;</span>
+		}
+<span class="nc" id="L126">		final MapView map = node.getMap();</span>
+<span class="nc" id="L127">		map.validate();</span>
+<span class="nc" id="L128">		map.invalidate();</span>
+
+<span class="nc" id="L130">		stopEditing();</span>
+		// EditNodeBase.closeEdit();
+<span class="nc" id="L132">		mMindMapController.setBlocked(true); // locally &quot;modal&quot; stated</span>
+
+<span class="nc" id="L134">		String text = node.getModel().toString();</span>
+<span class="nc" id="L135">		String htmlEditingOption = mMindMapController.getController()</span>
+<span class="nc" id="L136">				.getProperty(&quot;html_editing_option&quot;);</span>
+
+<span class="nc" id="L138">		boolean isHtmlNode = HtmlTools.isHtmlNode(text);</span>
+<span class="nc" id="L139">		boolean isLongNode = node.getIsLong();</span>
+
+		// do we need a decision if plain or HTML editing?
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		String useRichTextInNewLongNodes = (isHtmlNode) ? &quot;true&quot; : &quot;false&quot;;</span>
+		// if the node is not already html, we ask if rich text or plain text
+		// edit.
+<span class="nc bnc" id="L145" title="All 6 branches missed.">		if (!isHtmlNode &amp;&amp; !isLongNode &amp;&amp; editLong) {</span>
+			// ask user:
+<span class="nc" id="L147">			int showResult = new OptionalDontShowMeAgainDialog(</span>
+<span class="nc" id="L148">					mMindMapController.getFrame().getJFrame(),</span>
+<span class="nc" id="L149">					mMindMapController.getSelectedView(),</span>
+<span class="nc" id="L150">					&quot;edit.edit_rich_text&quot;,</span>
+<span class="nc" id="L151">					&quot;edit.decision&quot;,</span>
+<span class="nc" id="L152">					mMindMapController,</span>
+<span class="nc" id="L153">					new OptionalDontShowMeAgainDialog.StandardPropertyHandler(</span>
+<span class="nc" id="L154">							mMindMapController.getController(),</span>
+<span class="nc" id="L155">							FreeMind.RESOURCES_REMIND_USE_RICH_TEXT_IN_NEW_LONG_NODES),</span>
+<span class="nc" id="L156">					OptionalDontShowMeAgainDialog.BOTH_OK_AND_CANCEL_OPTIONS_ARE_STORED)</span>
+<span class="nc" id="L157">					.show().getResult();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			useRichTextInNewLongNodes = (showResult == JOptionPane.OK_OPTION) ? &quot;true&quot;</span>
+<span class="nc" id="L159">					: &quot;false&quot;;</span>
+		}
+		// useRichTextInNewLongNodes =
+		// c.getController().getProperty(&quot;use_rich_text_in_new_long_nodes&quot;);
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		boolean editHtml = isHtmlNode</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				|| (editLong &amp;&amp; Tools.safeEquals(useRichTextInNewLongNodes,</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">						&quot;true&quot;));</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		boolean editInternalWysiwyg = editHtml</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">				&amp;&amp; Tools.safeEquals(htmlEditingOption, &quot;internal-wysiwyg&quot;);</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		boolean editExternal = editHtml</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				&amp;&amp; Tools.safeEquals(htmlEditingOption, &quot;external&quot;);</span>
+
+<span class="nc bnc" id="L171" title="All 4 branches missed.">		if (editHtml &amp;&amp; !isHtmlNode) {</span>
+<span class="nc" id="L172">			text = HtmlTools.plainToHTML(text);</span>
+		}
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (editInternalWysiwyg) {</span>
+<span class="nc" id="L175">			EditNodeWYSIWYG editNodeWYSIWYG = new EditNodeWYSIWYG(node, text,</span>
+<span class="nc" id="L176">					firstEvent, mMindMapController,</span>
+<span class="nc" id="L177">					new EditNodeBase.EditControl() {</span>
+						public void cancel() {
+<span class="nc" id="L179">							mMindMapController.setBlocked(false);</span>
+<span class="nc" id="L180">							mCurrentEditDialog = null;</span>
+<span class="nc" id="L181">							mMindMapController.getController()</span>
+<span class="nc" id="L182">									.obtainFocusForSelected();</span>
+<span class="nc" id="L183">						}</span>
+
+						public void ok(String newText) {
+<span class="nc" id="L186">							setHtmlText(node, newText);</span>
+<span class="nc" id="L187">							cancel();</span>
+<span class="nc" id="L188">						}</span>
+
+						public void split(String newText, int position) {
+<span class="nc" id="L191">							mMindMapController.splitNode(node.getModel(),</span>
+<span class="nc" id="L192">									position, newText);</span>
+<span class="nc" id="L193">							cancel();</span>
+<span class="nc" id="L194">						}</span>
+					}); // focus fix
+<span class="nc" id="L196">			mCurrentEditDialog = editNodeWYSIWYG;</span>
+<span class="nc" id="L197">			editNodeWYSIWYG.show();</span>
+<span class="nc" id="L198">			return;</span>
+		}
+
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (editExternal) {</span>
+<span class="nc" id="L202">			EditNodeExternalApplication editNodeExternalApplication = new EditNodeExternalApplication(</span>
+<span class="nc" id="L203">					node, text, firstEvent, mMindMapController,</span>
+<span class="nc" id="L204">					new EditNodeBase.EditControl() {</span>
+						public void cancel() {
+<span class="nc" id="L206">							mMindMapController.setBlocked(false);</span>
+<span class="nc" id="L207">							mCurrentEditDialog = null;</span>
+<span class="nc" id="L208">							mMindMapController.getController()</span>
+<span class="nc" id="L209">									.obtainFocusForSelected();</span>
+<span class="nc" id="L210">						}</span>
+
+						public void ok(String newText) {
+<span class="nc" id="L213">							setHtmlText(node, newText);</span>
+<span class="nc" id="L214">							cancel();</span>
+<span class="nc" id="L215">						}</span>
+
+						public void split(String newText, int position) {
+<span class="nc" id="L218">							mMindMapController.splitNode(node.getModel(),</span>
+<span class="nc" id="L219">									position, newText);</span>
+<span class="nc" id="L220">							cancel();</span>
+<span class="nc" id="L221">						}</span>
+					}); // focus fix
+<span class="nc" id="L223">			mCurrentEditDialog = editNodeExternalApplication;</span>
+<span class="nc" id="L224">			editNodeExternalApplication.show();</span>
+			// We come here before quitting the editor window.
+<span class="nc" id="L226">			return;</span>
+		}
+
+<span class="nc bnc" id="L229" title="All 4 branches missed.">		if (isLongNode || editLong) {</span>
+<span class="nc" id="L230">			EditNodeDialog nodeEditDialog = new EditNodeDialog(node, text,</span>
+<span class="nc" id="L231">					firstEvent, mMindMapController,</span>
+<span class="nc" id="L232">					new EditNodeBase.EditControl() {</span>
+
+						public void cancel() {
+<span class="nc" id="L235">							mMindMapController.setBlocked(false);</span>
+<span class="nc" id="L236">							mCurrentEditDialog = null;</span>
+<span class="nc" id="L237">							mMindMapController.getController()</span>
+<span class="nc" id="L238">									.obtainFocusForSelected(); // focus fix</span>
+<span class="nc" id="L239">						}</span>
+
+						public void ok(String newText) {
+<span class="nc" id="L242">							setNodeText(node.getModel(), newText);</span>
+<span class="nc" id="L243">							cancel();</span>
+<span class="nc" id="L244">						}</span>
+
+						public void split(String newText, int position) {
+<span class="nc" id="L247">							mMindMapController.splitNode(node.getModel(),</span>
+<span class="nc" id="L248">									position, newText);</span>
+<span class="nc" id="L249">							cancel();</span>
+<span class="nc" id="L250">						}</span>
+					});
+<span class="nc" id="L252">			mCurrentEditDialog = nodeEditDialog;</span>
+<span class="nc" id="L253">			nodeEditDialog.show();</span>
+<span class="nc" id="L254">			return;</span>
+		}
+		// inline editing:
+<span class="nc" id="L257">		EditNodeTextField textfield = new EditNodeTextField(node, text,</span>
+<span class="nc" id="L258">				firstEvent, mMindMapController, new EditNodeBase.EditControl() {</span>
+
+					public void cancel() {
+<span class="nc bnc" id="L261" title="All 2 branches missed.">						if (isNewNode) { // delete also the node and set focus</span>
+											// to the parent
+<span class="nc" id="L263">							mMindMapController.getView()</span>
+<span class="nc" id="L264">									.selectAsTheOnlyOneSelected(node);</span>
+<span class="nc" id="L265">							Vector nodeList = new Vector();</span>
+<span class="nc" id="L266">							nodeList.add(node.getModel());</span>
+<span class="nc" id="L267">							mMindMapController.cut(nodeList);</span>
+<span class="nc" id="L268">							mMindMapController.select(prevSelected);</span>
+							// include max level for navigation
+<span class="nc bnc" id="L270" title="All 2 branches missed.">							if (parentFolded) {</span>
+<span class="nc" id="L271">								mMindMapController.setFolded(</span>
+<span class="nc" id="L272">										prevSelected.getModel(), true);</span>
+							}
+						}
+<span class="nc" id="L275">						endEdit();</span>
+<span class="nc" id="L276">					}</span>
+
+					public void ok(String newText) {
+<span class="nc" id="L279">						setNodeText(node.getModel(), newText);</span>
+<span class="nc" id="L280">						endEdit();</span>
+<span class="nc" id="L281">					}</span>
+
+					private void endEdit() {
+<span class="nc" id="L284">						mMindMapController.obtainFocusForSelected();</span>
+<span class="nc" id="L285">						mMindMapController.setBlocked(false);</span>
+<span class="nc" id="L286">						mCurrentEditDialog = null;</span>
+<span class="nc" id="L287">					}</span>
+
+					public void split(String newText, int position) {
+<span class="nc" id="L290">					}</span>
+				});
+<span class="nc" id="L292">		mCurrentEditDialog = textfield;</span>
+<span class="nc" id="L293">		textfield.show();</span>
+
+<span class="nc" id="L295">	}</span>
+
+	public void setNodeText(MindMapNode selected, String newText) {
+<span class="nc" id="L298">		String oldText = selected.toString();</span>
+
+<span class="nc" id="L300">		EditNodeAction EditAction = new EditNodeAction();</span>
+<span class="nc" id="L301">		EditAction.setNode(mMindMapController.getNodeID(selected));</span>
+<span class="nc" id="L302">		EditAction.setText(newText);</span>
+
+<span class="nc" id="L304">		EditNodeAction undoEditAction = new EditNodeAction();</span>
+<span class="nc" id="L305">		undoEditAction.setNode(mMindMapController.getNodeID(selected));</span>
+<span class="nc" id="L306">		undoEditAction.setText(oldText);</span>
+
+<span class="nc" id="L308">		mMindMapController.doTransaction(</span>
+<span class="nc" id="L309">				mMindMapController.getText(&quot;edit_node&quot;),</span>
+<span class="nc" id="L310">				new ActionPair(EditAction, undoEditAction));</span>
+<span class="nc" id="L311">	}</span>
+
+	protected MindMapController getMindMapController() {
+<span class="nc" id="L314">		return mMindMapController;</span>
+	}
+
+	private void setHtmlText(final NodeView node, String newText) {
+<span class="nc" id="L318">		final String body = HTML_HEAD.matcher(newText).replaceFirst(&quot;&quot;);</span>
+<span class="nc" id="L319">		setNodeText(node.getModel(), body);</span>
+<span class="nc" id="L320">	}</span>
+
+	public void stopEditing() {
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		if (mCurrentEditDialog != null) {</span>
+			// there was previous editing.
+<span class="nc" id="L325">			mCurrentEditDialog.closeEdit();</span>
+<span class="nc" id="L326">			mCurrentEditDialog = null;</span>
+		}
+<span class="nc" id="L328">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

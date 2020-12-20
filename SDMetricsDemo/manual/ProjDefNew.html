@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Adding New Project File Sets</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProjDef.html">Prev</a> - <a href="ProjDefImport.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="Preferences.html">4.16 Setting Preferences</a> > <a href="ProjDef.html">4.16.1 Project File Sets</a> > 4.16.1.1 Adding New Project File Sets
+<hr>
+<h4><a name="ProjDefNew"></a>4.16.1.1 Adding New Project File Sets</h4>
+
+To define a new project file set, click the "New..."
+button. This opens an editor where you can specify the  
+parameters of the project file set:<p>
+
+<img src="images/xmitrans.png" alt="Project File Set"><br>
+<b>Figure 26:&nbsp;Project File Set Editor</b><p>
+
+The parameters of a project file set are as follows:
+<ul>
+<li><b>Name of entry</b>: The name of the project file set.</li>
+<li><b>XMI Transformation File</b>: The location of the XMI
+transformation file of this project file set. Enter the file name 
+in the text field, or use the
+&quot;Browse...&quot; button to locate the file via a file chooser
+dialog.</li>
+<li><b>XMI version number(s)</b>: The XMI version numbers or 
+version-namepaces that the XMI transformation file handles. 
+For XMI versions 1.0 to 2.1, indicate the version number as shown
+in the "version" attribute in the XMI file. For XMI version 2.4
+and later, indicate the version-namespace, that is, the last part
+of the XMI namespace. For example, the XMI 2.4.1 namespace is 
+"http://www.omg.org/spec/XMI/20110701", so the version-namespace is
+20110701.<br>
+List all supported XMI version numbers and/or version namespaces,
+separated by semicolons, e.g. <tt>2.0;2.1;20110701</tt>.</li>
+<li><b>Exporter</b>: 
+If you created the XMI transformation file for a specific XMI
+exporter, enter the name of the exporter here. Use the exact name of
+the exporter as indicated in the <tt>XMI.exporter</tt> element in the
+documentation section of the XMI files produced by the exporter.
+<br> Leave this field empty if the XMI transformation file is not
+written for a specific exporter.</li>
+<li><b>Exporter Version(s)</b>: If you created the XMI transformation file for a
+specific version of an exporter, specify the version number
+here. Use the exact version number as indicated in the
+<tt>XMI.exporterVersion</tt> element in the XMI files produced by the
+exporter. If the XMI transformation file is suitable for several exporter
+versions, list all supporter exporter version numbers, separated by
+semicolons.<br>
+Leave this field empty if the XMI transformation file is not written
+for a specific version of the exporter.</li>
+<li><b>Metric definition file</b>: The location of the metric definition
+file of this project file set.
+Enter the file name in the text field, or use the
+&quot;Browse...&quot; button to locate the file via a file chooser
+dialog.</li>
+<li><b>Metamodel definition file</b>: The location of the metamodel
+definition file of this project file set. 
+Enter the file name in the text field, or use the
+&quot;Browse...&quot; button to locate the file via a file chooser
+dialog.</li>
+<li><b>Auto-selectable</b>: Controls if the project file set is 
+available for selection if you let SDMetrics automatically select
+the project file set to use for a given XMI input file. When disabled,
+the project file set can only be selected manually.
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProjDef.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="ProjDef.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ProjDefImport.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.16.1 "Project File Sets"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.16.1.2 "Importing Project File Sets"</td></tr></table>
+
+</body>
+</html>

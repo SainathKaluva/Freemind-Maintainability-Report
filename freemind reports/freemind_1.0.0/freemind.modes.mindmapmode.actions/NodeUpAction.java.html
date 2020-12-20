@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeUpAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">NodeUpAction.java</span></div><h1>NodeUpAction.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 21.08.2004
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.event.ActionEvent;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.TreeSet;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+
+import freemind.controller.actions.generated.instance.MoveNodesAction;
+import freemind.controller.actions.generated.instance.NodeListMember;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.modes.MapAdapter;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+
+public class NodeUpAction extends AbstractAction implements ActorXml {
+	private final MindMapController modeController;
+	private static Logger logger;
+
+	public NodeUpAction(MindMapController modeController) {
+<span class="nc" id="L50">		super(modeController.getText(&quot;node_up&quot;));</span>
+<span class="nc" id="L51">		this.modeController = modeController;</span>
+<span class="nc" id="L52">		modeController.getActionFactory().registerActor(this,</span>
+<span class="nc" id="L53">				getDoActionClass());</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L55">			logger = modeController.getFrame().getLogger(</span>
+<span class="nc" id="L56">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L58">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L61">		MindMapNode selected = modeController.getSelected();</span>
+<span class="nc" id="L62">		List selecteds = modeController.getSelecteds();</span>
+<span class="nc" id="L63">		moveNodes(selected, selecteds, -1);</span>
+<span class="nc" id="L64">		modeController.select(selected, selecteds);</span>
+<span class="nc" id="L65">	}</span>
+
+	/**
+     */
+	public void moveNodes(MindMapNode selected, List selecteds, int direction) {
+<span class="nc" id="L70">		MoveNodesAction doAction = createMoveNodesAction(selected, selecteds,</span>
+<span class="nc" id="L71">				direction);</span>
+<span class="nc" id="L72">		MoveNodesAction undoAction = createMoveNodesAction(selected, selecteds,</span>
+<span class="nc" id="L73">				-direction);</span>
+<span class="nc" id="L74">		modeController.doTransaction((String) getValue(NAME), new ActionPair(</span>
+<span class="nc" id="L75">				doAction, undoAction));</span>
+<span class="nc" id="L76">	}</span>
+
+	public void _moveNodes(MindMapNode selected, List selecteds, int direction) {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		Comparator comparator = (direction == -1) ? null : new Comparator() {</span>
+
+			public int compare(Object o1, Object o2) {
+<span class="nc" id="L82">				int i1 = ((Integer) o1).intValue();</span>
+<span class="nc" id="L83">				int i2 = ((Integer) o2).intValue();</span>
+<span class="nc" id="L84">				return i2 - i1;</span>
+			}
+		};
+<span class="nc bnc" id="L87" title="All 2 branches missed.">		if (!selected.isRoot()) {</span>
+<span class="nc" id="L88">			MindMapNode parent = selected.getParentNode();</span>
+			// multiple move:
+<span class="nc" id="L90">			Vector sortedChildren = getSortedSiblings(parent);</span>
+<span class="nc" id="L91">			TreeSet range = new TreeSet(comparator);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			for (Iterator i = selecteds.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L93">				MindMapNode node = (MindMapNode) i.next();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				if (node.getParent() != parent) {</span>
+<span class="nc" id="L95">					logger.warning(&quot;Not all selected nodes (here: &quot;</span>
+<span class="nc" id="L96">							+ node.getText() + &quot;) have the same parent &quot;</span>
+<span class="nc" id="L97">							+ parent.getText() + &quot;.&quot;);</span>
+<span class="nc" id="L98">					return;</span>
+				}
+<span class="nc" id="L100">				range.add(new Integer(sortedChildren.indexOf(node)));</span>
+			}
+			// test range for adjacent nodes:
+<span class="nc" id="L103">			Integer last = (Integer) range.iterator().next();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			for (Iterator i = range.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L105">				Integer newInt = (Integer) i.next();</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				if (Math.abs(newInt.intValue() - last.intValue()) &gt; 1) {</span>
+<span class="nc" id="L107">					logger.warning(&quot;Not adjacent nodes. Skipped. &quot;);</span>
+<span class="nc" id="L108">					return;</span>
+				}
+<span class="nc" id="L110">				last = newInt;</span>
+			}
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			for (Iterator i = range.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L113">				Integer position = (Integer) i.next();</span>
+				// from above:
+<span class="nc" id="L115">				MindMapNode node = (MindMapNode) sortedChildren.get(position</span>
+<span class="nc" id="L116">						.intValue());</span>
+<span class="nc" id="L117">				moveNodeTo(node, parent, direction);</span>
+			}
+		}
+<span class="nc" id="L120">	}</span>
+
+	/**
+	 * The direction is used if side left and right are present. then the next
+	 * suitable place on the same side# is searched. if there is no such place,
+	 * then the side is changed.
+	 * 
+	 * @return returns the new index.
+	 */
+	public int moveNodeTo(MindMapNode newChild, MindMapNode parent,
+			int direction) {
+<span class="nc" id="L131">		MapAdapter model = modeController.getModel();</span>
+<span class="nc" id="L132">		int index = model.getIndexOfChild(parent, newChild);</span>
+<span class="nc" id="L133">		int newIndex = index;</span>
+<span class="nc" id="L134">		int maxIndex = parent.getChildCount();</span>
+<span class="nc" id="L135">		Vector sortedNodesIndices = getSortedSiblings(parent);</span>
+<span class="nc" id="L136">		int newPositionInVector = sortedNodesIndices.indexOf(newChild)</span>
+<span class="nc" id="L137">				+ direction;</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (newPositionInVector &lt; 0) {</span>
+<span class="nc" id="L139">			newPositionInVector = maxIndex - 1;</span>
+		}
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (newPositionInVector &gt;= maxIndex) {</span>
+<span class="nc" id="L142">			newPositionInVector = 0;</span>
+		}
+<span class="nc" id="L144">		MindMapNode destinationNode = (MindMapNode) sortedNodesIndices</span>
+<span class="nc" id="L145">				.get(newPositionInVector);</span>
+<span class="nc" id="L146">		newIndex = model.getIndexOfChild(parent, destinationNode);</span>
+<span class="nc" id="L147">		modeController.removeNodeFromParent(newChild);</span>
+<span class="nc" id="L148">		modeController.insertNodeInto(newChild, parent, newIndex);</span>
+<span class="nc" id="L149">		modeController.nodeChanged(newChild);</span>
+<span class="nc" id="L150">		return newIndex;</span>
+	}
+
+	/**
+	 * Sorts nodes by their left/right status. The left are first.
+	 */
+	private Vector getSortedSiblings(MindMapNode node) {
+<span class="nc" id="L157">		Vector nodes = new Vector();</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		for (Iterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L159">			nodes.add(i.next());</span>
+		}
+<span class="nc" id="L161">		Collections.sort(nodes, new Comparator() {</span>
+
+			public int compare(Object o1, Object o2) {
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				if (o1 instanceof MindMapNode) {</span>
+<span class="nc" id="L165">					MindMapNode n1 = (MindMapNode) o1;</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">					if (o2 instanceof MindMapNode) {</span>
+<span class="nc" id="L167">						MindMapNode n2 = (MindMapNode) o2;</span>
+						// left is less than right
+<span class="nc bnc" id="L169" title="All 2 branches missed.">						int b1 = n1.isLeft() ? 0 : 1;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">						int b2 = n2.isLeft() ? 0 : 1;</span>
+<span class="nc" id="L171">						return b1 - b2;</span>
+					}
+				}
+<span class="nc" id="L174">				throw new IllegalArgumentException(</span>
+<span class="nc" id="L175">						&quot;Elements in LeftRightComparator are not comparable.&quot;);</span>
+			}
+		});
+		// logger.finest(&quot;Sorted nodes &quot;+ nodes);
+<span class="nc" id="L179">		return nodes;</span>
+	}
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (action instanceof MoveNodesAction) {</span>
+<span class="nc" id="L184">			MoveNodesAction moveAction = (MoveNodesAction) action;</span>
+<span class="nc" id="L185">			MindMapNode selected = modeController.getNodeFromID(moveAction</span>
+<span class="nc" id="L186">					.getNode());</span>
+<span class="nc" id="L187">			Vector selecteds = new Vector();</span>
+<span class="nc" id="L188">			for (Iterator i = moveAction.getListNodeListMemberList().iterator(); i</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L190">				NodeListMember node = (NodeListMember) i.next();</span>
+<span class="nc" id="L191">				selecteds.add(modeController.getNodeFromID(node.getNode()));</span>
+			}
+<span class="nc" id="L193">			_moveNodes(selected, selecteds, moveAction.getDirection());</span>
+		}
+<span class="nc" id="L195">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L198">		return MoveNodesAction.class;</span>
+	}
+
+	private MoveNodesAction createMoveNodesAction(MindMapNode selected,
+			List selecteds, int direction) {
+<span class="nc" id="L203">		MoveNodesAction moveAction = new MoveNodesAction();</span>
+<span class="nc" id="L204">		moveAction.setDirection(direction);</span>
+<span class="nc" id="L205">		moveAction.setNode(selected.getObjectId(modeController));</span>
+		// selectedNodes list
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		for (Iterator i = selecteds.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L208">			MindMapNode node = (MindMapNode) i.next();</span>
+<span class="nc" id="L209">			NodeListMember nodeListMember = new NodeListMember();</span>
+<span class="nc" id="L210">			nodeListMember.setNode(node.getObjectId(modeController));</span>
+<span class="nc" id="L211">			moveAction.addNodeListMember(nodeListMember);</span>
+		}
+<span class="nc" id="L213">		return moveAction;</span>
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExampleFileFilter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">ExampleFileFilter.java</span></div><h1>ExampleFileFilter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Copyright (c) 2003 Sun Microsystems, Inc. All  Rights Reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 
+ * -Redistributions of source code must retain the above copyright
+ *  notice, this list of conditions and the following disclaimer.
+ * 
+ * -Redistribution in binary form must reproduct the above copyright
+ *  notice, this list of conditions and the following disclaimer in
+ *  the documentation and/or other materials provided with the distribution.
+ * 
+ * Neither the name of Sun Microsystems, Inc. or the names of contributors
+ * may be used to endorse or promote products derived from this software
+ * without specific prior written permission.
+ * 
+ * This software is provided &quot;AS IS,&quot; without a warranty of any kind. ALL
+ * EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING
+ * ANY IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE
+ * OR NON-INFRINGEMENT, ARE HEREBY EXCLUDED. SUN AND ITS LICENSORS SHALL NOT
+ * BE LIABLE FOR ANY DAMAGES OR LIABILITIES SUFFERED BY LICENSEE AS A RESULT
+ * OF OR RELATING TO USE, MODIFICATION OR DISTRIBUTION OF THE SOFTWARE OR ITS
+ * DERIVATIVES. IN NO EVENT WILL SUN OR ITS LICENSORS BE LIABLE FOR ANY LOST
+ * REVENUE, PROFIT OR DATA, OR FOR DIRECT, INDIRECT, SPECIAL, CONSEQUENTIAL,
+ * INCIDENTAL OR PUNITIVE DAMAGES, HOWEVER CAUSED AND REGARDLESS OF THE THEORY
+ * OF LIABILITY, ARISING OUT OF THE USE OF OR INABILITY TO USE SOFTWARE, EVEN
+ * IF SUN HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+ * 
+ * You acknowledge that Software is not designed, licensed or intended for
+ * use in the design, construction, operation or maintenance of any nuclear
+ * facility.
+ */
+
+/*
+ * @(#)ExampleFileFilter.java	1.14 03/01/23
+ */
+
+package freemind.main;
+
+import java.io.File;
+import java.util.Enumeration;
+import java.util.Hashtable;
+
+import javax.swing.filechooser.FileFilter;
+
+/**
+ * A convenience implementation of FileFilter that filters out all files except
+ * for those type extensions that it knows about.
+ * 
+ * Extensions are of the type &quot;.foo&quot;, which is typically found on Windows and
+ * Unix boxes, but not on Macinthosh. Case is ignored.
+ * 
+ * Example - create a new filter that filerts out all files but gif and jpg
+ * image files:
+ * 
+ * JFileChooser chooser = new JFileChooser(); ExampleFileFilter filter = new
+ * ExampleFileFilter( new String{&quot;gif&quot;, &quot;jpg&quot;}, &quot;JPEG &amp; GIF Images&quot;)
+ * chooser.addChoosableFileFilter(filter); chooser.showOpenDialog(this);
+ * 
+ * @version 1.14 01/23/03
+ * @author Jeff Dinkins
+ */
+public class ExampleFileFilter extends FileFilter {
+
+<span class="nc" id="L86">	private static String TYPE_UNKNOWN = &quot;Type Unknown&quot;;</span>
+<span class="nc" id="L87">	private static String HIDDEN_FILE = &quot;Hidden File&quot;;</span>
+
+<span class="nc" id="L89">	private Hashtable filters = null;</span>
+<span class="nc" id="L90">	private String description = null;</span>
+<span class="nc" id="L91">	private String fullDescription = null;</span>
+<span class="nc" id="L92">	private boolean useExtensionsInDescription = true;</span>
+
+	/**
+	 * Creates a file filter. If no filters are added, then all files are
+	 * accepted.
+	 * 
+	 */
+<span class="nc" id="L99">	public ExampleFileFilter() {</span>
+<span class="nc" id="L100">		this.filters = new Hashtable();</span>
+<span class="nc" id="L101">	}</span>
+
+	/**
+	 * Creates a file filter that accepts files with the given extension.
+	 * Example: new ExampleFileFilter(&quot;jpg&quot;);
+	 * 
+	 */
+	public ExampleFileFilter(String extension) {
+<span class="nc" id="L109">		this(extension, null);</span>
+<span class="nc" id="L110">	}</span>
+
+	/**
+	 * Creates a file filter that accepts the given file type. Example: new
+	 * ExampleFileFilter(&quot;jpg&quot;, &quot;JPEG Image Images&quot;);
+	 * 
+	 * Note that the &quot;.&quot; before the extension is not needed. If provided, it
+	 * will be ignored.
+	 * 
+	 */
+	public ExampleFileFilter(String extension, String description) {
+<span class="nc" id="L121">		this();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (extension != null)</span>
+<span class="nc" id="L123">			addExtension(extension);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (description != null)</span>
+<span class="nc" id="L125">			setDescription(description);</span>
+<span class="nc" id="L126">	}</span>
+
+	/**
+	 * Creates a file filter from the given string array. Example: new
+	 * ExampleFileFilter(String {&quot;gif&quot;, &quot;jpg&quot;});
+	 * 
+	 * Note that the &quot;.&quot; before the extension is not needed adn will be ignored.
+	 * 
+	 */
+	public ExampleFileFilter(String[] filters) {
+<span class="nc" id="L136">		this(filters, null);</span>
+<span class="nc" id="L137">	}</span>
+
+	/**
+	 * Creates a file filter from the given string array and description.
+	 * Example: new ExampleFileFilter(String {&quot;gif&quot;, &quot;jpg&quot;},
+	 * &quot;Gif and JPG Images&quot;);
+	 * 
+	 * Note that the &quot;.&quot; before the extension is not needed and will be ignored.
+	 * 
+	 */
+	public ExampleFileFilter(String[] filters, String description) {
+<span class="nc" id="L148">		this();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		for (int i = 0; i &lt; filters.length; i++) {</span>
+			// add filters one by one
+<span class="nc" id="L151">			addExtension(filters[i]);</span>
+		}
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (description != null)</span>
+<span class="nc" id="L154">			setDescription(description);</span>
+<span class="nc" id="L155">	}</span>
+
+	/**
+	 * Return true if this file should be shown in the directory pane, false if
+	 * it shouldn't.
+	 * 
+	 * Files that begin with &quot;.&quot; are ignored.
+	 * 
+	 */
+	public boolean accept(File f) {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		if (f != null) {</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (f.isDirectory()) {</span>
+<span class="nc" id="L167">				return true;</span>
+			}
+<span class="nc" id="L169">			String extension = getExtension(f);</span>
+<span class="nc bnc" id="L170" title="All 4 branches missed.">			if (extension != null &amp;&amp; filters.get(getExtension(f)) != null) {</span>
+<span class="nc" id="L171">				return true;</span>
+			}
+			;
+		}
+<span class="nc" id="L175">		return false;</span>
+	}
+
+	/**
+	 * Return the extension portion of the file's name .
+	 * 
+	 */
+	public String getExtension(File f) {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">		if (f != null) {</span>
+<span class="nc" id="L184">			String filename = f.getName();</span>
+<span class="nc" id="L185">			int i = filename.lastIndexOf('.');</span>
+<span class="nc bnc" id="L186" title="All 4 branches missed.">			if (i &gt; 0 &amp;&amp; i &lt; filename.length() - 1) {</span>
+<span class="nc" id="L187">				return filename.substring(i + 1).toLowerCase();</span>
+			}
+			;
+		}
+<span class="nc" id="L191">		return null;</span>
+	}
+
+	/**
+	 * Adds a filetype &quot;dot&quot; extension to filter against.
+	 * 
+	 * For example: the following code will create a filter that filters out all
+	 * files except those that end in &quot;.jpg&quot; and &quot;.tif&quot;:
+	 * 
+	 * ExampleFileFilter filter = new ExampleFileFilter();
+	 * filter.addExtension(&quot;jpg&quot;); filter.addExtension(&quot;tif&quot;);
+	 * 
+	 * Note that the &quot;.&quot; before the extension is not needed and will be ignored.
+	 */
+	public void addExtension(String extension) {
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if (filters == null) {</span>
+<span class="nc" id="L207">			filters = new Hashtable(5);</span>
+		}
+<span class="nc" id="L209">		filters.put(extension.toLowerCase(), this);</span>
+<span class="nc" id="L210">		fullDescription = null;</span>
+<span class="nc" id="L211">	}</span>
+
+	/**
+	 * Returns the human readable description of this filter. For example:
+	 * &quot;JPEG and GIF Image Files (*.jpg, *.gif)&quot;
+	 * 
+	 */
+	public String getDescription() {
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		if (fullDescription == null) {</span>
+<span class="nc bnc" id="L220" title="All 4 branches missed.">			if (description == null || isExtensionListInDescription()) {</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">				fullDescription = description == null ? &quot;(&quot; : description</span>
+<span class="nc" id="L222">						+ &quot; (&quot;;</span>
+				// build the description from the extension list
+<span class="nc" id="L224">				Enumeration extensions = filters.keys();</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">				if (extensions != null) {</span>
+<span class="nc" id="L226">					fullDescription += &quot;.&quot; + (String) extensions.nextElement();</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">					while (extensions.hasMoreElements()) {</span>
+<span class="nc" id="L228">						fullDescription += &quot;, .&quot;</span>
+<span class="nc" id="L229">								+ (String) extensions.nextElement();</span>
+					}
+				}
+<span class="nc" id="L232">				fullDescription += &quot;)&quot;;</span>
+<span class="nc" id="L233">			} else {</span>
+<span class="nc" id="L234">				fullDescription = description;</span>
+			}
+		}
+<span class="nc" id="L237">		return fullDescription;</span>
+	}
+
+	/**
+	 * Sets the human readable description of this filter. For example:
+	 * filter.setDescription(&quot;Gif and JPG Images&quot;);
+	 * 
+	 */
+	public void setDescription(String description) {
+<span class="nc" id="L246">		this.description = description;</span>
+<span class="nc" id="L247">		fullDescription = null;</span>
+<span class="nc" id="L248">	}</span>
+
+	/**
+	 * Determines whether the extension list (.jpg, .gif, etc) should show up in
+	 * the human readable description.
+	 * 
+	 * Only relevent if a description was provided in the constructor or using
+	 * setDescription();
+	 * 
+	 */
+	public void setExtensionListInDescription(boolean b) {
+<span class="nc" id="L259">		useExtensionsInDescription = b;</span>
+<span class="nc" id="L260">		fullDescription = null;</span>
+<span class="nc" id="L261">	}</span>
+
+	/**
+	 * Returns whether the extension list (.jpg, .gif, etc) should show up in
+	 * the human readable description.
+	 * 
+	 * Only relevent if a description was provided in the constructor or using
+	 * setDescription();
+	 * 
+	 */
+	public boolean isExtensionListInDescription() {
+<span class="nc" id="L272">		return useExtensionsInDescription;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

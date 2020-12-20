@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExportWithXSLT.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">ExportWithXSLT.java</span></div><h1>ExportWithXSLT.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 08.04.2004
+ *
+ * To change the template for this generated file go to
+ * Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+package accessories.plugins;
+
+import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.net.URL;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import javax.imageio.ImageIO;
+import javax.swing.JOptionPane;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
+import accessories.plugins.util.html.ClickableImageCreator;
+import accessories.plugins.util.xslt.ExportDialog;
+import freemind.extensions.ExportHook;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+
+/**
+ * @author foltin
+ * 
+ *         Exports the map using an XSLT script. The parameterization is
+ *         described in the corresponding Export... .xml-file.
+ */
+public class ExportWithXSLT extends ExportHook {
+	private static final String NAME_EXTENSION_PROPERTY = &quot;name_extension&quot;;
+	/**
+	 * For test purposes. True=no error
+	 */
+<span class="nc" id="L73">	private boolean mTransformResultWithoutError = false;</span>
+
+	protected File chooseFile() {
+
+<span class="nc" id="L77">		String nameExtension = null;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (getProperties().containsKey(NAME_EXTENSION_PROPERTY)) {</span>
+<span class="nc" id="L79">			nameExtension = getResourceString(NAME_EXTENSION_PROPERTY);</span>
+		}
+<span class="nc" id="L81">		return chooseFile(getResourceString(&quot;file_type&quot;),</span>
+<span class="nc" id="L82">				getTranslatableResourceString(&quot;file_description&quot;),</span>
+<span class="nc" id="L83">				nameExtension);</span>
+	}
+
+	/**
+	 * 
+	 */
+	public ExportWithXSLT() {
+<span class="nc" id="L90">		super();</span>
+<span class="nc" id="L91">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.MindMapHook#startupMapHook()
+	 */
+	public void startupMapHook() {
+<span class="nc" id="L99">		super.startupMapHook();</span>
+<span class="nc" id="L100">		ModeController mc = getController();</span>
+<span class="nc" id="L101">		MindMap model = getController().getMap();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (Tools.safeEquals(getResourceString(&quot;file_type&quot;), &quot;user&quot;)) {</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (model == null)</span>
+<span class="nc" id="L104">				return; // there may be no map open</span>
+<span class="nc bnc" id="L105" title="All 4 branches missed.">			if ((model.getFile() == null) || model.isReadOnly()) {</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				if (mc.save()) {</span>
+<span class="nc" id="L107">					export(model.getFile());</span>
+<span class="nc" id="L108">					return;</span>
+				} else
+<span class="nc" id="L110">					return;</span>
+			} else
+<span class="nc" id="L112">				export(model.getFile());</span>
+<span class="nc" id="L113">		} else {</span>
+<span class="nc" id="L114">			File saveFile = chooseFile();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">			if (saveFile == null) {</span>
+				// no file.
+<span class="nc" id="L117">				return;</span>
+			}
+			try {
+<span class="nc" id="L120">				mTransformResultWithoutError = true;</span>
+<span class="nc" id="L121">				String transformErrors = transform(saveFile);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if (transformErrors != null) {</span>
+<span class="nc" id="L123">					JOptionPane.showMessageDialog(null,</span>
+<span class="nc" id="L124">							getResourceString(transformErrors), &quot;Freemind&quot;,</span>
+<span class="nc" id="L125">							JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L126">					mTransformResultWithoutError = false;</span>
+<span class="nc" id="L127">				} else {</span>
+					if (Tools
+<span class="nc bnc" id="L129" title="All 2 branches missed.">							.safeEquals(getResourceString(&quot;load_file&quot;), &quot;true&quot;)) {</span>
+<span class="nc" id="L130">						getController().getFrame().openDocument(</span>
+<span class="nc" id="L131">								Tools.fileToUrl(saveFile));</span>
+					}
+				}
+<span class="nc" id="L134">			} catch (Exception e) {</span>
+<span class="nc" id="L135">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L136">				mTransformResultWithoutError = false;</span>
+			}
+		}
+<span class="nc" id="L139">	}</span>
+
+	/**
+	 * @param saveFile
+	 * @return If ok: null, else: the resource identifier of the error string.
+	 * @throws Exception
+	 * 
+	 */
+	public String transform(File saveFile) throws Exception {
+		// get AREA:
+		// create HTML image?
+<span class="nc" id="L150">		boolean create_image = Tools.safeEquals(</span>
+<span class="nc" id="L151">				getResourceString(&quot;create_html_linked_image&quot;), &quot;true&quot;);</span>
+<span class="nc" id="L152">		String areaCode = getAreaCode(create_image);</span>
+		// XSLT Transformation
+<span class="nc" id="L154">		String xsltFileName = getResourceString(&quot;xslt_file&quot;);</span>
+<span class="nc" id="L155">		boolean success = transformMapWithXslt(xsltFileName, saveFile, areaCode);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (!success) {</span>
+			// JOptionPane.showMessageDialog(null,
+			// getResourceString(&quot;error_applying_template&quot;),
+			// &quot;Freemind&quot;, JOptionPane.ERROR_MESSAGE);
+<span class="nc" id="L160">			return &quot;error_applying_template&quot;;</span>
+		}
+		// create directory?
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (success</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				&amp;&amp; Tools.safeEquals(getResourceString(&quot;create_dir&quot;), &quot;true&quot;)) {</span>
+<span class="nc" id="L165">			String directoryName = saveFile.getAbsolutePath() + &quot;_files&quot;;</span>
+<span class="nc" id="L166">			success = createDirectory(directoryName);</span>
+
+			// copy files from the resources to the file system:
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			if (success) {</span>
+<span class="nc" id="L170">				String files = getResourceString(&quot;files_to_copy&quot;);</span>
+<span class="nc" id="L171">				String filePrefix = getResourceString(&quot;file_prefix&quot;);</span>
+<span class="nc" id="L172">				copyFilesFromResourcesToDirectory(directoryName, files,</span>
+<span class="nc" id="L173">						filePrefix);</span>
+			}
+			// copy icons?
+<span class="nc bnc" id="L176" title="All 2 branches missed.">			if (success</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">					&amp;&amp; Tools.safeEquals(getResourceString(&quot;copy_icons&quot;), &quot;true&quot;)) {</span>
+<span class="nc" id="L178">				success = copyIcons(directoryName);</span>
+			}
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			if (success</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">					&amp;&amp; Tools.safeEquals(getResourceString(&quot;copy_map&quot;), &quot;true&quot;)) {</span>
+<span class="nc" id="L182">				success = copyMap(directoryName);</span>
+			}
+<span class="nc bnc" id="L184" title="All 4 branches missed.">			if (success &amp;&amp; create_image) {</span>
+<span class="nc" id="L185">				createImageFromMap(directoryName);</span>
+			}
+		}
+<span class="nc bnc" id="L188" title="All 2 branches missed.">		if (!success) {</span>
+			// JOptionPane.showMessageDialog(null,
+			// getResourceString(&quot;error_creating_directory&quot;), &quot;Freemind&quot;,
+			// JOptionPane.ERROR_MESSAGE);
+<span class="nc" id="L192">			return &quot;error_creating_directory&quot;;</span>
+		}
+<span class="nc" id="L194">		return null;</span>
+	}
+
+	private boolean copyMap(String pDirectoryName) throws IOException {
+<span class="nc" id="L198">		boolean success = true;</span>
+		// Generating output Stream
+<span class="nc" id="L200">		BufferedWriter fileout = new BufferedWriter(</span>
+<span class="nc" id="L201">				new OutputStreamWriter(new FileOutputStream(pDirectoryName</span>
+<span class="nc" id="L202">						+ File.separator + &quot;map.mm&quot;)));</span>
+<span class="nc" id="L203">		getController().getMap().getFilteredXml(fileout);</span>
+<span class="nc" id="L204">		return success;</span>
+	}
+
+	/**
+     */
+	private boolean copyIcons(String directoryName) {
+		boolean success;
+<span class="nc" id="L211">		String iconDirectoryName = directoryName + File.separatorChar + &quot;icons&quot;;</span>
+
+<span class="nc" id="L213">		success = createDirectory(iconDirectoryName);</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (success) {</span>
+<span class="nc" id="L215">			copyIconsToDirectory(iconDirectoryName);</span>
+		}
+<span class="nc" id="L217">		return success;</span>
+	}
+
+	/**
+     */
+	private void createImageFromMap(String directoryName) {
+		// in the test case, we don't have a viewer and skip the image.
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (getController().getView() == null)</span>
+<span class="nc" id="L225">			return;</span>
+		// create image:
+<span class="nc" id="L227">		BufferedImage image = createBufferedImage();</span>
+		try {
+<span class="nc" id="L229">			FileOutputStream out = new FileOutputStream(directoryName</span>
+<span class="nc" id="L230">					+ File.separator + &quot;image.png&quot;);</span>
+<span class="nc" id="L231">			ImageIO.write(image, &quot;png&quot;, out);</span>
+<span class="nc" id="L232">			out.close();</span>
+<span class="nc" id="L233">		} catch (IOException e1) {</span>
+<span class="nc" id="L234">			freemind.main.Resources.getInstance().logException(e1);</span>
+		}
+<span class="nc" id="L236">	}</span>
+
+	/**
+     */
+	private void copyIconsToDirectory(String directoryName2) {
+<span class="nc" id="L241">		Vector iconNames = MindIcon.getAllIconNames();</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		for (int i = 0; i &lt; iconNames.size(); ++i) {</span>
+<span class="nc" id="L243">			String iconName = ((String) iconNames.get(i));</span>
+<span class="nc" id="L244">			MindIcon myIcon = MindIcon.factory(iconName);</span>
+<span class="nc" id="L245">			copyFromResource(MindIcon.getIconsPath(),</span>
+<span class="nc" id="L246">					myIcon.getIconBaseFileName(), directoryName2);</span>
+		}
+<span class="nc" id="L248">		File iconDir = new File(Resources.getInstance().getFreemindDirectory(),</span>
+<span class="nc" id="L249">				&quot;icons&quot;);</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if (iconDir.exists()) {</span>
+<span class="nc" id="L251">			String[] userIconArray = iconDir.list(new FilenameFilter() {</span>
+				public boolean accept(File dir, String name) {
+<span class="nc" id="L253">					return name.matches(&quot;.*\\.png&quot;);</span>
+				}
+			});
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			for (int i = 0; i &lt; userIconArray.length; ++i) {</span>
+<span class="nc" id="L257">				String iconName = userIconArray[i];</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">				if (iconName.length() == 4) {</span>
+<span class="nc" id="L259">					continue;</span>
+				}
+<span class="nc" id="L261">				copyFromFile(iconDir.getAbsolutePath(), iconName,</span>
+<span class="nc" id="L262">						directoryName2);</span>
+			}
+		}
+
+<span class="nc" id="L266">	}</span>
+
+	/**
+     */
+	private void copyFilesFromResourcesToDirectory(String directoryName,
+			String files, String filePrefix) {
+<span class="nc" id="L272">		StringTokenizer tokenizer = new StringTokenizer(files, &quot;,&quot;);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">		while (tokenizer.hasMoreTokens()) {</span>
+<span class="nc" id="L274">			String next = tokenizer.nextToken();</span>
+<span class="nc" id="L275">			copyFromResource(filePrefix, next, directoryName);</span>
+		}
+<span class="nc" id="L277">	}</span>
+
+	/**
+     */
+	private boolean createDirectory(String directoryName) {
+<span class="nc" id="L282">		File dir = new File(directoryName);</span>
+		// create directory, if not exists:
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		if (!dir.exists()) {</span>
+<span class="nc" id="L285">			return dir.mkdir();</span>
+		}
+<span class="nc" id="L287">		return true;</span>
+	}
+
+	/**
+	 * @throws IOException
+	 */
+	private boolean transformMapWithXslt(String xsltFileName, File saveFile,
+			String areaCode) throws IOException {
+<span class="nc" id="L295">		StringWriter writer = getMapXml();</span>
+<span class="nc" id="L296">		StringReader reader = new StringReader(writer.getBuffer().toString());</span>
+		// search for xslt file:
+<span class="nc" id="L298">		URL xsltUrl = getResource(xsltFileName);</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">		if (xsltUrl == null) {</span>
+<span class="nc" id="L300">			logger.severe(&quot;Can't find &quot; + xsltFileName + &quot; as resource.&quot;);</span>
+<span class="nc" id="L301">			throw new IllegalArgumentException(&quot;Can't find &quot; + xsltFileName</span>
+<span class="nc" id="L302">					+ &quot; as resource.&quot;);</span>
+		}
+<span class="nc" id="L304">		InputStream xsltFile = xsltUrl.openStream();</span>
+<span class="nc" id="L305">		return transform(new StreamSource(reader), xsltFile, saveFile, areaCode);</span>
+	}
+
+	/**
+	 * @throws IOException
+	 */
+	private StringWriter getMapXml() throws IOException {
+		// get output:
+<span class="nc" id="L313">		StringWriter writer = new StringWriter();</span>
+		// get XML
+<span class="nc" id="L315">		getController().getMap().getFilteredXml(writer);</span>
+<span class="nc" id="L316">		return writer;</span>
+	}
+
+	/**
+	 * @param create_image
+	 */
+	private String getAreaCode(boolean create_image) {
+<span class="nc" id="L323">		String areaCode = &quot;&quot;;</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">		if (create_image) {</span>
+<span class="nc" id="L325">			MindMapNode root = getController().getMap().getRootNode();</span>
+<span class="nc" id="L326">			ClickableImageCreator creator = new ClickableImageCreator(root,</span>
+<span class="nc" id="L327">					getController(),</span>
+<span class="nc" id="L328">					getResourceString(&quot;link_replacement_regexp&quot;));</span>
+<span class="nc" id="L329">			areaCode = creator.generateHtml();</span>
+		}
+<span class="nc" id="L331">		return areaCode;</span>
+	}
+
+	private void export(File file) {
+<span class="nc" id="L335">		ExportDialog exp = new ExportDialog(file, getController());</span>
+<span class="nc" id="L336">		exp.setVisible(true);</span>
+<span class="nc" id="L337">	}</span>
+
+	public boolean transform(Source xmlSource, InputStream xsltStream,
+			File resultFile, String areaCode) throws FileNotFoundException {
+		// System.out.println(&quot;set xsl&quot;);
+<span class="nc" id="L342">		Source xsltSource = new StreamSource(xsltStream);</span>
+		// System.out.println(&quot;set result&quot;);
+<span class="nc" id="L344">		Result result = new StreamResult(new FileOutputStream(resultFile));</span>
+
+		// create an instance of TransformerFactory
+		try {
+			// System.out.println(&quot;make transform instance&quot;);
+<span class="nc" id="L349">			TransformerFactory transFact = TransformerFactory.newInstance();</span>
+
+<span class="nc" id="L351">			Transformer trans = transFact.newTransformer(xsltSource);</span>
+			// set parameter:
+			// relative directory &lt;filename&gt;_files
+<span class="nc" id="L354">			trans.setParameter(&quot;destination_dir&quot;, Tools.fileToRelativeUrlString(new File(resultFile.getAbsolutePath()</span>
+<span class="nc" id="L355">					+ &quot;_files/&quot;), resultFile) + &quot;/&quot;);</span>
+<span class="nc" id="L356">			trans.setParameter(&quot;area_code&quot;, areaCode);</span>
+<span class="nc" id="L357">			trans.setParameter(&quot;folding_type&quot;, getController().getFrame()</span>
+<span class="nc" id="L358">					.getProperty(&quot;html_export_folding&quot;));</span>
+<span class="nc" id="L359">			trans.transform(xmlSource, result);</span>
+<span class="nc" id="L360">		} catch (Exception e) {</span>
+			// System.err.println(&quot;error applying the xslt file &quot;+e);
+<span class="nc" id="L362">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L363">			return false;</span>
+		}
+		;
+<span class="nc" id="L366">		return true;</span>
+	}
+
+	public boolean isTransformResultWithoutError() {
+<span class="nc" id="L370">		return mTransformResultWithoutError;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

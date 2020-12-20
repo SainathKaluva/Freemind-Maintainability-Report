@@ -1,0 +1,379 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Project File Format Definitions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="LOMatrices.html">Prev</a> - <a href="Glossary.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > E: Project File Format Definitions
+<hr>
+<h1><a name="ProjFileFormats"></a>E: Project File Format Definitions</h1>
+
+This appendix contains the definitions of the project file formats for
+the metamodel definition file, the XMI transformation file, and the
+metrics definition files. Being XML files, the definition is presented
+in the form of a DTD (document type definition).<p>
+
+<b>Metamodel definition file format</b><p>
+
+<pre>
+&lt;!ELEMENT sdmetricsmetamodel ( modelelement+ ) &gt;
+&lt;!ATTLIST sdmetricsmetamodel
+	 version CDATA #REQUIRED&gt;
+
+&lt;!ELEMENT modelelement (#PCDATA|attribute)*&gt;
+&lt;!ATTLIST modelelement
+	 name CDATA #REQUIRED
+	 parent CDATA "sdmetricsbase"&gt;
+
+&lt;!ELEMENT attribute (#PCDATA)&gt;
+&lt;!ATTLIST attribute
+	 name CDATA #REQUIRED
+	 type (ref|extref|data) "data"
+	 multiplicity (one|many) "one"&gt;
+</pre>
+
+<b>XMI transformation file format</b><p>
+
+<pre>
+&lt;!ELEMENT xmitransformations ( xmitransformation+ ) &gt;
+&lt;!ATTLIST xmitransformations
+	 version CDATA #REQUIRED
+	 requirexmiid (true|false) "true"&gt;
+
+&lt;!ELEMENT xmitransformation (trigger*) &gt;
+&lt;!ATTLIST xmitransformation
+	 modelelement CDATA #REQUIRED
+	 xmipattern CDATA #REQUIRED
+	 recurse (true|false) "false"
+	 requirexmiid (true|false) #IMPLIED
+	 condition CDATA #IMPLIED&gt;
+
+&lt;!ELEMENT trigger EMPTY&gt;
+&lt;!ATTLIST trigger
+	 name CDATA #REQUIRED
+	 type (attrval|cattrval|gcattrval|ctext|reflist|constant|ignore|xmi2assoc) #REQUIRED
+	 attr CDATA #IMPLIED
+	 src CDATA #IMPLIED
+	 linkbackattr CDATA #IMPLIED&gt;
+</pre>
+
+<b>Metric definition file format</b>
+
+<pre>
+&lt;!ELEMENT sdmetrics (metric|set|matrix|rule|wordlist|reference|term|
+                     metricprocedure|setprocedure|ruleprocedure)+ &gt;
+&lt;!ATTLIST sdmetrics
+	 version CDATA #REQUIRED
+	 ruleexemption CDATA #IMPLIED
+	 exemptiontag CDATA #IMPLIED
+	 exemptionvalue CDATA #IMPLIED&gt;
+
+&lt;!ELEMENT metric (description?,(projection|setoperation|compoundmetric|
+	attributevalue|nesting|signature|connectedcomponents|count|compare|
+	subelements|filtervalue|substring))&gt;
+&lt;!ATTLIST metric
+	name CDATA #REQUIRED
+	domain CDATA #REQUIRED
+	inheritable (true|false) "false"
+	category CDATA #IMPLIED
+	internal (true|false) "false"&gt;
+
+&lt;!ELEMENT set (description?,(projection|compoundset|subelements|compare))&gt;
+&lt;!ATTLIST set
+	name CDATA #REQUIRED
+	domain CDATA #REQUIRED
+	inheritable (true|false) "false"
+	multiset (true|false) "false"&gt;
+
+
+&lt;!ELEMENT matrix (description?,(projection|setoperation|compoundset))&gt;
+&lt;!ATTLIST matrix
+	name CDATA #REQUIRED
+	from_row_type CDATA #REQUIRED
+	to_col_type CDATA #REQUIRED&gt;
+
+&lt;!ELEMENT rule (description?,(violation|cycle|projection|compoundset|
+	valueset|compare))&gt;
+&lt;!ATTLIST rule
+	name CDATA #REQUIRED
+	domain CDATA #REQUIRED
+	inheritable (true|false) "false"
+	category CDATA #IMPLIED
+	severity CDATA #IMPLIED
+	applies_to CDATA #IMPLIED
+	disabled (true|false) "false"&gt;
+
+&lt;!ELEMENT wordlist (entry*)&gt;
+&lt;!ATTLIST wordlist
+	name CDATA #REQUIRED
+	ignorecase (true|false) "false"&gt;
+
+&lt;!ELEMENT entry EMPTY&gt;
+&lt;!ATTLIST entry
+	word CDATA #REQUIRED&gt;
+
+&lt;!ELEMENT description (#PCDATA)&gt;
+
+&lt;!ENTITY % scopes "same|other|higher|lower|sameorhigher|sameorlower|samebranch|
+	notsamebranch|containedin|notcontainedin|idem|notidem" &gt;
+
+&lt;!ENTITY % filteratts
+	'target CDATA #IMPLIED
+	targetcondition CDATA #IMPLIED
+	element CDATA #IMPLIED
+	eltype CDATA #IMPLIED
+	scope (%scopes;) #IMPLIED
+	condition CDATA #IMPLIED'
+&gt;
+
+&lt;!ENTITY % sumatts
+ 'sum CDATA #IMPLIED
+	stat (sum|min|max) "sum"'
+&gt;
+
+&lt;!ENTITY % ruleatts
+ 'precondition CDATA #IMPLIED
+	mincnt CDATA #IMPLIED
+	value CDATA #IMPLIED'
+&gt;
+
+&lt;!ELEMENT projection EMPTY&gt;
+&lt;!ATTLIST projection
+	relation CDATA #IMPLIED
+	relset CDATA #IMPLIED
+	%sumatts;
+	set CDATA #IMPLIED
+	valueset CDATA #IMPLIED
+	exclude_self (true|false) "false"
+	recurse (true|false) "false"
+	nesting (true|false) "false"
+	%ruleatts;
+	%filteratts;&gt;
+
+&lt;!ELEMENT compoundmetric EMPTY&gt;
+&lt;!ATTLIST compoundmetric
+	term CDATA #IMPLIED
+	condition CDATA #IMPLIED
+	alt CDATA #IMPLIED
+	fallback CDATA #IMPLIED&gt;
+
+&lt;!ELEMENT attributevalue EMPTY&gt;
+&lt;!ATTLIST attributevalue
+	attr CDATA #REQUIRED
+	element CDATA #IMPLIED&gt;
+
+&lt;!ELEMENT signature EMPTY&gt;
+&lt;!ATTLIST signature
+	set CDATA #REQUIRED
+	name CDATA #IMPLIED
+	prologue CDATA #IMPLIED
+	value CDATA #IMPLIED
+	separator CDATA #IMPLIED
+	epilogue CDATA #IMPLIED
+	%filteratts;&gt;
+
+&lt;!ELEMENT connectedcomponents EMPTY&gt;
+&lt;!ATTLIST connectedcomponents
+	set CDATA #REQUIRED
+	nodes CDATA #REQUIRED&gt;
+
+&lt;!ELEMENT valuesetcount EMPTY&gt;
+&lt;!ATTLIST valuesetcount
+	set CDATA #REQUIRED&gt;
+
+&lt;!ELEMENT count EMPTY&gt;
+&lt;!ATTLIST count
+	term CDATA #REQUIRED
+	set CDATA #REQUIRED
+	relset CDATA #REQUIRED
+	%filteratts;&gt;
+
+&lt;!ELEMENT compare EMPTY&gt;
+&lt;!ATTLIST compare
+	term CDATA #IMPLIED
+	set CDATA #IMPLIED
+	with CDATA #IMPLIED
+	comp CDATA #IMPLIED
+	return_element (true|false) "false"
+	exclude_self (true|false) "true"
+	%ruleatts;
+	%filteratts;&gt;
+
+&lt;!ELEMENT setoperation EMPTY&gt;
+&lt;!ATTLIST setoperation
+	set CDATA #REQUIRED
+	%sumatts;
+	%filteratts;&gt;
+
+&lt;!ELEMENT nesting EMPTY&gt;
+&lt;!ATTLIST nesting
+	relation CDATA #REQUIRED&gt;
+
+&lt;!ELEMENT subelements EMPTY&gt;
+&lt;!ATTLIST subelements
+	set CDATA #IMPLIED
+	exclude_self (true|false) "true"
+	valueset CDATA #IMPLIED
+	%filteratts;
+	%sumatts;&gt;
+
+&lt;!ELEMENT filtervalue EMPTY&gt;
+&lt;!ATTLIST filtervalue
+	relation CDATA #IMPLIED
+	relset CDATA #IMPLIED
+	value CDATA #IMPLIED
+	%filteratts;&gt;
+
+&lt;!ELEMENT substring EMPTY&gt;
+&lt;!ATTLIST substring
+	source CDATA #REQUIRED
+	separator CDATA #REQUIRED
+	position CDATA #IMPLIED
+	endseparator CDATA #IMPLIED
+	limit CDATA #IMPLIED
+	result CDATA #IMPLIED&gt;
+
+&lt;!ELEMENT compoundset EMPTY&gt;
+&lt;!ATTLIST compoundset
+	set CDATA #REQUIRED
+	cum CDATA #IMPLIED
+	valueset CDATA #IMPLIED
+	exclude_self (true|false) "false"
+	%ruleatts;
+	%filteratts;&gt;
+
+&lt;!ELEMENT violation EMPTY&gt;
+&lt;!ATTLIST violation
+	condition CDATA #REQUIRED
+	value CDATA #IMPLIED&gt;
+
+&lt;!ELEMENT valueset EMPTY&gt;
+&lt;!ATTLIST valueset
+	set CDATA #REQUIRED
+	precondition CDATA #IMPLIED
+	mincnt CDATA #IMPLIED&gt;
+
+&lt;!ELEMENT cycle EMPTY&gt;
+&lt;!ATTLIST cycle
+	nodes CDATA #REQUIRED
+	minnodes CDATA #IMPLIED&gt;
+
+&lt;!ELEMENT reference (#PCDATA|description)*&gt;
+&lt;!ATTLIST reference
+	tag CDATA #REQUIRED&gt;
+
+&lt;!ELEMENT term (#PCDATA|description)*&gt;
+&lt;!ATTLIST term
+	name CDATA #REQUIRED&gt;
+	
+&lt;!ELEMENT metricprocedure EMPTY&gt;
+&lt;!ATTLIST metricprocedure
+        name CDATA #REQUIRED
+        class CDATA #REQUIRED&gt;
+		
+&lt;!ELEMENT setprocedure EMPTY&gt;
+&lt;!ATTLIST setprocedure
+        name CDATA #REQUIRED
+        class CDATA #REQUIRED&gt;
+
+&lt;!ELEMENT ruleprocedure EMPTY&gt;
+&lt;!ATTLIST ruleprocedure
+        name CDATA #REQUIRED
+        class CDATA #REQUIRED&gt;
+</pre>
+
+
+<b>Grammar of expressions in metric definitions</b><p>
+
+The grammar for expressions in metric and set definitions is presented
+here using an extended Backus-Naur Formalism (EBNF). Note that the
+production rule FCT_LITERAL for function names recognized by the 
+expression parser only lists the default functions provided by SDMetrics.
+
+<pre>
+
+Expression            = UptoExpression.
+
+UptoExpression        = OrExpression {"upto" OrExpression | "topmost" OrExpression}.
+
+OrExpression          = AndExpression {"|" AndExpression | "or" AndExpression}.
+
+AndExpression         = EqualExpression {"&amp;" EqualExpression |
+                                         "and" EqualExpression}.
+
+EqualExpression       = RelationalExpression
+                        ["!=" RelationalExpression | 
+                          "=" RelationalExpression].
+
+RelationalExpression  = AdditiveExpression [ "<" AdditiveExpression | 
+                        ">" AdditiveExpression | "<=" AdditiveExpression | 
+                        ">=" AdditiveExpression |"lt" AdditiveExpression |
+                        "le" AdditiveExpression | "gt" AdditiveExpression |
+                        "ge" AdditiveExpression | "->" AdditiveExpression |
+                        "in" AdditiveExpression | 
+                        "startswith" AdditiveExpression | 
+                        "endswith" AdditiveExpression | 
+                        "onlist" AdditiveExpression].
+
+AdditiveExpression    = MultiplicativeExpression {
+                        "+" MultiplicativeExpression |
+                        "-" MultiplicativeExpression}.
+
+MultiplicativeExpression 
+                      = PowerExpression {
+                        "*" PowerExpression | "/" PowerExpression }
+
+PowerExpression       = DotExpression {"^" DotExpression |
+                        "->" DotExpression |"in" DotExpression }.
+
+DotExpression         = UnaryExpression {"." UnaryExpression}.
+
+UnaryExpression       = "+" UnaryExpression | "-" UnaryExpression |
+                        "!" UnaryExpression | "not" UnaryExpression |
+                        FCT_LITERAL ExpressionList | "(" Expression ")".
+
+ExpressionList        = "(" Expression {"," Expression} ")".
+
+Constant              = STRING_LITERAL | IDENTIFIER | INTEGER_LITERAL 
+                        | FLOATING_POINT_LITERAL.
+
+FCT_LITERAL           = "ln" | "exp" | "sqrt" | "abs" |
+                        "ceil" | "floor" | "round" | 
+                        "startswithcapital" | "startswithlowercase" |
+                        "islowercase" | "tolowercase" | 
+                        "length" | "size" | "flatsize" |
+                        "isunique" | "typeof" | "instanceof" | 
+                        "qualifiedname".
+
+INTEGER_LITERAL       = DECIMAL_LITERAL.
+
+DECIMAL_LITERAL       = DIGIT {DIGIT}. 
+
+FLOATING_POINT_LITERAL= ({DIGIT} "." DIGIT {DIGIT} [EXPONENT])
+                        | DIGIT {DIGIT} [EXPONENT].
+
+EXPONENT              = ("e"|"E") ["+"|"-"] DIGIT {DIGIT}.
+
+STRING_LITERAL        = "'" {LETTER|DIGIT} "'".
+
+IDENTIFIER            = LETTER {LETTER|DIGIT}. 
+
+LETTER                =  "_" | "A".."Z" | "a".."z".
+
+DIGIT                 = "0" | "1" | "2" | "3" | "4" | "5" | 
+                        "6" | "7" | "8" | "9".
+</pre>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="LOMatrices.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="index.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Glossary.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;D: "List of Matrices"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;F: "Glossary"</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ScriptingSecurityManager.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.script</a> &gt; <span class="el_source">ScriptingSecurityManager.java</span></div><h1>ScriptingSecurityManager.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2008 Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 06.03.2008
+ */
+/*$Id: ScriptingSecurityManager.java,v 1.1.2.5 2008/04/02 20:02:37 christianfoltin Exp $*/
+
+package plugins.script;
+
+import java.io.FileDescriptor;
+import java.net.InetAddress;
+import java.security.Permission;
+import java.util.HashSet;
+
+import freemind.main.Resources;
+
+/**
+ * @author foltin
+ * 
+ */
+public class ScriptingSecurityManager extends SecurityManager {
+
+	private final boolean mWithoutFileRestriction;
+	private final boolean mWithoutNetworkRestriction;
+	private final boolean mWithoutExecRestriction;
+
+	private static final int PERM_Accept = 0;
+	private static final int PERM_Connect = 1;
+	private static final int PERM_Listen = 2;
+	private static final int PERM_Multicast = 3;
+	private static final int PERM_SetFactory = 4;
+	private static final int PERM_Exec = 5;
+	private static final int PERM_Link = 6;
+	private static final int PERM_Delete = 7;
+	private static final int PERM_Read = 8;
+	private static final int PERM_Write = 9;
+
+	private static final int PERM_GROUP_FILE = 0;
+	private static final int PERM_GROUP_NETWORK = 1;
+	private static final int PERM_GROUP_EXEC = 2;
+<span class="nc" id="L57">	private static java.util.logging.Logger logger = null;</span>
+
+<span class="nc" id="L59">	public ScriptingSecurityManager(boolean pWithoutFileRestriction,</span>
+			boolean pWithoutNetworkRestriction, boolean pWithoutExecRestriction) {
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L62">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L63">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L65">		mWithoutFileRestriction = pWithoutFileRestriction;</span>
+<span class="nc" id="L66">		mWithoutNetworkRestriction = pWithoutNetworkRestriction;</span>
+<span class="nc" id="L67">		mWithoutExecRestriction = pWithoutExecRestriction;</span>
+<span class="nc" id="L68">	}</span>
+
+	public void checkAccept(String pHost, int pPort) {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">		if (mWithoutNetworkRestriction)</span>
+<span class="nc" id="L72">			return;</span>
+<span class="nc" id="L73">		throw getException(PERM_GROUP_NETWORK, PERM_Accept);</span>
+	}
+
+	public void checkConnect(String pHost, int pPort, Object pContext) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (mWithoutNetworkRestriction)</span>
+<span class="nc" id="L78">			return;</span>
+<span class="nc" id="L79">		throw getException(PERM_GROUP_NETWORK, PERM_Connect);</span>
+	}
+
+	public void checkConnect(String pHost, int pPort) {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (mWithoutNetworkRestriction)</span>
+<span class="nc" id="L84">			return;</span>
+<span class="nc" id="L85">		throw getException(PERM_GROUP_NETWORK, PERM_Connect);</span>
+	}
+
+	public void checkListen(int pPort) {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (mWithoutNetworkRestriction)</span>
+<span class="nc" id="L90">			return;</span>
+<span class="nc" id="L91">		throw getException(PERM_GROUP_NETWORK, PERM_Listen);</span>
+	}
+
+	public void checkMulticast(InetAddress pMaddr, byte pTtl) {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (mWithoutNetworkRestriction)</span>
+<span class="nc" id="L96">			return;</span>
+<span class="nc" id="L97">		throw getException(PERM_GROUP_NETWORK, PERM_Multicast);</span>
+	}
+
+	public void checkMulticast(InetAddress pMaddr) {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (mWithoutNetworkRestriction)</span>
+<span class="nc" id="L102">			return;</span>
+<span class="nc" id="L103">		throw getException(PERM_GROUP_NETWORK, PERM_Multicast);</span>
+	}
+
+	public void checkSetFactory() {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (mWithoutNetworkRestriction)</span>
+<span class="nc" id="L108">			return;</span>
+<span class="nc" id="L109">		throw getException(PERM_GROUP_NETWORK, PERM_SetFactory);</span>
+	}
+
+	public void checkExec(String pCmd) {
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (mWithoutExecRestriction)</span>
+<span class="nc" id="L114">			return;</span>
+<span class="nc" id="L115">		throw getException(PERM_GROUP_EXEC, PERM_Exec);</span>
+	}
+
+	public void checkLink(String pLib) {
+		/*
+		 * This should permit system libraries to be loaded.
+		 */
+<span class="nc" id="L122">		HashSet set = new HashSet();</span>
+<span class="nc" id="L123">		set.add(&quot;awt&quot;);</span>
+<span class="nc" id="L124">		set.add(&quot;net&quot;);</span>
+<span class="nc" id="L125">		set.add(&quot;jpeg&quot;);</span>
+<span class="nc" id="L126">		set.add(&quot;fontmanager&quot;);</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">		if (mWithoutExecRestriction || set.contains(pLib))</span>
+<span class="nc" id="L128">			return;</span>
+<span class="nc" id="L129">		throw getException(PERM_GROUP_EXEC, PERM_Link);</span>
+	}
+
+	public void checkDelete(String pFile) {
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (mWithoutFileRestriction)</span>
+<span class="nc" id="L134">			return;</span>
+<span class="nc" id="L135">		throw getException(PERM_GROUP_FILE, PERM_Delete);</span>
+	}
+
+	public void checkRead(FileDescriptor pFd) {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (mWithoutFileRestriction)</span>
+<span class="nc" id="L140">			return;</span>
+<span class="nc" id="L141">		throw getException(PERM_GROUP_FILE, PERM_Read);</span>
+	}
+
+	public void checkRead(String pFile, Object pContext) {
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (mWithoutFileRestriction)</span>
+<span class="nc" id="L146">			return;</span>
+<span class="nc" id="L147">		throw getException(PERM_GROUP_FILE, PERM_Read);</span>
+	}
+
+	public void checkRead(String pFile) {
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (mWithoutFileRestriction)</span>
+<span class="nc" id="L152">			return;</span>
+<span class="nc" id="L153">		throw getException(PERM_GROUP_FILE, PERM_Read);</span>
+	}
+
+	public void checkWrite(FileDescriptor pFd) {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (mWithoutFileRestriction)</span>
+<span class="nc" id="L158">			return;</span>
+<span class="nc" id="L159">		throw getException(PERM_GROUP_FILE, PERM_Write);</span>
+	}
+
+	public void checkWrite(String pFile) {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (mWithoutFileRestriction)</span>
+<span class="nc" id="L164">			return;</span>
+<span class="nc" id="L165">		throw getException(PERM_GROUP_FILE, PERM_Write);</span>
+	}
+
+	private SecurityException getException(int pPermissionGroup, int pPermission) {
+<span class="nc" id="L169">		return new SecurityException(Resources.getInstance().format(</span>
+<span class="nc" id="L170">				&quot;plugins/ScriptEditor.FORBIDDEN_ACTION&quot;,</span>
+<span class="nc" id="L171">				new Integer[] { new Integer(pPermissionGroup),</span>
+<span class="nc" id="L172">						new Integer(pPermission) }));</span>
+	}
+
+	public void checkAccess(Thread pT) {
+<span class="nc" id="L176">	}</span>
+
+	public void checkAccess(ThreadGroup pG) {
+<span class="nc" id="L179">	}</span>
+
+	public void checkAwtEventQueueAccess() {
+<span class="nc" id="L182">	}</span>
+
+	public void checkCreateClassLoader() {
+<span class="nc" id="L185">	}</span>
+
+	public void checkExit(int pStatus) {
+<span class="nc" id="L188">	}</span>
+
+	public void checkMemberAccess(Class arg0, int arg1) {
+<span class="nc" id="L191">	}</span>
+
+	public void checkPackageAccess(String pPkg) {
+<span class="nc" id="L194">	}</span>
+
+	public void checkPackageDefinition(String pPkg) {
+<span class="nc" id="L197">	}</span>
+
+	public void checkPermission(Permission pPerm, Object pContext) {
+<span class="nc" id="L200">		logger.fine(&quot;Check Permission with Context: &quot; + pPerm.getClass());</span>
+<span class="nc" id="L201">	}</span>
+
+	public void checkPermission(Permission pPerm) {
+<span class="nc" id="L204">		logger.fine(&quot;Check Permission: &quot; + pPerm.getClass());</span>
+<span class="nc" id="L205">	}</span>
+
+	public void checkPrintJobAccess() {
+<span class="nc" id="L208">	}</span>
+
+	public void checkPropertiesAccess() {
+<span class="nc" id="L211">	}</span>
+
+	public void checkPropertyAccess(String pKey) {
+<span class="nc" id="L214">	}</span>
+
+	public void checkSecurityAccess(String pTarget) {
+<span class="nc" id="L217">	}</span>
+
+	public void checkSystemClipboardAccess() {
+<span class="nc" id="L220">	}</span>
+
+	public boolean checkTopLevelWindow(Object pWindow) {
+<span class="nc" id="L223">		return true;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

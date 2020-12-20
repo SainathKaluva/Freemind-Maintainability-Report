@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Accepting Design Rule Violations</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="RuleFilter.html">Prev</a> - <a href="DStatsView.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="Rules.html">4.7 The View 'Rule Checker'</a> > 4.7.2 Accepting Design Rule Violations
+<hr>
+<h3><a name="RuleAccepting"></a>4.7.2 Accepting Design Rule Violations</h3>
+
+Rules are there to be bent once in a while. That is, sometimes there
+is a justification why a particular model element should be allowed to
+violate a particular rule. Such approved rule violations should not be
+reported anymore for the model element. You achieve this with specific
+tags or comments that you add to the model element in your UML tool.
+The procedure differs for UML 1.x and UML 2.x models.<p>
+
+<b>UML 1.x</b><p>
+To allow a model element <i>e</i> to violate a rule named
+<tt>rulename</tt>, define a tagged value for <i>e</i>, where the tag
+name is <tt>violates_rulename</tt> (please refer to the manual of your
+UML modeling tool for details on how to add tagged values). The value
+of the tagged value pair is ignored by SDMetrics. You can use the value
+for instance to document the reason why the model element is allowed
+to violate the rule.<p>
+
+For example, if after a design review a particular class is allowed to
+violate rules named "GodClass" and "MultipleInheritance", you add two
+tagged values to the class, one with tag <tt>violates_GodClass</tt>
+and the other with the tag <tt>violates_MultipleInheritance</tt>. From
+then on, violations of these two rules will no longer be reported for
+that class (and only these two rules, and only for that class).<p>
+
+<b>UML 2.x</b><p> 
+
+UML 2 no longer has tagged values as they are known in UML 1.x, but
+every model element can own comments. To exempt a model element from
+one or more rules, add one or more comments where the body text
+contains the string <tt>violates_rulename</tt> for each rule the model
+element is allowed to violate. Please refer to the manual of your UML
+modeling tool for details on how to add comments. An example comment
+body text could be:<br> 
+<tt>"violates_GodClass, violates_MultipleInheritance: confirmed in
+review"</tt><p>
+
+The comment's body can contain additional text before, after, or
+between the <tt>violates_rulename</tt> tags. You can use this to
+document the reason why the model element is allowed to violate the
+rule.<p>
+
+<b>Customizing rule exemption annotations</b><p>
+
+If the above methods to mark elements as exempt from certain rules
+do not suit you, the method is customizable to some degree,
+see <a href="RuleExAttr.html">Section&nbsp;8.3.6 "Exempting Approved Rule Violations"</a>.<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="RuleFilter.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Rules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="DStatsView.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.7.1 "Filtering Design Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.8 "The View 'Descriptive Statistics'"</td></tr></table>
+
+</body>
+</html>

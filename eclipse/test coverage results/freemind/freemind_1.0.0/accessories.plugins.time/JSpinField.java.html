@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>JSpinField.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.time</a> &gt; <span class="el_source">JSpinField.java</span></div><h1>JSpinField.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*</span>
+ *  JSpinField.java  - A spin field using a JSpinner (JDK 1.4)
+ *  Copyright (C) 2004 Kai Toedter
+ *  kai@toedter.com
+ *  www.toedter.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+package accessories.plugins.time;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+/**
+ * JSpinField is a numeric field with 2 spin buttons to increase or decrease the
+ * value. It has the same interface as the &quot;old&quot; JSpinField but uses a JSpinner
+ * internally (since J2SE SDK 1.4) rather than a scrollbar for emulating the
+ * spin buttons.
+ * 
+ * @author Kai Toedter
+ * @version $LastChangedRevision: 85 $
+ * @version $LastChangedDate: 2006-04-28 13:50:52 +0200 (Fr, 28 Apr 2006) $
+ */
+public class JSpinField extends JPanel implements ChangeListener,
+		CaretListener, ActionListener, FocusListener {
+	private static final long serialVersionUID = 1694904792717740650L;
+
+	protected JSpinner spinner;
+
+	/** the text (number) field */
+	protected JTextField textField;
+	protected int min;
+	protected int max;
+	protected int value;
+	protected Color darkGreen;
+
+	/**
+	 * Default JSpinField constructor. The valid value range is between
+	 * Integer.MIN_VALUE and Integer.MAX_VALUE. The initial value is 0.
+	 */
+	public JSpinField() {
+<span class="nc" id="L75">		this(Integer.MIN_VALUE, Integer.MAX_VALUE);</span>
+<span class="nc" id="L76">	}</span>
+
+	/**
+	 * JSpinField constructor with given minimum and maximum vaues and initial
+	 * value 0.
+	 */
+	public JSpinField(int min, int max) {
+<span class="nc" id="L83">		super();</span>
+<span class="nc" id="L84">		setName(&quot;JSpinField&quot;);</span>
+<span class="nc" id="L85">		this.min = min;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (max &lt; min)</span>
+<span class="nc" id="L87">			max = min;</span>
+<span class="nc" id="L88">		this.max = max;</span>
+<span class="nc" id="L89">		value = 0;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (value &lt; min)</span>
+<span class="nc" id="L91">			value = min;</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (value &gt; max)</span>
+<span class="nc" id="L93">			value = max;</span>
+
+<span class="nc" id="L95">		darkGreen = new Color(0, 150, 0);</span>
+<span class="nc" id="L96">		setLayout(new BorderLayout());</span>
+<span class="nc" id="L97">		textField = new JTextField();</span>
+<span class="nc" id="L98">		textField.addCaretListener(this);</span>
+<span class="nc" id="L99">		textField.addActionListener(this);</span>
+<span class="nc" id="L100">		textField.setHorizontalAlignment(SwingConstants.RIGHT);</span>
+<span class="nc" id="L101">		textField.setBorder(BorderFactory.createEmptyBorder());</span>
+<span class="nc" id="L102">		textField.setText(Integer.toString(value));</span>
+<span class="nc" id="L103">		textField.addFocusListener(this);</span>
+<span class="nc" id="L104">		spinner = new JSpinner() {</span>
+			private static final long serialVersionUID = -6287709243342021172L;
+<span class="nc" id="L106">			private JTextField textField = new JTextField();</span>
+
+			public Dimension getPreferredSize() {
+<span class="nc" id="L109">				Dimension size = super.getPreferredSize();</span>
+<span class="nc" id="L110">				return new Dimension(size.width,</span>
+<span class="nc" id="L111">						textField.getPreferredSize().height);</span>
+			}
+		};
+<span class="nc" id="L114">		spinner.setEditor(textField);</span>
+<span class="nc" id="L115">		spinner.addChangeListener(this);</span>
+		// spinner.setSize(spinner.getWidth(), textField.getHeight());
+<span class="nc" id="L117">		add(spinner, BorderLayout.CENTER);</span>
+<span class="nc" id="L118">	}</span>
+
+	public void adjustWidthToMaximumValue() {
+<span class="nc" id="L121">		JTextField testTextField = new JTextField(Integer.toString(max));</span>
+<span class="nc" id="L122">		int width = testTextField.getPreferredSize().width;</span>
+<span class="nc" id="L123">		int height = testTextField.getPreferredSize().height;</span>
+<span class="nc" id="L124">		textField.setPreferredSize(new Dimension(width, height));</span>
+<span class="nc" id="L125">		textField.revalidate();</span>
+<span class="nc" id="L126">	}</span>
+
+	/**
+	 * Is invoked when the spinner model changes
+	 * 
+	 * @param e
+	 *            the ChangeEvent
+	 */
+	public void stateChanged(ChangeEvent e) {
+<span class="nc" id="L135">		SpinnerNumberModel model = (SpinnerNumberModel) spinner.getModel();</span>
+<span class="nc" id="L136">		int value = model.getNumber().intValue();</span>
+<span class="nc" id="L137">		setValue(value);</span>
+<span class="nc" id="L138">	}</span>
+
+	/**
+	 * Sets the value attribute of the JSpinField object.
+	 * 
+	 * @param newValue
+	 *            The new value
+	 * @param updateTextField
+	 *            true if text field should be updated
+	 */
+	protected void setValue(int newValue, boolean updateTextField,
+			boolean firePropertyChange) {
+<span class="nc" id="L150">		int oldValue = value;</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (newValue &lt; min) {</span>
+<span class="nc" id="L152">			value = min;</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		} else if (newValue &gt; max) {</span>
+<span class="nc" id="L154">			value = max;</span>
+<span class="nc" id="L155">		} else {</span>
+<span class="nc" id="L156">			value = newValue;</span>
+		}
+
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (updateTextField) {</span>
+<span class="nc" id="L160">			textField.setText(Integer.toString(value));</span>
+<span class="nc" id="L161">			textField.setForeground(Color.black);</span>
+		}
+
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		if (firePropertyChange) {</span>
+<span class="nc" id="L165">			firePropertyChange(&quot;value&quot;, oldValue, value);</span>
+		}
+<span class="nc" id="L167">	}</span>
+
+	/**
+	 * Sets the value. This is a bound property.
+	 * 
+	 * @param newValue
+	 *            the new value
+	 * 
+	 * @see #getValue
+	 */
+	public void setValue(int newValue) {
+<span class="nc" id="L178">		setValue(newValue, true, true);</span>
+<span class="nc" id="L179">		spinner.setValue(new Integer(value));</span>
+<span class="nc" id="L180">	}</span>
+
+	/**
+	 * Returns the value.
+	 * 
+	 * @return the value value
+	 */
+	public int getValue() {
+<span class="nc" id="L188">		return value;</span>
+	}
+
+	/**
+	 * Sets the minimum value.
+	 * 
+	 * @param newMinimum
+	 *            the new minimum value
+	 * 
+	 * @see #getMinimum
+	 */
+	public void setMinimum(int newMinimum) {
+<span class="nc" id="L200">		min = newMinimum;</span>
+<span class="nc" id="L201">	}</span>
+
+	/**
+	 * Returns the minimum value.
+	 * 
+	 * @return the minimum value
+	 */
+	public int getMinimum() {
+<span class="nc" id="L209">		return min;</span>
+	}
+
+	/**
+	 * Sets the maximum value and adjusts the preferred width.
+	 * 
+	 * @param newMaximum
+	 *            the new maximum value
+	 * 
+	 * @see #getMaximum
+	 */
+	public void setMaximum(int newMaximum) {
+<span class="nc" id="L221">		max = newMaximum;</span>
+<span class="nc" id="L222">	}</span>
+
+	/**
+	 * Sets the horizontal alignment of the displayed value.
+	 * 
+	 * @param alignment
+	 *            the horizontal alignment
+	 */
+	public void setHorizontalAlignment(int alignment) {
+<span class="nc" id="L231">		textField.setHorizontalAlignment(alignment);</span>
+<span class="nc" id="L232">	}</span>
+
+	/**
+	 * Returns the maximum value.
+	 * 
+	 * @return the maximum value
+	 */
+	public int getMaximum() {
+<span class="nc" id="L240">		return max;</span>
+	}
+
+	/**
+	 * Sets the font property.
+	 * 
+	 * @param font
+	 *            the new font
+	 */
+	public void setFont(Font font) {
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if (textField != null) {</span>
+<span class="nc" id="L251">			textField.setFont(font);</span>
+		}
+<span class="nc" id="L253">	}</span>
+
+	/**
+	 * Sets the foreground
+	 * 
+	 * @param fg
+	 *            the foreground
+	 */
+	public void setForeground(Color fg) {
+<span class="nc bnc" id="L262" title="All 2 branches missed.">		if (textField != null) {</span>
+<span class="nc" id="L263">			textField.setForeground(fg);</span>
+		}
+<span class="nc" id="L265">	}</span>
+
+	/**
+	 * After any user input, the value of the textfield is proofed. Depending on
+	 * being an integer, the value is colored green or red.
+	 * 
+	 * @param e
+	 *            the caret event
+	 */
+	public void caretUpdate(CaretEvent e) {
+		try {
+<span class="nc" id="L276">			int testValue = Integer.valueOf(textField.getText()).intValue();</span>
+
+<span class="nc bnc" id="L278" title="All 4 branches missed.">			if ((testValue &gt;= min) &amp;&amp; (testValue &lt;= max)) {</span>
+<span class="nc" id="L279">				textField.setForeground(darkGreen);</span>
+<span class="nc" id="L280">				setValue(testValue, false, true);</span>
+<span class="nc" id="L281">			} else {</span>
+<span class="nc" id="L282">				textField.setForeground(Color.red);</span>
+			}
+<span class="nc" id="L284">		} catch (Exception ex) {</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">			if (ex instanceof NumberFormatException) {</span>
+<span class="nc" id="L286">				textField.setForeground(Color.red);</span>
+			}
+
+			// Ignore all other exceptions, e.g. illegal state exception
+		}
+
+<span class="nc" id="L292">		textField.repaint();</span>
+<span class="nc" id="L293">	}</span>
+
+	/**
+	 * After any user input, the value of the textfield is proofed. Depending on
+	 * being an integer, the value is colored green or red. If the textfield is
+	 * green, the enter key is accepted and the new value is set.
+	 * 
+	 * @param e
+	 *            Description of the Parameter
+	 */
+	public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L304" title="All 2 branches missed.">		if (textField.getForeground().equals(darkGreen)) {</span>
+<span class="nc" id="L305">			setValue(Integer.valueOf(textField.getText()).intValue());</span>
+		}
+<span class="nc" id="L307">	}</span>
+
+	/**
+	 * Enable or disable the JSpinField.
+	 * 
+	 * @param enabled
+	 *            The new enabled value
+	 */
+	public void setEnabled(boolean enabled) {
+<span class="nc" id="L316">		super.setEnabled(enabled);</span>
+<span class="nc" id="L317">		spinner.setEnabled(enabled);</span>
+<span class="nc" id="L318">		textField.setEnabled(enabled);</span>
+		/*
+		 * Fixes the background bug 4991597 and sets the background explicitely
+		 * to a TextField.inactiveBackground.
+		 */
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		if (!enabled) {</span>
+<span class="nc" id="L324">			textField.setBackground(UIManager</span>
+<span class="nc" id="L325">					.getColor(&quot;TextField.inactiveBackground&quot;));</span>
+		}
+<span class="nc" id="L327">	}</span>
+
+	/**
+	 * Returns the year chooser's spinner (which allow the focus to be set to
+	 * it).
+	 * 
+	 * @return Component the spinner or null, if the month chooser has no
+	 *         spinner
+	 */
+	public Component getSpinner() {
+<span class="nc" id="L337">		return spinner;</span>
+	}
+
+	/**
+	 * Creates a JFrame with a JSpinField inside and can be used for testing.
+	 * 
+	 * @param s
+	 *            The command line arguments
+	 */
+	public static void main(String[] s) {
+<span class="nc" id="L347">		JFrame frame = new JFrame(&quot;JSpinField&quot;);</span>
+<span class="nc" id="L348">		frame.getContentPane().add(new JSpinField());</span>
+<span class="nc" id="L349">		frame.pack();</span>
+<span class="nc" id="L350">		frame.setVisible(true);</span>
+<span class="nc" id="L351">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.event.FocusListener#focusGained(java.awt.event.FocusEvent)
+	 */
+	public void focusGained(FocusEvent e) {
+<span class="nc" id="L359">	}</span>
+
+	/**
+	 * The value of the text field is checked against a valid (green) value. If
+	 * valid, the value is set and a property change is fired.
+	 */
+	public void focusLost(FocusEvent e) {
+<span class="nc" id="L366">		actionPerformed(null);</span>
+<span class="nc" id="L367">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

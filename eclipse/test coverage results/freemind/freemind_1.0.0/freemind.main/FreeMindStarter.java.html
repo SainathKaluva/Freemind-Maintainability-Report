@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FreeMindStarter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">FreeMindStarter.java</span></div><h1>FreeMindStarter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Dimitri Polivaev, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 06.07.2006
+ */
+/*$Id: FreeMindStarter.java,v 1.1.2.11 2009/03/29 19:37:23 christianfoltin Exp $*/
+package freemind.main;
+
+import java.awt.Toolkit;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.net.URL;
+import java.util.Locale;
+import java.util.Properties;
+
+import javax.swing.JOptionPane;
+
+/**
+ * This class should check the java version and start freemind. In order to be
+ * able to check, it must be startable with java versions &lt; 1.4. We have
+ * therefore a section in the build.xml that explicitly compiles this class for
+ * java 1.1 compatibility. Currently, it is unclear, if this works as expected.
+ * But in any case, almost no dependencies to other FreeMind sources should be
+ * used here.
+ * 
+ * @author foltin
+ * 
+ */
+<span class="fc" id="L49">public class FreeMindStarter {</span>
+	/** Doubled variable on purpose. See header of this class. */
+<span class="fc" id="L51">	static final String JAVA_VERSION = System.getProperty(&quot;java.version&quot;);</span>
+
+	public static void main(String[] args) {
+<span class="nc" id="L54">		FreeMindStarter starter = new FreeMindStarter();</span>
+		// First check version of Java
+<span class="nc" id="L56">		starter.checkJavaVersion();</span>
+<span class="nc" id="L57">		Properties defaultPreferences = starter.readDefaultPreferences();</span>
+<span class="nc" id="L58">		starter.createUserDirectory(defaultPreferences);</span>
+<span class="nc" id="L59">		Properties userPreferences =</span>
+<span class="nc" id="L60">				starter.readUsersPreferences(defaultPreferences);</span>
+<span class="nc" id="L61">		starter.setDefaultLocale(userPreferences);</span>
+
+		// Christopher Robin Elmersson: set
+<span class="nc" id="L64">		Toolkit xToolkit = Toolkit.getDefaultToolkit();</span>
+
+		// workaround for java bug http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=7075600
+<span class="nc" id="L67">		System.setProperty(&quot;java.util.Arrays.useLegacyMergeSort&quot;, &quot;true&quot;);</span>
+		
+		try {
+<span class="nc" id="L70">			java.lang.reflect.Field awtAppClassNameField =</span>
+<span class="nc" id="L71">					xToolkit.getClass().getDeclaredField(&quot;awtAppClassName&quot;);</span>
+<span class="nc" id="L72">			awtAppClassNameField.setAccessible(true);</span>
+			try {
+<span class="nc" id="L74">				awtAppClassNameField.set(xToolkit, &quot;FreeMind&quot;);</span>
+<span class="nc" id="L75">			} catch (java.lang.IllegalAccessException ex) {</span>
+<span class="nc" id="L76">				System.err.println(&quot;Could not set window name&quot;);</span>
+			}
+<span class="nc" id="L78">		} catch (NoSuchFieldException ex) {</span>
+			// System.err.println(&quot;Could not get awtAppClassName&quot;);
+		}
+
+		// use reflection to call :
+		// FreeMind.main(args, defaultPreferences, userPreferences,
+		// starter.getUserPreferencesFile(defaultPreferences));
+		try {
+<span class="nc" id="L86">			Class mainClass = Class.forName(&quot;freemind.main.FreeMind&quot;);</span>
+<span class="nc" id="L87">			Method mainMethod = mainClass.getMethod(&quot;main&quot;, new Class[] {</span>
+<span class="nc" id="L88">					String[].class, Properties.class, Properties.class,</span>
+<span class="nc" id="L89">					File.class });</span>
+<span class="nc" id="L90">			mainMethod.invoke(null,</span>
+<span class="nc" id="L91">							new Object[] {</span>
+<span class="nc" id="L92">									args,</span>
+<span class="nc" id="L93">									defaultPreferences,</span>
+<span class="nc" id="L94">									userPreferences,</span>
+<span class="nc" id="L95">									starter.getUserPreferencesFile(defaultPreferences) });</span>
+
+<span class="nc" id="L97">		} catch (Exception e) {</span>
+<span class="nc" id="L98">			e.printStackTrace();</span>
+<span class="nc" id="L99">			JOptionPane.showMessageDialog(null,</span>
+<span class="nc" id="L100">					&quot;freemind.main.FreeMind can't be started&quot;,</span>
+<span class="nc" id="L101">					&quot;Startup problem&quot;, JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L102">			System.exit(1);</span>
+		}
+<span class="nc" id="L104">	}</span>
+
+	private void checkJavaVersion() {
+<span class="nc" id="L107">		System.out.println(&quot;Checking Java Version...&quot;);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (JAVA_VERSION.compareTo(&quot;1.4.0&quot;) &lt; 0) {</span>
+<span class="nc" id="L109">			String message = &quot;Warning: FreeMind requires version Java 1.4.0 or higher (your version: &quot;</span>
+<span class="nc" id="L110">					+ JAVA_VERSION</span>
+<span class="nc" id="L111">					+ &quot;, installed in &quot;</span>
+<span class="nc" id="L112">					+ System.getProperty(&quot;java.home&quot;) + &quot;).&quot;;</span>
+<span class="nc" id="L113">			System.err.println(message);</span>
+<span class="nc" id="L114">			JOptionPane.showMessageDialog(null, message, &quot;FreeMind&quot;,</span>
+<span class="nc" id="L115">					JOptionPane.WARNING_MESSAGE);</span>
+<span class="nc" id="L116">			System.exit(1);</span>
+		}
+<span class="nc" id="L118">	}</span>
+
+	private void createUserDirectory(Properties pDefaultProperties) {
+<span class="nc" id="L121">		File userPropertiesFolder = new File(</span>
+<span class="nc" id="L122">				getFreeMindDirectory(pDefaultProperties));</span>
+		try {
+			// create user directory:
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (!userPropertiesFolder.exists()) {</span>
+<span class="nc" id="L126">				userPropertiesFolder.mkdir();</span>
+			}
+<span class="nc" id="L128">		} catch (Exception e) {</span>
+			// exception is logged to console as we don't have a logger
+<span class="nc" id="L130">			e.printStackTrace();</span>
+<span class="nc" id="L131">			System.err.println(&quot;Cannot create folder for user properties and logging: '&quot;</span>
+<span class="nc" id="L132">							+ userPropertiesFolder.getAbsolutePath() + &quot;'&quot;);</span>
+
+		}
+<span class="nc" id="L135">	}</span>
+
+	/**
+	 * @param pProperties
+	 */
+	private void setDefaultLocale(Properties pProperties) {
+<span class="nc" id="L141">		String lang = pProperties.getProperty(FreeMindCommon.RESOURCE_LANGUAGE);</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		if (lang == null) {</span>
+<span class="nc" id="L143">			return;</span>
+		}
+<span class="nc" id="L145">		Locale localeDef = null;</span>
+<span class="nc bnc" id="L146" title="All 3 branches missed.">		switch (lang.length()) {</span>
+		case 2:
+<span class="nc" id="L148">			localeDef = new Locale(lang);</span>
+<span class="nc" id="L149">			break;</span>
+		case 5:
+<span class="nc" id="L151">			localeDef = new Locale(lang.substring(0, 1), lang.substring(3, 4));</span>
+<span class="nc" id="L152">			break;</span>
+		default:
+<span class="nc" id="L154">			return;</span>
+		}
+<span class="nc" id="L156">		Locale.setDefault(localeDef);</span>
+<span class="nc" id="L157">	}</span>
+
+	private Properties readUsersPreferences(Properties defaultPreferences) {
+<span class="nc" id="L160">		Properties auto = null;</span>
+<span class="nc" id="L161">		auto = new Properties(defaultPreferences);</span>
+		try {
+<span class="nc" id="L163">			InputStream in = null;</span>
+<span class="nc" id="L164">			File autoPropertiesFile = getUserPreferencesFile(defaultPreferences);</span>
+<span class="nc" id="L165">			in = new FileInputStream(autoPropertiesFile);</span>
+<span class="nc" id="L166">			auto.load(in);</span>
+<span class="nc" id="L167">			in.close();</span>
+<span class="nc" id="L168">		} catch (Exception ex) {</span>
+<span class="nc" id="L169">			ex.printStackTrace();</span>
+<span class="nc" id="L170">			System.err.println(&quot;Panic! Error while loading default properties.&quot;);</span>
+		}
+<span class="nc" id="L172">		return auto;</span>
+	}
+
+	private File getUserPreferencesFile(Properties defaultPreferences) {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (defaultPreferences == null) {</span>
+<span class="nc" id="L177">			System.err.println(&quot;Panic! Error while loading default properties.&quot;);</span>
+<span class="nc" id="L178">			System.exit(1);</span>
+		}
+<span class="nc" id="L180">		String freemindDirectory = getFreeMindDirectory(defaultPreferences);</span>
+<span class="nc" id="L181">		File userPropertiesFolder = new File(freemindDirectory);</span>
+<span class="nc" id="L182">		File autoPropertiesFile = new File(userPropertiesFolder,</span>
+<span class="nc" id="L183">				defaultPreferences.getProperty(&quot;autoproperties&quot;));</span>
+<span class="nc" id="L184">		return autoPropertiesFile;</span>
+	}
+
+	private String getFreeMindDirectory(Properties defaultPreferences) {
+<span class="nc" id="L188">		return System.getProperty(&quot;user.home&quot;) + File.separator</span>
+<span class="nc" id="L189">				+ defaultPreferences.getProperty(&quot;properties_folder&quot;);</span>
+	}
+
+	public Properties readDefaultPreferences() {
+<span class="fc" id="L193">		String propsLoc = &quot;freemind.properties&quot;;</span>
+<span class="fc" id="L194">		URL defaultPropsURL =</span>
+<span class="fc" id="L195">				this.getClass().getClassLoader().getResource(propsLoc);</span>
+<span class="fc" id="L196">		Properties props = new Properties();</span>
+		try {
+<span class="fc" id="L198">			InputStream in = defaultPropsURL.openStream();</span>
+<span class="fc" id="L199">			props.load(in);</span>
+<span class="fc" id="L200">			in.close();</span>
+<span class="pc" id="L201">		} catch (Exception ex) {</span>
+<span class="nc" id="L202">			ex.printStackTrace();</span>
+<span class="nc" id="L203">			System.err.println(&quot;Panic! Error while loading default properties.&quot;);</span>
+		}
+<span class="fc" id="L205">		return props;</span>
+	}
+	
+	public static class ProxyAuthenticator extends Authenticator {
+
+	    private String user, password;
+
+<span class="nc" id="L212">	    public ProxyAuthenticator(String user, String password) {</span>
+<span class="nc" id="L213">	        this.user = user;</span>
+<span class="nc" id="L214">	        this.password = password;</span>
+<span class="nc" id="L215">	    }</span>
+
+	    protected PasswordAuthentication getPasswordAuthentication() {
+<span class="nc" id="L218">	        return new PasswordAuthentication(user, password.toCharArray());</span>
+	    }
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExportPdfPapers.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.svg</a> &gt; <span class="el_source">ExportPdfPapers.java</span></div><h1>ExportPdfPapers.java</h1><pre class="source lang-java linenums">package plugins.svg;
+
+import java.awt.print.Paper;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.print.attribute.standard.MediaSize;
+import javax.print.attribute.standard.MediaSizeName;
+
+/**
+ * @author Andy
+ * 
+ *         Class is resposible to provide all papers that could be used for PDF
+ *         export
+ */
+class ExportPdfPapers {
+
+	/*
+	 * 72(dpi) / 25 (mm/inch) = 0.352 mm/px = (default value of transcoder)
+	 */
+	private static final double ppmm = 96 / 25.4;
+
+	/**
+	 * map to store all papers
+	 */
+<span class="nc" id="L26">	Map paperFormats = new HashMap();</span>
+
+	/**
+	 * constructor
+	 * 
+	 * @param exportPdf
+	 */
+<span class="nc" id="L33">	public ExportPdfPapers() {</span>
+
+<span class="nc" id="L35">		initPapers();</span>
+<span class="nc" id="L36">	}</span>
+
+	/**
+	 * 
+	 * @return the names of the given paper formats
+	 */
+	String[] getPaperNames() {
+<span class="nc" id="L43">		Object[] o_names = paperFormats.keySet().toArray();</span>
+<span class="nc" id="L44">		String[] names = new String[o_names.length];</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		for (int i = 0; i &lt; paperFormats.size(); i++) {</span>
+<span class="nc" id="L46">			names[i] = (String) o_names[i];</span>
+		}
+<span class="nc" id="L48">		return names;</span>
+	}
+
+	/**
+	 * Initialize the list of papers
+	 * 
+	 * for more papers see {@link http://en.wikipedia.org/wiki/Paper_size}
+	 */
+	private void initPapers() {
+		// A -Papers
+<span class="nc" id="L58">		addPaper(MediaSizeName.ISO_A2, &quot;A2&quot;);</span>
+<span class="nc" id="L59">		addPaper(MediaSizeName.ISO_A3, &quot;A3&quot;);</span>
+<span class="nc" id="L60">		addPaper(MediaSizeName.ISO_A4, &quot;A4&quot;);</span>
+<span class="nc" id="L61">		addPaper(MediaSizeName.ISO_A5, &quot;A5&quot;);</span>
+
+		// B - Papers
+<span class="nc" id="L64">		addPaper(MediaSizeName.ISO_B2, &quot;B2&quot;);</span>
+<span class="nc" id="L65">		addPaper(MediaSizeName.ISO_B3, &quot;B3&quot;);</span>
+<span class="nc" id="L66">		addPaper(MediaSizeName.ISO_B4, &quot;B4&quot;);</span>
+<span class="nc" id="L67">		addPaper(MediaSizeName.ISO_B5, &quot;B5&quot;);</span>
+
+<span class="nc" id="L69">	}</span>
+
+	/**
+	 * Add a new paper to the list of papers
+	 * 
+	 * @param name
+	 * @param displayName
+	 */
+	private void addPaper(MediaSizeName name, String displayName) {
+<span class="nc" id="L78">		MediaSize mSize = MediaSize.getMediaSizeForName(name);</span>
+<span class="nc" id="L79">		Paper paper = new Paper();</span>
+<span class="nc" id="L80">		paper.setSize(mSize.getX(MediaSize.MM) * ppmm, mSize.getY(MediaSize.MM)</span>
+<span class="nc" id="L81">				* ppmm);</span>
+<span class="nc" id="L82">		paperFormats.put(displayName, paper);</span>
+<span class="nc" id="L83">	}</span>
+
+	/**
+	 * Determine the paper from a given format string
+	 * 
+	 * @param formats
+	 *            string like A3 or A4 that is one of the values of
+	 *            getPaperNames()
+	 * @return The paper for the given format
+	 */
+	Paper determinePaper(String format) {
+
+<span class="nc" id="L95">		Object o = paperFormats.get(format);</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">		if (o != null &amp;&amp; o instanceof Paper) {</span>
+<span class="nc" id="L97">			Paper result = (Paper) o;</span>
+<span class="nc" id="L98">			return result;</span>
+		} else {
+<span class="nc" id="L100">			return null;</span>
+		}
+
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

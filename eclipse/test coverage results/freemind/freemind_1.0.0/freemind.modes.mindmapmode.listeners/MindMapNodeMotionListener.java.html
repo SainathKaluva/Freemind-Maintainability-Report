@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapNodeMotionListener.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.listeners</a> &gt; <span class="el_source">MindMapNodeMotionListener.java</span></div><h1>MindMapNodeMotionListener.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.modes.mindmapmode.listeners;
+
+import java.awt.AWTException;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+
+import freemind.controller.NodeMotionListener.NodeMotionAdapter;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.NodeMotionListenerView;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * The MouseMotionListener which belongs to every NodeView
+ */
+public class MindMapNodeMotionListener extends NodeMotionAdapter {
+
+	private final MindMapController c;
+
+	// Logging:
+	private static java.util.logging.Logger logger;
+
+<span class="nc" id="L51">	public MindMapNodeMotionListener(MindMapController controller) {</span>
+<span class="nc" id="L52">		c = controller;</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (logger == null)</span>
+<span class="nc" id="L54">			logger = c.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L55">	}</span>
+
+	public void mouseMoved(MouseEvent e) {
+<span class="nc" id="L58">	}</span>
+
+<span class="nc" id="L60">	private Point dragStartingPoint = null;</span>
+	private int originalParentVGap;
+	private int originalHGap;
+	private int originalShiftY;
+
+	/** Invoked when a mouse button is pressed on a component and then dragged. */
+	public void mouseDragged(MouseEvent e) {
+<span class="nc" id="L67">		logger.fine(&quot;Event: mouseDragged&quot;);</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if ((e.getModifiersEx() &amp; InputEvent.BUTTON1_DOWN_MASK) == (InputEvent.BUTTON1_DOWN_MASK)) {</span>
+<span class="nc" id="L69">			final NodeMotionListenerView motionListenerView = (NodeMotionListenerView) e</span>
+<span class="nc" id="L70">					.getSource();</span>
+<span class="nc" id="L71">			final NodeView nodeView = getNodeView(e);</span>
+<span class="nc" id="L72">			final MapView mapView = nodeView.getMap();</span>
+<span class="nc" id="L73">			MindMapNode node = nodeView.getModel();</span>
+<span class="nc" id="L74">			Point point = e.getPoint();</span>
+<span class="nc" id="L75">			Tools.convertPointToAncestor(motionListenerView, point,</span>
+<span class="nc" id="L76">					JScrollPane.class);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			if (!isActive()) {</span>
+<span class="nc" id="L78">				setDragStartingPoint(point, node);</span>
+<span class="nc" id="L79">			} else {</span>
+<span class="nc" id="L80">				Point dragNextPoint = point;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">				if ((e.getModifiersEx() &amp; InputEvent.CTRL_DOWN_MASK) == 0) {</span>
+<span class="nc" id="L82">					int nodeShiftY = getNodeShiftY(dragNextPoint, node,</span>
+<span class="nc" id="L83">							dragStartingPoint);</span>
+<span class="nc" id="L84">					int hGap = getHGap(dragNextPoint, node, dragStartingPoint);</span>
+<span class="nc" id="L85">					node.setShiftY(nodeShiftY);</span>
+<span class="nc" id="L86">					node.setHGap(hGap);</span>
+<span class="nc" id="L87">				} else {</span>
+<span class="nc" id="L88">					MindMapNode parentNode = nodeView.getVisibleParentView()</span>
+<span class="nc" id="L89">							.getModel();</span>
+<span class="nc" id="L90">					parentNode</span>
+<span class="nc" id="L91">							.setVGap(getVGap(dragNextPoint, dragStartingPoint));</span>
+<span class="nc" id="L92">					c.getModeController().nodeRefresh(parentNode);</span>
+				}
+<span class="nc" id="L94">				dragStartingPoint = dragNextPoint;</span>
+<span class="nc" id="L95">				c.getModeController().nodeRefresh(node);</span>
+			}
+<span class="nc" id="L97">			Point mapPoint = e.getPoint();</span>
+<span class="nc" id="L98">			Tools.convertPointToAncestor(motionListenerView, mapPoint, mapView);</span>
+<span class="nc" id="L99">			boolean isEventPointVisible = mapView.getVisibleRect().contains(</span>
+<span class="nc" id="L100">					mapPoint);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (!isEventPointVisible) {</span>
+<span class="nc" id="L102">				Rectangle r = new Rectangle(mapPoint);</span>
+<span class="nc" id="L103">				Rectangle bounds = mapView.getBounds();</span>
+<span class="nc" id="L104">				mapView.scrollRectToVisible(r);</span>
+<span class="nc" id="L105">				Rectangle bounds2 = mapView.getBounds();</span>
+<span class="nc" id="L106">				int diffx = bounds2.x - bounds.x;</span>
+<span class="nc" id="L107">				int diffy = bounds2.y - bounds.y;</span>
+				try {
+<span class="nc" id="L109">					mapPoint.translate(diffx, diffy);</span>
+					// here, there are strange cases, when the mouse moves away.
+					// Workaround.
+<span class="nc bnc" id="L112" title="All 2 branches missed.">					if (mapView.getVisibleRect().contains(mapPoint)) {</span>
+<span class="nc" id="L113">						(new Robot()).mouseMove(e.getXOnScreen() + diffx,</span>
+<span class="nc" id="L114">								e.getYOnScreen() + diffy);</span>
+					}
+<span class="nc" id="L116">				} catch (AWTException e1) {</span>
+<span class="nc" id="L117">					freemind.main.Resources.getInstance().logException(e1);</span>
+				}
+<span class="nc bnc" id="L119" title="All 2 branches missed.">				dragStartingPoint.x += ((node.getHGap() &lt; 0) ? 2 : 1) * diffx;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				dragStartingPoint.y += ((node.getShiftY() &lt; 0) ? 2 : 1) * diffy;</span>
+			}
+		}
+<span class="nc" id="L123">	}</span>
+
+	private int getVGap(Point dragNextPoint, Point dragStartingPoint) {
+<span class="nc" id="L126">		int oldVGap = originalParentVGap;</span>
+<span class="nc" id="L127">		int vGapChange = (int) ((dragNextPoint.y - dragStartingPoint.y) / c</span>
+<span class="nc" id="L128">				.getView().getZoom());</span>
+<span class="nc" id="L129">		oldVGap = Math.max(0, oldVGap - vGapChange);</span>
+<span class="nc" id="L130">		return oldVGap;</span>
+	}
+
+	private int getHGap(Point dragNextPoint, MindMapNode node,
+			Point dragStartingPoint) {
+<span class="nc" id="L135">		int oldHGap = node.getHGap();</span>
+<span class="nc" id="L136">		int hGapChange = (int) ((dragNextPoint.x - dragStartingPoint.x) / c</span>
+<span class="nc" id="L137">				.getView().getZoom());</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (node.isLeft())</span>
+<span class="nc" id="L139">			hGapChange = -hGapChange;</span>
+<span class="nc" id="L140">		oldHGap += +hGapChange;</span>
+<span class="nc" id="L141">		return oldHGap;</span>
+	}
+
+	private int getNodeShiftY(Point dragNextPoint, MindMapNode pNode,
+			Point dragStartingPoint) {
+<span class="nc" id="L146">		int shiftY = pNode.getShiftY();</span>
+<span class="nc" id="L147">		int shiftYChange = (int) ((dragNextPoint.y - dragStartingPoint.y) / c</span>
+<span class="nc" id="L148">				.getView().getZoom());</span>
+<span class="nc" id="L149">		shiftY += shiftYChange;</span>
+<span class="nc" id="L150">		return shiftY;</span>
+	}
+
+	public void mouseClicked(MouseEvent e) {
+<span class="nc bnc" id="L154" title="All 4 branches missed.">		if (e.getButton() == 1 &amp;&amp; e.getClickCount() == 2) {</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">			if (e.getModifiersEx() == 0) {</span>
+<span class="nc" id="L156">				NodeView nodeV = getNodeView(e);</span>
+<span class="nc" id="L157">				MindMapNode node = nodeV.getModel();</span>
+<span class="nc" id="L158">				c.moveNodePosition(node, node.getVGap(), NodeAdapter.HGAP, 0);</span>
+<span class="nc" id="L159">				return;</span>
+			}
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (e.getModifiersEx() == InputEvent.CTRL_DOWN_MASK) {</span>
+<span class="nc" id="L162">				NodeView nodeV = getNodeView(e);</span>
+<span class="nc" id="L163">				MindMapNode node = nodeV.getModel();</span>
+<span class="nc" id="L164">				c.moveNodePosition(node, NodeAdapter.VGAP, node.getHGap(),</span>
+<span class="nc" id="L165">						node.getShiftY());</span>
+<span class="nc" id="L166">				return;</span>
+			}
+		}
+<span class="nc" id="L169">	}</span>
+
+	/**
+     */
+	private NodeView getNodeView(MouseEvent e) {
+<span class="nc" id="L174">		return ((NodeMotionListenerView) e.getSource()).getMovedView();</span>
+	}
+
+	public void mouseEntered(MouseEvent e) {
+<span class="nc" id="L178">		logger.fine(&quot;Event: mouseEntered&quot;);</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (!JOptionPane.getFrameForComponent(e.getComponent()).isFocused())</span>
+<span class="nc" id="L180">			return;</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (!isActive()) {</span>
+<span class="nc" id="L182">			NodeMotionListenerView v = (NodeMotionListenerView) e.getSource();</span>
+<span class="nc" id="L183">			v.setMouseEntered();</span>
+		}
+<span class="nc" id="L185">	}</span>
+
+	public void mouseExited(MouseEvent e) {
+<span class="nc" id="L188">		logger.fine(&quot;Event: mouseExited&quot;);</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		if (!isActive()) {</span>
+<span class="nc" id="L190">			NodeMotionListenerView v = (NodeMotionListenerView) e.getSource();</span>
+<span class="nc" id="L191">			v.setMouseExited();</span>
+		}
+<span class="nc" id="L193">	}</span>
+
+	private void stopDrag() {
+<span class="nc" id="L196">		setDragStartingPoint(null, null);</span>
+<span class="nc" id="L197">	}</span>
+
+	public void mouseReleased(MouseEvent e) {
+<span class="nc" id="L200">		logger.fine(&quot;Event: mouseReleased&quot;);</span>
+<span class="nc" id="L201">		NodeMotionListenerView v = (NodeMotionListenerView) e.getSource();</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (!v.contains(e.getX(), e.getY()))</span>
+<span class="nc" id="L203">			v.setMouseExited();</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (!isActive())</span>
+<span class="nc" id="L205">			return;</span>
+<span class="nc" id="L206">		NodeView nodeV = getNodeView(e);</span>
+<span class="nc" id="L207">		Point point = e.getPoint();</span>
+<span class="nc" id="L208">		Tools.convertPointToAncestor(nodeV, point, JScrollPane.class);</span>
+		// move node to end position.
+<span class="nc" id="L210">		MindMapNode node = nodeV.getModel();</span>
+<span class="nc" id="L211">		MindMapNode parentNode = nodeV.getModel().getParentNode();</span>
+<span class="nc" id="L212">		final int parentVGap = parentNode.getVGap();</span>
+<span class="nc" id="L213">		final int hgap = node.getHGap();</span>
+<span class="nc" id="L214">		final int shiftY = node.getShiftY();</span>
+<span class="nc" id="L215">		resetPositions(node);</span>
+<span class="nc" id="L216">		c.moveNodePosition(node, parentVGap, hgap, shiftY);</span>
+<span class="nc" id="L217">		stopDrag();</span>
+<span class="nc" id="L218">	}</span>
+
+	/**
+     */
+	private void resetPositions(MindMapNode node) {
+<span class="nc" id="L223">		node.getParentNode().setVGap(originalParentVGap);</span>
+<span class="nc" id="L224">		node.setHGap(originalHGap);</span>
+<span class="nc" id="L225">		node.setShiftY(originalShiftY);</span>
+<span class="nc" id="L226">	}</span>
+
+	public boolean isActive() {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">		return getDragStartingPoint() != null;</span>
+	}
+
+	void setDragStartingPoint(Point point, MindMapNode node) {
+<span class="nc" id="L233">		dragStartingPoint = point;</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		if (point != null) {</span>
+<span class="nc" id="L235">			originalParentVGap = node.getParentNode().getVGap();</span>
+<span class="nc" id="L236">			originalHGap = node.getHGap();</span>
+<span class="nc" id="L237">			originalShiftY = node.getShiftY();</span>
+<span class="nc" id="L238">		} else {</span>
+<span class="nc" id="L239">			originalParentVGap = originalHGap = originalShiftY = 0;</span>
+		}
+<span class="nc" id="L241">	}</span>
+
+	Point getDragStartingPoint() {
+<span class="nc" id="L244">		return dragStartingPoint;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

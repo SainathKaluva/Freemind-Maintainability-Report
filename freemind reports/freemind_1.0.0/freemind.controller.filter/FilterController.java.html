@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FilterController.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter</a> &gt; <span class="el_source">FilterController.java</span></div><h1>FilterController.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 05.05.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.controller.filter;
+
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.Vector;
+
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.ImageIcon;
+
+import freemind.controller.Controller;
+import freemind.controller.MapModuleManager.MapModuleChangeObserver;
+import freemind.controller.filter.condition.Condition;
+import freemind.controller.filter.condition.ConditionFactory;
+import freemind.controller.filter.condition.ConditionRenderer;
+import freemind.controller.filter.condition.NoFilteringCondition;
+import freemind.main.Resources;
+import freemind.main.XMLElement;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMap;
+import freemind.modes.Mode;
+import freemind.modes.common.plugins.NodeNoteBase;
+import freemind.view.MapModule;
+
+/**
+ * @author dimitri
+ * 
+ */
+public class FilterController implements MapModuleChangeObserver {
+	private Controller c;
+	private FilterToolbar filterToolbar;
+	private DefaultComboBoxModel filterConditionModel;
+<span class="nc" id="L58">	static private ConditionRenderer conditionRenderer = null;</span>
+	static private ConditionFactory conditionFactory;
+	private MindMap map;
+	static final String FREEMIND_FILTER_EXTENSION_WITHOUT_DOT = &quot;mmfilter&quot;;
+<span class="nc" id="L62">	private static Filter inactiveFilter;</span>
+
+<span class="nc" id="L64">	public FilterController(Controller c) {</span>
+<span class="nc" id="L65">		this.c = c;</span>
+<span class="nc" id="L66">		c.getMapModuleManager().addListener(this);</span>
+<span class="nc" id="L67">	}</span>
+
+	ConditionRenderer getConditionRenderer() {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (conditionRenderer == null)</span>
+<span class="nc" id="L71">			conditionRenderer = new ConditionRenderer();</span>
+<span class="nc" id="L72">		return conditionRenderer;</span>
+	}
+
+	/**
+     */
+	public FilterToolbar getFilterToolbar() {
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (filterToolbar == null) {</span>
+<span class="nc" id="L79">			filterToolbar = new FilterToolbar(c);</span>
+<span class="nc" id="L80">			filterConditionModel = (DefaultComboBoxModel) filterToolbar</span>
+<span class="nc" id="L81">					.getFilterConditionModel();</span>
+
+			// FIXME state icons should be created on order to make possible
+			// their use in the filter component.
+			// It should not happen here.
+<span class="nc" id="L86">			MindIcon.factory(&quot;AttributeExist&quot;, new ImageIcon(Resources</span>
+<span class="nc" id="L87">					.getInstance().getResource(&quot;images/showAttributes.gif&quot;)));</span>
+<span class="nc" id="L88">			MindIcon.factory(NodeNoteBase.NODE_NOTE_ICON, new ImageIcon(</span>
+<span class="nc" id="L89">					Resources.getInstance().getResource(&quot;images/knotes.png&quot;)));</span>
+<span class="nc" id="L90">			MindIcon.factory(&quot;encrypted&quot;);</span>
+<span class="nc" id="L91">			MindIcon.factory(&quot;decrypted&quot;);</span>
+
+<span class="nc" id="L93">			filterToolbar.initConditions();</span>
+		}
+<span class="nc" id="L95">		return filterToolbar;</span>
+	}
+
+	/**
+     */
+	public void showFilterToolbar(boolean show) {
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (show == isVisible())</span>
+<span class="nc" id="L102">			return;</span>
+<span class="nc" id="L103">		getFilterToolbar().setVisible(show);</span>
+<span class="nc" id="L104">		final Filter filter = getMap().getFilter();</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (show) {</span>
+<span class="nc" id="L106">			filter.applyFilter(c);</span>
+<span class="nc" id="L107">		} else {</span>
+<span class="nc" id="L108">			createTransparentFilter().applyFilter(c);</span>
+		}
+<span class="nc" id="L110">		refreshMap();</span>
+<span class="nc" id="L111">	}</span>
+
+	public boolean isVisible() {
+<span class="nc" id="L114">		return getFilterToolbar().isVisible();</span>
+	}
+
+	void refreshMap() {
+<span class="nc" id="L118">		c.getModeController().refreshMap();</span>
+<span class="nc" id="L119">	}</span>
+
+	static public ConditionFactory getConditionFactory() {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (conditionFactory == null)</span>
+<span class="nc" id="L123">			conditionFactory = new ConditionFactory();</span>
+<span class="nc" id="L124">		return conditionFactory;</span>
+	}
+
+	/**
+     */
+	public MindMap getMap() {
+<span class="nc" id="L130">		return map;</span>
+	}
+
+	/**
+	 * @param filterToolbar
+	 *            The filterToolbar to set.
+	 */
+	private void setFilterToolbar(FilterToolbar filterToolbar) {
+<span class="nc" id="L138">		this.filterToolbar = filterToolbar;</span>
+<span class="nc" id="L139">	}</span>
+
+	public boolean isMapModuleChangeAllowed(MapModule oldMapModule,
+			Mode oldMode, MapModule newMapModule, Mode newMode) {
+<span class="nc" id="L143">		return true;</span>
+	}
+
+	public void beforeMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+<span class="nc" id="L148">	}</span>
+
+	public void afterMapClose(MapModule pOldMapModule, Mode pOldMode) {
+<span class="nc" id="L151">	}</span>
+
+	public void afterMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		MindMap newMap = newMapModule != null ? newMapModule.getModel() : null;</span>
+<span class="nc" id="L156">		FilterComposerDialog fd = getFilterToolbar().getFilterDialog();</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (fd != null) {</span>
+<span class="nc" id="L158">			fd.mapChanged(newMap);</span>
+		}
+<span class="nc" id="L160">		map = newMap;</span>
+<span class="nc" id="L161">		getFilterToolbar().mapChanged(newMap);</span>
+<span class="nc" id="L162">	}</span>
+
+	public void numberOfOpenMapInformation(int number, int pIndex) {
+<span class="nc" id="L165">	}</span>
+
+	private static Filter createTransparentFilter() {
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (inactiveFilter == null)</span>
+<span class="nc" id="L169">			inactiveFilter = new DefaultFilter(</span>
+<span class="nc" id="L170">					NoFilteringCondition.createCondition(), true, false);</span>
+<span class="nc" id="L171">		return inactiveFilter;</span>
+
+	}
+
+	public void saveConditions() {
+<span class="nc bnc" id="L176" title="All 2 branches missed.">		if (filterToolbar != null) {</span>
+<span class="nc" id="L177">			filterToolbar.saveConditions();</span>
+		}
+<span class="nc" id="L179">	}</span>
+
+	public DefaultComboBoxModel getFilterConditionModel() {
+<span class="nc" id="L182">		return filterConditionModel;</span>
+	}
+
+	public void setFilterConditionModel(
+			DefaultComboBoxModel filterConditionModel) {
+<span class="nc" id="L187">		this.filterConditionModel = filterConditionModel;</span>
+<span class="nc" id="L188">		filterToolbar.setFilterConditionModel(filterConditionModel);</span>
+<span class="nc" id="L189">	}</span>
+
+	void saveConditions(DefaultComboBoxModel filterConditionModel,
+			String pathToFilterFile) throws IOException {
+<span class="nc" id="L193">		XMLElement saver = new XMLElement();</span>
+<span class="nc" id="L194">		saver.setName(&quot;filter_conditions&quot;);</span>
+<span class="nc" id="L195">		Writer writer = new FileWriter(pathToFilterFile);</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		for (int i = 0; i &lt; filterConditionModel.getSize(); i++) {</span>
+<span class="nc" id="L197">			Condition cond = (Condition) filterConditionModel.getElementAt(i);</span>
+<span class="nc" id="L198">			cond.save(saver);</span>
+		}
+<span class="nc" id="L200">		saver.write(writer);</span>
+<span class="nc" id="L201">		writer.close();</span>
+<span class="nc" id="L202">	}</span>
+
+	void loadConditions(DefaultComboBoxModel filterConditionModel,
+			String pathToFilterFile) throws IOException {
+<span class="nc" id="L206">		filterConditionModel.removeAllElements();</span>
+<span class="nc" id="L207">		XMLElement loader = new XMLElement();</span>
+<span class="nc" id="L208">		Reader reader = new FileReader(pathToFilterFile);</span>
+<span class="nc" id="L209">		loader.parseFromReader(reader);</span>
+<span class="nc" id="L210">		reader.close();</span>
+<span class="nc" id="L211">		final Vector conditions = loader.getChildren();</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		for (int i = 0; i &lt; conditions.size(); i++) {</span>
+<span class="nc" id="L213">			filterConditionModel.addElement(FilterController</span>
+<span class="nc" id="L214">					.getConditionFactory().loadCondition(</span>
+<span class="nc" id="L215">							(XMLElement) conditions.get(i)));</span>
+		}
+<span class="nc" id="L217">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

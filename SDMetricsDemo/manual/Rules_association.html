@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Association Rules</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Rules_package.html">Prev</a> - <a href="Rules_associationclass.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LORules.html">C: List of Design Rules</a> > C.8 Association Rules
+<hr>
+<h2><a name="Rules_association"></a>C.8 Association Rules</h2>
+<a name="Rules_association_AggEnds"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>AggEnds</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The binary association has two composite or shared aggregation ends.<p> A binary association may have at most one shared (hollow diamond) or composite (filled diamond) aggregation end. This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. 
+</td></tr></table><hr><p>
+<a name="Rules_association_NaryAggEnds"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NaryAggEnds</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The n-ary association has a composite or shared aggregation end.<p> Three (or more)- way associations must not indicate shared or composite aggregation. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of shared/composite aggregation ends. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_association_NaryNavEnds"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NaryNavEnds</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The n-ary association indicates a navigable association end.<p> Three (or more)- way associations must not indicate navigability at any of the association ends. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of navigable association ends. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_association_LooseEnd"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>LooseEnd</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The association has one or more ends not connected to a model element.<p> Check the ends of the association, and attach the loose end(s) to the proper model element(s), or remove the association from the model. 
+</td></tr></table><hr><p>
+<a name="Rules_association_NaryAgg"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NaryAgg</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 3-low</td><td>Applies to: design</td></tr><tr><td colspan="2">The association has three or more association ends.<p> People are often confused by the semantics of n-ary associations. N-ary associations have no representation in common programming languages. The suggestion is therefore to remodel the n-ary association using several plain associations. <ul><li>Suggested in [<a href="References.html#References_Fra03">Fra03</a>] and [<a href="References.html#References_Oes04">Oes04</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_association_SpecAgg"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>SpecAgg</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 3-low</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The association is a specialization of another association.<p> People are often confused by the semantics of specialized associations. The suggestion is therefore to model any restrictions on the parent association using constraints. <ul><li>Suggested in [<a href="References.html#References_Oes04">Oes04</a>]. <li>Value returned: name of the parent association.</ul> 
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Rules_package.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LORules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Rules_associationclass.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;C.7 "Package Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;C.9 "Associationclass Rules"</td></tr></table>
+
+</body>
+</html>

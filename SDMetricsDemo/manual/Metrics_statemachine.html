@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Statemachine Metrics</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Metrics_usecase.html">Prev</a> - <a href="Metrics_activity.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LOMetrics.html">B: List of Design Metrics</a> > B.6 Statemachine Metrics
+<hr>
+<h2><a name="Metrics_statemachine"></a>B.6 Statemachine Metrics</h2>
+<a name="Metrics_statemachine_Trans"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Trans</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of transitions in the state machine.<p> Internal transitions are not included in this count. <ul><li>Version of NT in [<a href="References.html#References_MGP03">MGP03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_statemachine_TEffects"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>TEffects</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of transitions with an effect in the state machine.
+</td></tr></table><hr><p>
+<a name="Metrics_statemachine_TGuard"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>TGuard</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of transitions with a guard in the state machine. <ul><li>Also known as NG in [<a href="References.html#References_MGP03">MGP03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_statemachine_TTrigger"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>TTrigger</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of triggers of the transitions of the state machine. <ul><li>Also known as NE in [<a href="References.html#References_MGP03">MGP03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_statemachine_States"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>States</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of states in the state machine.<p> This includes pseudo states, as well as composite and concurrent states of the statemachine, and recursively the states they contain, at all levels of nesting. Submachine states count as "one", the states in statemachines they reference are not included. <ul><li>Corresponds to NSS+NCS in [<a href="References.html#References_MGP03">MGP03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_statemachine_SActivity"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>SActivity</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of activities defined for the states of the state machine.<p> This counts entry, exit, and do activities (or interactions or statemachines) defined  for the states. The states considered are those counted by metric <a href="Metrics_statemachine.html#Metrics_statemachine_States">States</a>. <ul><li>corresponds to NEntry+NExit+NA in [<a href="References.html#References_MGP03">MGP03</a>].</ul>
+</td></tr></table><hr><p>
+<a name="Metrics_statemachine_CC"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>CC</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The cyclomatic complexity of the state-transition graph.<p> This is calculated as <a href="Metrics_statemachine.html#Metrics_statemachine_Trans">Trans</a>-<a href="Metrics_statemachine.html#Metrics_statemachine_States">States</a>+2. <ul><li>Suggested in [<a href="References.html#References_MGP03">MGP03</a>].</ul> 
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Metrics_usecase.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LOMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Metrics_activity.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;B.5 "Usecase Metrics"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;B.7 "Activity Metrics"</td></tr></table>
+
+</body>
+</html>

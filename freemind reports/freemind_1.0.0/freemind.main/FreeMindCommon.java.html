@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FreeMindCommon.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">FreeMindCommon.java</span></div><h1>FreeMindCommon.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 10.01.2006
+ */
+/*$Id: FreeMindCommon.java,v 1.1.2.2.2.39 2009/05/18 19:47:57 christianfoltin Exp $*/
+package freemind.main;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLDecoder;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
+import java.util.logging.Logger;
+
+/**
+ * @author foltin
+ * 
+ */
+public class FreeMindCommon {
+
+	public static final String FREEMIND_FILE_EXTENSION_WITHOUT_DOT = &quot;mm&quot;;
+
+	public static final String FREEMIND_FILE_EXTENSION = &quot;.&quot;
+			+ FREEMIND_FILE_EXTENSION_WITHOUT_DOT;
+
+	public static final String POSTFIX_TRANSLATE_ME = &quot;[translate me]&quot;;
+
+	private class FreeMindResourceBundle extends ResourceBundle {
+		private PropertyResourceBundle languageResources;
+		private PropertyResourceBundle defaultResources;
+
+<span class="nc" id="L56">		FreeMindResourceBundle() {</span>
+			try {
+<span class="nc" id="L58">				String lang = getProperty(RESOURCE_LANGUAGE);</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">				if (lang == null || lang.equals(&quot;automatic&quot;)) {</span>
+<span class="nc" id="L60">					lang = Locale.getDefault().getLanguage() + &quot;_&quot;</span>
+<span class="nc" id="L61">							+ Locale.getDefault().getCountry();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">					if (getLanguageResources(lang) == null) {</span>
+<span class="nc" id="L63">						lang = Locale.getDefault().getLanguage();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">						if (getLanguageResources(lang) == null) {</span>
+							// default is english.
+<span class="nc" id="L66">							lang = DEFAULT_LANGUAGE;</span>
+						}
+					}
+				}
+<span class="nc bnc" id="L70" title="All 2 branches missed.">				if (&quot;no&quot;.equals(lang)) {</span>
+					// Bugs item #1935818
+<span class="nc" id="L72">					lang = &quot;nb&quot;;</span>
+				}
+<span class="nc" id="L74">				languageResources = getLanguageResources(lang);</span>
+				/*
+				 * fc, 26.4.2008. the following line is a bug, as the
+				 * defaultResources are used, even, when a single string is
+				 * missing inside a bundle and not only, when the complete
+				 * bundle is missing.
+				 */
+				// if(languageResources == null)
+<span class="nc" id="L82">				defaultResources = getLanguageResources(DEFAULT_LANGUAGE);</span>
+<span class="nc" id="L83">			} catch (Exception ex) {</span>
+<span class="nc" id="L84">				freemind.main.Resources.getInstance().logException(ex);</span>
+<span class="nc" id="L85">				logger.severe(&quot;Error loading Resources&quot;);</span>
+			}
+			// printResourceTable();
+<span class="nc" id="L88">		}</span>
+
+		// /** This is useful, if you want to see all resource strings in a HTML
+		// table.
+		// * Just rename the log file to log.0.html, open in a browser and set
+		// the
+		// * coding to UTF-8 */
+		// private void printResourceTable() {
+		// StringBuffer b = new StringBuffer(&quot;&lt;html&gt;&lt;body&gt;&lt;table&gt;&quot;);
+		// Set keySet = languageResources.keySet();
+		// Vector keys = new Vector(keySet);
+		// Collections.sort(keys);
+		// for (Iterator iterator = keys.iterator(); iterator.hasNext();) {
+		// String key = (String) iterator.next();
+		// b.append(&quot;&lt;tr&gt;&lt;td&gt;&quot; + key + &quot;&lt;/td&gt;&lt;td&gt;&quot; +
+		// languageResources.getString(key)+&quot;&lt;/td&gt;&lt;/tr&gt;\n&quot;);
+		// }
+		// b.append(&quot;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;&quot;);
+		// logger.info(b.toString());
+		// }
+
+		/**
+		 * @throws IOException
+		 */
+		private PropertyResourceBundle getLanguageResources(String lang)
+				throws IOException {
+<span class="nc" id="L114">			URL systemResource = mFreeMindMain.getResource(&quot;Resources_&quot; + lang</span>
+<span class="nc" id="L115">					+ &quot;.properties&quot;);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (systemResource == null) {</span>
+<span class="nc" id="L117">				return null;</span>
+			}
+<span class="nc" id="L119">			InputStream in = systemResource.openStream();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (in == null) {</span>
+<span class="nc" id="L121">				return null;</span>
+			}
+<span class="nc" id="L123">			PropertyResourceBundle bundle = new PropertyResourceBundle(in);</span>
+<span class="nc" id="L124">			in.close();</span>
+<span class="nc" id="L125">			return bundle;</span>
+		}
+
+		protected Object handleGetObject(String key) {
+			try {
+<span class="nc" id="L130">				return languageResources.getString(key);</span>
+<span class="nc" id="L131">			} catch (Exception ex) {</span>
+<span class="nc bnc" id="L132" title="All 4 branches missed.">				if(key != null &amp;&amp; key.startsWith(&quot;__&quot;)) {</span>
+					// private string, only translate on demand
+<span class="nc" id="L134">					return key;</span>
+				} else {
+<span class="nc" id="L136">					logger.severe(&quot;Warning - resource string not found:\n&quot; + key);</span>
+<span class="nc" id="L137">					return defaultResources.getString(key) + POSTFIX_TRANSLATE_ME;</span>
+				}
+			}
+		}
+
+		public Enumeration getKeys() {
+<span class="nc" id="L143">			return defaultResources.getKeys();</span>
+		}
+
+		String getResourceString(String key) {
+			try {
+<span class="nc" id="L148">				return getString(key);</span>
+<span class="nc" id="L149">			} catch (Exception ex) {</span>
+<span class="nc" id="L150">				return key;</span>
+			}
+		}
+
+		String getResourceString(String key, String pDefault) {
+			try {
+				try {
+<span class="nc" id="L157">					return languageResources.getString(key);</span>
+<span class="nc" id="L158">				} catch (Exception ex) {</span>
+<span class="nc" id="L159">					return defaultResources.getString(key)</span>
+<span class="nc" id="L160">							+ POSTFIX_TRANSLATE_ME;</span>
+				}
+<span class="nc" id="L162">			} catch (Exception e) {</span>
+				// logger.info(key+&quot; not found.&quot;);
+<span class="nc" id="L164">				return pDefault;</span>
+			}
+		}
+	}
+
+	public static final String RESOURCE_LANGUAGE = &quot;language&quot;;
+    public static final String CHECK_SPELLING = &quot;check_spelling&quot;;
+
+	public static final String RESOURCE_ANTIALIAS = &quot;antialias&quot;;
+
+	public static final String DEFAULT_LANGUAGE = &quot;en&quot;;
+
+	public static final String LOCAL_PROPERTIES = &quot;LocalProperties.&quot;;
+
+	private final FreeMindMain mFreeMindMain;
+
+	private String baseDir;
+
+	private FreeMindResourceBundle resources;
+
+	/**
+	 * Holds the last opened map.
+	 */
+	public static final String ON_START_IF_NOT_SPECIFIED = &quot;onStartIfNotSpecified&quot;;
+	public static final String LOAD_LAST_MAP = &quot;loadLastMap&quot;;
+	public static final String LOAD_LAST_MAPS_AND_LAYOUT = &quot;load_last_maps_and_layout&quot;;
+	public static final String SAVE_ONLY_INTRISICALLY_NEEDED_IDS = &quot;save_only_intrisically_needed_ids&quot;;
+
+	public static final String LOAD_NEW_MAP = &quot;load_new_map_when_no_other_is_specified&quot;;
+
+	/**
+	 * Load event occurred during startup
+	 * &lt;p&gt;
+	 * If FreeMind is not started and you double-click a .mm file on Mac OS X
+	 * the .mm file is not passed to Java's main method but handleOpenFile is
+	 * called which happens during startup where it is not safe to already load
+	 * the map. Therefore the event is stored in this property and later
+	 * processed by loadMaps.
+	 * &lt;p&gt;
+	 * Related issues
+	 * &lt;ul&gt;
+	 * &lt;li&gt;
+	 * http://sourceforge.net/tracker/?func=detail&amp;aid=2908045&amp;group_id=7118&amp;
+	 * atid=107118
+	 * &lt;li&gt;http://sourceforge.net/tracker/index.php?func=detail&amp;aid=1980423&amp;
+	 * group_id=7118&amp;atid=107118
+	 * &lt;/ul&gt;
+	 */
+	public static final String LOAD_EVENT_DURING_STARTUP = &quot;loadEventDuringStartup&quot;;
+
+	public static final String MINDMAP_LAST_STATE_MAP_STORAGE = &quot;mindmap_last_state_map_storage&quot;;
+
+<span class="nc" id="L216">	private static Logger logger = null;</span>
+
+	/**
+	 * 
+	 */
+	public FreeMindCommon(FreeMindMain main) {
+<span class="nc" id="L222">		super();</span>
+		// TODO Auto-generated constructor stub
+<span class="nc" id="L224">		this.mFreeMindMain = main;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">		if (logger == null)</span>
+<span class="nc" id="L226">			logger = main.getLogger(this.getClass().getName());</span>
+<span class="nc" id="L227">	}</span>
+
+	public String getProperty(String key) {
+<span class="nc" id="L230">		return mFreeMindMain.getProperty(key);</span>
+	}
+
+	private void setDefaultProperty(String key, String value) {
+<span class="nc" id="L234">		mFreeMindMain.setDefaultProperty(key, value);</span>
+<span class="nc" id="L235">	}</span>
+
+	/** Returns the ResourceBundle with the current language */
+	public ResourceBundle getResources() {
+<span class="nc bnc" id="L239" title="All 2 branches missed.">		if (resources == null) {</span>
+<span class="nc" id="L240">			resources = new FreeMindResourceBundle();</span>
+		}
+<span class="nc" id="L242">		return resources;</span>
+	}
+
+	public String getResourceString(String key) {
+<span class="nc" id="L246">		return ((FreeMindResourceBundle) getResources()).getResourceString(key);</span>
+	}
+
+	public String getResourceString(String key, String pDefault) {
+<span class="nc" id="L250">		return ((FreeMindResourceBundle) getResources()).getResourceString(key,</span>
+<span class="nc" id="L251">				pDefault);</span>
+	}
+
+	public void clearLanguageResources() {
+<span class="nc" id="L255">		resources = null;</span>
+<span class="nc" id="L256">	}</span>
+
+	public ClassLoader getFreeMindClassLoader() {
+<span class="nc" id="L259">		ClassLoader classLoader = this.getClass().getClassLoader();</span>
+		try {
+<span class="nc" id="L261">			return new URLClassLoader(new URL[] { Tools.fileToUrl(new File(</span>
+<span class="nc" id="L262">					getFreemindBaseDir())) }, classLoader);</span>
+<span class="nc" id="L263">		} catch (MalformedURLException e) {</span>
+<span class="nc" id="L264">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L265">			return classLoader;</span>
+		}
+	}
+
+	/**
+	 * Old version using String manipulation out of the classpath to find the
+	 * base dir.
+	 */
+	public String getFreemindBaseDirOld() {
+<span class="nc bnc" id="L274" title="All 2 branches missed.">		if (baseDir == null) {</span>
+<span class="nc" id="L275">			final String classPath = System.getProperty(&quot;java.class.path&quot;);</span>
+<span class="nc" id="L276">			final String mainJarFile = &quot;freemind.jar&quot;;</span>
+<span class="nc" id="L277">			int lastpos = classPath.indexOf(mainJarFile);</span>
+<span class="nc" id="L278">			int firstpos = 0;</span>
+			// if freemind.jar is not found in the class path use user.dir as
+			// Basedir
+<span class="nc bnc" id="L281" title="All 2 branches missed.">			if (lastpos == -1) {</span>
+<span class="nc" id="L282">				baseDir = System.getProperty(&quot;user.dir&quot;);</span>
+<span class="nc" id="L283">				logger.info(&quot;Basedir is user.dir: &quot; + baseDir);</span>
+<span class="nc" id="L284">				return baseDir;</span>
+			}
+			/*
+			 * fc: Now, if freemind.jar is the first, firstpos == -1. This
+			 * results in bad results in the substring method, or not??
+			 */
+<span class="nc" id="L290">			firstpos = classPath.lastIndexOf(File.pathSeparator, lastpos) + 1;</span>
+<span class="nc" id="L291">			lastpos -= 1;</span>
+<span class="nc bnc" id="L292" title="All 2 branches missed.">			if (lastpos &gt; firstpos) {</span>
+<span class="nc" id="L293">				logger.info(&quot;First &quot; + firstpos + &quot; and last &quot; + lastpos</span>
+<span class="nc" id="L294">						+ &quot; and string &quot; + classPath);</span>
+<span class="nc" id="L295">				baseDir = classPath.substring(firstpos, lastpos);</span>
+<span class="nc" id="L296">			} else</span>
+<span class="nc" id="L297">				baseDir = &quot;&quot;;</span>
+<span class="nc" id="L298">			final File basePath = new File(baseDir);</span>
+<span class="nc" id="L299">			baseDir = basePath.getAbsolutePath();</span>
+<span class="nc" id="L300">			logger.info(&quot;First basedir is: &quot; + baseDir);</span>
+			/*
+			 * I suppose, that here, the freemind.jar is removed together with
+			 * the last path. Example: /home/foltin/freemindapp/lib/freemind.jar
+			 * gives /home/foltin/freemindapp
+			 */
+<span class="nc" id="L306">			lastpos = baseDir.lastIndexOf(File.separator);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			if (lastpos &gt; -1)</span>
+<span class="nc" id="L308">				baseDir = baseDir.substring(0, lastpos);</span>
+<span class="nc" id="L309">			logger.info(&quot;Basedir is: &quot; + baseDir);</span>
+		}
+<span class="nc" id="L311">		return baseDir;</span>
+	}
+
+	/*
+	 * We define the base dir of FreeMind as the directory where accessories,
+	 * plugins and other things are to be found. We expect it to be either the
+	 * directory where the main jar file is (freemind.jar), or the root of the
+	 * class hierarchy (if no jar file is used), after any 'lib' directory is
+	 * removed. One can overwrite this definition by setting the
+	 * freemind.base.dir property.
+	 */
+	public String getFreemindBaseDir() {
+<span class="nc bnc" id="L323" title="All 2 branches missed.">		if (baseDir == null) {</span>
+			try {
+				File file;
+<span class="nc" id="L326">				String dir = System.getProperty(&quot;freemind.base.dir&quot;);</span>
+<span class="nc bnc" id="L327" title="All 2 branches missed.">				if (dir == null) {</span>
+					// Property isn't set, we try to find the
+					// base directory ourselves.
+					// System.err.println(&quot;property not set&quot;);
+					// We locate first the current class.
+<span class="nc" id="L332">					String classname = this.getClass().getName();</span>
+<span class="nc" id="L333">					URL url = this.getClass().getResource(</span>
+<span class="nc" id="L334">							classname.replaceFirst(&quot;^&quot;</span>
+<span class="nc" id="L335">									+ this.getClass().getPackage().getName()</span>
+<span class="nc" id="L336">									+ &quot;.&quot;, &quot;&quot;)</span>
+<span class="nc" id="L337">									+ &quot;.class&quot;);</span>
+					// then we create a file out of it, after
+					// removing file: and jar:, removing everything
+					// after !, as well as the class name part.
+					// Finally we decode everything (e.g. %20)
+					// TODO: is UTF-8 always the right value?
+<span class="nc" id="L343">					file = new File(URLDecoder.decode(</span>
+<span class="nc" id="L344">							url.getPath()</span>
+<span class="nc" id="L345">									.replaceFirst(&quot;^(file:|jar:)+&quot;, &quot;&quot;)</span>
+<span class="nc" id="L346">									.replaceFirst(&quot;!.*$&quot;, &quot;&quot;)</span>
+<span class="nc" id="L347">									.replaceFirst(</span>
+<span class="nc" id="L348">											classname.replace('.', '/')</span>
+<span class="nc" id="L349">													+ &quot;.class$&quot;, &quot;&quot;), &quot;UTF-8&quot;));</span>
+					// if it's a file, we take its parent, a dir
+<span class="nc bnc" id="L351" title="All 2 branches missed.">					if (file.isFile())</span>
+<span class="nc" id="L352">						file = file.getParentFile();</span>
+					/*
+					 * Now, we remove the lib directory: Example:
+					 * /home/foltin/freemindapp/lib/freemind.jar gives
+					 * /home/foltin/freemindapp
+					 */
+<span class="nc bnc" id="L358" title="All 2 branches missed.">					if (file.getName().equals(&quot;lib&quot;))</span>
+<span class="nc" id="L359">						file = file.getParentFile();</span>
+<span class="nc" id="L360">				} else {</span>
+<span class="nc" id="L361">					file = new File(dir);</span>
+				}
+				// then we check if the directory exists and is really
+				// a directory.
+<span class="nc bnc" id="L365" title="All 2 branches missed.">				if (!file.exists()) {</span>
+<span class="nc" id="L366">					throw new IllegalArgumentException(&quot;FreeMind base dir '&quot;</span>
+<span class="nc" id="L367">							+ file + &quot;' does not exist.&quot;);</span>
+				}
+<span class="nc bnc" id="L369" title="All 2 branches missed.">				if (!file.isDirectory()) {</span>
+<span class="nc" id="L370">					throw new IllegalArgumentException(</span>
+<span class="nc" id="L371">							&quot;FreeMind base dir (!) '&quot; + file</span>
+<span class="nc" id="L372">									+ &quot;' is not a directory.&quot;);</span>
+				}
+				// set the member variable
+<span class="nc" id="L375">				baseDir = file.getCanonicalPath();</span>
+<span class="nc" id="L376">				logger.info(&quot;Basedir is: &quot; + baseDir);</span>
+<span class="nc" id="L377">			} catch (Exception e) {</span>
+<span class="nc" id="L378">				Resources.getInstance().logException(e);</span>
+<span class="nc" id="L379">				throw new IllegalArgumentException(</span>
+<span class="nc" id="L380">						&quot;FreeMind base dir can't be determined.&quot;);</span>
+			}
+		}
+		// return the value of the cache variable
+<span class="nc" id="L384">		return baseDir;</span>
+	}
+
+	public String getAdjustableProperty(final String label) {
+<span class="nc" id="L388">		String value = getProperty(label);</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">		if (value == null) {</span>
+<span class="nc" id="L390">			return value;</span>
+		}
+<span class="nc bnc" id="L392" title="All 4 branches missed.">		if (value.startsWith(&quot;?&quot;) &amp;&amp; !value.equals(&quot;?&quot;)) {</span>
+			// try to look in the language specific properties
+<span class="nc" id="L394">			String localValue = ((FreeMindResourceBundle) getResources())</span>
+<span class="nc" id="L395">					.getResourceString(LOCAL_PROPERTIES + label, null);</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">			value = localValue == null ? value.substring(1).trim() : localValue;</span>
+<span class="nc" id="L397">			setDefaultProperty(label, value);</span>
+		}
+<span class="nc" id="L399">		return value;</span>
+	}
+
+	public void loadUIProperties(Properties props) {
+		// props.put(FreeMind.RESOURCES_BACKGROUND_COLOR,
+		// Tools.colorToXml(UIManager.getColor(&quot;text&quot;)));
+		// props.put(FreeMind.RESOURCES_NODE_TEXT_COLOR,
+		// Tools.colorToXml(UIManager.getColor(&quot;textText&quot;)));
+		// props.put(FreeMind.RESOURCES_SELECTED_NODE_COLOR,
+		// Tools.colorToXml(UIManager.getColor(&quot;textHighlight&quot;)));
+		// props.put(FreeMind.RESOURCES_SELECTED_NODE_TEXT_COLOR,
+		// Tools.colorToXml(UIManager.getColor(&quot;textHighlightText&quot;)));
+<span class="nc" id="L411">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

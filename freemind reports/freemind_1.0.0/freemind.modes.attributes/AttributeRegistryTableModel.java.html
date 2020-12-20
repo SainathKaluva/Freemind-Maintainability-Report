@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributeRegistryTableModel.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.attributes</a> &gt; <span class="el_source">AttributeRegistryTableModel.java</span></div><h1>AttributeRegistryTableModel.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 18.06.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.modes.attributes;
+
+import javax.swing.table.AbstractTableModel;
+
+import freemind.controller.filter.util.SortedListModel;
+import freemind.main.Resources;
+
+/**
+ * @author Dimitri Polivaev 18.06.2005
+ */
+public class AttributeRegistryTableModel extends AbstractTableModel {
+	private final AttributeRegistry attributeRegistry;
+<span class="nc" id="L36">	private String allAttributes = Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L37">			&quot;attributes_all&quot;);</span>
+
+<span class="nc" id="L39">	AttributeRegistryTableModel(AttributeRegistry registry) {</span>
+<span class="nc" id="L40">		this.attributeRegistry = registry;</span>
+<span class="nc" id="L41">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.table.TableModel#getRowCount()
+	 */
+	public int getRowCount() {
+<span class="nc" id="L49">		return attributeRegistry.size() + 1;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.table.TableModel#getColumnCount()
+	 */
+	public int getColumnCount() {
+<span class="nc" id="L58">		return 4;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.table.TableModel#getValueAt(int, int)
+	 */
+	public Object getValueAt(int row, int col) {
+<span class="nc bnc" id="L67" title="All 4 branches missed.">		if (row == 0 &amp;&amp; col &lt; 2) {</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">			if (col == 0)</span>
+<span class="nc" id="L69">				return allAttributes;</span>
+<span class="nc" id="L70">			return null;</span>
+		}
+<span class="nc" id="L72">		row--;</span>
+<span class="nc bnc" id="L73" title="All 5 branches missed.">		switch (col) {</span>
+		case 0:
+<span class="nc" id="L75">			return attributeRegistry.getKey(row);</span>
+		case 1:
+<span class="nc" id="L77">			return attributeRegistry.getElement(row).getVisibilityModel();</span>
+		case 2:
+<span class="nc" id="L79">			return attributeRegistry.getRestriction(row);</span>
+		case 3:
+<span class="nc" id="L81">			return attributeRegistry.getValues(row);</span>
+		}
+<span class="nc" id="L83">		return null;</span>
+	}
+
+	public void setValueAt(Object o, int row, int col) {
+<span class="nc bnc" id="L87" title="All 4 branches missed.">		if (row == 0 &amp;&amp; col != 2) {</span>
+<span class="nc" id="L88">			return;</span>
+		}
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (col == 3) {</span>
+<span class="nc" id="L91">			return;</span>
+		}
+<span class="nc" id="L93">		Boolean value = (Boolean) o;</span>
+<span class="nc bnc" id="L94" title="All 3 branches missed.">		switch (col) {</span>
+		case 1:
+<span class="nc" id="L96">			attributeRegistry.setVisibilityModel(row - 1, value);</span>
+<span class="nc" id="L97">			break;</span>
+		case 2:
+<span class="nc" id="L99">			attributeRegistry.setRestrictionModel(row - 1, value);</span>
+			break;
+		}
+<span class="nc" id="L102">	}</span>
+
+	public Class getColumnClass(int c) {
+<span class="nc bnc" id="L105" title="All 5 branches missed.">		switch (c) {</span>
+		case 0:
+<span class="nc" id="L107">			return String.class;</span>
+		case 1:
+<span class="nc" id="L109">			return Boolean.class;</span>
+		case 2:
+<span class="nc" id="L111">			return Boolean.class;</span>
+		case 3:
+<span class="nc" id="L113">			return SortedListModel.class;</span>
+		}
+<span class="nc" id="L115">		return Object.class;</span>
+	}
+
+	public boolean isCellEditable(int row, int col) {
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		return col &gt;= 1;</span>
+	}
+
+<span class="nc" id="L122">	static private String attributeColumnName = null;</span>
+<span class="nc" id="L123">	static private String visibilityColumnName = null;</span>
+<span class="nc" id="L124">	static private String restrictionColumnName = null;</span>
+<span class="nc" id="L125">	static private String editorColumnName = null;</span>
+
+	public String getColumnName(int column) {
+
+<span class="nc bnc" id="L129" title="All 5 branches missed.">		switch (column) {</span>
+		case 0:
+<span class="nc bnc" id="L131" title="All 2 branches missed.">			if (attributeColumnName == null)</span>
+<span class="nc" id="L132">				attributeColumnName = Resources.getInstance()</span>
+<span class="nc" id="L133">						.getResourceString(&quot;attributes_attribute&quot;);</span>
+<span class="nc" id="L134">			return attributeColumnName;</span>
+		case 1:
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			if (visibilityColumnName == null)</span>
+<span class="nc" id="L137">				visibilityColumnName = Resources.getInstance()</span>
+<span class="nc" id="L138">						.getResourceString(&quot;attributes_visible&quot;);</span>
+<span class="nc" id="L139">			return visibilityColumnName;</span>
+		case 2:
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (restrictionColumnName == null)</span>
+<span class="nc" id="L142">				restrictionColumnName = Resources.getInstance()</span>
+<span class="nc" id="L143">						.getResourceString(&quot;attributes_restriction&quot;);</span>
+<span class="nc" id="L144">			return restrictionColumnName;</span>
+		case 3:
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (editorColumnName == null)</span>
+<span class="nc" id="L147">				editorColumnName = Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L148">						&quot;attributes_edit&quot;);</span>
+<span class="nc" id="L149">			return editorColumnName;</span>
+		}
+<span class="nc" id="L151">		return null;</span>
+	}
+
+	public void fireTableRowsDeleted() {
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (getRowCount() &gt; 1)</span>
+<span class="nc" id="L156">			fireTableRowsDeleted(1, getRowCount() - 1);</span>
+<span class="nc" id="L157">	}</span>
+
+	public void fireTableCellUpdated(int row, int column) {
+<span class="nc" id="L160">		super.fireTableCellUpdated(row + 1, column);</span>
+<span class="nc" id="L161">	}</span>
+
+	public void fireTableRowsDeleted(int firstRow, int lastRow) {
+<span class="nc" id="L164">		super.fireTableRowsDeleted(firstRow + 1, lastRow + 1);</span>
+<span class="nc" id="L165">	}</span>
+
+	public void fireTableRowsInserted(int firstRow, int lastRow) {
+<span class="nc" id="L168">		super.fireTableRowsInserted(firstRow + 1, lastRow + 1);</span>
+<span class="nc" id="L169">	}</span>
+
+	public void fireTableRowsUpdated(int firstRow, int lastRow) {
+<span class="nc" id="L172">		super.fireTableRowsUpdated(firstRow + 1, lastRow + 1);</span>
+<span class="nc" id="L173">	}</span>
+
+	/**
+     */
+	public void fireVisibilityUpdated(int row) {
+<span class="nc" id="L178">		fireTableCellUpdated(row + 1, 1);</span>
+<span class="nc" id="L179">	}</span>
+
+	/**
+     */
+	public void fireRestrictionsUpdated(int row) {
+<span class="nc" id="L184">		fireTableRowsUpdated(row + 1, row + 1);</span>
+<span class="nc" id="L185">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

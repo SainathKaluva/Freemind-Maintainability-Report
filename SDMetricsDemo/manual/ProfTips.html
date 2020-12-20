@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Tips on Creating Metrics and Rules for Profile Extensions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProfOpt3.html">Prev</a> - <a href="ExtendME.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="Profiles.html">8.7 Defining Metrics for Profiles</a> > 8.7.7 Tips on Creating Metrics and Rules for Profile Extensions
+<hr>
+<h3><a name="ProfTips"></a>8.7.7 Tips on Creating Metrics and Rules for Profile Extensions</h3>
+
+We have discussed three options to deal with stereotypes in
+UML profiles:
+<ul>
+<li>option 1: using regular model elements
+<li>option 2: using extension references without inheritance
+<li>option 3: using extension references with inheritance
+</ul>
+
+Here are some guidelines to decide which option to use for
+a given stereotype.
+
+<ul>
+<li>How often do you need to distinguish elements to which the
+stereotype is applied from elements of the same type to which 
+the stereotype is not applied?<p>
+If, for example, the distinction between SysML FlowPorts and 
+plain UML ports is only relevant for a few of your metrics and rules, 
+and you can treat them equally as plain UML ports most of the 
+time, option 1 or 2 is appropriate.<p>
+
+<li>Do you need to identify the extension elements in the metric,
+rule, or relation matrix data tables?<p>If so, you have to choose 
+option 2 or 3.<p>
+
+<li>How much does the stereotype application change the
+"character" or "nature" of the extended model element?<p>
+In case of SysML requirements, for example, the characteristic
+of the "class" element changes considerably. Unlike regular classes, 
+requirements can't have operations or attributes, do not participate in 
+associations, can't be generalized, and are usually not 
+instantiated. They are actually not much like classes at all.<p>
+In such situations, option 3 is appropriate, because it
+eliminates the "class" element representing the requirement 
+from the model, and existing metrics and rules that involve
+classes will ignore the extended element.<p>
+<li>How important or central is the concept of the extension
+in the profile?<p>
+Like requirements, a SysML block extends UML meta-class "class".
+Unlike requirements, however, SysML blocks maintain most of 
+the class features from UML. Yet, as blocks are the central
+modular structure units of the SysML, the set of metrics and
+rules to calculate for blocks will probably be quite different
+from the set of class metrics and rules. Option 3 is therefore
+the best choice for the central concepts of the profile.<p>
+<li>How many meta-classes does the stereotype extend?<p>
+If the stereotype extends two or more meta-classes
+(for example, SysML TestCase can extend "operation"
+or "behavior"), you can use option 3 for at most one
+of the extension, and must use option 1 or 2 for all 
+others. This is because SDMetrics' metamodeling facility
+does not support multiple inheritance. 
+</ul>
+
+Using extension references with inheritance, the inheritance mechanism
+plays a more important role in the SDMetrics metamodel. With the support 
+for profiles, a number of features were introduced to provide more flexibility
+dealing with inheritance:
+
+<ul>
+<li>inheritance of metric, set, and rule definitions to pass
+selected metrics, sets, and rules on to descended types 
+(see e.g. <a href="DefMetrics.html">Section&nbsp;8.1 "Definition of Metrics"</a> for metric inheritance)
+<li>metrics or sets involving recursion or nesting extend their
+recursion to compatible super- and subclasses
+(see e.g. <a href="Recurse.html">Section&nbsp;8.1.1.8 "Attribute "recurse""</a>)
+<li>filtering for subtypes with the "target" and "eltype" 
+filter attributes (see <a href="Target.html">Section&nbsp;8.1.1.3 "Filter Attribute "target""</a>).
+<li>new function "instanceof" (see <a href="BoolFct.html">Section&nbsp;8.5.4.2 "Boolean Functions"</a>)
+</ul>
+
+
+<b>Where to go from here</b><p>
+
+On the SDMetrics web site, you can download a set of project files
+for SysML 1.2, with metrics and rules that cover block definition diagrams, 
+internal block diagrams, parametric diagrams, and requirement diagrams. 
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProfOpt3.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Profiles.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ExtendME.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.7.6 "Extension References with Inheritance"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;9 "Extending the Metrics and Rule Engine"</td></tr></table>
+
+</body>
+</html>

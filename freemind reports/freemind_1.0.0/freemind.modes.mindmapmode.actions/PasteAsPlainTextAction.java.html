@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>PasteAsPlainTextAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">PasteAsPlainTextAction.java</span></div><h1>PasteAsPlainTextAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2011 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+
+import freemind.main.HtmlTools;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+
+/**
+ * @author foltin
+ * @date 18.10.2011
+ */
+public class PasteAsPlainTextAction extends AbstractAction {
+
+	private MindMapController mMindMapController;
+	private static Logger logger;
+
+	public PasteAsPlainTextAction(MindMapController pMindMapController) {
+<span class="nc" id="L46">		super(pMindMapController.getText(&quot;paste_as_plain_text&quot;), null);</span>
+<span class="nc" id="L47">		this.mMindMapController = pMindMapController;</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L49">			logger = mMindMapController.getFrame().getLogger(</span>
+<span class="nc" id="L50">					this.getClass().getName());</span>
+		}
+
+<span class="nc" id="L53">		setEnabled(false);</span>
+<span class="nc" id="L54">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
+	public void actionPerformed(ActionEvent pArg0) {
+<span class="nc" id="L63">		Transferable clipboardContents = mMindMapController</span>
+<span class="nc" id="L64">				.getClipboardContents();</span>
+		// test for plain text support
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (clipboardContents.isDataFlavorSupported(DataFlavor.stringFlavor)) {</span>
+			try {
+<span class="nc" id="L68">				String plainText = (String) clipboardContents</span>
+<span class="nc" id="L69">						.getTransferData(DataFlavor.stringFlavor);</span>
+				// sometimes these (for XML illegal) characters occur
+<span class="nc" id="L71">				plainText = HtmlTools.makeValidXml(plainText);</span>
+<span class="nc" id="L72">				logger.info(&quot;Pasting string &quot; + plainText);</span>
+				// paste.
+<span class="nc" id="L74">				MindMapNode selected = mMindMapController.getSelected();</span>
+<span class="nc" id="L75">				MindMapNode newNode = mMindMapController.addNewNode(selected,</span>
+<span class="nc" id="L76">						selected.getChildCount(), selected.isLeft());</span>
+<span class="nc" id="L77">				mMindMapController.setNodeText(newNode, plainText);</span>
+<span class="nc" id="L78">			} catch (UnsupportedFlavorException e) {</span>
+<span class="nc" id="L79">				freemind.main.Resources.getInstance().logException(e);</span>
+
+<span class="nc" id="L81">			} catch (IOException e) {</span>
+<span class="nc" id="L82">				freemind.main.Resources.getInstance().logException(e);</span>
+
+			}
+<span class="nc" id="L85">		} else {</span>
+			// not supported message.
+<span class="nc" id="L87">			logger.warning(&quot;String flavor not supported for transferable &quot;</span>
+<span class="nc" id="L88">					+ clipboardContents);</span>
+		}
+<span class="nc" id="L90">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

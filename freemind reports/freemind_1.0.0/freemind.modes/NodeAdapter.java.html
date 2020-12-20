@@ -1,0 +1,1512 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">NodeAdapter.java</span></div><h1>NodeAdapter.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.modes;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.Vector;
+
+import javax.swing.ImageIcon;
+import javax.swing.event.EventListenerList;
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import freemind.controller.Controller;
+import freemind.controller.filter.Filter;
+import freemind.controller.filter.FilterInfo;
+import freemind.extensions.DontSaveMarker;
+import freemind.extensions.NodeHook;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindCommon;
+import freemind.main.FreeMindMain;
+import freemind.main.HtmlTools;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.attributes.Attribute;
+import freemind.modes.attributes.NodeAttributeTableModel;
+import freemind.preferences.FreemindPropertyListener;
+import freemind.view.mindmapview.NodeView;
+import freemind.view.mindmapview.NodeViewVisitor;
+
+/**
+ * This class represents a single Node of a Tree. It contains direct handles to
+ * its parent and children and to its view.
+ */
+public abstract class NodeAdapter implements MindMapNode {
+
+	final static int SHIFT = -2;// height of the vertical shift between node and
+								// its closest child
+	public final static int HGAP = 20;// width of the horizontal gap that
+										// contains the edges
+	public final static int VGAP = 3;// height of the vertical gap between nodes
+
+	public final static int LEFT_POSITION = -1;
+	public final static int RIGHT_POSITION = 1;
+	public final static int UNKNOWN_POSITION = 0;
+
+	private HashSet activatedHooks;
+	private List hooks;
+<span class="nc" id="L86">	protected Object userObject = &quot;no text&quot;;</span>
+<span class="nc" id="L87">	private String xmlText = &quot;no text&quot;;</span>
+<span class="nc" id="L88">	private String link = null; // Change this to vector in future for full</span>
+								// graph support
+<span class="nc" id="L90">	private TreeMap toolTip = null; // lazy, fc, 30.6.2005</span>
+
+	// these Attributes have default values, so it can be useful to directly
+	// access them in
+	// the save() method instead of using getXXX(). This way the stored file is
+	// smaller and looks better.
+	// (if the default is used, it is not stored) Look at mindmapmode for an
+	// example.
+	protected String style;
+	/** stores the icons associated with this node. */
+<span class="nc" id="L100">	protected Vector/* &lt;MindIcon&gt; */icons = null; // lazy, fc, 30.6.2005</span>
+
+<span class="nc" id="L102">	protected TreeMap /* of String to MindIcon s */stateIcons = null; // lazy, fc,</span>
+																	// 30.6.2005
+	// /**stores the label associated with this node:*/
+	// protected String mLabel;
+	/** parameters of an eventually associated cloud */
+	protected MindMapCloud cloud;
+
+	protected Color color;
+	protected Color backgroundColor;
+	protected boolean folded;
+<span class="nc" id="L112">	private int position = UNKNOWN_POSITION;</span>
+
+<span class="nc" id="L114">	private int vGap = VGAP;</span>
+<span class="nc" id="L115">	private int hGap = HGAP;</span>
+<span class="nc" id="L116">	private int shiftY = 0;</span>
+
+	protected List children;
+	private MindMapNode preferredChild;
+
+	protected Font font;
+<span class="nc" id="L122">	protected boolean underlined = false;</span>
+
+<span class="nc" id="L124">	private FilterInfo filterInfo = new FilterInfo();</span>
+
+	private MindMapNode parent;
+	/**
+	 * the edge which leads to this node, only root has none In future it has to
+	 * hold more than one view, maybe with a Vector in which the index specifies
+	 * the MapView which contains the NodeViews
+	 */
+	private MindMapEdge edge;
+<span class="nc" id="L133">	private Collection views = null;</span>
+	private FreeMindMain frame;
+	private static final boolean ALLOWSCHILDREN = true;
+	private static final boolean ISLEAF = false; // all nodes may have children
+	/** read only empty attribute class */
+<span class="nc" id="L138">	private static final NodeAttributeTableModel EMTPY_ATTRIBUTES = new NodeAttributeTableModel(</span>
+<span class="nc" id="L139">			null) {</span>
+		public void insertRow(int index, String name, String value) {
+<span class="nc" id="L141">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L142">					&quot;Can't set attributes in the EMTPY_ATTRIBUTES table.&quot;);</span>
+		};
+
+		public void addRowNoUndo(Attribute newAttribute) {
+<span class="nc" id="L146">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L147">					&quot;Can't set attributes in the EMTPY_ATTRIBUTES table.&quot;);</span>
+		};
+
+		public Vector getAttributes() {
+<span class="nc" id="L151">			return new Vector();</span>
+		};
+	};
+
+<span class="nc" id="L155">	private HistoryInformation historyInformation = null;</span>
+	// Logging:
+	static protected java.util.logging.Logger logger;
+<span class="nc" id="L158">	private MindMap map = null;</span>
+	private NodeAttributeTableModel attributes;
+	private String noteText;
+	private String xmlNoteText;
+	private static FreemindPropertyListener sSaveIdPropertyChangeListener;
+<span class="nc" id="L163">	private static boolean sSaveOnlyIntrinsicallyNeededIds = false;</span>
+
+	//
+	// Constructors
+	//
+
+	protected NodeAdapter(FreeMindMain frame, MindMap map) {
+<span class="nc" id="L170">		this(null, frame, map);</span>
+<span class="nc" id="L171">	}</span>
+
+<span class="nc" id="L173">	protected NodeAdapter(Object userObject, FreeMindMain frame, MindMap map) {</span>
+<span class="nc" id="L174">		this.frame = frame;</span>
+<span class="nc" id="L175">		setText((String) userObject);</span>
+<span class="nc" id="L176">		hooks = null; // lazy, fc, 30.6.2005.</span>
+<span class="nc" id="L177">		activatedHooks = null; // lazy, fc, 30.6.2005</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (logger == null)</span>
+<span class="nc" id="L179">			logger = frame.getLogger(this.getClass().getName());</span>
+		// create creation time:
+<span class="nc" id="L181">		setHistoryInformation(new HistoryInformation());</span>
+<span class="nc" id="L182">		this.map = map;</span>
+<span class="nc" id="L183">		this.attributes = EMTPY_ATTRIBUTES;</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (sSaveIdPropertyChangeListener == null) {</span>
+<span class="nc" id="L185">			sSaveIdPropertyChangeListener = new FreemindPropertyListener() {</span>
+
+				public void propertyChanged(String propertyName,
+						String newValue, String oldValue) {
+<span class="nc" id="L189">					if (propertyName</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">							.equals(FreeMindCommon.SAVE_ONLY_INTRISICALLY_NEEDED_IDS)) {</span>
+<span class="nc" id="L191">						sSaveOnlyIntrinsicallyNeededIds = Boolean.valueOf(</span>
+<span class="nc" id="L192">								newValue).booleanValue();</span>
+					}
+<span class="nc" id="L194">				}</span>
+			};
+			Controller
+<span class="nc" id="L197">					.addPropertyChangeListenerAndPropagate(sSaveIdPropertyChangeListener);</span>
+		}
+
+<span class="nc" id="L200">	}</span>
+
+	/**
+     */
+	public void setMap(MindMap map) {
+<span class="nc" id="L205">		this.map = map;</span>
+<span class="nc" id="L206">		map.getRegistry().registrySubtree(this, true);</span>
+<span class="nc" id="L207">	}</span>
+
+	public String getText() {
+<span class="nc" id="L210">		String string = &quot;&quot;;</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (userObject != null) {</span>
+<span class="nc" id="L212">			string = userObject.toString();</span>
+		}
+<span class="nc" id="L214">		return string;</span>
+	}
+
+	public final void setText(String text) {
+<span class="nc bnc" id="L218" title="All 2 branches missed.">		if (text == null) {</span>
+<span class="nc" id="L219">			userObject = null;</span>
+<span class="nc" id="L220">			xmlText = null;</span>
+<span class="nc" id="L221">			return;</span>
+		}
+<span class="nc" id="L223">		userObject = HtmlTools.makeValidXml(text);</span>
+<span class="nc" id="L224">		xmlText = HtmlTools.getInstance().toXhtml((String) userObject);</span>
+<span class="nc" id="L225">	}</span>
+
+	public final String getXmlText() {
+<span class="nc" id="L228">		return xmlText;</span>
+	}
+
+	public final void setXmlText(String pXmlText) {
+<span class="nc" id="L232">		this.xmlText = HtmlTools.makeValidXml(pXmlText);</span>
+<span class="nc" id="L233">		userObject = HtmlTools.getInstance().toHtml(xmlText);</span>
+<span class="nc" id="L234">	}</span>
+
+	/* ************************************************************
+	 * ******** Notes *******
+	 * ************************************************************
+	 */
+
+	public final String getXmlNoteText() {
+<span class="nc" id="L242">		return xmlNoteText;</span>
+	}
+
+	public final String getNoteText() {
+		// logger.info(&quot;Note html: &quot; + noteText);
+<span class="nc" id="L247">		return noteText;</span>
+	}
+
+	public final void setXmlNoteText(String pXmlNoteText) {
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if (pXmlNoteText == null) {</span>
+<span class="nc" id="L252">			xmlNoteText = null;</span>
+<span class="nc" id="L253">			noteText = null;</span>
+<span class="nc" id="L254">			return;</span>
+		}
+<span class="nc" id="L256">		this.xmlNoteText = HtmlTools.makeValidXml(pXmlNoteText);</span>
+<span class="nc" id="L257">		noteText = HtmlTools.getInstance().toHtml(xmlNoteText);</span>
+<span class="nc" id="L258">	}</span>
+
+	public final void setNoteText(String pNoteText) {
+<span class="nc bnc" id="L261" title="All 2 branches missed.">		if (pNoteText == null) {</span>
+<span class="nc" id="L262">			xmlNoteText = null;</span>
+<span class="nc" id="L263">			noteText = null;</span>
+<span class="nc" id="L264">			return;</span>
+		}
+<span class="nc" id="L266">		this.noteText = HtmlTools.makeValidXml(pNoteText);</span>
+<span class="nc" id="L267">		this.xmlNoteText = HtmlTools.getInstance().toXhtml(noteText);</span>
+<span class="nc" id="L268">	}</span>
+
+	public String getPlainTextContent() {
+		// Redefined in MindMapNodeModel.
+<span class="nc" id="L272">		return toString();</span>
+	}
+
+	public String getLink() {
+<span class="nc" id="L276">		return link;</span>
+	}
+
+	public String getShortText(ModeController controller) {
+<span class="nc" id="L280">		String adaptedText = getPlainTextContent();</span>
+		// adaptedText = adaptedText.replaceAll(&quot;&lt;html&gt;&quot;, &quot;&quot;);
+<span class="nc bnc" id="L282" title="All 2 branches missed.">		if (adaptedText.length() &gt; 40)</span>
+<span class="nc" id="L283">			adaptedText = adaptedText.substring(0, 40) + &quot; ...&quot;;</span>
+<span class="nc" id="L284">		return adaptedText;</span>
+	}
+
+	public void setLink(String link) {
+<span class="nc bnc" id="L288" title="All 4 branches missed.">		if (link != null &amp;&amp; link.startsWith(&quot;#&quot;)) {</span>
+<span class="nc" id="L289">			getMap().getLinkRegistry().registerLocalHyperlinkId(</span>
+<span class="nc" id="L290">					link.substring(1));</span>
+		}
+<span class="nc" id="L292">		this.link = link;</span>
+<span class="nc" id="L293">	}</span>
+
+	public FilterInfo getFilterInfo() {
+<span class="nc" id="L296">		return filterInfo;</span>
+	}
+
+	public FreeMindMain getFrame() {
+<span class="nc" id="L300">		return frame;</span>
+	}
+
+	//
+	// Interface MindMapNode
+	//
+
+	//
+	// get/set methods
+	//
+
+	public Collection getViewers() {
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		if (views == null) {</span>
+<span class="nc" id="L313">			views = new LinkedList();</span>
+		}
+<span class="nc" id="L315">		return views;</span>
+	}
+
+	public void addViewer(NodeView viewer) {
+<span class="nc" id="L319">		getViewers().add(viewer);</span>
+<span class="nc" id="L320">		addTreeModelListener(viewer);</span>
+<span class="nc" id="L321">	}</span>
+
+	public void removeViewer(NodeView viewer) {
+<span class="nc" id="L324">		getViewers().remove(viewer);</span>
+<span class="nc" id="L325">		removeTreeModelListener(viewer);</span>
+<span class="nc" id="L326">	}</span>
+
+	/** Creates the TreePath recursively */
+	public TreePath getPath() {
+<span class="nc" id="L330">		Vector pathVector = new Vector();</span>
+		TreePath treePath;
+<span class="nc" id="L332">		this.addToPathVector(pathVector);</span>
+<span class="nc" id="L333">		treePath = new TreePath(pathVector.toArray());</span>
+<span class="nc" id="L334">		return treePath;</span>
+	}
+
+	public MindMapEdge getEdge() {
+<span class="nc" id="L338">		return edge;</span>
+	}
+
+	public void setEdge(MindMapEdge edge) {
+<span class="nc" id="L342">		this.edge = edge;</span>
+<span class="nc" id="L343">	}</span>
+
+	public MindMapCloud getCloud() {
+<span class="nc" id="L346">		return cloud;</span>
+	}
+
+	public void setCloud(MindMapCloud cloud) {
+		// Take care to keep the calculated iterative levels consistent
+<span class="nc bnc" id="L351" title="All 4 branches missed.">		if (cloud != null &amp;&amp; this.cloud == null) {</span>
+<span class="nc" id="L352">			changeChildCloudIterativeLevels(1);</span>
+<span class="nc bnc" id="L353" title="All 4 branches missed.">		} else if (cloud == null &amp;&amp; this.cloud != null) {</span>
+<span class="nc" id="L354">			changeChildCloudIterativeLevels(-1);</span>
+		}
+<span class="nc" id="L356">		this.cloud = cloud;</span>
+<span class="nc" id="L357">	}</span>
+
+	/**
+	 * Correct iterative level values of children
+	 */
+	private void changeChildCloudIterativeLevels(int deltaLevel) {
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		for (ListIterator e = childrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L364">			NodeAdapter childNode = (NodeAdapter) e.next();</span>
+<span class="nc" id="L365">			MindMapCloud childCloud = childNode.getCloud();</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (childCloud != null) {</span>
+<span class="nc" id="L367">				childCloud.changeIterativeLevel(deltaLevel);</span>
+			}
+<span class="nc" id="L369">			childNode.changeChildCloudIterativeLevels(deltaLevel);</span>
+		}
+<span class="nc" id="L371">	}</span>
+
+	/** A Node-Style like MindMapNode.STYLE_FORK or MindMapNode.STYLE_BUBBLE */
+	public String getStyle() {
+<span class="nc" id="L375">		String returnedString = style; /* Style string returned */</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">		if (style == null) {</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">			if (this.isRoot()) {</span>
+<span class="nc" id="L378">				returnedString = getFrame().getProperty(</span>
+<span class="nc" id="L379">						FreeMind.RESOURCES_ROOT_NODE_STYLE);</span>
+<span class="nc" id="L380">			} else {</span>
+<span class="nc" id="L381">				String stdstyle = getFrame().getProperty(</span>
+<span class="nc" id="L382">						FreeMind.RESOURCES_NODE_STYLE);</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">				if (stdstyle.equals(MindMapNode.STYLE_AS_PARENT)) {</span>
+<span class="nc" id="L384">					returnedString = getParentNode().getStyle();</span>
+<span class="nc" id="L385">				} else {</span>
+<span class="nc" id="L386">					returnedString = stdstyle;</span>
+				}
+			}
+<span class="nc bnc" id="L389" title="All 4 branches missed.">		} else if (this.isRoot() &amp;&amp; style.equals(MindMapNode.STYLE_AS_PARENT)) {</span>
+<span class="nc" id="L390">			returnedString = getFrame().getProperty(</span>
+<span class="nc" id="L391">					FreeMind.RESOURCES_ROOT_NODE_STYLE);</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">		} else if (style.equals(MindMapNode.STYLE_AS_PARENT)) {</span>
+<span class="nc" id="L393">			returnedString = getParentNode().getStyle();</span>
+		}
+
+		// Handle the combined node style
+<span class="nc bnc" id="L397" title="All 2 branches missed.">		if (returnedString.equals(MindMapNode.STYLE_COMBINED)) {</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">			if (this.isFolded()) {</span>
+<span class="nc" id="L399">				return MindMapNode.STYLE_BUBBLE;</span>
+			} else {
+<span class="nc" id="L401">				return MindMapNode.STYLE_FORK;</span>
+			}
+		}
+<span class="nc" id="L404">		return returnedString;</span>
+	}
+
+	public boolean hasStyle() {
+<span class="nc bnc" id="L408" title="All 2 branches missed.">		return style != null;</span>
+	}
+
+	/** The Foreground/Font Color */
+	public Color getColor() {
+<span class="nc" id="L413">		return color;</span>
+	}
+
+	// ////
+	// The set methods. I'm not sure if they should be here or in the
+	// implementing class.
+	// ///
+
+	public void setStyle(String style) {
+<span class="nc" id="L422">		this.style = style;</span>
+<span class="nc" id="L423">	}</span>
+
+	public void setColor(Color color) {
+<span class="nc" id="L426">		this.color = color;</span>
+<span class="nc" id="L427">	}</span>
+
+	// fc, 24.2.2004: background color:
+	public Color getBackgroundColor() {
+<span class="nc" id="L431">		return backgroundColor;</span>
+	};
+
+	public void setBackgroundColor(Color color) {
+<span class="nc" id="L435">		this.backgroundColor = color;</span>
+<span class="nc" id="L436">	};</span>
+
+	//
+	// font handling
+	//
+
+	// Remark to setBold and setItalic implemetation
+	//
+	// Using deriveFont() is a bad idea, because it does not really choose
+	// the appropriate face. For example, instead of choosing face
+	// &quot;Arial Bold&quot;, it derives the bold face from &quot;Arial&quot;.
+
+	// Node holds font only in the case that the font is not default.
+
+	public void establishOwnFont() {
+<span class="nc bnc" id="L451" title="All 2 branches missed.">		font = (font != null) ? font : getFrame().getController()</span>
+<span class="nc" id="L452">				.getDefaultFont();</span>
+<span class="nc" id="L453">	}</span>
+
+	public void setBold(boolean bold) {
+<span class="nc bnc" id="L456" title="All 2 branches missed.">		if (bold != isBold()) {</span>
+<span class="nc" id="L457">			toggleBold();</span>
+		}
+<span class="nc" id="L459">	}</span>
+
+	public void toggleBold() {
+<span class="nc" id="L462">		establishOwnFont();</span>
+<span class="nc" id="L463">		setFont(getFrame().getController().getFontThroughMap(</span>
+<span class="nc" id="L464">				new Font(font.getFamily(), font.getStyle() ^ Font.BOLD, font</span>
+<span class="nc" id="L465">						.getSize())));</span>
+<span class="nc" id="L466">	}</span>
+
+	public void setItalic(boolean italic) {
+<span class="nc bnc" id="L469" title="All 2 branches missed.">		if (italic != isItalic()) {</span>
+<span class="nc" id="L470">			toggleItalic();</span>
+		}
+<span class="nc" id="L472">	}</span>
+
+	public void toggleItalic() {
+<span class="nc" id="L475">		establishOwnFont();</span>
+<span class="nc" id="L476">		setFont(getFrame().getController().getFontThroughMap(</span>
+<span class="nc" id="L477">				new Font(font.getFamily(), font.getStyle() ^ Font.ITALIC, font</span>
+<span class="nc" id="L478">						.getSize())));</span>
+<span class="nc" id="L479">	}</span>
+
+	public void setUnderlined(boolean underlined) {
+<span class="nc" id="L482">		this.underlined = underlined;</span>
+<span class="nc" id="L483">	}</span>
+
+	public void setFont(Font font) {
+<span class="nc" id="L486">		this.font = font;</span>
+<span class="nc" id="L487">	}</span>
+
+	public MindMapNode getParentNode() {
+<span class="nc" id="L490">		return parent;</span>
+	}
+
+	public void setFontSize(int fontSize) {
+<span class="nc" id="L494">		establishOwnFont();</span>
+<span class="nc" id="L495">		setFont(getFrame().getController().getFontThroughMap(</span>
+<span class="nc" id="L496">				new Font(font.getFamily(), font.getStyle(), fontSize)));</span>
+<span class="nc" id="L497">	}</span>
+
+	public Font getFont() {
+<span class="nc" id="L500">		return font;</span>
+	}
+
+	public String getFontSize() {
+<span class="nc bnc" id="L504" title="All 2 branches missed.">		if (getFont() != null) {</span>
+<span class="nc" id="L505">			return new Integer(getFont().getSize()).toString();</span>
+		} else {
+<span class="nc" id="L507">			return getFrame().getProperty(&quot;defaultfontsize&quot;);</span>
+		}
+	}
+
+	public String getFontFamilyName() {
+<span class="nc bnc" id="L512" title="All 2 branches missed.">		if (getFont() != null) {</span>
+<span class="nc" id="L513">			return getFont().getFamily();</span>
+		} else {
+<span class="nc" id="L515">			return getFrame().getProperty(&quot;defaultfont&quot;);</span>
+		}
+	}
+
+	public boolean isBold() {
+<span class="nc bnc" id="L520" title="All 2 branches missed.">		return font != null ? font.isBold() : false;</span>
+	}
+
+	public boolean isItalic() {
+<span class="nc bnc" id="L524" title="All 2 branches missed.">		return font != null ? font.isItalic() : false;</span>
+	}
+
+	public boolean isUnderlined() { // not implemented
+<span class="nc" id="L528">		return underlined;</span>
+	}
+
+	public boolean isFolded() {
+<span class="nc" id="L532">		return folded;</span>
+	}
+
+	// fc, 24.9.2003:
+	public List getIcons() {
+<span class="nc bnc" id="L537" title="All 2 branches missed.">		if (icons == null)</span>
+<span class="nc" id="L538">			return Collections.EMPTY_LIST;</span>
+<span class="nc" id="L539">		return icons;</span>
+	}
+
+	public MindMap getMap() {
+<span class="nc" id="L543">		return map;</span>
+	}
+
+	public void addIcon(MindIcon _icon, int position) {
+<span class="nc" id="L547">		createIcons();</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">		if (position == MindIcon.LAST) {</span>
+<span class="nc" id="L549">			icons.add(_icon);</span>
+<span class="nc" id="L550">		} else {</span>
+<span class="nc" id="L551">			icons.add(position, _icon);</span>
+		}
+<span class="nc" id="L553">		getMap().getRegistry().addIcon(_icon);</span>
+<span class="nc" id="L554">	}</span>
+
+	/** @return returns the number of remaining icons. */
+	public int removeIcon(int position) {
+<span class="nc" id="L558">		createIcons();</span>
+<span class="nc bnc" id="L559" title="All 2 branches missed.">		if (position == MindIcon.LAST) {</span>
+<span class="nc" id="L560">			position = icons.size() - 1;</span>
+		}
+<span class="nc" id="L562">		icons.remove(position);</span>
+<span class="nc" id="L563">		int returnSize = icons.size();</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">		if (returnSize == 0) {</span>
+<span class="nc" id="L565">			icons = null;</span>
+		}
+<span class="nc" id="L567">		return returnSize;</span>
+	};
+
+	// end, fc, 24.9.2003
+
+	// public String getLabel() { return mLabel; }
+
+	// public void setLabel(String newLabel) { mLabel = newLabel; /* bad hack:
+	// registry fragen.*/ };
+
+	// public Vector/* of NodeLinkStruct*/ getReferences() { return
+	// mNodeLinkVector; };
+
+	// public void removeReferenceAt(int i) {
+	// if(mNodeLinkVector.size() &gt; i) {
+	// mNodeLinkVector.removeElementAt(i);
+	// } else {
+	// /* exception. */
+	// }
+	// }
+
+	// public void addReference(MindMapLink mindMapLink) {
+	// mNodeLinkVector.add(mindMapLink); };
+
+	/**
+	 * True iff one of node's &lt;i&gt;strict&lt;/i&gt; descendants is folded. A node N is
+	 * not its strict descendant - the fact that node itself is folded is not
+	 * sufficient to return true.
+	 */
+	public boolean hasFoldedStrictDescendant() {
+
+<span class="nc bnc" id="L598" title="All 2 branches missed.">		for (ListIterator e = childrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L599">			NodeAdapter child = (NodeAdapter) e.next();</span>
+<span class="nc bnc" id="L600" title="All 4 branches missed.">			if (child.isFolded() || child.hasFoldedStrictDescendant()) {</span>
+<span class="nc" id="L601">				return true;</span>
+			}
+		}
+
+<span class="nc" id="L605">		return false;</span>
+	}
+
+	/**
+	 * @return true, if one of its parents is folded. If itself is folded,
+	 *         doesn't matter.
+	 */
+	public boolean hasFoldedParents() {
+<span class="nc bnc" id="L613" title="All 2 branches missed.">		if (isRoot())</span>
+<span class="nc" id="L614">			return false;</span>
+<span class="nc bnc" id="L615" title="All 2 branches missed.">		if (getParentNode().isFolded()) {</span>
+<span class="nc" id="L616">			return true;</span>
+		}
+<span class="nc" id="L618">		return getParentNode().hasFoldedParents();</span>
+	}
+
+	public void setFolded(boolean folded) {
+<span class="nc" id="L622">		this.folded = folded;</span>
+<span class="nc" id="L623">	}</span>
+
+	public MindMapNode shallowCopy() {
+		try {
+			// get XML from me.
+<span class="nc" id="L628">			StringWriter writer = new StringWriter();</span>
+<span class="nc" id="L629">			this.save(writer, this.getMap().getLinkRegistry(), true, false);</span>
+<span class="nc" id="L630">			String result = writer.toString();</span>
+<span class="nc" id="L631">			HashMap IDToTarget = new HashMap();</span>
+<span class="nc" id="L632">			MindMapNode copy = this.getModeController().createNodeTreeFromXml(</span>
+<span class="nc" id="L633">					new StringReader(result), IDToTarget);</span>
+<span class="nc" id="L634">			copy.setFolded(false);</span>
+<span class="nc" id="L635">			return copy;</span>
+<span class="nc" id="L636">		} catch (Exception e) {</span>
+<span class="nc" id="L637">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L638">			return null;</span>
+		}
+	}
+
+	//
+	// other
+	//
+
+	public String toString() {
+<span class="nc" id="L647">		return getText();</span>
+	}
+
+	public boolean isDescendantOf(MindMapNode pParentNode) {
+<span class="nc bnc" id="L651" title="All 2 branches missed.">		if (this.isRoot())</span>
+<span class="nc" id="L652">			return false;</span>
+<span class="nc bnc" id="L653" title="All 2 branches missed.">		else if (pParentNode == getParentNode())</span>
+<span class="nc" id="L654">			return true;</span>
+		else
+<span class="nc" id="L656">			return getParentNode().isDescendantOf(pParentNode);</span>
+	}
+
+	public boolean isRoot() {
+<span class="nc bnc" id="L660" title="All 2 branches missed.">		return (parent == null);</span>
+	}
+
+	public boolean isDescendantOfOrEqual(MindMapNode pParentNode) {
+<span class="nc bnc" id="L664" title="All 2 branches missed.">		if (this == pParentNode) {</span>
+<span class="nc" id="L665">			return true;</span>
+		}
+<span class="nc" id="L667">		return isDescendantOf(pParentNode);</span>
+	}
+
+	public boolean hasChildren() {
+<span class="nc bnc" id="L671" title="All 4 branches missed.">		return children != null &amp;&amp; !children.isEmpty();</span>
+	}
+
+	public int getChildPosition(MindMapNode childNode) {
+<span class="nc" id="L675">		int position = 0;</span>
+<span class="nc bnc" id="L676" title="All 2 branches missed.">		for (ListIterator i = children.listIterator(); i.hasNext(); ++position) {</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">			if (((MindMapNode) i.next()) == childNode) {</span>
+<span class="nc" id="L678">				return position;</span>
+			}
+		}
+<span class="nc" id="L681">		return -1;</span>
+	}
+
+	public ListIterator childrenUnfolded() {
+<span class="nc bnc" id="L685" title="All 2 branches missed.">		return children != null ? children.listIterator()</span>
+<span class="nc" id="L686">				: Collections.EMPTY_LIST.listIterator();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMapNode#sortedChildrenUnfolded()
+	 */
+	public ListIterator sortedChildrenUnfolded() {
+<span class="nc bnc" id="L695" title="All 2 branches missed.">		if (children == null)</span>
+<span class="nc" id="L696">			return null;</span>
+<span class="nc" id="L697">		LinkedList sorted = new LinkedList(children);</span>
+		/*
+		 * Using this stable sort, we assure that the left nodes came in front
+		 * of the right ones.
+		 */
+<span class="nc" id="L702">		Collections.sort(sorted, new Comparator() {</span>
+
+			public int compare(Object pO1, Object pO2) {
+<span class="nc" id="L705">				return comp(((MindMapNode) pO2).isLeft(),</span>
+<span class="nc" id="L706">						((MindMapNode) pO1).isLeft());</span>
+			}
+
+			private int comp(boolean pLeft, boolean pLeft2) {
+<span class="nc bnc" id="L710" title="All 2 branches missed.">				if (pLeft == pLeft2) {</span>
+<span class="nc" id="L711">					return 0;</span>
+				}
+<span class="nc bnc" id="L713" title="All 2 branches missed.">				if (pLeft) {</span>
+<span class="nc" id="L714">					return 1;</span>
+				}
+<span class="nc" id="L716">				return -1;</span>
+			}
+		});
+<span class="nc" id="L719">		return sorted.listIterator();</span>
+	}
+
+	public ListIterator childrenFolded() {
+<span class="nc bnc" id="L723" title="All 2 branches missed.">		if (isFolded()) {</span>
+<span class="nc" id="L724">			return Collections.EMPTY_LIST.listIterator();</span>
+		}
+<span class="nc" id="L726">		return childrenUnfolded();</span>
+	}
+
+	public List getChildren() {
+<span class="nc bnc" id="L730" title="All 2 branches missed.">		return Collections.unmodifiableList((children != null) ? children</span>
+<span class="nc" id="L731">				: Collections.EMPTY_LIST);</span>
+	}
+
+	//
+	// Interface TreeNode
+	//
+
+	/**
+	 * AFAIK there is no way to get an enumeration out of a linked list. So this
+	 * exception must be thrown, or we can't implement TreeNode anymore (maybe
+	 * we shouldn't?)
+	 */
+	public Enumeration children() {
+<span class="nc" id="L744">		throw new UnsupportedOperationException(</span>
+<span class="nc" id="L745">				&quot;Use childrenFolded or childrenUnfolded instead&quot;);</span>
+	}
+
+	public boolean getAllowsChildren() {
+<span class="nc" id="L749">		return ALLOWSCHILDREN;</span>
+	}
+
+	public TreeNode getChildAt(int childIndex) {
+		// fc, 11.12.2004: This is not understandable, that a child does not
+		// exist if the parent is folded.
+		// if (isFolded()) {
+		// return null;
+		// }
+<span class="nc" id="L758">		return (TreeNode) children.get(childIndex);</span>
+	}
+
+	public int getChildCount() {
+<span class="nc bnc" id="L762" title="All 2 branches missed.">		return children == null ? 0 : children.size();</span>
+	}
+
+	// (PN)
+	// public int getChildCount() {
+	// if (isFolded()) {
+	// return 0;
+	// }
+	// return children.size();
+	// }
+	// // Daniel: ^ The name of this method is confusing. It does nto convey
+	// // the meaning, at least not to me.
+
+	public int getIndex(TreeNode node) {
+<span class="nc" id="L776">		return children.indexOf((MindMapNode) node); // uses equals()</span>
+	}
+
+	public TreeNode getParent() {
+<span class="nc" id="L780">		return parent;</span>
+	}
+
+	public boolean isLeaf() {
+<span class="nc bnc" id="L784" title="All 2 branches missed.">		return getChildCount() == 0;</span>
+	}
+
+	// fc, 16.12.2003 left-right bug:
+	public boolean isLeft() {
+<span class="nc bnc" id="L789" title="All 4 branches missed.">		if (getParent() != null &amp;&amp; !getParentNode().isRoot()) {</span>
+<span class="nc" id="L790">			return getParentNode().isLeft();</span>
+		}
+<span class="nc bnc" id="L792" title="All 4 branches missed.">		if (position == UNKNOWN_POSITION &amp;&amp; !isRoot()) {</span>
+<span class="nc" id="L793">			setLeft(getParentNode().isLeft());</span>
+		}
+<span class="nc bnc" id="L795" title="All 2 branches missed.">		return position == LEFT_POSITION;</span>
+	}
+
+	public void setLeft(boolean isLeft) {
+<span class="nc bnc" id="L799" title="All 2 branches missed.">		position = isLeft ? LEFT_POSITION : RIGHT_POSITION;</span>
+<span class="nc bnc" id="L800" title="All 2 branches missed.">		if (!isRoot()) {</span>
+<span class="nc bnc" id="L801" title="All 2 branches missed.">			for (int i = 0; i &lt; getChildCount(); i++) {</span>
+<span class="nc" id="L802">				final NodeAdapter child = (NodeAdapter) getChildAt(i);</span>
+<span class="nc" id="L803">				child.position = position;</span>
+			}
+		}
+<span class="nc" id="L806">	}</span>
+
+	public boolean isNewChildLeft() {
+<span class="nc bnc" id="L809" title="All 2 branches missed.">		if (!isRoot()) {</span>
+<span class="nc" id="L810">			return isLeft();</span>
+		}
+<span class="nc" id="L812">		int rightChildrenCount = 0;</span>
+<span class="nc bnc" id="L813" title="All 2 branches missed.">		for (int i = 0; i &lt; getChildCount(); i++) {</span>
+<span class="nc bnc" id="L814" title="All 2 branches missed.">			if (!((MindMapNode) getChildAt(i)).isLeft())</span>
+<span class="nc" id="L815">				rightChildrenCount++;</span>
+<span class="nc bnc" id="L816" title="All 2 branches missed.">			if (rightChildrenCount &gt; getChildCount() / 2) {</span>
+<span class="nc" id="L817">				return true;</span>
+			}
+		}
+<span class="nc" id="L820">		return false;</span>
+	}
+
+	//
+	// Interface MutableTreeNode
+	//
+
+	// do all remove methods have to work recursively to make the
+	// Garbage Collection work (Nodes in removed Sub-Trees reference each
+	// other)?
+
+	public void insert(MutableTreeNode child, int index) {
+<span class="nc" id="L832">		logger.finest(&quot;Insert at &quot; + index + &quot; the node &quot; + child);</span>
+<span class="nc" id="L833">		final MindMapNode childNode = (MindMapNode) child;</span>
+<span class="nc bnc" id="L834" title="All 2 branches missed.">		if (index &lt; 0) { // add to the end (used in xml load) (PN)</span>
+<span class="nc" id="L835">			index = getChildCount();</span>
+<span class="nc" id="L836">			children.add(index, child);</span>
+<span class="nc" id="L837">		} else { // mind preferred child :-)</span>
+<span class="nc" id="L838">			children.add(index, child);</span>
+<span class="nc" id="L839">			preferredChild = childNode;</span>
+		}
+<span class="nc" id="L841">		child.setParent(this);</span>
+<span class="nc" id="L842">		recursiveCallAddChildren(this, childNode);</span>
+<span class="nc" id="L843">	}</span>
+
+	public void remove(int index) {
+<span class="nc" id="L846">		MutableTreeNode node = (MutableTreeNode) children.get(index);</span>
+<span class="nc" id="L847">		remove(node);</span>
+<span class="nc" id="L848">	}</span>
+
+	public void remove(MutableTreeNode node) {
+<span class="nc bnc" id="L851" title="All 2 branches missed.">		if (node == this.preferredChild) { // mind preferred child :-) (PN)</span>
+<span class="nc" id="L852">			int index = children.indexOf(node);</span>
+<span class="nc bnc" id="L853" title="All 2 branches missed.">			if (children.size() &gt; index + 1) {</span>
+<span class="nc" id="L854">				this.preferredChild = (MindMapNode) (children.get(index + 1));</span>
+<span class="nc" id="L855">			} else {</span>
+<span class="nc bnc" id="L856" title="All 2 branches missed.">				this.preferredChild = (index &gt; 0) ? (MindMapNode) (children</span>
+<span class="nc" id="L857">						.get(index - 1)) : null;</span>
+			}
+		}
+<span class="nc" id="L860">		node.setParent(null);</span>
+<span class="nc" id="L861">		children.remove(node);</span>
+		// call remove child hook after removal.
+<span class="nc" id="L863">		recursiveCallRemoveChildren(this, (MindMapNode) node, this);</span>
+<span class="nc" id="L864">	}</span>
+
+	private void recursiveCallAddChildren(MindMapNode node,
+			MindMapNode addedChild) {
+		// Tell any node hooks that the node is added:
+<span class="nc bnc" id="L869" title="All 2 branches missed.">		if (node instanceof MindMapNode) {</span>
+<span class="nc" id="L870">			for (Iterator i = ((MindMapNode) node).getActivatedHooks()</span>
+<span class="nc bnc" id="L871" title="All 2 branches missed.">					.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L872">				PermanentNodeHook hook = (PermanentNodeHook) i.next();</span>
+<span class="nc bnc" id="L873" title="All 2 branches missed.">				if (addedChild.getParentNode() == node) {</span>
+<span class="nc" id="L874">					hook.onAddChild(addedChild);</span>
+				}
+<span class="nc" id="L876">				hook.onAddChildren(addedChild);</span>
+			}
+		}
+<span class="nc bnc" id="L879" title="All 4 branches missed.">		if (!node.isRoot() &amp;&amp; node.getParentNode() != null)</span>
+<span class="nc" id="L880">			recursiveCallAddChildren(node.getParentNode(), addedChild);</span>
+<span class="nc" id="L881">	}</span>
+
+	/**
+	 * @param oldDad
+	 *            the last dad node had.
+	 */
+	private void recursiveCallRemoveChildren(MindMapNode node,
+			MindMapNode removedChild, MindMapNode oldDad) {
+<span class="nc bnc" id="L889" title="All 2 branches missed.">		for (Iterator i = node.getActivatedHooks().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L890">			PermanentNodeHook hook = (PermanentNodeHook) i.next();</span>
+<span class="nc bnc" id="L891" title="All 2 branches missed.">			if (removedChild.getParentNode() == node) {</span>
+<span class="nc" id="L892">				hook.onRemoveChild(removedChild);</span>
+			}
+<span class="nc" id="L894">			hook.onRemoveChildren(removedChild, oldDad);</span>
+		}
+<span class="nc bnc" id="L896" title="All 4 branches missed.">		if (!node.isRoot() &amp;&amp; node.getParentNode() != null)</span>
+<span class="nc" id="L897">			recursiveCallRemoveChildren(node.getParentNode(), removedChild,</span>
+<span class="nc" id="L898">					oldDad);</span>
+<span class="nc" id="L899">	}</span>
+
+	public void removeFromParent() {
+<span class="nc" id="L902">		parent.remove(this);</span>
+<span class="nc" id="L903">	}</span>
+
+	public void setParent(MutableTreeNode newParent) {
+<span class="nc" id="L906">		parent = (MindMapNode) newParent;</span>
+<span class="nc" id="L907">	}</span>
+
+	public void setParent(MindMapNode newParent) {
+<span class="nc" id="L910">		parent = newParent;</span>
+<span class="nc" id="L911">	}</span>
+
+	public void setUserObject(Object object) {
+<span class="nc" id="L914">		setText((String) object);</span>
+<span class="nc" id="L915">	}</span>
+
+	// //////////////
+	// Private methods. Internal Implementation
+	// ////////////
+
+	/** Recursive Method for getPath() */
+	private void addToPathVector(Vector pathVector) {
+<span class="nc" id="L923">		pathVector.add(0, this); // Add myself to beginning of Vector</span>
+<span class="nc bnc" id="L924" title="All 2 branches missed.">		if (parent != null) {</span>
+<span class="nc" id="L925">			((NodeAdapter) parent).addToPathVector(pathVector);</span>
+		}
+<span class="nc" id="L927">	}</span>
+
+	public int getNodeLevel() { // for cursor navigation within a level (PN)
+<span class="nc" id="L930">		int level = 0;</span>
+		MindMapNode parent;
+<span class="nc bnc" id="L932" title="All 2 branches missed.">		for (parent = this; !parent.isRoot(); parent = parent.getParentNode()) {</span>
+<span class="nc bnc" id="L933" title="All 2 branches missed.">			if (parent.isVisible()) {</span>
+<span class="nc" id="L934">				level++;</span>
+			}
+		}
+<span class="nc" id="L937">		return level;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMapNode#addHook(freemind.modes.NodeHook)
+	 */
+	public PermanentNodeHook addHook(PermanentNodeHook hook) {
+		// add then
+<span class="nc bnc" id="L947" title="All 2 branches missed.">		if (hook == null)</span>
+<span class="nc" id="L948">			throw new IllegalArgumentException(&quot;Added null hook.&quot;);</span>
+<span class="nc" id="L949">		createHooks();</span>
+<span class="nc" id="L950">		hooks.add(hook);</span>
+<span class="nc" id="L951">		return hook;</span>
+	}
+
+	public void invokeHook(NodeHook hook) {
+		// initialize:
+<span class="nc" id="L956">		hook.startupMapHook();</span>
+		// the main invocation:
+<span class="nc" id="L958">		hook.setNode(this);</span>
+		try {
+<span class="nc" id="L960">			hook.invoke(this);</span>
+<span class="nc" id="L961">		} catch (Exception e) {</span>
+			// FIXME: Do something special here, but in any case, do not add the
+			// hook
+			// to the activatedHooks:
+<span class="nc" id="L965">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L966">			return;</span>
+		}
+<span class="nc bnc" id="L968" title="All 2 branches missed.">		if (hook instanceof PermanentNodeHook) {</span>
+<span class="nc" id="L969">			createActivatedHooks();</span>
+<span class="nc" id="L970">			activatedHooks.add(hook);</span>
+<span class="nc" id="L971">		} else {</span>
+			// end of its short life:
+<span class="nc" id="L973">			hook.shutdownMapHook();</span>
+		}
+<span class="nc" id="L975">	}</span>
+
+	private void createActivatedHooks() {
+<span class="nc bnc" id="L978" title="All 2 branches missed.">		if (activatedHooks == null) {</span>
+<span class="nc" id="L979">			activatedHooks = new HashSet();</span>
+		}
+<span class="nc" id="L981">	}</span>
+
+	private void createToolTip() {
+<span class="nc bnc" id="L984" title="All 2 branches missed.">		if (toolTip == null) {</span>
+<span class="nc" id="L985">			toolTip = new TreeMap();</span>
+		}
+<span class="nc" id="L987">	}</span>
+
+	private void createHooks() {
+<span class="nc bnc" id="L990" title="All 2 branches missed.">		if (hooks == null) {</span>
+<span class="nc" id="L991">			hooks = new Vector();</span>
+		}
+<span class="nc" id="L993">	}</span>
+
+	private void createStateIcons() {
+<span class="nc bnc" id="L996" title="All 2 branches missed.">		if (stateIcons == null) {</span>
+<span class="nc" id="L997">			stateIcons = new TreeMap();</span>
+		}
+<span class="nc" id="L999">	}</span>
+
+	private void createIcons() {
+<span class="nc bnc" id="L1002" title="All 2 branches missed.">		if (icons == null) {</span>
+<span class="nc" id="L1003">			icons = new Vector();</span>
+		}
+<span class="nc" id="L1005">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMapNode#getHooks()
+	 */
+	public List getHooks() {
+<span class="nc bnc" id="L1013" title="All 2 branches missed.">		if (hooks == null)</span>
+<span class="nc" id="L1014">			return Collections.EMPTY_LIST;</span>
+<span class="nc" id="L1015">		return Collections.unmodifiableList(hooks);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMapNode#getActivatedHooks()
+	 */
+	public Collection getActivatedHooks() {
+<span class="nc bnc" id="L1024" title="All 2 branches missed.">		if (activatedHooks == null) {</span>
+<span class="nc" id="L1025">			return Collections.EMPTY_LIST;</span>
+		}
+<span class="nc" id="L1027">		return Collections.unmodifiableCollection(activatedHooks);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMapNode#removeHook(freemind.modes.NodeHook)
+	 */
+	public void removeHook(PermanentNodeHook hook) {
+		// the order is crucial here: the shutdown method should be able to
+		// perform &quot;nodeChanged&quot;
+		// calls without having its own updateNodeHook method to be called
+		// again.
+<span class="nc" id="L1040">		String name = hook.getName();</span>
+<span class="nc" id="L1041">		createActivatedHooks();</span>
+<span class="nc bnc" id="L1042" title="All 2 branches missed.">		if (activatedHooks.contains(hook)) {</span>
+<span class="nc" id="L1043">			activatedHooks.remove(hook);</span>
+<span class="nc bnc" id="L1044" title="All 2 branches missed.">			if (activatedHooks.size() == 0) {</span>
+<span class="nc" id="L1045">				activatedHooks = null;</span>
+			}
+<span class="nc" id="L1047">			hook.shutdownMapHook();</span>
+		}
+<span class="nc" id="L1049">		createHooks();</span>
+<span class="nc" id="L1050">		hooks.remove(hook);</span>
+<span class="nc bnc" id="L1051" title="All 2 branches missed.">		if (hooks.size() == 0)</span>
+<span class="nc" id="L1052">			hooks = null;</span>
+<span class="nc" id="L1053">		logger.fine(&quot;Removed hook &quot; + name + &quot; at &quot; + hook + &quot;.&quot;);</span>
+<span class="nc" id="L1054">	}</span>
+
+	public void removeAllHooks() {
+<span class="nc" id="L1057">		int timeout = getHooks().size() * 2;</span>
+<span class="nc bnc" id="L1058" title="All 4 branches missed.">		while (getHooks().size() &gt; 0 &amp;&amp; timeout-- &gt; 0) {</span>
+<span class="nc" id="L1059">			PermanentNodeHook hook = (PermanentNodeHook) getHooks().get(0);</span>
+			try {
+<span class="nc" id="L1061">				removeHook(hook);</span>
+<span class="nc" id="L1062">			} catch (Exception e) {</span>
+<span class="nc" id="L1063">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+		}
+<span class="nc" id="L1066">	}</span>
+
+	/**
+	 */
+	public SortedMap getToolTip() {
+<span class="nc bnc" id="L1071" title="All 2 branches missed.">		if (toolTip == null)</span>
+<span class="nc" id="L1072">			return new TreeMap();</span>
+		;
+<span class="nc" id="L1074">		return Collections.unmodifiableSortedMap(toolTip);</span>
+	}
+
+	/**
+	 */
+	public void setToolTip(String key, String string) {
+<span class="nc" id="L1080">		createToolTip();</span>
+<span class="nc bnc" id="L1081" title="All 2 branches missed.">		if (string == null) {</span>
+<span class="nc bnc" id="L1082" title="All 2 branches missed.">			if (toolTip.containsKey(key)) {</span>
+<span class="nc" id="L1083">				toolTip.remove(key);</span>
+			}
+<span class="nc bnc" id="L1085" title="All 2 branches missed.">			if (toolTip.size() == 0)</span>
+<span class="nc" id="L1086">				toolTip = null;</span>
+<span class="nc" id="L1087">		} else {</span>
+<span class="nc" id="L1088">			toolTip.put(key, string);</span>
+		}
+<span class="nc" id="L1090">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.MindMapNode#getNodeId()
+	 */
+	public String getObjectId(ModeController controller) {
+<span class="nc" id="L1098">		return controller.getNodeID(this);</span>
+	}
+
+	public XMLElement save(Writer writer, MindMapLinkRegistry registry,
+			boolean saveInvisible, boolean saveChildren) throws IOException {
+		// pre save event to save all contents of the node:
+<span class="nc" id="L1104">		getModeController().firePreSaveEvent(this);</span>
+<span class="nc" id="L1105">		XMLElement node = new XMLElement();</span>
+
+		// if (!isNodeClassToBeSaved()) {
+<span class="nc" id="L1108">		node.setName(XMLElementAdapter.XML_NODE);</span>
+		// } else {
+		// node.setName(XMLElementAdapter.XML_NODE_CLASS_PREFIX
+		// + this.getClass().getName());
+		// }
+
+		/** fc, 12.6.2005: XML must not contain any zero characters. */
+<span class="nc" id="L1115">		String text = this.toString().replace('\0', ' ');</span>
+<span class="nc bnc" id="L1116" title="All 2 branches missed.">		if (!HtmlTools.isHtmlNode(text)) {</span>
+<span class="nc" id="L1117">			node.setAttribute(XMLElementAdapter.XML_NODE_TEXT, text);</span>
+<span class="nc" id="L1118">		} else {</span>
+			// save &lt;content&gt; tag:
+<span class="nc" id="L1120">			XMLElement htmlElement = new XMLElement();</span>
+<span class="nc" id="L1121">			htmlElement.setName(XMLElementAdapter.XML_NODE_XHTML_CONTENT_TAG);</span>
+<span class="nc" id="L1122">			htmlElement.setAttribute(XMLElementAdapter.XML_NODE_XHTML_TYPE_TAG,</span>
+<span class="nc" id="L1123">					XMLElementAdapter.XML_NODE_XHTML_TYPE_NODE);</span>
+<span class="nc" id="L1124">			htmlElement</span>
+<span class="nc" id="L1125">					.setEncodedContent(convertToEncodedContent(getXmlText()));</span>
+<span class="nc" id="L1126">			node.addChild(htmlElement);</span>
+		}
+<span class="nc bnc" id="L1128" title="All 2 branches missed.">		if (getXmlNoteText() != null) {</span>
+<span class="nc" id="L1129">			XMLElement htmlElement = new XMLElement();</span>
+<span class="nc" id="L1130">			htmlElement.setName(XMLElementAdapter.XML_NODE_XHTML_CONTENT_TAG);</span>
+<span class="nc" id="L1131">			htmlElement.setAttribute(XMLElementAdapter.XML_NODE_XHTML_TYPE_TAG,</span>
+<span class="nc" id="L1132">					XMLElementAdapter.XML_NODE_XHTML_TYPE_NOTE);</span>
+<span class="nc" id="L1133">			htmlElement</span>
+<span class="nc" id="L1134">					.setEncodedContent(convertToEncodedContent(getXmlNoteText()));</span>
+<span class="nc" id="L1135">			node.addChild(htmlElement);</span>
+
+		}
+		// save additional info:
+<span class="nc bnc" id="L1139" title="All 2 branches missed.">		if (getAdditionalInfo() != null) {</span>
+<span class="nc" id="L1140">			node.setAttribute(XMLElementAdapter.XML_NODE_ENCRYPTED_CONTENT,</span>
+<span class="nc" id="L1141">					getAdditionalInfo());</span>
+		}
+		// ((MindMapEdgeModel)getEdge()).save(doc,node);
+
+<span class="nc" id="L1145">		XMLElement edge = (getEdge()).save();</span>
+<span class="nc bnc" id="L1146" title="All 2 branches missed.">		if (edge != null) {</span>
+<span class="nc" id="L1147">			node.addChild(edge);</span>
+		}
+
+<span class="nc bnc" id="L1150" title="All 2 branches missed.">		if (getCloud() != null) {</span>
+<span class="nc" id="L1151">			XMLElement cloud = (getCloud()).save();</span>
+<span class="nc" id="L1152">			node.addChild(cloud);</span>
+		}
+
+<span class="nc" id="L1155">		Vector linkVector = registry.getAllLinksFromMe(this);</span>
+<span class="nc bnc" id="L1156" title="All 2 branches missed.">		for (int i = 0; i &lt; linkVector.size(); ++i) {</span>
+<span class="nc bnc" id="L1157" title="All 2 branches missed.">			if (linkVector.get(i) instanceof ArrowLinkAdapter) {</span>
+<span class="nc" id="L1158">				XMLElement arrowLinkElement = ((ArrowLinkAdapter) linkVector</span>
+<span class="nc" id="L1159">						.get(i)).save();</span>
+<span class="nc" id="L1160">				node.addChild(arrowLinkElement);</span>
+			}
+		}
+
+		// virtual link targets:
+<span class="nc" id="L1165">		Vector targetVector = registry.getAllLinksIntoMe(this);</span>
+<span class="nc bnc" id="L1166" title="All 2 branches missed.">		for (int i = 0; i &lt; targetVector.size(); ++i) {</span>
+<span class="nc bnc" id="L1167" title="All 2 branches missed.">			if (targetVector.get(i) instanceof ArrowLinkAdapter) {</span>
+<span class="nc" id="L1168">				XMLElement arrowLinkTargetElement = ((ArrowLinkAdapter) targetVector</span>
+<span class="nc" id="L1169">						.get(i)).createArrowLinkTarget(registry).save();</span>
+<span class="nc" id="L1170">				node.addChild(arrowLinkTargetElement);</span>
+			}
+		}
+
+<span class="nc bnc" id="L1174" title="All 2 branches missed.">		if (isFolded()) {</span>
+<span class="nc" id="L1175">			node.setAttribute(&quot;FOLDED&quot;, &quot;true&quot;);</span>
+		}
+
+		// fc, 17.12.2003: Remove the left/right bug.
+		// VVV save if and only if parent is root.
+<span class="nc bnc" id="L1180" title="All 4 branches missed.">		if (!(isRoot()) &amp;&amp; (getParentNode().isRoot())) {</span>
+<span class="nc bnc" id="L1181" title="All 2 branches missed.">			node.setAttribute(&quot;POSITION&quot;, isLeft() ? &quot;left&quot; : &quot;right&quot;);</span>
+		}
+
+		// the id is used, if there is a local hyperlink pointing to me or a
+		// real link.
+<span class="nc" id="L1186">		String label = registry.getLabel(this);</span>
+<span class="nc bnc" id="L1187" title="All 2 branches missed.">		if (!sSaveOnlyIntrinsicallyNeededIds</span>
+<span class="nc bnc" id="L1188" title="All 2 branches missed.">				|| (registry.isTargetOfLocalHyperlinks(label) || (registry</span>
+<span class="nc bnc" id="L1189" title="All 2 branches missed.">						.getAllLinksIntoMe(this).size() &gt; 0))) {</span>
+<span class="nc bnc" id="L1190" title="All 2 branches missed.">			if (label != null) {</span>
+<span class="nc" id="L1191">				node.setAttribute(&quot;ID&quot;, label);</span>
+			}
+		}
+<span class="nc bnc" id="L1194" title="All 2 branches missed.">		if (color != null) {</span>
+<span class="nc" id="L1195">			node.setAttribute(&quot;COLOR&quot;, Tools.colorToXml(getColor()));</span>
+		}
+
+		// new background color.
+<span class="nc bnc" id="L1199" title="All 2 branches missed.">		if (getBackgroundColor() != null) {</span>
+<span class="nc" id="L1200">			node.setAttribute(&quot;BACKGROUND_COLOR&quot;,</span>
+<span class="nc" id="L1201">					Tools.colorToXml(getBackgroundColor()));</span>
+		}
+
+<span class="nc bnc" id="L1204" title="All 2 branches missed.">		if (style != null) {</span>
+<span class="nc" id="L1205">			node.setAttribute(&quot;STYLE&quot;, this.getStyle());</span>
+		}
+		// ^ Here cannot be just getStyle() without super. This is because
+		// getStyle's style depends on folded / unfolded. For example, when
+		// real style is fork and node is folded, getStyle returns
+		// MindMapNode.STYLE_BUBBLE, which is not what we want to save.
+
+		// layout
+<span class="nc bnc" id="L1213" title="All 2 branches missed.">		if (vGap != VGAP) {</span>
+<span class="nc" id="L1214">			node.setAttribute(&quot;VGAP&quot;, Integer.toString(vGap));</span>
+		}
+<span class="nc bnc" id="L1216" title="All 2 branches missed.">		if (hGap != HGAP) {</span>
+<span class="nc" id="L1217">			node.setAttribute(&quot;HGAP&quot;, Integer.toString(hGap));</span>
+		}
+<span class="nc bnc" id="L1219" title="All 2 branches missed.">		if (shiftY != 0) {</span>
+<span class="nc" id="L1220">			node.setAttribute(&quot;VSHIFT&quot;, Integer.toString(shiftY));</span>
+		}
+		// link
+<span class="nc bnc" id="L1223" title="All 2 branches missed.">		if (getLink() != null) {</span>
+<span class="nc" id="L1224">			node.setAttribute(&quot;LINK&quot;, getLink());</span>
+		}
+
+		// history information, fc, 11.4.2005
+<span class="nc bnc" id="L1228" title="All 2 branches missed.">		if (historyInformation != null) {</span>
+<span class="nc" id="L1229">			node.setAttribute(XMLElementAdapter.XML_NODE_HISTORY_CREATED_AT,</span>
+<span class="nc" id="L1230">					Tools.dateToString(getHistoryInformation().getCreatedAt()));</span>
+<span class="nc" id="L1231">			node.setAttribute(</span>
+<span class="nc" id="L1232">					XMLElementAdapter.XML_NODE_HISTORY_LAST_MODIFIED_AT, Tools</span>
+<span class="nc" id="L1233">							.dateToString(getHistoryInformation()</span>
+<span class="nc" id="L1234">									.getLastModifiedAt()));</span>
+		}
+		// font
+<span class="nc bnc" id="L1237" title="All 2 branches missed.">		if (font != null) {</span>
+<span class="nc" id="L1238">			XMLElement fontElement = new XMLElement();</span>
+<span class="nc" id="L1239">			fontElement.setName(&quot;font&quot;);</span>
+
+<span class="nc bnc" id="L1241" title="All 2 branches missed.">			if (font != null) {</span>
+<span class="nc" id="L1242">				fontElement.setAttribute(&quot;NAME&quot;, font.getFamily());</span>
+			}
+<span class="nc bnc" id="L1244" title="All 2 branches missed.">			if (font.getSize() != 0) {</span>
+<span class="nc" id="L1245">				fontElement.setAttribute(&quot;SIZE&quot;,</span>
+<span class="nc" id="L1246">						Integer.toString(font.getSize()));</span>
+			}
+<span class="nc bnc" id="L1248" title="All 2 branches missed.">			if (isBold()) {</span>
+<span class="nc" id="L1249">				fontElement.setAttribute(&quot;BOLD&quot;, &quot;true&quot;);</span>
+			}
+<span class="nc bnc" id="L1251" title="All 2 branches missed.">			if (isItalic()) {</span>
+<span class="nc" id="L1252">				fontElement.setAttribute(&quot;ITALIC&quot;, &quot;true&quot;);</span>
+			}
+<span class="nc bnc" id="L1254" title="All 2 branches missed.">			if (isUnderlined()) {</span>
+<span class="nc" id="L1255">				fontElement.setAttribute(&quot;UNDERLINE&quot;, &quot;true&quot;);</span>
+			}
+<span class="nc" id="L1257">			node.addChild(fontElement);</span>
+		}
+<span class="nc bnc" id="L1259" title="All 2 branches missed.">		for (int i = 0; i &lt; getIcons().size(); ++i) {</span>
+<span class="nc" id="L1260">			XMLElement iconElement = new XMLElement();</span>
+<span class="nc" id="L1261">			iconElement.setName(&quot;icon&quot;);</span>
+<span class="nc" id="L1262">			iconElement.setAttribute(&quot;BUILTIN&quot;,</span>
+<span class="nc" id="L1263">					((MindIcon) getIcons().get(i)).getName());</span>
+<span class="nc" id="L1264">			node.addChild(iconElement);</span>
+		}
+
+<span class="nc bnc" id="L1267" title="All 2 branches missed.">		for (Iterator i = getActivatedHooks().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L1268">			PermanentNodeHook permHook = (PermanentNodeHook) i.next();</span>
+<span class="nc bnc" id="L1269" title="All 2 branches missed.">			if (permHook instanceof DontSaveMarker) {</span>
+<span class="nc" id="L1270">				continue;</span>
+			}
+<span class="nc" id="L1272">			XMLElement hookElement = new XMLElement();</span>
+<span class="nc" id="L1273">			hookElement.setName(&quot;hook&quot;);</span>
+<span class="nc" id="L1274">			permHook.save(hookElement);</span>
+<span class="nc" id="L1275">			node.addChild(hookElement);</span>
+		}
+
+<span class="nc" id="L1278">		attributes.save(node);</span>
+<span class="nc bnc" id="L1279" title="All 4 branches missed.">		if (saveChildren &amp;&amp; childrenUnfolded().hasNext()) {</span>
+<span class="nc" id="L1280">			node.writeWithoutClosingTag(writer);</span>
+			// recursive
+<span class="nc" id="L1282">			saveChildren(writer, registry, this, saveInvisible);</span>
+<span class="nc" id="L1283">			node.writeClosingTag(writer);</span>
+<span class="nc" id="L1284">		} else {</span>
+<span class="nc" id="L1285">			node.write(writer);</span>
+		}
+<span class="nc" id="L1287">		return node;</span>
+	}
+
+	public static String convertToEncodedContent(String xmlText2) {
+<span class="nc" id="L1291">		String replace = HtmlTools.makeValidXml(xmlText2);</span>
+<span class="nc" id="L1292">		return HtmlTools.unicodeToHTMLUnicodeEntity(replace, true);</span>
+	}
+
+	public ModeController getModeController() {
+<span class="nc" id="L1296">		return map.getModeController();</span>
+	}
+
+	private void saveChildren(Writer writer, MindMapLinkRegistry registry,
+			NodeAdapter node, boolean saveHidden) throws IOException {
+<span class="nc bnc" id="L1301" title="All 2 branches missed.">		for (ListIterator e = node.childrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L1302">			NodeAdapter child = (NodeAdapter) e.next();</span>
+<span class="nc bnc" id="L1303" title="All 4 branches missed.">			if (saveHidden || child.isVisible())</span>
+<span class="nc" id="L1304">				child.save(writer, registry, saveHidden, true);</span>
+			else
+<span class="nc" id="L1306">				saveChildren(writer, registry, child, saveHidden);</span>
+		}
+<span class="nc" id="L1308">	}</span>
+
+	public int getShiftY() {
+<span class="nc" id="L1311">		return shiftY;</span>
+	}
+
+	public boolean hasExactlyOneVisibleChild() {
+<span class="nc" id="L1315">		int count = 0;</span>
+<span class="nc bnc" id="L1316" title="All 2 branches missed.">		for (ListIterator i = childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc bnc" id="L1317" title="All 2 branches missed.">			if (((MindMapNode) i.next()).isVisible())</span>
+<span class="nc" id="L1318">				count++;</span>
+<span class="nc bnc" id="L1319" title="All 2 branches missed.">			if (count == 2)</span>
+<span class="nc" id="L1320">				return false;</span>
+		}
+<span class="nc bnc" id="L1322" title="All 2 branches missed.">		return count == 1;</span>
+	}
+
+	public boolean hasVisibleChilds() {
+<span class="nc bnc" id="L1326" title="All 2 branches missed.">		for (ListIterator i = childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc bnc" id="L1327" title="All 2 branches missed.">			if (((MindMapNode) i.next()).isVisible())</span>
+<span class="nc" id="L1328">				return true;</span>
+		}
+<span class="nc" id="L1330">		return false;</span>
+	}
+
+	public int calcShiftY() {
+		try {
+			// return 0;
+<span class="nc bnc" id="L1336" title="All 2 branches missed.">			return shiftY + (parent.hasExactlyOneVisibleChild() ? SHIFT : 0);</span>
+<span class="nc" id="L1337">		} catch (NullPointerException e) {</span>
+<span class="nc" id="L1338">			return 0;</span>
+		}
+
+	}
+
+	/**
+	 * @param shiftY
+	 *            The shiftY to set.
+	 */
+	public void setShiftY(int shiftY) {
+<span class="nc" id="L1348">		this.shiftY = shiftY;</span>
+<span class="nc" id="L1349">	}</span>
+
+	/**
+     *
+     */
+
+	public void setAdditionalInfo(String info) {
+<span class="nc" id="L1356">	}</span>
+
+	public String getAdditionalInfo() {
+<span class="nc" id="L1359">		return null;</span>
+	}
+
+	/** This method must be synchronized as the TreeMap isn't. */
+	public synchronized void setStateIcon(String key, ImageIcon icon) {
+		// logger.info(&quot;Set state of key:&quot;+key+&quot;, icon &quot;+icon);
+<span class="nc" id="L1365">		createStateIcons();</span>
+<span class="nc bnc" id="L1366" title="All 2 branches missed.">		if (icon != null) {</span>
+<span class="nc" id="L1367">			stateIcons.put(key, icon);</span>
+<span class="nc" id="L1368">			getMap().getRegistry().addIcon(MindIcon.factory(key, icon));</span>
+<span class="nc bnc" id="L1369" title="All 2 branches missed.">		} else if (stateIcons.containsKey(key)) {</span>
+<span class="nc" id="L1370">			stateIcons.remove(key);</span>
+		}
+<span class="nc bnc" id="L1372" title="All 2 branches missed.">		if (stateIcons.size() == 0)</span>
+<span class="nc" id="L1373">			stateIcons = null;</span>
+<span class="nc" id="L1374">	}</span>
+
+	public Map getStateIcons() {
+<span class="nc bnc" id="L1377" title="All 2 branches missed.">		if (stateIcons == null)</span>
+<span class="nc" id="L1378">			return Collections.EMPTY_MAP;</span>
+<span class="nc" id="L1379">		return Collections.unmodifiableSortedMap(stateIcons);</span>
+	}
+
+	public HistoryInformation getHistoryInformation() {
+<span class="nc" id="L1383">		return historyInformation;</span>
+	}
+
+	public void setHistoryInformation(HistoryInformation historyInformation) {
+<span class="nc" id="L1387">		this.historyInformation = historyInformation;</span>
+<span class="nc" id="L1388">	}</span>
+
+	public int getHGap() {
+<span class="nc" id="L1391">		return hGap;</span>
+	}
+
+	public void setHGap(int gap) {
+		// hGap = Math.max(HGAP, gap);
+<span class="nc" id="L1396">		hGap = gap;</span>
+<span class="nc" id="L1397">	}</span>
+
+	public int getVGap() {
+<span class="nc" id="L1400">		return vGap;</span>
+	}
+
+	public void setVGap(int gap) {
+<span class="nc" id="L1404">		vGap = Math.max(gap, 0);</span>
+<span class="nc" id="L1405">	}</span>
+
+	public boolean isVisible() {
+<span class="nc" id="L1408">		Filter filter = getMap().getFilter();</span>
+<span class="nc bnc" id="L1409" title="All 4 branches missed.">		return filter == null || filter.isVisible(this);</span>
+	}
+
+	public NodeAttributeTableModel getAttributes() {
+<span class="nc" id="L1413">		return attributes;</span>
+	}
+
+	public void createAttributeTableModel() {
+<span class="nc bnc" id="L1417" title="All 2 branches missed.">		if (attributes == EMTPY_ATTRIBUTES) {</span>
+<span class="nc" id="L1418">			attributes = new NodeAttributeTableModel(this);</span>
+<span class="nc bnc" id="L1419" title="All 2 branches missed.">			if (views == null) {</span>
+<span class="nc" id="L1420">				return;</span>
+			}
+<span class="nc" id="L1422">			final Iterator iterator = views.iterator();</span>
+<span class="nc bnc" id="L1423" title="All 2 branches missed.">			while (iterator.hasNext()) {</span>
+<span class="nc" id="L1424">				NodeView view = (NodeView) iterator.next();</span>
+<span class="nc" id="L1425">				view.createAttributeView();</span>
+			}
+		}
+
+<span class="nc" id="L1429">	}</span>
+
+	public int getAttributeTableLength() {
+<span class="nc" id="L1432">		return attributes.getRowCount();</span>
+	}
+
+	public Attribute getAttribute(int pPosition) {
+<span class="nc" id="L1436">		return new Attribute(attributes.getAttribute(pPosition));</span>
+	}
+
+	public List getAttributeKeyList() {
+<span class="nc" id="L1440">		Vector returnValue = new Vector();</span>
+<span class="nc bnc" id="L1441" title="All 2 branches missed.">		if (attributes != null) {</span>
+<span class="nc" id="L1442">			for (Iterator iter = attributes.getAttributes().iterator(); iter</span>
+<span class="nc bnc" id="L1443" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L1444">				Attribute attr = (Attribute) iter.next();</span>
+<span class="nc" id="L1445">				returnValue.add(attr.getName());</span>
+			}
+		}
+<span class="nc" id="L1448">		return returnValue;</span>
+	}
+
+	public int getAttributePosition(String pKey) {
+<span class="nc bnc" id="L1452" title="All 2 branches missed.">		if (pKey == null)</span>
+<span class="nc" id="L1453">			return -1;</span>
+<span class="nc" id="L1454">		int pos = 0;</span>
+<span class="nc" id="L1455">		for (Iterator iter = attributes.getAttributes().iterator(); iter</span>
+<span class="nc bnc" id="L1456" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L1457">			Attribute attr = (Attribute) iter.next();</span>
+<span class="nc bnc" id="L1458" title="All 2 branches missed.">			if (pKey.equals(attr.getName())) {</span>
+<span class="nc" id="L1459">				return pos;</span>
+			}
+<span class="nc" id="L1461">			pos++;</span>
+		}
+<span class="nc" id="L1463">		return -1;</span>
+	}
+
+	public String getAttribute(String pKey) {
+<span class="nc" id="L1467">		int attributePosition = getAttributePosition(pKey);</span>
+<span class="nc bnc" id="L1468" title="All 2 branches missed.">		if (attributePosition &lt; 0) {</span>
+<span class="nc" id="L1469">			return null;</span>
+		}
+<span class="nc" id="L1471">		return getAttribute(attributePosition).getValue();</span>
+	}
+
+	public void setAttribute(int pPosition, Attribute pAttribute) {
+<span class="nc" id="L1475">		createAttributeTableModel();</span>
+<span class="nc" id="L1476">		attributes.setName(pPosition, pAttribute.getName());</span>
+<span class="nc" id="L1477">		attributes.setValue(pPosition, pAttribute.getValue());</span>
+<span class="nc" id="L1478">	}</span>
+
+<span class="nc" id="L1480">	EventListenerList listenerList = new EventListenerList();</span>
+
+	public void addTreeModelListener(TreeModelListener l) {
+<span class="nc" id="L1483">		listenerList.add(TreeModelListener.class, l);</span>
+<span class="nc" id="L1484">	}</span>
+
+	public void removeTreeModelListener(TreeModelListener l) {
+<span class="nc" id="L1487">		listenerList.remove(TreeModelListener.class, l);</span>
+<span class="nc" id="L1488">	}</span>
+
+	public EventListenerList getListeners() {
+<span class="nc" id="L1491">		return listenerList;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.modes.MindMapNode#acceptViewVisitor(freemind.view.mindmapview
+	 * .NodeViewVisitor)
+	 */
+	public void acceptViewVisitor(NodeViewVisitor visitor) {
+<span class="nc" id="L1502">		final Iterator iterator = views.iterator();</span>
+<span class="nc bnc" id="L1503" title="All 2 branches missed.">		while (iterator.hasNext()) {</span>
+<span class="nc" id="L1504">			visitor.visit((NodeView) iterator.next());</span>
+		}
+
+<span class="nc" id="L1507">	}</span>
+	//
+	// Events
+	//
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

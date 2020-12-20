@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>TimeManagement.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.time</a> &gt; <span class="el_source">TimeManagement.java</span></div><h1>TimeManagement.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2005  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 04.02.2005
+ */
+
+package accessories.plugins.time;
+
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.text.DateFormat;
+import java.text.MessageFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Vector;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.WindowConstants;
+
+import freemind.controller.MapModuleManager.MapModuleChangeObserver;
+import freemind.controller.StructuredMenuHolder;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.modes.Mode;
+import freemind.modes.common.plugins.ReminderHookBase;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.hooks.MindMapHookAdapter;
+import freemind.view.MapModule;
+
+//FIXME: Reminder: more than once. (later)
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="nc" id="L70">public class TimeManagement extends MindMapHookAdapter implements</span>
+		PropertyChangeListener, ActionListener, MapModuleChangeObserver {
+
+	private interface NodeFactory {
+		MindMapNode getNode(MindMapNode pNode);
+	}
+
+	private class AppendDateAbstractAction extends AbstractAction {
+		private NodeFactory mFactory;
+
+<span class="nc" id="L80">		public AppendDateAbstractAction() {</span>
+
+<span class="nc" id="L82">		}</span>
+
+		public void init(NodeFactory pFactory, String pText) {
+<span class="nc" id="L85">			putValue(Action.NAME, getMindMapController().getText(pText));</span>
+<span class="nc" id="L86">			mFactory = pFactory;</span>
+<span class="nc" id="L87">		}</span>
+
+		public void actionPerformed(ActionEvent actionEvent) {
+<span class="nc" id="L90">			MindMapNode lastElement = null;</span>
+<span class="nc" id="L91">			Vector sel = new Vector();</span>
+<span class="nc" id="L92">			for (Iterator i = getMindMapController().getSelecteds().iterator(); i</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L94">				MindMapNode element = mFactory.getNode((MindMapNode) i.next());</span>
+<span class="nc" id="L95">				DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);</span>
+<span class="nc" id="L96">				String dateAsString = df.format(getCalendarDate());</span>
+<span class="nc" id="L97">				getMindMapController().setNodeText(element,</span>
+<span class="nc" id="L98">						element.getText() + &quot; &quot; + dateAsString);</span>
+<span class="nc" id="L99">				lastElement = element;</span>
+<span class="nc" id="L100">				sel.add(element);</span>
+			}
+<span class="nc" id="L102">			getMindMapController().select(lastElement, sel);</span>
+<span class="nc" id="L103">		}</span>
+
+	}
+
+	private class AppendDateAction extends AppendDateAbstractAction {
+<span class="nc" id="L108">		public AppendDateAction() {</span>
+<span class="nc" id="L109">			init(new NodeFactory() {</span>
+
+				public MindMapNode getNode(MindMapNode pNode) {
+<span class="nc" id="L112">					return pNode;</span>
+				}
+<span class="nc" id="L114">			}, &quot;plugins/TimeManagement.xml_appendButton&quot;);</span>
+<span class="nc" id="L115">		}</span>
+
+	}
+
+	private class AppendDateToChildAction extends AppendDateAbstractAction {
+<span class="nc" id="L120">		public AppendDateToChildAction() {</span>
+<span class="nc" id="L121">			init(new NodeFactory() {</span>
+
+				public MindMapNode getNode(MindMapNode pNode) {
+<span class="nc" id="L124">					return getMindMapController().addNewNode(pNode,</span>
+<span class="nc" id="L125">							pNode.getChildCount(), pNode.isLeft());</span>
+				}
+<span class="nc" id="L127">			}, &quot;plugins/TimeManagement.xml_appendAsNewButton&quot;);</span>
+<span class="nc" id="L128">		}</span>
+	}
+
+	private class AppendDateToSiblingAction extends AppendDateAbstractAction {
+<span class="nc" id="L132">		public AppendDateToSiblingAction() {</span>
+<span class="nc" id="L133">			init(new NodeFactory() {</span>
+
+				public MindMapNode getNode(MindMapNode pNode) {
+<span class="nc" id="L136">					MindMapNode parent = pNode;</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">					if (!pNode.isRoot()) {</span>
+<span class="nc" id="L138">						parent = pNode.getParentNode();</span>
+					}
+<span class="nc" id="L140">					return getMindMapController().addNewNode(parent,</span>
+<span class="nc" id="L141">							parent.getIndex(pNode) + 1, parent.isLeft());</span>
+				}
+<span class="nc" id="L143">			}, &quot;plugins/TimeManagement.xml_appendAsNewSiblingButton&quot;);</span>
+<span class="nc" id="L144">		}</span>
+	}
+
+	private class RemindAction extends AbstractAction {
+<span class="nc" id="L148">		public RemindAction() {</span>
+<span class="nc" id="L149">			super(getMindMapController().getText(</span>
+<span class="nc" id="L150">					&quot;plugins/TimeManagement.xml_reminderButton&quot;));</span>
+<span class="nc" id="L151">		}</span>
+
+		public void actionPerformed(ActionEvent pE) {
+<span class="nc" id="L154">			TimeManagement.this.actionPerformed(pE);</span>
+<span class="nc" id="L155">		}</span>
+	}
+
+	private final class RemoveReminders extends AbstractAction {
+<span class="nc" id="L159">		public RemoveReminders() {</span>
+<span class="nc" id="L160">			super(getMindMapController().getText(</span>
+<span class="nc" id="L161">					&quot;plugins/TimeManagement.xml_removeReminderButton&quot;));</span>
+<span class="nc" id="L162">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L165">			for (Iterator i = getMindMapController().getSelecteds().iterator(); i</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L167">				MindMapNode node = (MindMapNode) i.next();</span>
+
+<span class="nc" id="L169">				ReminderHookBase alreadyPresentHook = TimeManagementOrganizer</span>
+<span class="nc" id="L170">						.getHook(node);</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">				if (alreadyPresentHook != null) {</span>
+<span class="nc" id="L172">					addHook(node, 0L); // means remove hook, as it is already</span>
+					// present.
+				}
+			}
+<span class="nc" id="L176">		}</span>
+	}
+
+	private class TodayAction extends AbstractAction {
+<span class="nc" id="L180">		public TodayAction() {</span>
+<span class="nc" id="L181">			super(getMindMapController().getText(</span>
+<span class="nc" id="L182">					&quot;plugins/TimeManagement.xml_todayButton&quot;));</span>
+<span class="nc" id="L183">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L186">			calendar.setCalendar(Calendar.getInstance());</span>
+<span class="nc" id="L187">		}</span>
+	}
+
+	private class CloseAction extends AbstractAction {
+<span class="nc" id="L191">		public CloseAction() {</span>
+<span class="nc" id="L192">			super(getMindMapController().getText(</span>
+<span class="nc" id="L193">					&quot;plugins/TimeManagement.xml_closeButton&quot;));</span>
+<span class="nc" id="L194">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L197">			disposeDialog();</span>
+<span class="nc" id="L198">		}</span>
+	}
+
+	public final static String REMINDER_HOOK_NAME = &quot;plugins/TimeManagementReminder.xml&quot;;
+
+<span class="nc" id="L203">	private static Calendar lastDate = null;</span>
+
+	private JTripleCalendar calendar;
+
+	private JDialog dialog;
+
+	private JPanel timePanel;
+
+	private JTextField hourField;
+
+	private JTextField minuteField;
+
+	private MindMapController mController;
+
+<span class="nc" id="L217">	private static TimeManagement sCurrentlyOpenTimeManagement = null;</span>
+
+	public void startupMapHook() {
+<span class="nc" id="L220">		super.startupMapHook();</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (sCurrentlyOpenTimeManagement != null) {</span>
+<span class="nc" id="L222">			sCurrentlyOpenTimeManagement.dialog.getContentPane().setVisible(</span>
+<span class="nc" id="L223">					true);</span>
+<span class="nc" id="L224">			return;</span>
+		}
+<span class="nc" id="L226">		sCurrentlyOpenTimeManagement = this;</span>
+<span class="nc" id="L227">		this.mController = super.getMindMapController();</span>
+<span class="nc" id="L228">		getMindMapController().getController().getMapModuleManager()</span>
+<span class="nc" id="L229">				.addListener(this);</span>
+<span class="nc" id="L230">		dialog = new JDialog(getMindMapController().getFrame().getJFrame(),</span>
+<span class="nc" id="L231">				false /*</span>
+					 * not modal
+					 */);
+<span class="nc" id="L234">		dialog.setTitle(getResourceString(&quot;plugins/TimeManagement.xml_WindowTitle&quot;));</span>
+<span class="nc" id="L235">		dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L236">		dialog.addWindowListener(new WindowAdapter() {</span>
+			public void windowClosing(WindowEvent event) {
+<span class="nc" id="L238">				disposeDialog();</span>
+<span class="nc" id="L239">			}</span>
+		});
+<span class="nc" id="L241">		Action closeAction = new CloseAction();</span>
+<span class="nc" id="L242">		Tools.addEscapeActionToDialog(dialog, closeAction);</span>
+		/** Menu **/
+<span class="nc" id="L244">		StructuredMenuHolder menuHolder = new StructuredMenuHolder();</span>
+<span class="nc" id="L245">		JMenuBar menu = new JMenuBar();</span>
+<span class="nc" id="L246">		JMenu mainItem = new JMenu(getMindMapController().getText(</span>
+<span class="nc" id="L247">				&quot;TimeManagement.Actions&quot;));</span>
+<span class="nc" id="L248">		menuHolder.addMenu(mainItem, &quot;main/actions/.&quot;);</span>
+<span class="nc" id="L249">		addAccelerator(menuHolder.addAction(new AppendDateAction(),</span>
+<span class="nc" id="L250">				&quot;main/actions/append&quot;),</span>
+<span class="nc" id="L251">				&quot;keystroke_plugins/TimeManagement_append&quot;);</span>
+<span class="nc" id="L252">		addAccelerator(menuHolder.addAction(new AppendDateToChildAction(),</span>
+<span class="nc" id="L253">				&quot;main/actions/appendAsChild&quot;),</span>
+<span class="nc" id="L254">				&quot;keystroke_plugins/TimeManagement_appendAsChild&quot;);</span>
+<span class="nc" id="L255">		addAccelerator(menuHolder.addAction(new AppendDateToSiblingAction(),</span>
+<span class="nc" id="L256">				&quot;main/actions/appendAsSibling&quot;),</span>
+<span class="nc" id="L257">				&quot;keystroke_plugins/TimeManagement_appendAsSibling&quot;);</span>
+<span class="nc" id="L258">		JMenuItem remindMenuItem = addAccelerator(</span>
+<span class="nc" id="L259">				menuHolder.addAction(new RemindAction(), &quot;main/actions/remind&quot;),</span>
+<span class="nc" id="L260">				&quot;keystroke_plugins/TimeManagementRemind&quot;);</span>
+<span class="nc" id="L261">		remindMenuItem</span>
+<span class="nc" id="L262">				.setToolTipText(getResourceString(&quot;plugins/TimeManagement.xml_reminderButton_tooltip&quot;));</span>
+<span class="nc" id="L263">		JMenuItem removeRemindersItem = addAccelerator(menuHolder.addAction(</span>
+<span class="nc" id="L264">				new RemoveReminders(), &quot;main/actions/removeReminders&quot;),</span>
+<span class="nc" id="L265">				&quot;keystroke_plugins/TimeManagementRemoveReminders&quot;);</span>
+<span class="nc" id="L266">		removeRemindersItem</span>
+<span class="nc" id="L267">				.setToolTipText(getResourceString(&quot;plugins/TimeManagement.xml_removeReminderButton_tooltip&quot;));</span>
+
+<span class="nc" id="L269">		addAccelerator(</span>
+<span class="nc" id="L270">				menuHolder.addAction(new TodayAction(), &quot;main/actions/today&quot;),</span>
+<span class="nc" id="L271">				&quot;keystroke_plugins/TimeManagementToday&quot;);</span>
+<span class="nc" id="L272">		menuHolder.addAction(new CloseAction(), &quot;main/actions/close&quot;);</span>
+<span class="nc" id="L273">		menuHolder.updateMenus(menu, &quot;main/&quot;);</span>
+<span class="nc" id="L274">		dialog.setJMenuBar(menu);</span>
+
+<span class="nc" id="L276">		calendar = new JTripleCalendar();</span>
+<span class="nc" id="L277">		Container contentPane = dialog.getContentPane();</span>
+<span class="nc" id="L278">		contentPane.setLayout(new GridBagLayout());</span>
+<span class="nc" id="L279">		GridBagConstraints gb1 = new GridBagConstraints();</span>
+<span class="nc" id="L280">		gb1.gridx = 0;</span>
+<span class="nc" id="L281">		gb1.gridwidth = 4;</span>
+<span class="nc" id="L282">		gb1.fill = GridBagConstraints.BOTH;</span>
+<span class="nc" id="L283">		gb1.gridy = 0;</span>
+<span class="nc" id="L284">		calendar.getDayChooser().addPropertyChangeListener(this);</span>
+<span class="nc" id="L285">		contentPane.add(calendar, gb1);</span>
+		{
+<span class="nc" id="L287">			GridBagConstraints gb2 = new GridBagConstraints();</span>
+<span class="nc" id="L288">			gb2.gridx = 0;</span>
+<span class="nc" id="L289">			gb2.gridy = 1;</span>
+<span class="nc" id="L290">			gb2.gridwidth = 4;</span>
+<span class="nc" id="L291">			gb2.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L292">			contentPane.add(getTimePanel(), gb2);</span>
+		}
+<span class="nc bnc" id="L294" title="All 2 branches missed.">		if (lastDate != null) {</span>
+<span class="nc" id="L295">			logger.info(&quot;Setting date to &quot; + lastDate);</span>
+<span class="nc" id="L296">			calendar.setCalendar(lastDate);</span>
+		}
+<span class="nc" id="L298">		dialog.pack();</span>
+		// focus fix after startup.
+<span class="nc" id="L300">		dialog.addWindowFocusListener(new WindowAdapter() {</span>
+
+			public void windowGainedFocus(WindowEvent e) {
+<span class="nc" id="L303">				calendar.getDayChooser().getSelectedDay().requestFocus();</span>
+<span class="nc" id="L304">				dialog.removeWindowFocusListener(this);</span>
+<span class="nc" id="L305">			}</span>
+		});
+<span class="nc" id="L307">		dialog.setVisible(true);</span>
+<span class="nc" id="L308">	}</span>
+
+	/**
+	 */
+	private JPanel getTimePanel() {
+<span class="nc bnc" id="L313" title="All 2 branches missed.">		if (timePanel == null) {</span>
+<span class="nc" id="L314">			timePanel = new JPanel();</span>
+<span class="nc" id="L315">			timePanel.setLayout(new GridBagLayout());</span>
+			{
+<span class="nc" id="L317">				GridBagConstraints gb2 = new GridBagConstraints();</span>
+<span class="nc" id="L318">				gb2.gridx = 0;</span>
+<span class="nc" id="L319">				gb2.gridy = 0;</span>
+<span class="nc" id="L320">				gb2.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L321">				timePanel.add(new JLabel(</span>
+<span class="nc" id="L322">						getResourceString(&quot;plugins/TimeManagement.xml_hour&quot;)),</span>
+<span class="nc" id="L323">						gb2);</span>
+			}
+			{
+<span class="nc" id="L326">				GridBagConstraints gb2 = new GridBagConstraints();</span>
+<span class="nc" id="L327">				gb2.gridx = 1;</span>
+<span class="nc" id="L328">				gb2.gridy = 0;</span>
+<span class="nc" id="L329">				gb2.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L330">				hourField = new JTextField(2);</span>
+<span class="nc" id="L331">				hourField.setText(new Integer(getCalendar().get(</span>
+<span class="nc" id="L332">						Calendar.HOUR_OF_DAY)).toString());</span>
+<span class="nc" id="L333">				timePanel.add(hourField, gb2);</span>
+			}
+			{
+<span class="nc" id="L336">				GridBagConstraints gb2 = new GridBagConstraints();</span>
+<span class="nc" id="L337">				gb2.gridx = 2;</span>
+<span class="nc" id="L338">				gb2.gridy = 0;</span>
+<span class="nc" id="L339">				gb2.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L340">				timePanel</span>
+<span class="nc" id="L341">						.add(new JLabel(</span>
+<span class="nc" id="L342">								getResourceString(&quot;plugins/TimeManagement.xml_minute&quot;)),</span>
+<span class="nc" id="L343">								gb2);</span>
+			}
+			{
+<span class="nc" id="L346">				GridBagConstraints gb2 = new GridBagConstraints();</span>
+<span class="nc" id="L347">				gb2.gridx = 3;</span>
+<span class="nc" id="L348">				gb2.gridy = 0;</span>
+<span class="nc" id="L349">				gb2.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L350">				minuteField = new JTextField(2);</span>
+<span class="nc" id="L351">				String minuteString = new Integer(getCalendar().get(</span>
+<span class="nc" id="L352">						Calendar.MINUTE)).toString();</span>
+				// padding with &quot;0&quot;
+<span class="nc bnc" id="L354" title="All 2 branches missed.">				if (minuteString.length() &lt; 2) {</span>
+<span class="nc" id="L355">					minuteString = &quot;0&quot; + minuteString;</span>
+				}
+<span class="nc" id="L357">				minuteField.setText(minuteString);</span>
+<span class="nc" id="L358">				timePanel.add(minuteField, gb2);</span>
+			}
+
+		}
+<span class="nc" id="L362">		return timePanel;</span>
+	}
+
+	public void propertyChange(PropertyChangeEvent event) {
+<span class="nc" id="L366">		if (event.getPropertyName().equals(JDayChooser.DAY_PROPERTY)) {</span>
+		}
+<span class="nc" id="L368">	}</span>
+
+	public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L371">		Date date = getCalendarDate();</span>
+		// add permanent node hook to the nodes and this hook checks
+		// permanently.
+<span class="nc" id="L374">		for (Iterator i = getMindMapController().getSelecteds().iterator(); i</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L376">			MindMapNode node = (MindMapNode) i.next();</span>
+
+<span class="nc" id="L378">			ReminderHookBase alreadyPresentHook = TimeManagementOrganizer</span>
+<span class="nc" id="L379">					.getHook(node);</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">			if (alreadyPresentHook != null) {</span>
+				// already present:
+<span class="nc" id="L382">				Object[] messageArguments = {</span>
+<span class="nc" id="L383">						new Date(alreadyPresentHook.getRemindUserAt()), date };</span>
+<span class="nc" id="L384">				MessageFormat formatter = new MessageFormat(</span>
+<span class="nc" id="L385">						getMindMapController()</span>
+<span class="nc" id="L386">								.getText(</span>
+<span class="nc" id="L387">										&quot;plugins/TimeManagement.xml_reminderNode_onlyOneDate&quot;));</span>
+<span class="nc" id="L388">				String message = formatter.format(messageArguments);</span>
+<span class="nc" id="L389">				logger.info(messageArguments.length + &quot;, &quot; + message);</span>
+<span class="nc" id="L390">				int result = JOptionPane.showConfirmDialog(</span>
+<span class="nc" id="L391">						getMindMapController().getFrame().getJFrame(), message,</span>
+<span class="nc" id="L392">						&quot;FreeMind&quot;, JOptionPane.YES_NO_OPTION);</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">				if (result == JOptionPane.NO_OPTION)</span>
+<span class="nc" id="L394">					return;</span>
+				// here, the old has to be removed and the new one installed.
+<span class="nc" id="L396">				addHook(node, 0L); // means remove hook, as it is already</span>
+									// present.
+
+			}
+<span class="nc" id="L400">			addHook(node, date.getTime());</span>
+<span class="nc" id="L401">			ReminderHookBase rh = TimeManagementOrganizer.getHook(node);</span>
+<span class="nc bnc" id="L402" title="All 2 branches missed.">			if (rh == null) {</span>
+<span class="nc" id="L403">				throw new IllegalArgumentException(</span>
+<span class="nc" id="L404">						&quot;hook not found although it is present!!&quot;);</span>
+			}
+<span class="nc" id="L406">			node.invokeHook(rh);</span>
+<span class="nc" id="L407">			getMindMapController().nodeChanged(node);</span>
+		}
+		// disposeDialog();
+<span class="nc" id="L410">	}</span>
+
+	/**
+	 * @param pRemindAt
+	 *            TODO
+	 */
+	private void addHook(MindMapNode node, long pRemindAt) {
+		// add the hook:
+<span class="nc" id="L418">		Properties properties = new Properties();</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">		if (pRemindAt != 0L) {</span>
+<span class="nc" id="L420">			properties.put(ReminderHookBase.REMINDUSERAT,</span>
+<span class="nc" id="L421">					new Long(pRemindAt).toString());</span>
+		}
+<span class="nc" id="L423">		getMindMapController().addHook(node,</span>
+<span class="nc" id="L424">				Tools.getVectorWithSingleElement(node), REMINDER_HOOK_NAME,</span>
+<span class="nc" id="L425">				properties);</span>
+<span class="nc" id="L426">	}</span>
+
+	/**
+	 *
+	 */
+	private void disposeDialog() {
+<span class="nc" id="L432">		dialog.setVisible(false);</span>
+<span class="nc" id="L433">		dialog.dispose();</span>
+<span class="nc" id="L434">		lastDate = getCalendar();</span>
+<span class="nc" id="L435">		sCurrentlyOpenTimeManagement = null;</span>
+<span class="nc" id="L436">	}</span>
+
+	/**
+	 */
+	private Date getCalendarDate() {
+<span class="nc" id="L441">		Calendar cal = getCalendar();</span>
+		try {
+<span class="nc" id="L443">			int value = 0;</span>
+<span class="nc" id="L444">			value = Integer.parseInt(hourField.getText());</span>
+<span class="nc" id="L445">			cal.set(Calendar.HOUR_OF_DAY, value);</span>
+<span class="nc" id="L446">			value = Integer.parseInt(minuteField.getText());</span>
+<span class="nc" id="L447">			cal.set(Calendar.MINUTE, value);</span>
+<span class="nc" id="L448">			cal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L449">		} catch (Exception e) {</span>
+		}
+<span class="nc" id="L451">		return cal.getTime();</span>
+	}
+
+	protected Calendar getCalendar() {
+<span class="nc" id="L455">		return calendar.getCalendar();</span>
+	}
+
+	public void afterMapClose(MapModule oldMapModule, Mode oldMode) {
+<span class="nc" id="L459">	}</span>
+
+	public void afterMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+<span class="nc" id="L463">	}</span>
+
+	public void beforeMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+<span class="nc" id="L467">		getMindMapController().getController().getMapModuleManager()</span>
+<span class="nc" id="L468">				.removeListener(this);</span>
+<span class="nc" id="L469">		disposeDialog();</span>
+<span class="nc" id="L470">	}</span>
+
+	public boolean isMapModuleChangeAllowed(MapModule oldMapModule,
+			Mode oldMode, MapModule newMapModule, Mode newMode) {
+<span class="nc" id="L474">		return true;</span>
+	}
+
+	public void numberOfOpenMapInformation(int number, int pIndex) {
+<span class="nc" id="L478">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.modes.mindmapmode.hooks.MindMapHookAdapter#getMindMapController
+	 * ()
+	 */
+	public MindMapController getMindMapController() {
+<span class="nc" id="L488">		return mController;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

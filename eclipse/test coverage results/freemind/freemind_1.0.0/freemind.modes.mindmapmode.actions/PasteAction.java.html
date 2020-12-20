@@ -1,0 +1,944 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>PasteAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">PasteAction.java</span></div><h1>PasteAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 09.05.2004
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
+import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
+
+import freemind.controller.MindMapNodesSelection;
+import freemind.controller.actions.generated.instance.PasteNodeAction;
+import freemind.controller.actions.generated.instance.TransferableContent;
+import freemind.controller.actions.generated.instance.TransferableFile;
+import freemind.controller.actions.generated.instance.TransferableImage;
+import freemind.controller.actions.generated.instance.UndoPasteNodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindCommon;
+import freemind.main.HtmlTools;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.XMLParseException;
+import freemind.modes.ControllerAdapter;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+
+public class PasteAction extends AbstractAction implements ActorXml {
+
+	private static java.util.logging.Logger logger;
+	private final MindMapController mMindMapController;
+	private UndoPasteHandler mUndoPasteHandler;
+
+	public PasteAction(MindMapController pMindMapController) {
+<span class="nc" id="L79">		super(pMindMapController.getText(&quot;paste&quot;), new ImageIcon(</span>
+<span class="nc" id="L80">				pMindMapController.getResource(&quot;images/editpaste.png&quot;)));</span>
+<span class="nc" id="L81">		this.mMindMapController = pMindMapController;</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L83">			logger = mMindMapController.getFrame().getLogger(</span>
+<span class="nc" id="L84">					this.getClass().getName());</span>
+		}
+
+<span class="nc" id="L87">		setEnabled(false);</span>
+<span class="nc" id="L88">		this.mMindMapController.getActionFactory().registerActor(this,</span>
+<span class="nc" id="L89">				getDoActionClass());</span>
+
+		// special undo handler for paste.
+<span class="nc" id="L92">		mUndoPasteHandler = new UndoPasteHandler(mMindMapController);</span>
+<span class="nc" id="L93">		this.mMindMapController.getActionFactory().registerActor(</span>
+<span class="nc" id="L94">				mUndoPasteHandler, UndoPasteNodeAction.class);</span>
+
+<span class="nc" id="L96">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L99">		Transferable clipboardContents = this.mMindMapController</span>
+<span class="nc" id="L100">				.getClipboardContents();</span>
+<span class="nc" id="L101">		MindMapNode selectedNode = this.mMindMapController.getSelected();</span>
+<span class="nc" id="L102">		this.mMindMapController.paste(clipboardContents, selectedNode);</span>
+<span class="nc" id="L103">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.actions.ActorXml#act(freemind.controller.actions.
+	 * generated.instance.XmlAction)
+	 */
+	public void act(XmlAction action) {
+<span class="nc" id="L113">		PasteNodeAction pasteAction = (PasteNodeAction) action;</span>
+<span class="nc" id="L114">		_paste(getTransferable(pasteAction.getTransferableContent()),</span>
+<span class="nc" id="L115">				mMindMapController.getNodeFromID(pasteAction.getNode()),</span>
+<span class="nc" id="L116">				pasteAction.getAsSibling(), pasteAction.getIsLeft());</span>
+<span class="nc" id="L117">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.actions.ActorXml#getDoActionClass()
+	 */
+	public Class getDoActionClass() {
+<span class="nc" id="L125">		return PasteNodeAction.class;</span>
+	}
+
+	/**
+	 * @param t
+	 * @param coord
+	 * @param pUndoAction
+	 *            is filled automatically when not null.
+	 * @return a new PasteNodeAction.
+	 */
+	public PasteNodeAction getPasteNodeAction(Transferable t,
+			NodeCoordinate coord, UndoPasteNodeAction pUndoAction) {
+<span class="nc" id="L137">		PasteNodeAction pasteAction = new PasteNodeAction();</span>
+<span class="nc" id="L138">		final String targetId = mMindMapController.getNodeID(coord.target);</span>
+<span class="nc" id="L139">		pasteAction.setNode(targetId);</span>
+<span class="nc" id="L140">		pasteAction.setTransferableContent(getTransferableContent(t,</span>
+<span class="nc" id="L141">				pUndoAction));</span>
+<span class="nc" id="L142">		pasteAction.setAsSibling(coord.asSibling);</span>
+<span class="nc" id="L143">		pasteAction.setIsLeft(coord.isLeft);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (pUndoAction != null) {</span>
+<span class="nc" id="L145">			pUndoAction.setNode(targetId);</span>
+<span class="nc" id="L146">			pUndoAction.setAsSibling(coord.asSibling);</span>
+<span class="nc" id="L147">			pUndoAction.setIsLeft(coord.isLeft);</span>
+<span class="nc" id="L148">			String s = mMindMapController.marshall(pUndoAction);</span>
+<span class="nc" id="L149">			logger.fine(&quot;Undo action: &quot; + s);</span>
+
+		}
+<span class="nc" id="L152">		return pasteAction;</span>
+	}
+
+	/** URGENT: Change this method. */
+	public void paste(MindMapNode node, MindMapNode parent) {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">		if (node != null) {</span>
+<span class="nc" id="L158">			insertNodeInto(node, parent);</span>
+<span class="nc" id="L159">			mMindMapController.nodeStructureChanged(parent);</span>
+		}
+<span class="nc" id="L161">	}</span>
+
+	/**
+	 * @param t
+	 *            the content
+	 * @param target
+	 *            where to add the content
+	 * @param asSibling
+	 *            if true, the content is added beside the target, otherwise as
+	 *            new children
+	 * @param isLeft
+	 *            if something is pasted as a sibling to root, it must be
+	 *            decided on which side of root
+	 * @return true, if successfully executed.
+	 */
+	public boolean paste(Transferable t, MindMapNode target, boolean asSibling,
+			boolean isLeft) {
+<span class="nc" id="L178">		UndoPasteNodeAction undoAction = new UndoPasteNodeAction();</span>
+		PasteNodeAction pasteAction;
+<span class="nc" id="L180">		pasteAction = getPasteNodeAction(t, new NodeCoordinate(target,</span>
+<span class="nc" id="L181">				asSibling, isLeft), undoAction);</span>
+		// Undo-action
+		/*
+		 * how to construct the undo action for a complex paste? a) Paste pastes
+		 * a number of new nodes that are adjacent. This number should be
+		 * determined.
+		 * 
+		 * 
+		 * d) But, as there are many possibilities which data flavor is pasted,
+		 * it has to be determined before, which one will be taken.
+		 */
+<span class="nc" id="L192">		return mMindMapController.doTransaction(&quot;paste&quot;,</span>
+<span class="nc" id="L193">				new ActionPair(pasteAction, undoAction));</span>
+	}
+
+	public static class NodeCoordinate {
+
+		public MindMapNode target;
+		public boolean asSibling;
+		public boolean isLeft;
+
+<span class="nc" id="L202">		public NodeCoordinate(MindMapNode target, boolean asSibling,</span>
+				boolean isLeft) {
+<span class="nc" id="L204">			this.target = target;</span>
+<span class="nc" id="L205">			this.asSibling = asSibling;</span>
+<span class="nc" id="L206">			this.isLeft = isLeft;</span>
+<span class="nc" id="L207">		}</span>
+
+		public MindMapNode getNode() {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			if (asSibling) {</span>
+<span class="nc" id="L211">				MindMapNode parentNode = target.getParentNode();</span>
+<span class="nc" id="L212">				return (MindMapNode) parentNode.getChildAt(parentNode</span>
+<span class="nc" id="L213">						.getChildPosition(target) - 1);</span>
+			} else {
+<span class="nc" id="L215">				logger.finest(&quot;getChildCount = &quot; + target.getChildCount()</span>
+<span class="nc" id="L216">						+ &quot;, target = &quot; + target);</span>
+<span class="nc" id="L217">				return (MindMapNode) target</span>
+<span class="nc" id="L218">						.getChildAt(target.getChildCount() - 1);</span>
+			}
+		}
+
+<span class="nc" id="L222">		public NodeCoordinate(MindMapNode node, boolean isLeft) {</span>
+<span class="nc" id="L223">			this.isLeft = isLeft;</span>
+<span class="nc" id="L224">			MindMapNode parentNode = node.getParentNode();</span>
+<span class="nc" id="L225">			int childPosition = parentNode.getChildPosition(node);</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			if (childPosition == parentNode.getChildCount() - 1) {</span>
+<span class="nc" id="L227">				target = parentNode;</span>
+<span class="nc" id="L228">				asSibling = false;</span>
+<span class="nc" id="L229">			} else {</span>
+<span class="nc" id="L230">				target = (MindMapNode) parentNode.getChildAt(childPosition + 1);</span>
+<span class="nc" id="L231">				asSibling = true;</span>
+			}
+<span class="nc" id="L233">		}</span>
+	}
+
+	private interface DataFlavorHandler {
+
+		void paste(Object TransferData, MindMapNode target, boolean asSibling,
+				boolean isLeft, Transferable t)
+				throws UnsupportedFlavorException, IOException;
+
+		DataFlavor getDataFlavor();
+	}
+
+<span class="nc" id="L245">	private class FileListFlavorHandler implements DataFlavorHandler {</span>
+
+		public void paste(Object TransferData, MindMapNode target,
+				boolean asSibling, boolean isLeft, Transferable t) {
+			// TODO: Does not correctly interpret asSibling.
+<span class="nc" id="L250">			List fileList = (List) TransferData;</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">			for (ListIterator it = fileList.listIterator(); it.hasNext();) {</span>
+<span class="nc" id="L252">				File file = (File) it.next();</span>
+<span class="nc" id="L253">				MindMapNode node = mMindMapController.newNode(file.getName(),</span>
+<span class="nc" id="L254">						target.getMap());</span>
+<span class="nc" id="L255">				node.setLeft(isLeft);</span>
+<span class="nc" id="L256">				node.setLink(Tools.fileToRelativeUrlString(file,</span>
+<span class="nc" id="L257">						mMindMapController.getModel().getFile()));</span>
+<span class="nc" id="L258">				insertNodeInto((MindMapNodeModel) node, target, asSibling,</span>
+<span class="nc" id="L259">						isLeft, false);</span>
+				// addUndoAction(node);
+			}
+<span class="nc" id="L262">		}</span>
+
+		public DataFlavor getDataFlavor() {
+<span class="nc" id="L265">			return MindMapNodesSelection.fileListFlavor;</span>
+		}
+	}
+
+<span class="nc" id="L269">	private class MindMapNodesFlavorHandler implements DataFlavorHandler {</span>
+
+		public void paste(Object TransferData, MindMapNode target,
+				boolean asSibling, boolean isLeft, Transferable t) {
+<span class="nc" id="L273">			String textFromClipboard = (String) TransferData;</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (textFromClipboard != null) {</span>
+<span class="nc" id="L275">				String[] textLines = textFromClipboard</span>
+<span class="nc" id="L276">						.split(ModeController.NODESEPARATOR);</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">				if (textLines.length &gt; 1) {</span>
+<span class="nc" id="L278">					mMindMapController.getFrame().setWaitingCursor(true);</span>
+				}
+				// and now? paste it:
+<span class="nc" id="L281">				String mapContent = MindMapMapModel.MAP_INITIAL_START</span>
+						+ FreeMind.XML_VERSION + &quot;\&quot;&gt;&lt;node TEXT=\&quot;DUMMY\&quot;&gt;&quot;;
+<span class="nc bnc" id="L283" title="All 2 branches missed.">				for (int j = 0; j &lt; textLines.length; j++) {</span>
+<span class="nc" id="L284">					mapContent += textLines[j];</span>
+				}
+<span class="nc" id="L286">				mapContent += &quot;&lt;/node&gt;&lt;/map&gt;&quot;;</span>
+				// logger.info(&quot;Pasting &quot; + mapContent);
+				try {
+<span class="nc" id="L289">					MindMapNode node = mMindMapController.getMindMapMapModel()</span>
+<span class="nc" id="L290">							.loadTree(</span>
+<span class="nc" id="L291">									new MindMapMapModel.StringReaderCreator(</span>
+<span class="nc" id="L292">											mapContent), false);</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">					for (ListIterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L294">						MindMapNodeModel importNode = (MindMapNodeModel) i</span>
+<span class="nc" id="L295">								.next();</span>
+<span class="nc" id="L296">						insertNodeInto(importNode, target, asSibling, isLeft,</span>
+<span class="nc" id="L297">								true);</span>
+						// addUndoAction(importNode);
+					}
+<span class="nc bnc" id="L300" title="All 2 branches missed.">					for (ListIterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L301">						MindMapNodeModel importNode = (MindMapNodeModel) i</span>
+<span class="nc" id="L302">								.next();</span>
+<span class="nc" id="L303">						mMindMapController.invokeHooksRecursively(importNode,</span>
+<span class="nc" id="L304">								mMindMapController.getModel());</span>
+					}
+<span class="nc bnc" id="L306" title="All 2 branches missed.">					for (ListIterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L307">						MindMapNodeModel importNode = (MindMapNodeModel) i</span>
+<span class="nc" id="L308">								.next();</span>
+<span class="nc" id="L309">						mMindMapController.processUnfinishedLinksInHooks(importNode);</span>
+					}
+<span class="nc" id="L311">				} catch (Exception e) {</span>
+<span class="nc" id="L312">					freemind.main.Resources.getInstance().logException(e);</span>
+				}
+			}
+<span class="nc" id="L315">		}</span>
+
+		public DataFlavor getDataFlavor() {
+<span class="nc" id="L318">			return MindMapNodesSelection.mindMapNodesFlavor;</span>
+		}
+	}
+
+<span class="nc" id="L322">	private static final Pattern HREF_PATTERN = Pattern</span>
+<span class="nc" id="L323">			.compile(&quot;&lt;html&gt;\\s*&lt;body&gt;\\s*&lt;a\\s+href=\&quot;([^&gt;]+)\&quot;&gt;(.*)&lt;/a&gt;\\s*&lt;/body&gt;\\s*&lt;/html&gt;&quot;);</span>
+
+<span class="nc" id="L325">	private class DirectHtmlFlavorHandler implements DataFlavorHandler {</span>
+
+		public void paste(Object transferData, MindMapNode target,
+				boolean asSibling, boolean isLeft, Transferable t)
+				throws UnsupportedFlavorException, IOException {
+<span class="nc" id="L330">			String textFromClipboard = (String) transferData;</span>
+			// workaround for java decoding bug
+			// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6740877
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if (textFromClipboard.charAt(0) == 65533) {</span>
+<span class="nc" id="L334">				throw new UnsupportedFlavorException(</span>
+<span class="nc" id="L335">						MindMapNodesSelection.htmlFlavor);</span>
+			}
+			// ^ This outputs transfer data to standard output. I don't know
+			// why.
+			// { Alternative pasting of HTML
+<span class="nc" id="L340">			mMindMapController.getFrame().setWaitingCursor(true);</span>
+<span class="nc" id="L341">			textFromClipboard = textFromClipboard</span>
+<span class="nc" id="L342">					.replaceFirst(&quot;(?i)(?s)&lt;head&gt;.*&lt;/head&gt;&quot;, &quot;&quot;)</span>
+<span class="nc" id="L343">					.replaceFirst(&quot;(?i)(?s)^.*&lt;html[^&gt;]*&gt;&quot;, &quot;&lt;html&gt;&quot;)</span>
+<span class="nc" id="L344">					.replaceFirst(&quot;(?i)(?s)&lt;body [^&gt;]*&gt;&quot;, &quot;&lt;body&gt;&quot;)</span>
+<span class="nc" id="L345">					.replaceAll(&quot;(?i)(?s)&lt;script.*?&gt;.*?&lt;/script&gt;&quot;, &quot;&quot;)</span>
+<span class="nc" id="L346">					.replaceAll(&quot;(?i)(?s)&lt;/?tbody.*?&gt;&quot;, &quot;&quot;). // Java HTML Editor</span>
+					// does not like
+					// the tag.
+<span class="nc" id="L349">					replaceAll(&quot;(?i)(?s)&lt;!--.*?--&gt;&quot;, &quot;&quot;). // Java HTML Editor</span>
+					// shows comments in
+					// not very nice
+					// manner.
+<span class="nc" id="L353">					replaceAll(&quot;(?i)(?s)&lt;/?o[^&gt;]*&gt;&quot;, &quot;&quot;); // Java HTML Editor</span>
+			// does not like
+			// Microsoft Word's
+			// &lt;o&gt; tag.
+
+<span class="nc" id="L358">			if (Tools.safeEquals(</span>
+<span class="nc" id="L359">					mMindMapController.getFrame().getProperty(</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">							&quot;cut_out_pictures_when_pasting_html&quot;), &quot;true&quot;)) {</span>
+<span class="nc" id="L361">				textFromClipboard = textFromClipboard.replaceAll(</span>
+<span class="nc" id="L362">						&quot;(?i)(?s)&lt;img[^&gt;]*&gt;&quot;, &quot;&quot;);</span>
+			} // Cut out images.
+
+<span class="nc" id="L365">			textFromClipboard = HtmlTools</span>
+<span class="nc" id="L366">					.unescapeHTMLUnicodeEntity(textFromClipboard);</span>
+
+<span class="nc" id="L368">			MindMapNode node = mMindMapController.newNode(textFromClipboard,</span>
+<span class="nc" id="L369">					mMindMapController.getMap());</span>
+			// if only one &lt;a&gt;...&lt;/a&gt; element found, set link
+<span class="nc" id="L371">			Matcher m = HREF_PATTERN.matcher(textFromClipboard);</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">			if (m.matches()) {</span>
+<span class="nc" id="L373">				final String body = m.group(2);</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">				if (!body.matches(&quot;.*&lt;\\s*a.*&quot;)) {</span>
+<span class="nc" id="L375">					final String href = m.group(1);</span>
+<span class="nc" id="L376">					node.setLink(href);</span>
+				}
+			}
+
+<span class="nc" id="L380">			insertNodeInto(node, target);</span>
+			// addUndoAction(node);
+<span class="nc" id="L382">			mMindMapController.getFrame().setWaitingCursor(false);</span>
+<span class="nc" id="L383">		}</span>
+
+		public DataFlavor getDataFlavor() {
+<span class="nc" id="L386">			return MindMapNodesSelection.htmlFlavor;</span>
+		}
+	}
+
+<span class="nc" id="L390">	private class HtmlFlavorHandler implements DataFlavorHandler {</span>
+
+		public void paste(Object TransferData, MindMapNode target,
+				boolean asSibling, boolean isLeft, Transferable t)
+				throws UnsupportedFlavorException, IOException {
+			// System.err.println(&quot;htmlFlavor&quot;);
+<span class="nc" id="L396">			String textFromClipboard = (String) TransferData;</span>
+			// ^ This outputs transfer data to standard output. I don't know
+			// why.
+<span class="nc" id="L399">			MindMapNode pastedNode = pasteStringWithoutRedisplay(t, target,</span>
+<span class="nc" id="L400">					asSibling, isLeft);</span>
+
+<span class="nc" id="L402">			textFromClipboard = textFromClipboard.replaceAll(&quot;&lt;!--.*?--&gt;&quot;, &quot;&quot;); // remove</span>
+			// HTML
+			// comment
+<span class="nc" id="L405">			String[] links = textFromClipboard</span>
+<span class="nc" id="L406">					.split(&quot;&lt;[aA][^&gt;]*[hH][rR][eE][fF]=\&quot;&quot;);</span>
+
+<span class="nc" id="L408">			MindMapNode linkParentNode = null;</span>
+<span class="nc" id="L409">			URL referenceURL = null;</span>
+<span class="nc" id="L410">			boolean baseUrlCanceled = false;</span>
+
+<span class="nc bnc" id="L412" title="All 2 branches missed.">			for (int i = 1; i &lt; links.length; i++) {</span>
+<span class="nc" id="L413">				String link = links[i].substring(0, links[i].indexOf(&quot;\&quot;&quot;));</span>
+<span class="nc" id="L414">				String textWithHtml = links[i].replaceAll(&quot;^[^&gt;]*&gt;&quot;, &quot;&quot;)</span>
+<span class="nc" id="L415">						.replaceAll(&quot;&lt;/[aA]&gt;[\\s\\S]*&quot;, &quot;&quot;);</span>
+<span class="nc" id="L416">				String text = HtmlTools</span>
+<span class="nc" id="L417">						.toXMLUnescapedText(textWithHtml.replaceAll(&quot;\\n&quot;, &quot;&quot;)</span>
+<span class="nc" id="L418">								.replaceAll(&quot;&lt;[^&gt;]*&gt;&quot;, &quot;&quot;).trim());</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">				if (text.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L420">					text = link;</span>
+				}
+<span class="nc" id="L422">				URL linkURL = null;</span>
+				try {
+<span class="nc" id="L424">					linkURL = new URL(link);</span>
+<span class="nc" id="L425">				} catch (MalformedURLException ex) {</span>
+					try {
+						// Either invalid URL or relative URL
+<span class="nc bnc" id="L428" title="All 4 branches missed.">						if (referenceURL == null &amp;&amp; !baseUrlCanceled) {</span>
+<span class="nc" id="L429">							String referenceURLString = JOptionPane</span>
+<span class="nc" id="L430">									.showInputDialog(mMindMapController</span>
+<span class="nc" id="L431">											.getView().getSelected(),</span>
+<span class="nc" id="L432">											mMindMapController</span>
+<span class="nc" id="L433">													.getText(&quot;enter_base_url&quot;));</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">							if (referenceURLString == null) {</span>
+<span class="nc" id="L435">								baseUrlCanceled = true;</span>
+<span class="nc" id="L436">							} else {</span>
+<span class="nc" id="L437">								referenceURL = new URL(referenceURLString);</span>
+							}
+						}
+<span class="nc" id="L440">						linkURL = new URL(referenceURL, link);</span>
+<span class="nc" id="L441">					} catch (MalformedURLException ex2) {</span>
+					}
+				}
+<span class="nc bnc" id="L444" title="All 2 branches missed.">				if (linkURL != null) {</span>
+<span class="nc bnc" id="L445" title="All 6 branches missed.">					if (links.length == 2 &amp; pastedNode != null) {</span>
+						// pastedNode != null iff the number of pasted lines is
+						// one
+						// The firts element in links[] array is never a link,
+						// therefore
+						// the condition links.length == 2 actually says
+						// &quot;there is one link&quot;.
+						// Set link directly into node
+<span class="nc" id="L453">						((MindMapNodeModel) pastedNode).setLink(linkURL</span>
+<span class="nc" id="L454">								.toString());</span>
+<span class="nc" id="L455">						break;</span>
+					}
+<span class="nc bnc" id="L457" title="All 2 branches missed.">					if (linkParentNode == null) {</span>
+<span class="nc" id="L458">						linkParentNode = mMindMapController.newNode(&quot;Links&quot;,</span>
+<span class="nc" id="L459">								target.getMap());</span>
+<span class="nc" id="L460">						linkParentNode.setLeft(target.isNewChildLeft());</span>
+						// Here we cannot set bold, because linkParentNode.font
+						// is null
+<span class="nc" id="L463">						insertNodeInto(linkParentNode, target);</span>
+<span class="nc" id="L464">						((NodeAdapter) linkParentNode).setBold(true);</span>
+					}
+<span class="nc" id="L466">					MindMapNode linkNode = mMindMapController.newNode(text,</span>
+<span class="nc" id="L467">							target.getMap());</span>
+<span class="nc" id="L468">					linkNode.setLink(linkURL.toString());</span>
+<span class="nc" id="L469">					insertNodeInto(linkNode, linkParentNode);</span>
+				}
+			}
+<span class="nc" id="L472">		}</span>
+
+		public DataFlavor getDataFlavor() {
+<span class="nc" id="L475">			return MindMapNodesSelection.htmlFlavor;</span>
+		}
+	}
+
+<span class="nc" id="L479">	private class StringFlavorHandler implements DataFlavorHandler {</span>
+
+		public void paste(Object TransferData, MindMapNode target,
+				boolean asSibling, boolean isLeft, Transferable t)
+				throws UnsupportedFlavorException, IOException {
+			// System.err.println(&quot;stringFlavor&quot;);
+<span class="nc" id="L485">			pasteStringWithoutRedisplay(t, target, asSibling, isLeft);</span>
+<span class="nc" id="L486">		}</span>
+
+		public DataFlavor getDataFlavor() {
+<span class="nc" id="L489">			return DataFlavor.stringFlavor;</span>
+		}
+	}
+
+<span class="nc" id="L493">	private class ImageFlavorHandler implements DataFlavorHandler {</span>
+
+		public void paste(Object transferData, MindMapNode target,
+				boolean asSibling, boolean isLeft, Transferable t)
+				throws UnsupportedFlavorException, IOException {
+<span class="nc" id="L498">			logger.info(&quot;imageFlavor&quot;);</span>
+
+<span class="nc" id="L500">			mMindMapController.getFrame().setWaitingCursor(true);</span>
+
+			/*
+			 * BufferedImage img = null; try { img = ImageIO.read(new
+			 * File(&quot;image.jpg&quot;)); } catch (IOException e) { }
+			 */
+
+<span class="nc" id="L507">			String imgfile = &quot;&quot; + transferData;</span>
+
+<span class="nc" id="L509">			String strText = &quot;&lt;html&gt;&lt;body&gt;&lt;img src=\&quot;&quot; + imgfile</span>
+<span class="nc" id="L510">					+ &quot;\&quot;/&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+
+<span class="nc" id="L512">			MindMapNode node = mMindMapController.newNode(strText,</span>
+<span class="nc" id="L513">					mMindMapController.getMap());</span>
+			// if only one &lt;a&gt;...&lt;/a&gt; element found, set link
+
+<span class="nc" id="L516">			insertNodeInto(node, target);</span>
+			// addUndoAction(node);
+<span class="nc" id="L518">			mMindMapController.getFrame().setWaitingCursor(false);</span>
+
+<span class="nc" id="L520">		}</span>
+
+		public DataFlavor getDataFlavor() {
+<span class="nc" id="L523">			return DataFlavor.imageFlavor;</span>
+		}
+	}
+
+	/*
+     *
+     */
+	private void _paste(Transferable t, MindMapNode target, boolean asSibling,
+			boolean isLeft) {
+<span class="nc bnc" id="L532" title="All 2 branches missed.">		if (t == null) {</span>
+<span class="nc" id="L533">			return;</span>
+		}
+		// Uncomment to print obtained data flavors
+
+		/*
+		 * DataFlavor[] fl = t.getTransferDataFlavors(); for (int i = 0; i &lt;
+		 * fl.length; i++) { System.out.println(fl[i]); }
+		 */
+<span class="nc" id="L541">		DataFlavorHandler[] dataFlavorHandlerList = getFlavorHandlers();</span>
+<span class="nc bnc" id="L542" title="All 2 branches missed.">		for (int i = 0; i &lt; dataFlavorHandlerList.length; i++) {</span>
+<span class="nc" id="L543">			DataFlavorHandler handler = dataFlavorHandlerList[i];</span>
+<span class="nc" id="L544">			DataFlavor flavor = handler.getDataFlavor();</span>
+<span class="nc bnc" id="L545" title="All 2 branches missed.">			if (t.isDataFlavorSupported(flavor)) {</span>
+				try {
+<span class="nc" id="L547">					handler.paste(t.getTransferData(flavor), target, asSibling,</span>
+<span class="nc" id="L548">							isLeft, t);</span>
+<span class="nc" id="L549">					break;</span>
+<span class="nc" id="L550">				} catch (UnsupportedFlavorException e) {</span>
+<span class="nc" id="L551">					Resources.getInstance().logException(e);</span>
+<span class="nc" id="L552">				} catch (IOException e) {</span>
+<span class="nc" id="L553">					Resources.getInstance().logException(e);</span>
+				}
+			}
+		}
+<span class="nc" id="L557">		mMindMapController.getFrame().setWaitingCursor(false);</span>
+<span class="nc" id="L558">	}</span>
+
+	/**
+     */
+	private DataFlavorHandler[] getFlavorHandlers() {
+<span class="nc" id="L563">		DataFlavorHandler[] dataFlavorHandlerList = new DataFlavorHandler[] {</span>
+<span class="nc" id="L564">				new FileListFlavorHandler(), new MindMapNodesFlavorHandler(),</span>
+<span class="nc" id="L565">				new DirectHtmlFlavorHandler(), new StringFlavorHandler(),</span>
+<span class="nc" id="L566">				new ImageFlavorHandler() };</span>
+		// %%% Make dependent on an option?: new HtmlFlavorHandler(),
+<span class="nc" id="L568">		return dataFlavorHandlerList;</span>
+	}
+
+	public MindMapNodeModel pasteXMLWithoutRedisplay(String pasted,
+			MindMapNode target, boolean asSibling, boolean changeSide,
+			boolean isLeft, HashMap pIDToTarget) throws XMLParseException {
+		// Call nodeStructureChanged(target) after this function.
+<span class="nc" id="L575">		logger.fine(&quot;Pasting &quot; + pasted + &quot; to &quot; + target);</span>
+		try {
+<span class="nc" id="L577">			MindMapNodeModel node = (MindMapNodeModel) mMindMapController</span>
+<span class="nc" id="L578">					.createNodeTreeFromXml(new StringReader(pasted),</span>
+<span class="nc" id="L579">							pIDToTarget);</span>
+<span class="nc" id="L580">			insertNodeInto(node, target, asSibling, isLeft, changeSide);</span>
+<span class="nc" id="L581">			mMindMapController.invokeHooksRecursively(node,</span>
+<span class="nc" id="L582">					mMindMapController.getModel());</span>
+<span class="nc" id="L583">			mMindMapController.processUnfinishedLinksInHooks(node);</span>
+<span class="nc" id="L584">			return node;</span>
+<span class="nc" id="L585">		} catch (IOException ee) {</span>
+<span class="nc" id="L586">			freemind.main.Resources.getInstance().logException(ee);</span>
+<span class="nc" id="L587">			return null;</span>
+		}
+	}
+
+	private void insertNodeInto(MindMapNodeModel node, MindMapNode target,
+			boolean asSibling, boolean isLeft, boolean changeSide) {
+		MindMapNode parent;
+<span class="nc bnc" id="L594" title="All 2 branches missed.">		if (asSibling) {</span>
+<span class="nc" id="L595">			parent = target.getParentNode();</span>
+<span class="nc" id="L596">		} else {</span>
+<span class="nc" id="L597">			parent = target;</span>
+		}
+<span class="nc bnc" id="L599" title="All 2 branches missed.">		if (changeSide) {</span>
+<span class="nc" id="L600">			node.setParent(parent);</span>
+<span class="nc" id="L601">			node.setLeft(isLeft);</span>
+		}
+		// now, the import is finished. We can inform others about the new
+		// nodes:
+<span class="nc bnc" id="L605" title="All 2 branches missed.">		if (asSibling) {</span>
+<span class="nc" id="L606">			insertNodeInto(node, parent, parent.getChildPosition(target));</span>
+<span class="nc" id="L607">		} else {</span>
+<span class="nc" id="L608">			insertNodeInto(node, target);</span>
+		}
+<span class="nc" id="L610">	}</span>
+
+<span class="nc" id="L612">	static final Pattern nonLinkCharacter = Pattern.compile(&quot;[ \n()'\&quot;,;]&quot;);</span>
+
+	/**
+	 * Paste String (as opposed to other flavours)
+	 * 
+	 * Split the text into lines; determine the new tree structure by the number
+	 * of leading spaces in lines. In case that trimmed line starts with
+	 * protocol (http:, https:, ftp:), create a link with the same content.
+	 * 
+	 * If there was only one line to be pasted, return the pasted node, null
+	 * otherwise.
+	 * 
+	 * @param isLeft
+	 *            TODO
+	 */
+	private MindMapNode pasteStringWithoutRedisplay(Transferable t,
+			MindMapNode parent, boolean asSibling, boolean isLeft)
+			throws UnsupportedFlavorException, IOException {
+
+<span class="nc" id="L631">		String textFromClipboard = (String) t</span>
+<span class="nc" id="L632">				.getTransferData(DataFlavor.stringFlavor);</span>
+<span class="nc" id="L633">		Pattern mailPattern = Pattern.compile(&quot;([^@ &lt;&gt;\\*']+@[^@ &lt;&gt;\\*']+)&quot;);</span>
+
+<span class="nc" id="L635">		String[] textLines = textFromClipboard.split(&quot;\n&quot;);</span>
+
+<span class="nc bnc" id="L637" title="All 2 branches missed.">		if (textLines.length &gt; 1) {</span>
+<span class="nc" id="L638">			mMindMapController.getFrame().setWaitingCursor(true);</span>
+		}
+
+<span class="nc" id="L641">		MindMapNode realParent = null;</span>
+<span class="nc bnc" id="L642" title="All 2 branches missed.">		if (asSibling) {</span>
+			// When pasting as sibling, we use virtual node as parent. When the
+			// pasting to
+			// virtual node is completed, we insert the children of that virtual
+			// node to
+			// the parent of real parent.
+<span class="nc" id="L648">			realParent = parent;</span>
+<span class="nc" id="L649">			parent = new MindMapNodeModel(mMindMapController.getFrame(),</span>
+<span class="nc" id="L650">					mMindMapController.getMap());</span>
+		}
+
+<span class="nc" id="L653">		ArrayList parentNodes = new ArrayList();</span>
+<span class="nc" id="L654">		ArrayList parentNodesDepths = new ArrayList();</span>
+
+<span class="nc" id="L656">		parentNodes.add(parent);</span>
+<span class="nc" id="L657">		parentNodesDepths.add(new Integer(-1));</span>
+
+<span class="nc" id="L659">		String[] linkPrefixes = { &quot;http://&quot;, &quot;ftp://&quot;, &quot;https://&quot; };</span>
+
+<span class="nc" id="L661">		MindMapNode pastedNode = null;</span>
+
+<span class="nc bnc" id="L663" title="All 2 branches missed.">		for (int i = 0; i &lt; textLines.length; ++i) {</span>
+<span class="nc" id="L664">			String text = textLines[i];</span>
+<span class="nc" id="L665">			text = text.replaceAll(&quot;\t&quot;, &quot;        &quot;);</span>
+<span class="nc bnc" id="L666" title="All 2 branches missed.">			if (text.matches(&quot; *&quot;)) {</span>
+<span class="nc" id="L667">				continue;</span>
+			}
+
+<span class="nc" id="L670">			int depth = 0;</span>
+<span class="nc bnc" id="L671" title="All 4 branches missed.">			while (depth &lt; text.length() &amp;&amp; text.charAt(depth) == ' ') {</span>
+<span class="nc" id="L672">				++depth;</span>
+			}
+<span class="nc" id="L674">			String visibleText = text.trim();</span>
+
+			// If the text is a recognizable link (e.g.
+			// http://www.google.com/index.html),
+			// make it more readable by look nicer by cutting off obvious prefix
+			// and other
+			// transforamtions.
+
+<span class="nc bnc" id="L682" title="All 2 branches missed.">			if (visibleText.matches(&quot;^http://(www\\.)?[^ ]*$&quot;)) {</span>
+<span class="nc" id="L683">				visibleText = visibleText.replaceAll(&quot;^http://(www\\.)?&quot;, &quot;&quot;)</span>
+<span class="nc" id="L684">						.replaceAll(&quot;(/|\\.[^\\./\\?]*)$&quot;, &quot;&quot;)</span>
+<span class="nc" id="L685">						.replaceAll(&quot;((\\.[^\\./]*\\?)|\\?)[^/]*$&quot;, &quot; ? ...&quot;)</span>
+<span class="nc" id="L686">						.replaceAll(&quot;_|%20&quot;, &quot; &quot;);</span>
+<span class="nc" id="L687">				String[] textParts = visibleText.split(&quot;/&quot;);</span>
+<span class="nc" id="L688">				visibleText = &quot;&quot;;</span>
+<span class="nc bnc" id="L689" title="All 2 branches missed.">				for (int textPartIdx = 0; textPartIdx &lt; textParts.length; textPartIdx++) {</span>
+<span class="nc bnc" id="L690" title="All 2 branches missed.">					if (textPartIdx &gt; 0) {</span>
+<span class="nc" id="L691">						visibleText += &quot; &gt; &quot;;</span>
+					}
+<span class="nc bnc" id="L693" title="All 2 branches missed.">					visibleText += textPartIdx == 0 ? textParts[textPartIdx]</span>
+<span class="nc" id="L694">							: Tools.firstLetterCapitalized(textParts[textPartIdx]</span>
+<span class="nc" id="L695">									.replaceAll(&quot;^~*&quot;, &quot;&quot;));</span>
+				}
+			}
+
+<span class="nc" id="L699">			MindMapNode node = mMindMapController.newNode(visibleText,</span>
+<span class="nc" id="L700">					parent.getMap());</span>
+<span class="nc bnc" id="L701" title="All 2 branches missed.">			if (textLines.length == 1) {</span>
+<span class="nc" id="L702">				pastedNode = node;</span>
+			}
+
+			// Heuristically determine, if there is a mail.
+
+<span class="nc" id="L707">			Matcher mailMatcher = mailPattern.matcher(visibleText);</span>
+<span class="nc bnc" id="L708" title="All 2 branches missed.">			if (mailMatcher.find()) {</span>
+<span class="nc" id="L709">				node.setLink(&quot;mailto:&quot; + mailMatcher.group());</span>
+			}
+
+			// Heuristically determine, if there is a link. Because this is
+			// heuristic, it is probable that it can be improved to include
+			// some matches or exclude some matches.
+
+<span class="nc bnc" id="L716" title="All 2 branches missed.">			for (int j = 0; j &lt; linkPrefixes.length; j++) {</span>
+<span class="nc" id="L717">				int linkStart = text.indexOf(linkPrefixes[j]);</span>
+<span class="nc bnc" id="L718" title="All 2 branches missed.">				if (linkStart != -1) {</span>
+<span class="nc" id="L719">					int linkEnd = linkStart;</span>
+<span class="nc bnc" id="L720" title="All 2 branches missed.">					while (linkEnd &lt; text.length()</span>
+<span class="nc" id="L721">							&amp;&amp; !nonLinkCharacter.matcher(</span>
+<span class="nc" id="L722">									text.substring(linkEnd, linkEnd + 1))</span>
+<span class="nc bnc" id="L723" title="All 2 branches missed.">									.matches()) {</span>
+<span class="nc" id="L724">						linkEnd++;</span>
+					}
+<span class="nc" id="L726">					node.setLink(text.substring(linkStart, linkEnd));</span>
+				}
+			}
+
+			// Determine parent among candidate parents
+			// Change the array of candidate parents accordingly
+
+<span class="nc bnc" id="L733" title="All 2 branches missed.">			for (int j = parentNodes.size() - 1; j &gt;= 0; --j) {</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">				if (depth &gt; ((Integer) parentNodesDepths.get(j)).intValue()) {</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">					for (int k = j + 1; k &lt; parentNodes.size(); ++k) {</span>
+<span class="nc" id="L736">						MindMapNode n = (MindMapNode) parentNodes.get(k);</span>
+<span class="nc" id="L737">						if (n.getParentNode() == parent) {</span>
+							// addUndoAction(n);
+						}
+<span class="nc" id="L740">						parentNodes.remove(k);</span>
+<span class="nc" id="L741">						parentNodesDepths.remove(k);</span>
+					}
+<span class="nc" id="L743">					MindMapNode target = (MindMapNode) parentNodes.get(j);</span>
+<span class="nc" id="L744">					node.setLeft(isLeft);</span>
+<span class="nc" id="L745">					insertNodeInto(node, target);</span>
+<span class="nc" id="L746">					parentNodes.add(node);</span>
+<span class="nc" id="L747">					parentNodesDepths.add(new Integer(depth));</span>
+<span class="nc" id="L748">					break;</span>
+				}
+			}
+		}
+
+<span class="nc bnc" id="L753" title="All 2 branches missed.">		for (int k = 0; k &lt; parentNodes.size(); ++k) {</span>
+<span class="nc" id="L754">			MindMapNode n = (MindMapNode) parentNodes.get(k);</span>
+<span class="nc" id="L755">			if (n.getParentNode() == parent) {</span>
+				// addUndoAction(n);
+			}
+		}
+<span class="nc" id="L759">		return pastedNode;</span>
+	}
+
+	/**
+     */
+	private void insertNodeInto(MindMapNodeModel node, MindMapNode parent, int i) {
+<span class="nc" id="L765">		mMindMapController.insertNodeInto(node, parent, i);</span>
+<span class="nc" id="L766">	}</span>
+
+	private void insertNodeInto(MindMapNode node, MindMapNode parent) {
+<span class="nc" id="L769">		mMindMapController.insertNodeInto(node, parent);</span>
+<span class="nc" id="L770">	}</span>
+
+	private TransferableContent getTransferableContent(Transferable t,
+			UndoPasteNodeAction pUndoAction) {
+<span class="nc" id="L774">		boolean amountAlreadySet = false;</span>
+		try {
+<span class="nc" id="L776">			TransferableContent trans = new TransferableContent();</span>
+<span class="nc bnc" id="L777" title="All 2 branches missed.">			if (t.isDataFlavorSupported(MindMapNodesSelection.mindMapNodesFlavor)) {</span>
+				String textFromClipboard;
+<span class="nc" id="L779">				textFromClipboard = (String) t</span>
+<span class="nc" id="L780">						.getTransferData(MindMapNodesSelection.mindMapNodesFlavor);</span>
+<span class="nc" id="L781">				trans.setTransferable(HtmlTools.makeValidXml(textFromClipboard));</span>
+<span class="nc bnc" id="L782" title="All 4 branches missed.">				if (pUndoAction != null &amp;&amp; !amountAlreadySet) {</span>
+<span class="nc" id="L783">					pUndoAction</span>
+<span class="nc" id="L784">							.setNodeAmount(Tools.countOccurrences(</span>
+<span class="nc" id="L785">									textFromClipboard,</span>
+<span class="nc" id="L786">									ControllerAdapter.NODESEPARATOR) + 1);</span>
+<span class="nc" id="L787">					amountAlreadySet = true;</span>
+				}
+			}
+<span class="nc bnc" id="L790" title="All 2 branches missed.">			if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {</span>
+				String textFromClipboard;
+<span class="nc" id="L792">				textFromClipboard = (String) t</span>
+<span class="nc" id="L793">						.getTransferData(DataFlavor.stringFlavor);</span>
+<span class="nc" id="L794">				trans.setTransferableAsPlainText(HtmlTools</span>
+<span class="nc" id="L795">						.makeValidXml(textFromClipboard));</span>
+<span class="nc bnc" id="L796" title="All 4 branches missed.">				if (pUndoAction != null &amp;&amp; !amountAlreadySet) {</span>
+					// determine amount of new nodes using the algorithm:
+<span class="nc" id="L798">					final int childCount = determineAmountOfNewNodes(t);</span>
+<span class="nc" id="L799">					pUndoAction.setNodeAmount(childCount);</span>
+<span class="nc" id="L800">					amountAlreadySet = true;</span>
+				}
+			}
+<span class="nc" id="L803">			if (t.isDataFlavorSupported(MindMapNodesSelection.rtfFlavor)) {</span>
+				// byte[] textFromClipboard = (byte[])
+				// t.getTransferData(MindMapNodesSelection.rtfFlavor);
+				// trans.setTransferableAsRTF(textFromClipboard.toString());
+			}
+<span class="nc bnc" id="L808" title="All 2 branches missed.">			if (t.isDataFlavorSupported(MindMapNodesSelection.htmlFlavor)) {</span>
+				String textFromClipboard;
+<span class="nc" id="L810">				textFromClipboard = (String) t</span>
+<span class="nc" id="L811">						.getTransferData(MindMapNodesSelection.htmlFlavor);</span>
+<span class="nc" id="L812">				trans.setTransferableAsHtml(HtmlTools</span>
+<span class="nc" id="L813">						.makeValidXml(textFromClipboard));</span>
+<span class="nc bnc" id="L814" title="All 4 branches missed.">				if (pUndoAction != null &amp;&amp; !amountAlreadySet) {</span>
+					// on html paste, the string text is taken and &quot;improved&quot;.
+					// Thus, we count its lines.
+					final int childCount;
+					try {
+<span class="nc" id="L819">						childCount = determineAmountOfNewNodes(t);</span>
+<span class="nc" id="L820">						pUndoAction.setNodeAmount(childCount);</span>
+<span class="nc" id="L821">					} catch (Exception e) {</span>
+<span class="nc" id="L822">						freemind.main.Resources.getInstance().logException(e);</span>
+						// ok, something went wrong, but this breaks undo, only.
+<span class="nc" id="L824">						pUndoAction.setNodeAmount(1);</span>
+					}
+<span class="nc" id="L826">					amountAlreadySet = true;</span>
+				}
+			}
+<span class="nc bnc" id="L829" title="All 2 branches missed.">			if (t.isDataFlavorSupported(MindMapNodesSelection.fileListFlavor)) {</span>
+				/*
+				 * Since the JAXB-generated interface TransferableContent
+				 * doesn't supply a setTranserableAsFileList method, we have to
+				 * get the fileList, clear it, and then set it to the new value.
+				 */
+<span class="nc" id="L835">				List fileList = (List) t</span>
+<span class="nc" id="L836">						.getTransferData(MindMapNodesSelection.fileListFlavor);</span>
+<span class="nc bnc" id="L837" title="All 2 branches missed.">				for (Iterator iter = fileList.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L838">					File fileName = (File) iter.next();</span>
+<span class="nc" id="L839">					TransferableFile transferableFile = new TransferableFile();</span>
+<span class="nc" id="L840">					transferableFile.setFileName(fileName.getAbsolutePath());</span>
+<span class="nc" id="L841">					trans.addTransferableFile(transferableFile);</span>
+				}
+<span class="nc bnc" id="L843" title="All 4 branches missed.">				if (pUndoAction != null &amp;&amp; !amountAlreadySet) {</span>
+<span class="nc" id="L844">					pUndoAction.setNodeAmount(fileList.size());</span>
+<span class="nc" id="L845">					amountAlreadySet = true;</span>
+				}
+			}
+<span class="nc bnc" id="L848" title="All 2 branches missed.">			if (t.isDataFlavorSupported(DataFlavor.imageFlavor)) {</span>
+<span class="nc" id="L849">				logger.info(&quot;image...&quot;);</span>
+
+				try {
+					// Get data from clipboard and assign it to an image.
+					// clipboard.getData() returns an object, so we need to cast
+					// it to a BufferdImage.
+<span class="nc" id="L855">					BufferedImage image = (BufferedImage) t</span>
+<span class="nc" id="L856">							.getTransferData(DataFlavor.imageFlavor);</span>
+
+<span class="nc" id="L858">					TransferableImage timg = new TransferableImage();</span>
+
+<span class="nc" id="L860">					File mindmapFile = mMindMapController.getMap().getFile();</span>
+<span class="nc bnc" id="L861" title="All 2 branches missed.">					if (mindmapFile == null) {</span>
+<span class="nc" id="L862">						JOptionPane.showMessageDialog(</span>
+<span class="nc" id="L863">								mMindMapController.getView(),</span>
+<span class="nc" id="L864">								mMindMapController.getText(&quot;map_not_saved&quot;),</span>
+<span class="nc" id="L865">								&quot;FreeMind&quot;, JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L866">						return null;</span>
+					}
+<span class="nc" id="L868">					File tempFile = File</span>
+<span class="nc" id="L869">							.createTempFile(</span>
+<span class="nc" id="L870">									mindmapFile</span>
+<span class="nc" id="L871">											.getName()</span>
+<span class="nc" id="L872">											.replace(</span>
+<span class="nc" id="L873">													FreeMindCommon.FREEMIND_FILE_EXTENSION,</span>
+<span class="nc" id="L874">													&quot;_&quot;), &quot;.jpeg&quot;, mindmapFile</span>
+<span class="nc" id="L875">											.getParentFile());</span>
+
+<span class="nc" id="L877">					String imgfilepath = tempFile.getName();</span>
+<span class="nc" id="L878">					timg.setImage(imgfilepath);</span>
+
+<span class="nc" id="L880">					trans.addTransferableImage(timg);</span>
+
+					// class to write image to disk. You specify the image to be
+					// saved, its type,
+					// and then the file in which to write the image data.
+<span class="nc" id="L885">					logger.info(&quot;Starting to write clipboard image &quot; + image</span>
+<span class="nc" id="L886">							+ &quot; to &quot; + tempFile);</span>
+<span class="nc" id="L887">					ImageIO.write(image, &quot;jpg&quot;, tempFile);</span>
+
+<span class="nc" id="L889">					trans.setTransferableAsImage(imgfilepath);</span>
+
+<span class="nc bnc" id="L891" title="All 4 branches missed.">					if (pUndoAction != null &amp;&amp; !amountAlreadySet) {</span>
+<span class="nc" id="L892">						pUndoAction.setNodeAmount(1);</span>
+<span class="nc" id="L893">						amountAlreadySet = true;</span>
+					}
+<span class="nc" id="L895">				} // getData throws this.</span>
+<span class="nc" id="L896">				catch (UnsupportedFlavorException ufe) {</span>
+<span class="nc" id="L897">					freemind.main.Resources.getInstance().logException(ufe);</span>
+<span class="nc" id="L898">				} catch (IOException ioe) {</span>
+<span class="nc" id="L899">					freemind.main.Resources.getInstance().logException(ioe);</span>
+				}
+
+			}
+<span class="nc" id="L903">			return trans;</span>
+<span class="nc" id="L904">		} catch (UnsupportedFlavorException e) {</span>
+<span class="nc" id="L905">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L906">		} catch (IOException e) {</span>
+<span class="nc" id="L907">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L909">		return null;</span>
+	}
+
+	/*
+	 * TODO: This is a bit dirty here. Better would be to separate the algorithm
+	 * from the node creation and use the pure algo.
+	 */
+	protected int determineAmountOfNewNodes(Transferable t)
+			throws UnsupportedFlavorException, IOException {
+		// create a new node for testing purposes.
+<span class="nc" id="L919">		MindMapNodeModel parent = new MindMapNodeModel(</span>
+<span class="nc" id="L920">				mMindMapController.getFrame(), mMindMapController.getMap());</span>
+<span class="nc" id="L921">		pasteStringWithoutRedisplay(t, parent, false, false);</span>
+<span class="nc" id="L922">		final int childCount = parent.getChildCount();</span>
+<span class="nc" id="L923">		return childCount;</span>
+	}
+
+	private Transferable getTransferable(TransferableContent trans) {
+		// create Transferable:
+		// Add file list to this selection.
+<span class="nc" id="L929">		Vector fileList = new Vector();</span>
+<span class="nc" id="L930">		for (Iterator iter = trans.getListTransferableFileList().iterator(); iter</span>
+<span class="nc bnc" id="L931" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L932">			TransferableFile tFile = (TransferableFile) iter.next();</span>
+<span class="nc" id="L933">			fileList.add(new File(tFile.getFileName()));</span>
+		}
+<span class="nc" id="L935">		Transferable copy = new MindMapNodesSelection(trans.getTransferable(),</span>
+<span class="nc" id="L936">				trans.getTransferableAsImage(),</span>
+<span class="nc" id="L937">				trans.getTransferableAsPlainText(),</span>
+<span class="nc" id="L938">				trans.getTransferableAsRTF(), trans.getTransferableAsHtml(),</span>
+<span class="nc" id="L939">				trans.getTransferableAsDrop(), fileList, null);</span>
+<span class="nc" id="L940">		return copy;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,795 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ClonePasteAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">ClonePasteAction.java</span></div><h1>ClonePasteAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2011 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package accessories.plugins;
+
+import java.awt.datatransfer.Transferable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
+import java.util.Vector;
+
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+
+import freemind.common.OptionalDontShowMeAgainDialog;
+import freemind.controller.MenuItemEnabledListener;
+import freemind.controller.MindMapNodesSelection;
+import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.CutNodeAction;
+import freemind.controller.actions.generated.instance.DeleteNodeAction;
+import freemind.controller.actions.generated.instance.HookNodeAction;
+import freemind.controller.actions.generated.instance.MoveNodeXmlAction;
+import freemind.controller.actions.generated.instance.MoveNodesAction;
+import freemind.controller.actions.generated.instance.NewNodeAction;
+import freemind.controller.actions.generated.instance.NodeAction;
+import freemind.controller.actions.generated.instance.NodeListMember;
+import freemind.controller.actions.generated.instance.PasteNodeAction;
+import freemind.controller.actions.generated.instance.UndoPasteNodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.extensions.HookRegistration;
+import freemind.main.FreeMind;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.Tools.MindMapNodePair;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.ModeController.NodeSelectionListener;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.NodeHookAction;
+import freemind.modes.mindmapmode.actions.xml.ActionFilter;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * This is the &quot;paste node as clone&quot; action from the menu.
+ * 
+ * @author foltin
+ * @date 25.4.2011
+ * 
+ */
+public class ClonePasteAction extends MindMapNodeHookAdapter {
+
+	/**
+	 * 
+	 */
+<span class="nc" id="L81">	public ClonePasteAction() {</span>
+<span class="nc" id="L82">	}</span>
+
+	public void invoke(MindMapNode pNode) {
+<span class="nc" id="L85">		super.invoke(pNode);</span>
+<span class="nc" id="L86">		Vector mindMapNodes = getMindMapNodes();</span>
+<span class="nc" id="L87">		logger.info(&quot;Clones for nodes: &quot; + Tools.listToString(mindMapNodes));</span>
+		// now, construct the plugin for those nodes:
+<span class="nc" id="L89">		for (Iterator itPastedNodes = mindMapNodes.iterator(); itPastedNodes</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L91">			MindMapNode copiedNode = (MindMapNode) itPastedNodes.next();</span>
+<span class="nc" id="L92">			ClonePlugin clonePlugin = ClonePlugin.getHook(copiedNode);</span>
+			// first the clone master
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (clonePlugin == null) {</span>
+<span class="nc" id="L95">				int showResult = new OptionalDontShowMeAgainDialog(</span>
+<span class="nc" id="L96">						getMindMapController().getFrame().getJFrame(),</span>
+<span class="nc" id="L97">						getMindMapController().getSelectedView(),</span>
+<span class="nc" id="L98">						&quot;choose_clone_type&quot;,</span>
+<span class="nc" id="L99">						&quot;clone_type_question&quot;,</span>
+<span class="nc" id="L100">						getMindMapController(),</span>
+<span class="nc" id="L101">						new OptionalDontShowMeAgainDialog.StandardPropertyHandler(</span>
+<span class="nc" id="L102">								getMindMapController().getController(),</span>
+<span class="nc" id="L103">								FreeMind.RESOURCES_COMPLETE_CLONING),</span>
+<span class="nc" id="L104">						OptionalDontShowMeAgainDialog.BOTH_OK_AND_CANCEL_OPTIONS_ARE_STORED)</span>
+<span class="nc" id="L105">						.show().getResult();</span>
+<span class="nc" id="L106">				Properties properties = new Properties();</span>
+<span class="nc" id="L107">				properties</span>
+<span class="nc" id="L108">						.setProperty(</span>
+<span class="nc" id="L109">								ClonePlugin.XML_STORAGE_CLONE_ITSELF,</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">								showResult == JOptionPane.OK_OPTION ? ClonePlugin.CLONE_ITSELF_TRUE</span>
+<span class="nc" id="L111">										: ClonePlugin.CLONE_ITSELF_FALSE);</span>
+<span class="nc" id="L112">				Vector selecteds = Tools.getVectorWithSingleElement(copiedNode);</span>
+<span class="nc" id="L113">				getMindMapController().addHook(copiedNode, selecteds,</span>
+<span class="nc" id="L114">						ClonePlugin.PLUGIN_LABEL, properties);</span>
+			}
+			// finally, we construct a new one:
+<span class="nc" id="L117">			Transferable copy = getMindMapController().copy(copiedNode, true);</span>
+<span class="nc" id="L118">			addNewClone(copiedNode, pNode, copy);</span>
+		}
+<span class="nc" id="L120">	}</span>
+
+	public void addNewClone(MindMapNode originalNode,
+			MindMapNode pDestinationNode, Transferable copy) {
+<span class="nc" id="L124">		String originalNodeId = getMindMapController().getNodeID(originalNode);</span>
+<span class="nc" id="L125">		logger.info(&quot;Original node &quot; + originalNode + &quot;, id &quot; + originalNodeId);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (originalNode.isRoot()) {</span>
+<span class="nc" id="L127">			getMindMapController().getController().errorMessage(</span>
+<span class="nc" id="L128">					getMindMapController().getText(</span>
+<span class="nc" id="L129">							&quot;clone_plugin_no_root_cloning&quot;));</span>
+<span class="nc" id="L130">			return;</span>
+		}
+		// insert clone:
+<span class="nc" id="L133">		List listOfChilds = pDestinationNode.getChildren();</span>
+<span class="nc" id="L134">		Vector listOfChildIds = new Vector();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		for (Iterator it = listOfChilds.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L136">			String nodeID = getMindMapController().getNodeID(</span>
+<span class="nc" id="L137">					(MindMapNode) it.next());</span>
+<span class="nc" id="L138">			listOfChildIds.add(nodeID);</span>
+<span class="nc" id="L139">			logger.info(&quot;Old child id:&quot; + nodeID);</span>
+		}
+<span class="nc" id="L141">		getMindMapController().paste(copy, pDestinationNode);</span>
+<span class="nc" id="L142">	}</span>
+
+	public Vector getMindMapNodes() {
+<span class="nc" id="L145">		return getRegistration().getMindMapNodes();</span>
+	}
+
+	protected Registration getRegistration() {
+<span class="nc" id="L149">		return (Registration) getPluginBaseClass();</span>
+	}
+
+	public interface ClonePropertiesObserver {
+		void propertiesChanged(CloneProperties pCloneProperties);
+	}
+
+<span class="nc" id="L156">	public static class CloneProperties {</span>
+<span class="nc" id="L157">		boolean mCloneItself = false;</span>
+<span class="nc" id="L158">		private HashSet mObserverSet = new HashSet();</span>
+
+		public boolean isCloneItself() {
+<span class="nc" id="L161">			return mCloneItself;</span>
+		}
+
+		public void setCloneItself(boolean pCloneItself) {
+<span class="nc" id="L165">			boolean fire = false;</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">			if (pCloneItself != mCloneItself) {</span>
+<span class="nc" id="L167">				fire = true;</span>
+			}
+<span class="nc" id="L169">			mCloneItself = pCloneItself;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			if (fire) {</span>
+<span class="nc" id="L171">				firePropertiesChanged();</span>
+			}
+<span class="nc" id="L173">		}</span>
+
+		public void registerObserver(ClonePropertiesObserver pObserver) {
+<span class="nc" id="L176">			mObserverSet.add(pObserver);</span>
+<span class="nc" id="L177">		}</span>
+
+		public void deregisterObserver(ClonePropertiesObserver pObserver) {
+<span class="nc" id="L180">			mObserverSet.remove(pObserver);</span>
+<span class="nc" id="L181">		}</span>
+
+		private void firePropertiesChanged() {
+<span class="nc bnc" id="L184" title="All 2 branches missed.">			for (Iterator it = mObserverSet.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L185">				ClonePropertiesObserver observer = (ClonePropertiesObserver) it</span>
+<span class="nc" id="L186">						.next();</span>
+<span class="nc" id="L187">				observer.propertiesChanged(this);</span>
+			}
+<span class="nc" id="L189">		}</span>
+
+	}
+
+	public static class Registration implements HookRegistration,
+			MenuItemEnabledListener, ActionFilter, NodeSelectionListener {
+
+		private static final String PLUGIN_NAME = &quot;accessories/plugins/ClonePasteAction.properties&quot;;
+		private static ImageIcon sCloneIcon;
+		private static ImageIcon sOriginalIcon;
+<span class="nc" id="L199">		private static boolean sShowIcon = true;</span>
+
+		/**
+		 * Mapping of clone id (String) to a HashSet of {@link MindMapNode}s
+		 */
+<span class="nc" id="L204">		private HashMap mCloneIdsMap = new HashMap();</span>
+		/**
+		 * This is the reverse of mCloneIdsMap: {@link MindMapNode} to cloneId.
+		 */
+<span class="nc" id="L208">		private HashMap mClonesMap = new HashMap();</span>
+
+		/**
+		 * This is a storage cloneId to clone properties.
+		 */
+<span class="nc" id="L213">		private HashMap mClonePropertiesMap = new HashMap();</span>
+
+		private final MindMapController controller;
+
+		private final MindMap mMap;
+
+		private final java.util.logging.Logger logger;
+<span class="nc" id="L220">		private Vector mLastMarkedNodeViews = new Vector();</span>
+
+<span class="nc" id="L222">		public Registration(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L223">			this.controller = (MindMapController) controller;</span>
+<span class="nc" id="L224">			mMap = map;</span>
+<span class="nc" id="L225">			logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L226">		}</span>
+
+		public void register() {
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			if (sCloneIcon == null) {</span>
+<span class="nc" id="L230">				sCloneIcon = new ImageIcon(</span>
+<span class="nc" id="L231">						controller.getResource(&quot;images/clone.png&quot;));</span>
+<span class="nc" id="L232">				sOriginalIcon = new ImageIcon(</span>
+<span class="nc" id="L233">						controller.getResource(&quot;images/clone_original.png&quot;));</span>
+<span class="nc" id="L234">				sShowIcon = Resources.getInstance().getBoolProperty(</span>
+<span class="nc" id="L235">						FreeMind.RESOURCES_DON_T_SHOW_CLONE_ICONS);</span>
+			}
+<span class="nc" id="L237">			controller.getActionFactory().registerFilter(this);</span>
+<span class="nc" id="L238">			controller.registerNodeSelectionListener(this, false);</span>
+<span class="nc" id="L239">		}</span>
+
+		public void deRegister() {
+<span class="nc" id="L242">			controller.deregisterNodeSelectionListener(this);</span>
+<span class="nc" id="L243">			controller.getActionFactory().deregisterFilter(this);</span>
+<span class="nc" id="L244">		}</span>
+
+		public boolean isEnabled(JMenuItem pItem, Action pAction) {
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (controller == null)</span>
+<span class="nc" id="L248">				return false;</span>
+<span class="nc" id="L249">			String hookName = ((NodeHookAction) pAction).getHookName();</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">			if (PLUGIN_NAME.equals(hookName)) {</span>
+				// only enabled, if nodes have been copied before.
+<span class="nc" id="L252">				Vector mindMapNodes = getMindMapNodes();</span>
+				// logger.warning(&quot;Nodes &quot; + Tools.listToString(mindMapNodes));
+<span class="nc bnc" id="L254" title="All 2 branches missed.">				return !mindMapNodes.isEmpty();</span>
+			}
+<span class="nc" id="L256">			List selecteds = controller.getSelecteds();</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">			for (Iterator it = selecteds.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L258">				MindMapNode node = (MindMapNode) it.next();</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">				if (ClonePlugin.getHook(node) != null) {</span>
+<span class="nc" id="L260">					return true;</span>
+				}
+			}
+<span class="nc" id="L263">			return false;</span>
+		}
+
+		public Vector getMindMapNodes() {
+<span class="nc" id="L267">			Vector mindMapNodes = new Vector();</span>
+<span class="nc" id="L268">			Transferable clipboardContents = controller.getClipboardContents();</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">			if (clipboardContents != null) {</span>
+				try {
+<span class="nc" id="L271">					List transferData = (List) clipboardContents</span>
+<span class="nc" id="L272">							.getTransferData(MindMapNodesSelection.copyNodeIdsFlavor);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">					for (Iterator it = transferData.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L274">						String nodeId = (String) it.next();</span>
+<span class="nc" id="L275">						MindMapNode node = controller.getNodeFromID(nodeId);</span>
+<span class="nc" id="L276">						mindMapNodes.add(node);</span>
+					}
+<span class="nc" id="L278">				} catch (Exception e) {</span>
+					// e.printStackTrace();
+					// freemind.main.Resources.getInstance().logException(e);
+				}
+			}
+<span class="nc" id="L283">			return mindMapNodes;</span>
+		}
+
+		public String generateNewCloneId(String pProposedID) {
+<span class="nc" id="L287">			return Tools.generateID(pProposedID, mCloneIdsMap, &quot;CLONE_&quot;);</span>
+		}
+
+		/**
+		 * @param pCloneId
+		 * @return true, if the pCloneId is new (not already registered)
+		 */
+		public boolean registerClone(String pCloneId, ClonePlugin pPlugin) {
+<span class="nc" id="L295">			boolean vectorPresent = mCloneIdsMap.containsKey(pCloneId);</span>
+<span class="nc" id="L296">			HashSet v = getHashSetToCloneId(pCloneId);</span>
+<span class="nc" id="L297">			MindMapNode node = pPlugin.getNode();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">			for (Iterator it = v.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L299">				MindMapNode otherCloneNode = (MindMapNode) it.next();</span>
+<span class="nc" id="L300">				ClonePlugin otherClone = ClonePlugin.getHook(otherCloneNode);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">				if (otherClone == null) {</span>
+<span class="nc" id="L302">					it.remove();</span>
+<span class="nc" id="L303">					logger.warning(&quot;Found clone node &quot;</span>
+<span class="nc" id="L304">							+ controller.getNodeID(otherCloneNode)</span>
+<span class="nc" id="L305">							+ &quot; which isn't a clone any more.&quot;);</span>
+<span class="nc" id="L306">					continue;</span>
+				}
+				// inform all others
+<span class="nc" id="L309">				otherClone.addClone(node);</span>
+				// inform this clone about its brothers
+<span class="nc" id="L311">				pPlugin.addClone(otherCloneNode);</span>
+			}
+<span class="nc" id="L313">			v.add(node);</span>
+<span class="nc" id="L314">			mClonesMap.put(node, pCloneId);</span>
+<span class="nc" id="L315">			selectShadowNode(node, true, node);</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">			if (!mClonePropertiesMap.containsKey(pCloneId)) {</span>
+<span class="nc" id="L317">				mClonePropertiesMap.put(pCloneId, new CloneProperties());</span>
+			}
+<span class="nc bnc" id="L319" title="All 2 branches missed.">			return !vectorPresent;</span>
+		}
+
+		public void deregisterClone(String pCloneId, ClonePlugin pPlugin) {
+<span class="nc" id="L323">			HashSet cloneSet = getHashSetToCloneId(pCloneId);</span>
+<span class="nc" id="L324">			MindMapNode node = pPlugin.getNode();</span>
+<span class="nc" id="L325">			cloneSet.remove(node);</span>
+<span class="nc" id="L326">			mClonesMap.remove(node);</span>
+			// inform all others
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			for (Iterator it = cloneSet.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L329">				MindMapNode otherCloneNode = (MindMapNode) it.next();</span>
+<span class="nc" id="L330">				ClonePlugin otherClone = ClonePlugin.getHook(otherCloneNode);</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">				if (otherClone == null) {</span>
+<span class="nc" id="L332">					it.remove();</span>
+<span class="nc" id="L333">					logger.warning(&quot;Found clone node &quot;</span>
+<span class="nc" id="L334">							+ controller.getNodeID(otherCloneNode)</span>
+<span class="nc" id="L335">							+ &quot; which isn't a clone any more.&quot;);</span>
+<span class="nc" id="L336">					continue;</span>
+				}
+<span class="nc" id="L338">				otherClone.removeClone(node);</span>
+			}
+<span class="nc bnc" id="L340" title="All 2 branches missed.">			if (cloneSet.isEmpty()) {</span>
+				// remove entire clone
+<span class="nc" id="L342">				mCloneIdsMap.remove(cloneSet);</span>
+<span class="nc" id="L343">				mClonePropertiesMap.remove(pCloneId);</span>
+			}
+<span class="nc" id="L345">		}</span>
+
+		public CloneProperties getCloneProperties(String pCloneId) {
+<span class="nc bnc" id="L348" title="All 2 branches missed.">			if (mClonePropertiesMap.containsKey(pCloneId)) {</span>
+<span class="nc" id="L349">				return (CloneProperties) mClonePropertiesMap.get(pCloneId);</span>
+			}
+<span class="nc" id="L351">			throw new IllegalArgumentException(</span>
+<span class="nc" id="L352">					&quot;Clone properties not found for &quot; + pCloneId);</span>
+		}
+
+		protected HashSet getHashSetToCloneId(String pCloneId) {
+<span class="nc" id="L356">			HashSet v = null;</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">			if (!mCloneIdsMap.containsKey(pCloneId)) {</span>
+<span class="nc" id="L358">				v = new HashSet();</span>
+<span class="nc" id="L359">				mCloneIdsMap.put(pCloneId, v);</span>
+<span class="nc" id="L360">			} else {</span>
+<span class="nc" id="L361">				v = (HashSet) mCloneIdsMap.get(pCloneId);</span>
+			}
+<span class="nc" id="L363">			return v;</span>
+		}
+
+		public ActionPair filterAction(ActionPair pair) {
+			// shortcut for no clones for speed up.
+<span class="nc bnc" id="L368" title="All 2 branches missed.">			if (mCloneIdsMap.isEmpty()) {</span>
+<span class="nc" id="L369">				return pair;</span>
+			}
+<span class="nc" id="L371">			XmlAction doAction = pair.getDoAction();</span>
+<span class="nc" id="L372">			doAction = cloneAction(doAction);</span>
+<span class="nc" id="L373">			pair.setDoAction(doAction);</span>
+<span class="nc" id="L374">			return pair;</span>
+		}
+
+		private XmlAction cloneAction(XmlAction doAction) {
+<span class="nc" id="L378">			logger.fine(&quot;Found do action: &quot; + doAction.getClass().getName());</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">			if (doAction instanceof NodeAction) {</span>
+<span class="nc" id="L380">				NodeAction nodeAction = (NodeAction) doAction;</span>
+<span class="nc" id="L381">				MindMapNode node = controller.getNodeFromID(nodeAction</span>
+<span class="nc" id="L382">						.getNode());</span>
+				// check for clone or original?
+<span class="nc" id="L384">				doAction = cloneAction(nodeAction, node);</span>
+<span class="nc" id="L385">			} else {</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">				if (doAction instanceof CompoundAction) {</span>
+<span class="nc" id="L387">					CompoundAction compoundAction = (CompoundAction) doAction;</span>
+<span class="nc" id="L388">					List choiceList = compoundAction.getListChoiceList();</span>
+<span class="nc" id="L389">					int index = 0;</span>
+<span class="nc bnc" id="L390" title="All 2 branches missed.">					for (Iterator it = choiceList.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L391">						XmlAction subAction = (XmlAction) it.next();</span>
+<span class="nc" id="L392">						subAction = cloneAction(subAction);</span>
+<span class="nc" id="L393">						compoundAction.setAtChoice(index, subAction);</span>
+<span class="nc" id="L394">						index++;</span>
+					}
+				}
+			}
+<span class="nc" id="L398">			return doAction;</span>
+		}
+
+		private XmlAction cloneAction(NodeAction nodeAction, MindMapNode node) {
+<span class="nc" id="L402">			List correspondingNodes = getCorrespondingNodes(nodeAction, node);</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">			if (correspondingNodes.isEmpty()) {</span>
+<span class="nc" id="L404">				return nodeAction;</span>
+			}
+			// create new action:
+<span class="nc" id="L407">			CompoundAction compound = new CompoundAction();</span>
+<span class="nc" id="L408">			compound.addChoice(nodeAction);</span>
+<span class="nc bnc" id="L409" title="All 2 branches missed.">			for (Iterator it = correspondingNodes.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L410">				Tools.MindMapNodePair pair = (Tools.MindMapNodePair) it.next();</span>
+<span class="nc" id="L411">				getNewCompoundAction(nodeAction, pair, compound);</span>
+			}
+<span class="nc" id="L413">			return compound;</span>
+		}
+
+		private void getNewCompoundAction(NodeAction nodeAction,
+				Tools.MindMapNodePair correspondingNodePair,
+				CompoundAction compound) {
+			// deep copy:
+<span class="nc" id="L420">			NodeAction copiedNodeAction = (NodeAction) Tools</span>
+<span class="nc" id="L421">					.deepCopy(nodeAction);</span>
+			// special cases:
+<span class="nc bnc" id="L423" title="All 2 branches missed.">			if (copiedNodeAction instanceof MoveNodesAction) {</span>
+<span class="nc" id="L424">				MoveNodesAction moveAction = (MoveNodesAction) copiedNodeAction;</span>
+<span class="nc bnc" id="L425" title="All 2 branches missed.">				for (int i = 0; i &lt; moveAction.getListNodeListMemberList()</span>
+<span class="nc" id="L426">						.size(); i++) {</span>
+<span class="nc" id="L427">					NodeListMember member = moveAction.getNodeListMember(i);</span>
+<span class="nc" id="L428">					changeNodeListMember(correspondingNodePair, moveAction,</span>
+<span class="nc" id="L429">							member);</span>
+				}
+			}
+<span class="nc bnc" id="L432" title="All 2 branches missed.">			if (copiedNodeAction instanceof HookNodeAction) {</span>
+<span class="nc" id="L433">				HookNodeAction hookAction = (HookNodeAction) copiedNodeAction;</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">				for (int i = 0; i &lt; hookAction.getListNodeListMemberList()</span>
+<span class="nc" id="L435">						.size(); i++) {</span>
+<span class="nc" id="L436">					NodeListMember member = hookAction.getNodeListMember(i);</span>
+<span class="nc" id="L437">					changeNodeListMember(correspondingNodePair, hookAction,</span>
+<span class="nc" id="L438">							member);</span>
+				}
+			}
+<span class="nc bnc" id="L441" title="All 2 branches missed.">			if (copiedNodeAction instanceof NewNodeAction) {</span>
+<span class="nc" id="L442">				NewNodeAction newNodeAction = (NewNodeAction) copiedNodeAction;</span>
+<span class="nc" id="L443">				String newId = mMap.getLinkRegistry().generateUniqueID(null);</span>
+<span class="nc" id="L444">				newNodeAction.setNewId(newId);</span>
+			}
+<span class="nc" id="L446">			copiedNodeAction.setNode(controller.getNodeID(correspondingNodePair</span>
+<span class="nc" id="L447">					.getCorresponding()));</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">			if (copiedNodeAction instanceof PasteNodeAction) {</span>
+				/*
+				 * difficult thing here: if something is pasted, the paste
+				 * action itself contains the node ids of the paste. The first
+				 * pasted action will get that node id. This should be the
+				 * corresponding node itself. This presumably corrects a bug
+				 * that the selection on move actions is changing.
+				 */
+<span class="nc" id="L456">				compound.addChoice(copiedNodeAction);</span>
+<span class="nc" id="L457">			} else {</span>
+<span class="nc" id="L458">				compound.addAtChoice(0, copiedNodeAction);</span>
+			}
+<span class="nc" id="L460">		}</span>
+
+		public void changeNodeListMember(
+				Tools.MindMapNodePair correspondingNodePair,
+				NodeAction pAction, NodeListMember member) {
+<span class="nc" id="L465">			NodeAdapter memberNode = controller.getNodeFromID(member.getNode());</span>
+<span class="nc" id="L466">			List correspondingMoveNodes = getCorrespondingNodes(pAction,</span>
+<span class="nc" id="L467">					memberNode);</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			if (!correspondingMoveNodes.isEmpty()) {</span>
+				// search for this clone:
+<span class="nc" id="L470">				for (Iterator it = correspondingMoveNodes.iterator(); it</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">						.hasNext();) {</span>
+<span class="nc" id="L472">					Tools.MindMapNodePair pair = (Tools.MindMapNodePair) it</span>
+<span class="nc" id="L473">							.next();</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">					if (pair.getCloneNode() == correspondingNodePair</span>
+<span class="nc" id="L475">							.getCloneNode()) {</span>
+						// found:
+<span class="nc" id="L477">						member.setNode(controller.getNodeID(pair</span>
+<span class="nc" id="L478">								.getCorresponding()));</span>
+<span class="nc" id="L479">						break;</span>
+					}
+				}
+			}
+<span class="nc" id="L483">		}</span>
+
+		/**
+		 * Method takes into account, that some actions are different.
+		 * 
+		 * @param nodeAction
+		 * @param node
+		 * @return
+		 */
+		public List getCorrespondingNodes(NodeAction nodeAction,
+				MindMapNode node) {
+<span class="nc" id="L494">			boolean startWithParent = false;</span>
+			// Behavior for complete cloning.
+<span class="nc bnc" id="L496" title="All 2 branches missed.">			if (mClonesMap.containsKey(node)) {</span>
+<span class="nc" id="L497">				String cloneId = (String) mClonesMap.get(node);</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">				if (getCloneProperties(cloneId).isCloneItself()) {</span>
+					// Behavior for complete cloning
+<span class="nc bnc" id="L500" title="All 2 branches missed.">					if (nodeAction instanceof MoveNodesAction</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">							|| nodeAction instanceof MoveNodeXmlAction</span>
+<span class="nc bnc" id="L502" title="All 2 branches missed.">							|| nodeAction instanceof DeleteNodeAction</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">							|| nodeAction instanceof CutNodeAction) {</span>
+						// ok, there is an action for a clone itself. be
+						// careful:
+						// clone only, if parents are clones:
+<span class="nc" id="L507">						startWithParent = true;</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">					} else if (nodeAction instanceof PasteNodeAction) {</span>
+<span class="nc" id="L509">						PasteNodeAction pna = (PasteNodeAction) nodeAction;</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">						if (pna.getAsSibling()) {</span>
+							// sibling means, that the paste goes below the
+							// clone.
+							// skip.
+<span class="nc" id="L514">							startWithParent = true;</span>
+						} else {
+							// here, the action changes the children, thus, they
+							// are
+							// subject to cloning.
+						}
+<span class="nc bnc" id="L520" title="All 2 branches missed.">					} else if (nodeAction instanceof UndoPasteNodeAction) {</span>
+<span class="nc" id="L521">						UndoPasteNodeAction pna = (UndoPasteNodeAction) nodeAction;</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">						if (pna.getAsSibling()) {</span>
+							// sibling means, that the paste goes below the
+							// clone.
+							// skip.
+<span class="nc" id="L526">							startWithParent = true;</span>
+						} else {
+							// here, the action changes the children, thus, they
+							// are
+							// subject to cloning.
+						}
+					}
+<span class="nc" id="L533">				} else {</span>
+					// Behavior for children cloning only
+					/*
+					 * new node action belongs to the children, so clone it,
+					 * even, when node is the clone itself.
+					 */
+<span class="nc bnc" id="L539" title="All 2 branches missed.">					if (nodeAction instanceof NewNodeAction) {</span>
+						// here, the action changes the children, thus, they are
+						// subject to cloning.
+<span class="nc bnc" id="L542" title="All 2 branches missed.">					} else if (nodeAction instanceof PasteNodeAction) {</span>
+<span class="nc" id="L543">						PasteNodeAction pna = (PasteNodeAction) nodeAction;</span>
+<span class="nc bnc" id="L544" title="All 2 branches missed.">						if (pna.getAsSibling()) {</span>
+							// sibling means, that the paste goes below the
+							// clone.
+							// skip.
+<span class="nc" id="L548">							startWithParent = true;</span>
+						} else {
+							// here, the action changes the children, thus, they
+							// are
+							// subject to cloning.
+						}
+<span class="nc bnc" id="L554" title="All 2 branches missed.">					} else if (nodeAction instanceof UndoPasteNodeAction) {</span>
+<span class="nc" id="L555">						UndoPasteNodeAction pna = (UndoPasteNodeAction) nodeAction;</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">						if (pna.getAsSibling()) {</span>
+							// sibling means, that the paste goes below the
+							// clone.
+							// skip.
+<span class="nc" id="L560">							startWithParent = true;</span>
+						} else {
+							// here, the action changes the children, thus, they
+							// are
+							// subject to cloning.
+						}
+<span class="nc" id="L566">					} else {</span>
+						// ok, there is an action for a clone itself. be
+						// careful:
+						// clone only, if parents are clones:
+<span class="nc" id="L570">						startWithParent = true;</span>
+					}
+				}
+			}
+<span class="nc" id="L574">			List/* MindMapNodePair */correspondingNodes = getCorrespondingNodes(</span>
+<span class="nc" id="L575">					node, startWithParent);</span>
+<span class="nc" id="L576">			return correspondingNodes;</span>
+		}
+
+		/**
+		 * This is the main method here. It returns to a given node its cloned
+		 * nodes on the other side.
+		 * 
+		 * @param pNode
+		 *            is checked to be son of one of the clones/original.
+		 * @param pStartWithParent
+		 *            Sometimes, it is relevant, if only one of the parents is a
+		 *            clone, eg. for all actions, that affect the clone itself,
+		 *            thus not need to be cloned, but perhaps the clone is
+		 *            itself a node inside of another clone!
+		 * @return a list of {@link MindMapNodePair}s where the first is the
+		 *         corresponding node and the second is the clone. If the return
+		 *         value is empty, the node isn't son of any.
+		 */
+		public List getCorrespondingNodes(MindMapNode pNode,
+				boolean pStartWithParent) {
+			// in case, no clones are present, this method returns very fast.
+<span class="nc bnc" id="L597" title="All 2 branches missed.">			if (mClonesMap.isEmpty()) {</span>
+<span class="nc" id="L598">				return Collections.EMPTY_LIST;</span>
+			}
+			MindMapNode clone;
+			{
+				MindMapNode child;
+				// code doubling to speed up. First check for a clone on the way
+				// to root.
+<span class="nc bnc" id="L605" title="All 2 branches missed.">				if (pStartWithParent) {</span>
+<span class="nc" id="L606">					child = pNode.getParentNode();</span>
+<span class="nc" id="L607">				} else {</span>
+<span class="nc" id="L608">					child = pNode;</span>
+				}
+<span class="nc bnc" id="L610" title="All 2 branches missed.">				while (!mClonesMap.containsKey(child)) {</span>
+<span class="nc bnc" id="L611" title="All 2 branches missed.">					if (child.isRoot()) {</span>
+						// nothing found!
+<span class="nc" id="L613">						return Collections.EMPTY_LIST;</span>
+					}
+<span class="nc" id="L615">					child = child.getParentNode();</span>
+				}
+<span class="nc" id="L617">				clone = child;</span>
+			}
+			MindMapNode child;
+			// now, there is a clone on the way. Collect the indices.
+<span class="nc" id="L621">			Vector indexVector = new Vector();</span>
+<span class="nc bnc" id="L622" title="All 2 branches missed.">			if (pStartWithParent) {</span>
+<span class="nc" id="L623">				addNodePosition(indexVector, pNode);</span>
+<span class="nc" id="L624">				child = pNode.getParentNode();</span>
+<span class="nc" id="L625">			} else {</span>
+<span class="nc" id="L626">				child = pNode;</span>
+			}
+<span class="nc bnc" id="L628" title="All 2 branches missed.">			while (clone != child) {</span>
+<span class="nc" id="L629">				addNodePosition(indexVector, child);</span>
+<span class="nc" id="L630">				child = child.getParentNode();</span>
+			}
+<span class="nc" id="L632">			Vector returnValue = new Vector();</span>
+<span class="nc" id="L633">			MindMapNode originalNode = child;</span>
+<span class="nc" id="L634">			HashSet targets = (HashSet) mCloneIdsMap.get(mClonesMap.get(child));</span>
+<span class="nc" id="L635">			CloneLoop: for (Iterator itClone = targets.iterator(); itClone</span>
+<span class="nc bnc" id="L636" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L637">				MindMapNode cloneNode = (MindMapNode) itClone.next();</span>
+<span class="nc" id="L638">				MindMapNode target = cloneNode;</span>
+<span class="nc bnc" id="L639" title="All 2 branches missed.">				if (cloneNode == originalNode)</span>
+<span class="nc" id="L640">					continue;</span>
+<span class="nc bnc" id="L641" title="All 2 branches missed.">				for (int i = indexVector.size() - 1; i &gt;= 0; --i) {</span>
+<span class="nc" id="L642">					int index = ((Integer) indexVector.get(i)).intValue();</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">					if (target.getChildCount() &lt;= index) {</span>
+<span class="nc" id="L644">						logger.warning(&quot;Index &quot; + index</span>
+<span class="nc" id="L645">								+ &quot; in other tree not found from &quot;</span>
+<span class="nc" id="L646">								+ printNodeIds(targets) + &quot; originating from &quot;</span>
+<span class="nc" id="L647">								+ printNodeId(cloneNode) + &quot; start at parent &quot;</span>
+<span class="nc" id="L648">								+ pStartWithParent);</span>
+						// with crossed fingers.
+<span class="nc" id="L650">						continue CloneLoop;</span>
+					}
+<span class="nc" id="L652">					target = (MindMapNode) target.getChildAt(index);</span>
+				}
+				// logger.fine(&quot;Found corresponding node &quot; + printNodeId(target)
+				// + &quot; on clone &quot; + printNodeId(cloneNode));
+<span class="nc" id="L656">				returnValue.add(new Tools.MindMapNodePair(target, cloneNode));</span>
+			}
+<span class="nc" id="L658">			return returnValue;</span>
+		}
+
+		private void addNodePosition(Vector indexVector, MindMapNode child) {
+<span class="nc" id="L662">			indexVector.add(new Integer(child.getParentNode().getChildPosition(</span>
+<span class="nc" id="L663">					child)));</span>
+<span class="nc" id="L664">		}</span>
+
+		/**
+		 * @param pCloneNode
+		 * @return
+		 */
+		private String printNodeId(MindMapNode pCloneNode) {
+			try {
+<span class="nc" id="L672">				return controller.getNodeID(pCloneNode) + &quot;: '&quot;</span>
+<span class="nc" id="L673">						+ (pCloneNode.getShortText(controller)) + &quot;'&quot;;</span>
+<span class="nc" id="L674">			} catch (Exception e) {</span>
+<span class="nc" id="L675">				return &quot;NOT FOUND: '&quot; + pCloneNode + &quot;'&quot;;</span>
+			}
+		}
+
+		/**
+		 * @param pClones
+		 * @return
+		 */
+		private String printNodeIds(HashSet pClones) {
+<span class="nc" id="L684">			Vector strings = new Vector();</span>
+<span class="nc bnc" id="L685" title="All 2 branches missed.">			for (Iterator it = pClones.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L686">				MindMapNode pluginNode = (MindMapNode) it.next();</span>
+<span class="nc" id="L687">				strings.add(printNodeId(pluginNode));</span>
+			}
+<span class="nc" id="L689">			return Tools.listToString(strings);</span>
+		}
+
+		/**
+		 * Is sent when a node is selected.
+		 */
+		public void onFocusNode(NodeView node) {
+<span class="nc" id="L696">			markShadowNode(node, true);</span>
+<span class="nc" id="L697">		}</span>
+
+		/**
+		 * Is sent when a node is deselected.
+		 */
+		public void onLostFocusNode(NodeView node) {
+<span class="nc" id="L703">			markShadowNode(node, false);</span>
+<span class="nc" id="L704">		}</span>
+
+		public void markShadowNode(NodeView pNode, boolean pEnableShadow) {
+			// at startup, the node is null.
+<span class="nc bnc" id="L708" title="All 4 branches missed.">			if (pNode == null || pNode.getModel() == null) {</span>
+<span class="nc" id="L709">				return;</span>
+			}
+<span class="nc bnc" id="L711" title="All 2 branches missed.">			if (!pEnableShadow) {</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">				if (!mLastMarkedNodeViews.isEmpty()) {</span>
+<span class="nc" id="L713">					for (Iterator it = mLastMarkedNodeViews.iterator(); it</span>
+<span class="nc bnc" id="L714" title="All 2 branches missed.">							.hasNext();) {</span>
+<span class="nc" id="L715">						MindMapNode node = (MindMapNode) it.next();</span>
+<span class="nc bnc" id="L716" title="All 2 branches missed.">						if (mClonesMap.containsKey(node)) {</span>
+<span class="nc" id="L717">							setIcon(node, sOriginalIcon);</span>
+<span class="nc" id="L718">						} else {</span>
+<span class="nc" id="L719">							setIcon(node, null);</span>
+						}
+					}
+<span class="nc" id="L722">					mLastMarkedNodeViews.clear();</span>
+				}
+<span class="nc" id="L724">			} else {</span>
+<span class="nc" id="L725">				markShadowNode(pNode.getModel(), pEnableShadow);</span>
+			}
+<span class="nc" id="L727">		}</span>
+
+		public void markShadowNode(MindMapNode model, boolean pEnableShadow) {
+<span class="nc" id="L730">			mLastMarkedNodeViews.clear();</span>
+			try {
+<span class="nc" id="L732">				List/* pair of MindMapNodePair */shadowNodes = getCorrespondingNodes(</span>
+<span class="nc" id="L733">						model, false);</span>
+<span class="nc bnc" id="L734" title="All 2 branches missed.">				for (Iterator it = shadowNodes.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L735">					Tools.MindMapNodePair shadowNode = (Tools.MindMapNodePair) it</span>
+<span class="nc" id="L736">							.next();</span>
+<span class="nc" id="L737">					MindMapNode correspondingNode = shadowNode</span>
+<span class="nc" id="L738">							.getCorresponding();</span>
+<span class="nc" id="L739">					mLastMarkedNodeViews.add(correspondingNode);</span>
+<span class="nc" id="L740">					selectShadowNode(correspondingNode, pEnableShadow,</span>
+<span class="nc" id="L741">							shadowNode.getCloneNode());</span>
+				}
+<span class="nc" id="L743">			} catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L744">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+<span class="nc" id="L746">		}</span>
+
+		private void selectShadowNode(MindMapNode node, boolean pEnableShadow,
+				MindMapNode pCloneNode) {
+<span class="nc bnc" id="L750" title="All 2 branches missed.">			if (!sShowIcon) {</span>
+<span class="nc" id="L751">				return;</span>
+			}
+<span class="nc bnc" id="L753" title="All 2 branches missed.">			while (node != null) {</span>
+<span class="nc bnc" id="L754" title="All 2 branches missed.">				ImageIcon i = pEnableShadow ? sCloneIcon : null;</span>
+<span class="nc bnc" id="L755" title="All 2 branches missed.">				if (node == pCloneNode) {</span>
+<span class="nc" id="L756">					i = sOriginalIcon;</span>
+				}
+<span class="nc" id="L758">				setIcon(node, i);</span>
+<span class="nc bnc" id="L759" title="All 2 branches missed.">				if (node == pCloneNode)</span>
+<span class="nc" id="L760">					break;</span>
+<span class="nc" id="L761">				node = node.getParentNode();</span>
+				// comment this out to get a complete marked path to the root of
+				// the
+				// clones.
+				break;
+			}
+<span class="nc" id="L767">		}</span>
+
+		public void setIcon(MindMapNode node, ImageIcon i) {
+<span class="nc" id="L770">			node.setStateIcon(PLUGIN_NAME, i);</span>
+<span class="nc" id="L771">			controller.nodeRefresh(node);</span>
+<span class="nc" id="L772">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * freemind.modes.ModeController.NodeSelectionListener#onSelectionChange
+		 * (freemind.modes.MindMapNode, boolean)
+		 */
+		public void onSelectionChange(NodeView pNode, boolean pIsSelected) {
+<span class="nc" id="L782">		}</span>
+
+		public void onUpdateNodeHook(MindMapNode pNode) {
+
+<span class="nc" id="L786">		}</span>
+
+		public void onSaveNode(MindMapNode pNode) {
+
+<span class="nc" id="L790">		}</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,4 @@
+Name	NumOps	EC_Attr	EC_Par	IC_Par	Assoc	NumDirClients	NumIndClients	NumAnc	NumDesc	Diags
+SDMetrics.com.sdmetrics.app.DataTables	10	0	7	0	0	4	0	0	0	0
+SDMetrics.com.sdmetrics.metrics.StronglyConnectedComponents.Graph	2	0	2	0	1	2	0	0	0	0
+SDMetrics.com.sdmetrics.model.XMIReader.ProgressMessageHandler	1	0	1	0	1	0	0	0	0	0

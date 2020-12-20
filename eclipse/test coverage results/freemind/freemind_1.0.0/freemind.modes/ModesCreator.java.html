@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ModesCreator.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">ModesCreator.java</span></div><h1>ModesCreator.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+import java.util.logging.Logger;
+
+import freemind.controller.Controller;
+
+/**
+ * This class creates all the modes that are available. To add your own mode,
+ * simply import it, and create it in getAllModes() (just do the same whats done
+ * with MindMapMode). Thats all!
+ */
+public class ModesCreator {
+	private Controller c;
+
+	/**
+	 * Contains translated mode name =&gt; Mode instances
+	 */
+	private Map mCreatedModes;
+
+	/**
+	 * Contains a name translation. Mode name =&gt; Class Name
+	 */
+	private Map modesTranslation;
+
+	private static Logger logger;
+
+<span class="fc" id="L52">	public ModesCreator(Controller c) {</span>
+<span class="fc" id="L53">		this.c = c;</span>
+<span class="fc" id="L54">	}</span>
+
+	public Set getAllModes() {
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L58">			logger = c.getFrame().getLogger(this.getClass().getName());</span>
+		}
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		if (mCreatedModes == null) {</span>
+<span class="nc" id="L61">			mCreatedModes = new TreeMap();</span>
+<span class="nc" id="L62">			modesTranslation = new HashMap();</span>
+<span class="nc" id="L63">			String modestring = c.getFrame().getProperty(&quot;modes_since_0_8_0&quot;);</span>
+
+<span class="nc" id="L65">			StringTokenizer tokens = new StringTokenizer(modestring, &quot;,&quot;);</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			while (tokens.hasMoreTokens()) {</span>
+<span class="nc" id="L68">				String modename = tokens.nextToken();</span>
+<span class="nc" id="L69">				String modeAlias = tokens.nextToken();</span>
+<span class="nc" id="L70">				mCreatedModes.put(modename, null);</span>
+<span class="nc" id="L71">				modesTranslation.put(modeAlias, modename);</span>
+			}
+<span class="nc" id="L73">			logger.info(&quot;Modes:&quot; + mCreatedModes.keySet());</span>
+		}
+<span class="nc" id="L75">		return modesTranslation.keySet();</span>
+	}
+
+	/**
+	 * Creates a new ModeController.
+	 * 
+	 */
+	public Mode getMode(String modeAlias) {
+<span class="nc" id="L83">		getAllModes();</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (!modesTranslation.containsKey(modeAlias)) {</span>
+<span class="nc" id="L85">			throw new IllegalArgumentException(&quot;Unknown mode &quot; + modeAlias);</span>
+		}
+<span class="nc" id="L87">		String modeName = (String) modesTranslation.get(modeAlias);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (mCreatedModes.get(modeName) == null) {</span>
+			try {
+<span class="nc" id="L90">				Mode mode = null;</span>
+<span class="nc" id="L91">				mode = (Mode) Class.forName(modeName).newInstance();</span>
+<span class="nc" id="L92">				logger.info(&quot;Initializing mode &quot; + modeAlias);</span>
+<span class="nc" id="L93">				mode.init(c);</span>
+<span class="nc" id="L94">				logger.info(&quot;Done: Initializing mode &quot; + modeAlias);</span>
+<span class="nc" id="L95">				mCreatedModes.put(modeName, mode);</span>
+<span class="nc" id="L96">			} catch (Exception ex) {</span>
+<span class="nc" id="L97">				logger.severe(&quot;Mode &quot; + modeName + &quot; could not be loaded.&quot;);</span>
+<span class="nc" id="L98">				freemind.main.Resources.getInstance().logException(ex);</span>
+			}
+		}
+<span class="nc" id="L101">		return (Mode) mCreatedModes.get(modeName);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

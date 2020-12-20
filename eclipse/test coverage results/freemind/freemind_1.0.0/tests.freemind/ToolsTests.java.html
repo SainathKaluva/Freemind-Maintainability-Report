@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ToolsTests.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">ToolsTests.java</span></div><h1>ToolsTests.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2011 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package tests.freemind;
+
+import java.awt.print.Paper;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Vector;
+
+import freemind.main.FreeMindSecurityManager;
+import freemind.main.HtmlTools;
+import freemind.main.Tools;
+import freemind.modes.mindmapmode.MindMapMapModel;
+
+/**
+ * @author foltin
+ * @date 30.06.2011
+ */
+<span class="fc" id="L44">public class ToolsTests extends FreeMindTestBase {</span>
+
+	/**
+	 * 
+	 */
+	private static final String UNIX_PATH_WITH_SPEACIAL_CHAR = &quot;/Users/foltin/downloads/Ja\u0308nstra\u00dfe 270c.pdf&quot;;
+	/**
+	 * 
+	 */
+	private static final String WINDOWS_PATH_WITH_SPECIAL_CHAR = &quot;o:\\Users\\foltin\\downloads\\Ja\u0308nstra\u00dfe 270c.pdf&quot;;
+	/**
+	 * 
+	 */
+	private static final String WINDOWS_PATH_C_USERS_TMP_IM_MM = &quot;c:\\Users\\foltin\\tmp\\im.mm&quot;;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see tests.freemind.FreeMindTestBase#setUp()
+	 */
+	protected void setUp() throws Exception {
+<span class="fc" id="L65">		super.setUp();</span>
+<span class="fc" id="L66">	}</span>
+
+	public void testArgsToUrlConversion() throws Exception {
+<span class="fc" id="L69">		String[] args = new String[] { &quot;/home/bla&quot;, &quot;--quiet&quot;, &quot;c:\\test.mm&quot; };</span>
+<span class="nc" id="L70">		String arrayToUrls = Tools.arrayToUrls(args);</span>
+<span class="nc" id="L71">		Vector urlVector = Tools.urlStringToUrls(arrayToUrls);</span>
+<span class="nc" id="L72">		assertEquals(args.length, urlVector.size());</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		for (Iterator it = urlVector.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L74">			URL urli = (URL) it.next();</span>
+<span class="nc" id="L75">			System.out.println(urli);</span>
+		}
+<span class="nc" id="L77">	}</span>
+
+	public void testRichContentConversion() throws Exception {
+<span class="fc" id="L80">		String input = &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;&lt;map version=\&quot;0.9.0\&quot;&gt;&quot;</span>
+				+ &quot;&lt;!-- To view this file, download free mind mapping software FreeMind from http://freemind.sourceforge.net --&gt;&quot;
+				+ &quot;&lt;node CREATED=\&quot;1320424144875\&quot; ID=\&quot;ID_984089046\&quot; MODIFIED=\&quot;1320424283250\&quot; TEXT=\&quot;GREEK LETTERS&amp;#x391;&amp;#x392;&amp;#x393;&amp;#x394;&amp;#x395;&amp;#x396;&amp;#x397;&amp;#x398;&amp;#x399;&amp;#x39a;&amp;#x39b;&amp;#x39c;&amp;#x39d;&amp;#x39e;&amp;#x39f;&amp;#x3a0;&amp;#x3a1;&amp;#x3a3;&amp;#x3a4;&amp;#x3a5;&amp;#x3a6;&amp;#x3a7;&amp;#x3a8;&amp;#x3a9; &amp;#x3b1;&amp;#x3b2;&amp;#x3b3;&amp;#x3b4;&amp;#x3b5;&amp;#x3b6;&amp;#x3b7;&amp;#x3b8;&amp;#x3b9;&amp;#x3ba;&amp;#x3bb;&amp;#x3bc;&amp;#x3bd;&amp;#x3be;&amp;#x3bf;&amp;#x3c0;&amp;#x3c1;&amp;#x3c3;&amp;#x3c4;&amp;#x3c5;&amp;#x3c6;&amp;#x3c7;&amp;#x3c8;&amp;#x3c9; &amp;#x3ac;&amp;#x3ad;&amp;#x3ae;&amp;#x3af;&amp;#x3cc;&amp;#x3cd;&amp;#x3ce;\&quot;&gt;&quot;
+				+ &quot;&lt;node CREATED=\&quot;1320424155937\&quot; ID=\&quot;ID_1884129484\&quot; MODIFIED=\&quot;1320424262562\&quot; POSITION=\&quot;right\&quot;&gt;&quot;
+				+ &quot;&lt;richcontent TYPE=\&quot;NODE\&quot;&gt;&lt;html&gt;&quot;
+				+ &quot;  &lt;head&gt;&quot;
+				+ &quot;    &quot;
+				+ &quot;  &lt;/head&gt;&quot;
+				+ &quot;  &lt;body&gt;&quot;
+				+ &quot;    &lt;p&gt;&quot;
+				+ &quot;      &amp;#x391;&amp;#x392;&amp;#x393;&amp;#x394;&amp;#x395;&amp;#x396;&amp;#x397;&amp;#x398;&amp;#x399;&amp;#x39a;&amp;#x39b;&amp;#x39c;&amp;#x39d;&amp;#x39e;&amp;#x39f;&amp;#x3a0;&amp;#x3a1;&amp;#x3a3;&amp;#x3a4;&amp;#x3a5;&amp;#x3a6;&amp;#x3a7;&amp;#x3a8;&amp;#x3a9;&quot;
+				+ &quot;    &lt;/p&gt;&quot;
+				+ &quot;    &lt;p&gt;&quot;
+				+ &quot;      &amp;#x3b1;&amp;#x3b2;&amp;#x3b3;&amp;#x3b4;&amp;#x3b5;&amp;#x3b6;&amp;#x3b7;&amp;#x3b8;&amp;#x3b9;&amp;#x3ba;&amp;#x3bb;&amp;#x3bc;&amp;#x3bd;&amp;#x3be;&amp;#x3bf;&amp;#x3c0;&amp;#x3c1;&amp;#x3c3;&amp;#x3c4;&amp;#x3c5;&amp;#x3c6;&amp;#x3c7;&amp;#x3c8;&amp;#x3c9; &amp;#x3ac;&amp;#x3ad;&amp;#x3ae;&amp;#x3af;&amp;#x3cc;&amp;#x3cd;&amp;#x3ce;&quot;
+				+ &quot;    &lt;/p&gt;&quot;
+				+ &quot;  &lt;/body&gt;&quot;
+				+ &quot;&lt;/html&gt;&quot;
+				+ &quot;&lt;/richcontent&gt;&quot;
+				+ &quot;&lt;/node&gt;&quot; + &quot;&lt;/node&gt;&quot; + &quot;&lt;/map&gt;&quot;;
+<span class="pc" id="L99">		Reader updateReader = Tools.getUpdateReader(new StringReader(input),</span>
+<span class="fc" id="L100">				MindMapMapModel.FREEMIND_VERSION_UPDATER_XSLT, mFreeMindMain);</span>
+<span class="nc" id="L101">		String result = Tools.getFile(updateReader);</span>
+<span class="nc" id="L102">		result = HtmlTools.unicodeToHTMLUnicodeEntity(result, true);</span>
+<span class="nc" id="L103">		System.out.println(result);</span>
+<span class="nc" id="L104">		assertEquals(&quot;Correct conversion&quot;, input,</span>
+<span class="nc" id="L105">				result.replaceAll(&quot;&amp;#xd;$&quot;, &quot;&quot;).trim());</span>
+<span class="nc" id="L106">	}</span>
+
+	public void testUrlConversion() throws Exception {
+<span class="fc" id="L109">		File input = new File(</span>
+<span class="fc" id="L110">				UNIX_PATH_WITH_SPEACIAL_CHAR);</span>
+<span class="fc" id="L111">		System.out.println(&quot;input file &quot; + input);</span>
+<span class="nc" id="L112">		URL url = Tools.fileToUrl(input);</span>
+<span class="nc" id="L113">		String externalForm = HtmlTools.unicodeToHTMLUnicodeEntity(</span>
+<span class="nc" id="L114">				url.toExternalForm(), false);</span>
+<span class="nc" id="L115">		System.out.println(&quot;External form: &quot; + externalForm);</span>
+		// convert back:
+<span class="nc" id="L117">		String unescapeHTMLUnicodeEntity = HtmlTools</span>
+<span class="nc" id="L118">				.unescapeHTMLUnicodeEntity(externalForm);</span>
+<span class="nc" id="L119">		File urlToFile = Tools.urlToFile(new URL(unescapeHTMLUnicodeEntity));</span>
+<span class="nc" id="L120">		assertEquals(&quot;Forth and back should give the same&quot;,</span>
+<span class="nc" id="L121">				input.getAbsolutePath(), urlToFile.getAbsolutePath());</span>
+
+<span class="nc" id="L123">	}</span>
+
+	/**
+	 * To be tested under windows
+	 */
+	public void testRelativeUrlsWindows() throws Exception {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (Tools.isWindows()) {</span>
+<span class="nc" id="L130">			String pathname = WINDOWS_PATH_WITH_SPECIAL_CHAR;</span>
+<span class="nc" id="L131">			File input = new File(pathname);</span>
+<span class="nc" id="L132">			String expected = pathname;</span>
+<span class="nc" id="L133">			File mapFile = new File(WINDOWS_PATH_C_USERS_TMP_IM_MM);</span>
+<span class="nc" id="L134">			testCorrectRelativism(input, expected, mapFile);</span>
+		}
+<span class="nc" id="L136">	}</span>
+
+	public void testGetPrefix() throws Exception {
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (Tools.isWindows()) {</span>
+<span class="nc" id="L140">			  assertEquals(&quot;c:\\&quot;, </span>
+<span class="nc" id="L141">					Tools.getPrefix(WINDOWS_PATH_C_USERS_TMP_IM_MM).toString());</span>
+<span class="nc" id="L142">		} else {</span>
+<span class="nc" id="L143">			assertEquals(&quot;/&quot;,</span>
+<span class="nc" id="L144">					Tools.getPrefix(UNIX_PATH_WITH_SPEACIAL_CHAR).toString());</span>
+			
+		}
+<span class="nc" id="L147">	}</span>
+	
+	public void testRelativeUrls() throws Exception {
+<span class="fc" id="L150">		File input = new File(</span>
+<span class="fc" id="L151">				UNIX_PATH_WITH_SPEACIAL_CHAR);</span>
+<span class="fc" id="L152">		String expected = &quot;../downloads/Ja\u0308nstra\u00dfe%20270c.pdf&quot;;</span>
+<span class="fc" id="L153">		File mapFile = new File(&quot;/Users/foltin/tmp/im.mm&quot;);</span>
+<span class="nc" id="L154">		testCorrectRelativism(input, expected, mapFile);</span>
+
+<span class="nc" id="L156">	}</span>
+
+	public void testRelativeUrls2() throws Exception {
+<span class="fc" id="L159">		File input = new File(</span>
+<span class="fc" id="L160">				&quot;/Users/foltin/downloads/subdir1/subdir2/Ja\u0308nstra\u00dfe 270c.pdf&quot;);</span>
+<span class="fc" id="L161">		String expected = &quot;../downloads/subdir1/subdir2/Ja\u0308nstra\u00dfe%20270c.pdf&quot;;</span>
+<span class="fc" id="L162">		File mapFile = new File(&quot;/Users/foltin/tmp/im.mm&quot;);</span>
+<span class="nc" id="L163">		testCorrectRelativism(input, expected, mapFile);</span>
+
+<span class="nc" id="L165">	}</span>
+
+	public void testRelativeUrls3() throws Exception {
+<span class="fc" id="L168">		File input = new File(</span>
+<span class="fc" id="L169">				UNIX_PATH_WITH_SPEACIAL_CHAR);</span>
+<span class="fc" id="L170">		String expected = &quot;../../../downloads/Ja\u0308nstra\u00dfe%20270c.pdf&quot;;</span>
+<span class="fc" id="L171">		File mapFile = new File(&quot;/Users/foltin/tmp/subdir1/subdir2/im.mm&quot;);</span>
+<span class="nc" id="L172">		testCorrectRelativism(input, expected, mapFile);</span>
+
+<span class="nc" id="L174">	}</span>
+
+	public void testRelativeUrls4() throws Exception {
+<span class="fc" id="L177">		File input = new File(</span>
+<span class="fc" id="L178">				UNIX_PATH_WITH_SPEACIAL_CHAR);</span>
+<span class="fc" id="L179">		String expected = &quot;Ja\u0308nstra\u00dfe%20270c.pdf&quot;;</span>
+<span class="fc" id="L180">		File mapFile = new File(&quot;/Users/foltin/downloads/im.mm&quot;);</span>
+<span class="nc" id="L181">		testCorrectRelativism(input, expected, mapFile);</span>
+
+<span class="nc" id="L183">	}</span>
+
+	public void testRelativeUrlsSpaces() throws Exception {
+<span class="fc" id="L186">		File input = new File(</span>
+<span class="fc" id="L187">				&quot;/Users/foltin/downloads/subd ir1/subdi r2/Ja\u0308nstra\u00dfe 270c.pdf&quot;);</span>
+<span class="fc" id="L188">		String expected = &quot;../downloads/subd%20ir1/subdi%20r2/Ja\u0308nstra\u00dfe%20270c.pdf&quot;;</span>
+<span class="fc" id="L189">		File mapFile = new File(&quot;/Users/foltin/tmp/im.mm&quot;);</span>
+<span class="nc" id="L190">		testCorrectRelativism(input, expected, mapFile);</span>
+
+<span class="nc" id="L192">	}</span>
+
+	protected void testCorrectRelativism(File input, String expected,
+			File mapFile) throws MalformedURLException {
+<span class="nc" id="L196">		String relative = Tools.fileToRelativeUrlString(input, mapFile);</span>
+<span class="nc" id="L197">		assertEquals(&quot;Correct relative result&quot;, expected, relative);</span>
+<span class="nc" id="L198">		URL u = new URL(Tools.fileToUrl(mapFile), relative);</span>
+<span class="nc" id="L199">		URL e = Tools.fileToUrl(input);</span>
+<span class="nc" id="L200">		assertEquals(&quot;Correct absolute  result&quot;, e.toExternalForm(),</span>
+<span class="nc" id="L201">				u.toExternalForm());</span>
+<span class="nc" id="L202">	}</span>
+
+	public void testOccurrences() throws Exception {
+<span class="pc" id="L205">		assertEquals(&quot;Correct amount&quot;, 5,</span>
+<span class="nc" id="L206">				Tools.countOccurrences(&quot;abababaa&quot;, &quot;a&quot;));</span>
+<span class="nc" id="L207">		assertEquals(&quot;Correct amount&quot;, 3,</span>
+<span class="nc" id="L208">				Tools.countOccurrences(&quot;abababaa&quot;, &quot;ab&quot;));</span>
+<span class="nc" id="L209">	}</span>
+
+	public void testUpdate() throws FileNotFoundException, IOException {
+<span class="nc" id="L212">		doUpdate();</span>
+<span class="nc" id="L213">	}</span>
+
+	public void testUpdateWithSecurityManager() throws FileNotFoundException,
+			IOException {
+		/**
+		 * Due to a java bug (in version 7 update 4), setting a security manager
+		 * (this is normally done in FreeMind) breaks the update. This is tested
+		 * here.
+		 */
+<span class="fc" id="L222">		System.setSecurityManager(new FreeMindSecurityManager());</span>
+<span class="nc" id="L223">		doUpdate();</span>
+<span class="nc" id="L224">	}</span>
+
+	protected void doUpdate() throws IOException {
+<span class="fc" id="L227">		String input = &quot;&lt;map version=\&quot;0.9.0\&quot;&gt;&quot;</span>
+				+ &quot;&lt;!-- To view this file, download free mind mapping software FreeMind from http://freemind.sourceforge.net --&gt;&quot;
+				+ &quot;&lt;node CREATED=\&quot;1337970913625\&quot; ID=\&quot;ID_1753131052\&quot; MODIFIED=\&quot;1337970913625\&quot; TEXT=\&quot;Neue Mindmap\&quot;/&gt;&quot;
+				+ &quot;&lt;/map&gt;&quot;;
+<span class="pc" id="L231">		Reader updateReader = Tools.getUpdateReader(new StringReader(input),</span>
+<span class="fc" id="L232">				MindMapMapModel.FREEMIND_VERSION_UPDATER_XSLT, getFrame());</span>
+<span class="nc" id="L233">		String output = Tools.getFile(updateReader);</span>
+<span class="nc" id="L234">		assertEquals(&quot;Correct output&quot;,</span>
+<span class="nc" id="L235">				&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;&quot; + input,</span>
+<span class="nc" id="L236">				output.trim());</span>
+<span class="nc" id="L237">	}</span>
+
+	public static void main(String[] args) {
+<span class="nc" id="L240">		junit.textui.TestRunner.run(ToolsTests.class);</span>
+<span class="nc" id="L241">	}</span>
+
+	public void testPageFormatStorage() throws Exception {
+<span class="fc" id="L244">		Paper paper = new Paper();</span>
+<span class="fc" id="L245">		paper.setImageableArea(1d, 2d, 3d, 4d);</span>
+<span class="fc" id="L246">		paper.setSize(5d, 6d);</span>
+<span class="nc" id="L247">		String pageFormatAsString = Tools.getPageFormatAsString(paper);</span>
+<span class="nc" id="L248">		Paper paper2 = new Paper();</span>
+<span class="nc" id="L249">		Tools.setPageFormatFromString(paper2, pageFormatAsString);</span>
+<span class="nc" id="L250">		assertEquals(paper.getHeight(), paper2.getHeight(), 0d);</span>
+<span class="nc" id="L251">		assertEquals(paper.getWidth(), paper2.getWidth(), 0d);</span>
+<span class="nc" id="L252">		assertEquals(paper.getImageableHeight(), paper2.getImageableHeight(),</span>
+<span class="nc" id="L253">				0d);</span>
+<span class="nc" id="L254">		assertEquals(paper.getImageableWidth(), paper2.getImageableWidth(), 0d);</span>
+<span class="nc" id="L255">		assertEquals(paper.getImageableX(), paper2.getImageableX(), 0d);</span>
+<span class="nc" id="L256">		assertEquals(paper.getImageableY(), paper2.getImageableY(), 0d);</span>
+<span class="nc" id="L257">	}</span>
+
+<span class="fc" id="L259">	private class A {</span>
+
+	}
+
+<span class="fc" id="L263">	private class B extends A {</span>
+
+	}
+
+	private boolean visit(A pA) {
+<span class="fc" id="L268">		return true;</span>
+	}
+
+	private boolean visit(B pA) {
+<span class="fc" id="L272">		return false;</span>
+	}
+
+	/**
+	 * 
+	 */
+	public void testVisitor() {
+<span class="fc" id="L279">		A a = new A();</span>
+<span class="fc" id="L280">		B b = new B();</span>
+<span class="fc" id="L281">		A castedB = b;</span>
+<span class="fc" id="L282">		assertTrue(visit(a));</span>
+<span class="fc" id="L283">		assertFalse(visit(b));</span>
+		/*
+		 * I don't understand this: no polymorphism is applied to the call of
+		 * visit in this case, as the visit(a) method is called, although, a is
+		 * of class B! If anybody can explain this to me, please write an email
+		 * to me (chris).
+		 */
+<span class="fc" id="L290">		assertTrue(visit(castedB));</span>
+<span class="fc" id="L291">	}</span>
+
+	public void testKeyDocumentationPathConversion() throws Exception {
+<span class="fc" id="L294">		String file = &quot;c:\\home\\java\\freemind\\0_9_0\\bin\\dist\\doc/FM_Key_Mappings_Quick_Guide.pdf&quot;;</span>
+<span class="nc" id="L295">		System.out.println(Tools.urlToFile(Tools.fileToUrl(new File(file))));</span>
+<span class="nc" id="L296">	}</span>
+	
+	public void testChangedProperties() throws Exception {
+<span class="fc" id="L299">		Properties def = new Properties();</span>
+<span class="fc" id="L300">		Properties changed = new Properties();</span>
+<span class="fc" id="L301">		String key = &quot;blabla&quot;;</span>
+<span class="fc" id="L302">		String key2 = &quot;notexistent&quot;;</span>
+<span class="fc" id="L303">		String key3 = &quot;notpresentindef&quot;;</span>
+<span class="fc" id="L304">		String key4 = &quot;equal&quot;;</span>
+<span class="fc" id="L305">		def.put(key, &quot;A&quot;);</span>
+<span class="fc" id="L306">		changed.put(key, &quot;B&quot;);</span>
+<span class="fc" id="L307">		def.put(key4, &quot;A&quot;);</span>
+<span class="fc" id="L308">		changed.put(key4, &quot;A&quot;);</span>
+<span class="fc" id="L309">		def.put(key2, &quot;default&quot;);</span>
+<span class="fc" id="L310">		changed.put(key3, &quot;new value&quot;);</span>
+<span class="nc" id="L311">		Properties copy = Tools.copyChangedProperties(changed, def);</span>
+<span class="nc" id="L312">		assertEquals(2, copy.keySet().size());</span>
+		
+<span class="nc" id="L314">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

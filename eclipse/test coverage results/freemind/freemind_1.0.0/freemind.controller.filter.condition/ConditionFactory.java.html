@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ConditionFactory.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter.condition</a> &gt; <span class="el_source">ConditionFactory.java</span></div><h1>ConditionFactory.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 17.05.2005
+ *
+ */
+package freemind.controller.filter.condition;
+
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+
+import freemind.common.NamedObject;
+import freemind.main.Resources;
+import freemind.main.XMLElement;
+
+/**
+ * @author dimitri 17.05.2005
+ */
+public class ConditionFactory {
+
+	static final String FILTER_ICON = &quot;filter_icon&quot;;
+	static final String FILTER_NODE = &quot;filter_node&quot;;
+
+	static final String FILTER_DOES_NOT_EXIST = &quot;filter_does_not_exist&quot;;
+	static final String FILTER_EXIST = &quot;filter_exist&quot;;
+	static final String FILTER_CONTAINS = &quot;filter_contains&quot;;
+	static final String FILTER_NOT_CONTAINS = &quot;filter_not_contains&quot;;
+	static final String FILTER_IS_NOT_EQUAL_TO = &quot;filter_is_not_equal_to&quot;;
+	static final String FILTER_IS_EQUAL_TO = &quot;filter_is_equal_to&quot;;
+	static final String FILTER_LE = &quot;&lt;=&quot;;
+	static final String FILTER_LT = &quot;&lt;&quot;;
+	static final String FILTER_GE = &quot;&gt;=&quot;;
+	static final String FILTER_GT = &quot;&gt;&quot;;
+	static final String FILTER_IGNORE_CASE = &quot;filter_ignore_case&quot;;
+
+	/**
+     *
+     */
+<span class="nc" id="L56">	public ConditionFactory() {</span>
+<span class="nc" id="L57">	}</span>
+
+	static String createDescription(String attribute, String simpleCondition,
+			String value, boolean ignoreCase) {
+<span class="nc" id="L61">		String description = attribute</span>
+<span class="nc" id="L62">				+ &quot; &quot;</span>
+<span class="nc" id="L63">				+ simpleCondition</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">				+ (value != null ? &quot; \&quot;&quot; + value + &quot;\&quot;&quot; : &quot;&quot;)</span>
+<span class="nc bnc" id="L65" title="All 4 branches missed.">				+ (ignoreCase &amp;&amp; value != null ? &quot;, &quot;</span>
+<span class="nc" id="L66">						+ Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L67">								FILTER_IGNORE_CASE) : &quot;&quot;);</span>
+<span class="nc" id="L68">		return description;</span>
+	}
+
+	public Condition loadCondition(XMLElement element) {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (element.getName().equalsIgnoreCase(NodeContainsCondition.NAME))</span>
+<span class="nc" id="L73">			return NodeContainsCondition.load(element);</span>
+<span class="nc" id="L74">		if (element.getName().equalsIgnoreCase(</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				IgnoreCaseNodeContainsCondition.NAME))</span>
+<span class="nc" id="L76">			return IgnoreCaseNodeContainsCondition.load(element);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		if (element.getName().equalsIgnoreCase(NodeCompareCondition.NAME))</span>
+<span class="nc" id="L78">			return NodeCompareCondition.load(element);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (element.getName().equalsIgnoreCase(AttributeCompareCondition.NAME))</span>
+<span class="nc" id="L80">			return AttributeCompareCondition.load(element);</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">		if (element.getName().equalsIgnoreCase(AttributeExistsCondition.NAME))</span>
+<span class="nc" id="L82">			return AttributeExistsCondition.load(element);</span>
+<span class="nc" id="L83">		if (element.getName()</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">				.equalsIgnoreCase(AttributeNotExistsCondition.NAME))</span>
+<span class="nc" id="L85">			return AttributeNotExistsCondition.load(element);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (element.getName().equalsIgnoreCase(IconContainedCondition.NAME))</span>
+<span class="nc" id="L87">			return IconContainedCondition.load(element);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">       	if (element.getName().equalsIgnoreCase(IconNotContainedCondition.NAME))</span>
+<span class="nc" id="L89">			return IconNotContainedCondition.load(element);</span>
+<span class="nc" id="L90">		if (element.getName().equalsIgnoreCase(</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">				ConditionNotSatisfiedDecorator.NAME)) {</span>
+<span class="nc" id="L92">			return ConditionNotSatisfiedDecorator.load(element);</span>
+		}
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (element.getName().equalsIgnoreCase(ConjunctConditions.NAME)) {</span>
+<span class="nc" id="L95">			return ConjunctConditions.load(element);</span>
+		}
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (element.getName().equalsIgnoreCase(DisjunctConditions.NAME)) {</span>
+<span class="nc" id="L98">			return DisjunctConditions.load(element);</span>
+		}
+<span class="nc" id="L100">		return null;</span>
+	}
+
+	public Condition createAttributeCondition(String attribute,
+			NamedObject simpleCondition, String value, boolean ignoreCase) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (simpleCondition.equals(FILTER_EXIST))</span>
+<span class="nc" id="L106">			return new AttributeExistsCondition(attribute);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (simpleCondition.equals(FILTER_DOES_NOT_EXIST))</span>
+<span class="nc" id="L108">			return new AttributeNotExistsCondition(attribute);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (ignoreCase) {</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_IS_EQUAL_TO))</span>
+<span class="nc" id="L111">				return new AttributeCompareCondition(attribute, value, true, 0,</span>
+<span class="nc" id="L112">						true);</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_IS_NOT_EQUAL_TO))</span>
+<span class="nc" id="L114">				return new AttributeCompareCondition(attribute, value, true, 0,</span>
+<span class="nc" id="L115">						false);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_GT))</span>
+<span class="nc" id="L117">				return new AttributeCompareCondition(attribute, value, true, 1,</span>
+<span class="nc" id="L118">						true);</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_GE))</span>
+<span class="nc" id="L120">				return new AttributeCompareCondition(attribute, value, true,</span>
+<span class="nc" id="L121">						-1, false);</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_LT))</span>
+<span class="nc" id="L123">				return new AttributeCompareCondition(attribute, value, true,</span>
+<span class="nc" id="L124">						-1, true);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_LE))</span>
+<span class="nc" id="L126">				return new AttributeCompareCondition(attribute, value, true, 1,</span>
+<span class="nc" id="L127">						false);</span>
+		} else {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_IS_EQUAL_TO))</span>
+<span class="nc" id="L130">				return new AttributeCompareCondition(attribute, value, false,</span>
+<span class="nc" id="L131">						0, true);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_IS_NOT_EQUAL_TO))</span>
+<span class="nc" id="L133">				return new AttributeCompareCondition(attribute, value, false,</span>
+<span class="nc" id="L134">						0, false);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_GT))</span>
+<span class="nc" id="L136">				return new AttributeCompareCondition(attribute, value, false,</span>
+<span class="nc" id="L137">						1, true);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_GE))</span>
+<span class="nc" id="L139">				return new AttributeCompareCondition(attribute, value, false,</span>
+<span class="nc" id="L140">						-1, false);</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_LT))</span>
+<span class="nc" id="L142">				return new AttributeCompareCondition(attribute, value, false,</span>
+<span class="nc" id="L143">						-1, true);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_LE))</span>
+<span class="nc" id="L145">				return new AttributeCompareCondition(attribute, value, false,</span>
+<span class="nc" id="L146">						1, false);</span>
+		}
+<span class="nc" id="L148">		return null;</span>
+	}
+
+	public Condition createCondition(NamedObject attribute,
+			NamedObject simpleCondition, String value, boolean ignoreCase) {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (attribute.equals(FILTER_ICON)</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				&amp;&amp; simpleCondition.equals(FILTER_CONTAINS))</span>
+<span class="nc" id="L155">			return new IconContainedCondition(value);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">        if (attribute.equals(FILTER_ICON)</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">            &amp;&amp; simpleCondition.equals(FILTER_NOT_CONTAINS)    )</span>
+<span class="nc" id="L158">            return new IconNotContainedCondition(value);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">		if (attribute.equals(FILTER_NODE)) {</span>
+<span class="nc" id="L160">			return createNodeCondition(simpleCondition, value, ignoreCase);</span>
+		}
+<span class="nc" id="L162">		return null;</span>
+	}
+
+	public NamedObject[] getNodeConditionNames() {
+<span class="nc" id="L166">		return new NamedObject[] {</span>
+				// TranslatedString.create(&quot;filter_exist&quot;),
+				// TranslatedString.create(&quot;filter_does_not_exist&quot;),
+<span class="nc" id="L169">				Resources.getInstance().createTranslatedString(FILTER_CONTAINS),</span>
+<span class="nc" id="L170">				Resources.getInstance().createTranslatedString(</span>
+<span class="nc" id="L171">						FILTER_IS_EQUAL_TO),</span>
+<span class="nc" id="L172">				Resources.getInstance().createTranslatedString(</span>
+<span class="nc" id="L173">						FILTER_IS_NOT_EQUAL_TO),</span>
+<span class="nc" id="L174">				NamedObject.literal(FILTER_GT), NamedObject.literal(FILTER_GE),</span>
+<span class="nc" id="L175">				NamedObject.literal(FILTER_LE), NamedObject.literal(FILTER_LT), };</span>
+	}
+
+	public Object[] getIconConditionNames() {
+<span class="nc" id="L179">		return new NamedObject[] { Resources.getInstance()</span>
+<span class="nc" id="L180">				.createTranslatedString(FILTER_CONTAINS),                 </span>
+<span class="nc" id="L181">			Resources.getInstance().createTranslatedString(FILTER_NOT_CONTAINS),</span>
+		};
+	}
+
+	public NamedObject[] getAttributeConditionNames() {
+<span class="nc" id="L186">		return new NamedObject[] {</span>
+<span class="nc" id="L187">				Resources.getInstance().createTranslatedString(FILTER_EXIST),</span>
+<span class="nc" id="L188">				Resources.getInstance().createTranslatedString(</span>
+<span class="nc" id="L189">						FILTER_DOES_NOT_EXIST),</span>
+				// TranslatedString.create(&quot;filter_contains&quot;),
+<span class="nc" id="L191">				Resources.getInstance().createTranslatedString(</span>
+<span class="nc" id="L192">						FILTER_IS_EQUAL_TO),</span>
+<span class="nc" id="L193">				Resources.getInstance().createTranslatedString(</span>
+<span class="nc" id="L194">						FILTER_IS_NOT_EQUAL_TO),</span>
+<span class="nc" id="L195">				NamedObject.literal(FILTER_GT), NamedObject.literal(FILTER_GE),</span>
+<span class="nc" id="L196">				NamedObject.literal(FILTER_LE), NamedObject.literal(FILTER_LT), };</span>
+	}
+
+	protected Condition createNodeCondition(NamedObject simpleCondition,
+			String value, boolean ignoreCase) {
+<span class="nc bnc" id="L201" title="All 2 branches missed.">		if (ignoreCase) {</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_CONTAINS)) {</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">				if (value.equals(&quot;&quot;))</span>
+<span class="nc" id="L204">					return null;</span>
+<span class="nc" id="L205">				return new IgnoreCaseNodeContainsCondition(value);</span>
+			}
+<span class="nc bnc" id="L207" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_IS_EQUAL_TO))</span>
+<span class="nc" id="L208">				return new NodeCompareCondition(value, true, 0, true);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_IS_NOT_EQUAL_TO))</span>
+<span class="nc" id="L210">				return new NodeCompareCondition(value, true, 0, false);</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_GT))</span>
+<span class="nc" id="L212">				return new NodeCompareCondition(value, true, 1, true);</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_GE))</span>
+<span class="nc" id="L214">				return new NodeCompareCondition(value, true, -1, false);</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_LT))</span>
+<span class="nc" id="L216">				return new NodeCompareCondition(value, true, -1, true);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_LE))</span>
+<span class="nc" id="L218">				return new NodeCompareCondition(value, true, 1, false);</span>
+		} else {
+<span class="nc bnc" id="L220" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_CONTAINS)) {</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">				if (value.equals(&quot;&quot;))</span>
+<span class="nc" id="L222">					return null;</span>
+<span class="nc" id="L223">				return new NodeContainsCondition(value);</span>
+			}
+<span class="nc bnc" id="L225" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_IS_EQUAL_TO))</span>
+<span class="nc" id="L226">				return new NodeCompareCondition(value, false, 0, true);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_IS_NOT_EQUAL_TO))</span>
+<span class="nc" id="L228">				return new NodeCompareCondition(value, false, 0, false);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_GT))</span>
+<span class="nc" id="L230">				return new NodeCompareCondition(value, false, 1, true);</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_GE))</span>
+<span class="nc" id="L232">				return new NodeCompareCondition(value, false, -1, false);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_LT))</span>
+<span class="nc" id="L234">				return new NodeCompareCondition(value, false, -1, true);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			if (simpleCondition.equals(FILTER_LE))</span>
+<span class="nc" id="L236">				return new NodeCompareCondition(value, false, 1, false);</span>
+		}
+<span class="nc" id="L238">		return null;</span>
+	}
+
+	static public JComponent createCellRendererComponent(String description) {
+<span class="nc" id="L242">		JCondition component = new JCondition();</span>
+<span class="nc" id="L243">		JLabel label = new JLabel(description);</span>
+<span class="nc" id="L244">		component.add(label);</span>
+<span class="nc" id="L245">		return component;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

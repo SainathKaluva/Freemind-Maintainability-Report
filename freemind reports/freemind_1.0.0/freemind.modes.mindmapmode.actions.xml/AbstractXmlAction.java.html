@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AbstractXmlAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions.xml</a> &gt; <span class="el_source">AbstractXmlAction.java</span></div><h1>AbstractXmlAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 02.05.2004
+ */
+
+
+package freemind.modes.mindmapmode.actions.xml;
+
+import java.awt.event.ActionEvent;
+
+import javax.swing.Action;
+import javax.swing.Icon;
+
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.FreemindAction;
+
+/**
+ * @author foltin
+ * 
+ */
+public abstract class AbstractXmlAction extends FreemindAction {
+
+	private ActorXml actor;
+
+	private MindMapController controller;
+
+	protected AbstractXmlAction(String name, Icon icon,
+			MindMapController controller) {
+<span class="nc" id="L46">		super(name, icon, controller);</span>
+<span class="nc" id="L47">		this.controller = controller;</span>
+<span class="nc" id="L48">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
+	final public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L57">		xmlActionPerformed(arg0);</span>
+<span class="nc" id="L58">	}</span>
+
+	protected String getShortDescription() {
+<span class="nc" id="L61">		return (String) getValue(Action.SHORT_DESCRIPTION);</span>
+	}
+
+	/**
+	 */
+	protected abstract void xmlActionPerformed(ActionEvent arg0);
+
+	/**
+	 */
+	public MindMapController getMindMapController() {
+<span class="nc" id="L71">		return controller;</span>
+	}
+
+	public void addActor(ActorXml actor) {
+<span class="nc" id="L75">		this.actor = actor;</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		if (actor != null) {</span>
+			// registration:
+<span class="nc" id="L78">			getMindMapController().getActionFactory().registerActor(actor,</span>
+<span class="nc" id="L79">					actor.getDoActionClass());</span>
+		}
+<span class="nc" id="L81">	}</span>
+
+	/**
+	 */
+	public ActorXml getActor() {
+<span class="nc" id="L86">		return actor;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

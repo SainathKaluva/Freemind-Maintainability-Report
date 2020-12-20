@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - The Project File Settings Dialog</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProjFileExplained.html">Prev</a> - <a href="ProjFilter.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="ProjSettings.html">4.2 Specifying Project Settings</a> > <a href="ProjFile.html">4.2.1 Specifying Project Files</a> > 4.2.1.2 The Project File Settings Dialog
+<hr>
+<h4><a name="ProjFileDlg"></a>4.2.1.2 The Project File Settings Dialog</h4>
+
+To edit the project file settings, select "Project -&gt; Edit Project
+Settings" from the menu bar, or click the <img
+src="images/setting.gif" alt="Project Settings
+Button">&nbsp;button in the tool bar. Select the "File Settings" tab.<p>
+
+<img src="images/projsetting.png" alt="Project File Settings Dialog"><br> 
+<b>Figure 6:&nbsp;Project File Settings Dialog</b><p>
+
+On the file settings dialog, you specify the project files to use. From top to
+bottom:<p>
+
+<b>XMI Source File</b><br> To specify the XMI source file,
+<ul>
+<li>enter the name of the XMI file with your UML design in the text
+field,
+<li>or click the arrow down button next to the text field to pick a
+file from a list of recently used XMI source files,
+<li>or click the &quot;Browse...&quot; button next to the text
+field; this opens a standard file chooser dialog where you can
+navigate the file system to select the file,
+<li>or if your system supports file drag and drop, you can drop the XMI
+file anywhere into the main window or the project file settings dialog.
+</ul>
+
+<b>Select Project File Set</b><br>
+SDMetrics ships with several default project file sets. Each project file 
+set includes a consistent combination of one metamodel definition file, 
+one XMI transformation file, and one metric definition file:<p>
+
+<table>
+<tr><th>Name</th><th>Description</th></tr>
+<tr><td>Default UML 1.x and XMI 1.0</td><td>XMI 1.0 import and metrics for UML 1.x models</td></tr>
+<tr><td>Default UML 1.x and XMI 1.1-1.3</td><td>XMI 1.1/1.2/1.3 import and metrics for UML 1.x models</td></tr>
+<tr><td>Default UML 2.x and XMI 2.x</td><td>XMI 2.x import and metrics for UML 2.x models</td></tr>
+</table>
+<b>Table 1:&nbsp;Default project file sets</b><p>
+
+When you select the radio button "Automatic", SDMetrics will automatically 
+determine the most suitable project file set based on the XMI version and 
+exporter of the XMI source file at hand. When you select the radio button 
+"Custom", SDMetrics will always use the project file set selected from the
+dropdown list. This feature is useful when you have created your own 
+project file sets (see <a href="ProjDef.html">Section&nbsp;4.16.1 "Project File Sets"</a>), or if SDMetrics has problems determining
+the XMI version of your XMI source file, or if SDMetrics cannot match the XMI 
+version to one of the available project file sets.<p>
+
+Most of the time, you will want to use a project file set "as is". 
+You can, however, replace any or all files of the project file set 
+with modified or custom project files of your own, e.g., to calculate 
+a different set of design metrics.<p>
+
+<b>Override XMI Transformations File</b><br>
+If you do not wish to use
+the XMI transformation file of the applicable project file set, you 
+can specify an alternative XMI transformation file to use here.
+Select the "from file" radio
+button, and specify your transformation file in the text field next to
+it (using the browse button, the list of previously used XMI transformations, 
+or drag and drop the file into the dialog).<br>
+See <a href="TransFile.html">Section&nbsp;7.2 "XMI Transformation Files"</a> for more information on how to create your own XMI
+transformation files.<p>
+
+<b>Override Metamodel Definition File</b><br>
+To use a modified or custom metamodel of your own, select the "from file"
+radio button, and specify your metamodel definition file in the text
+field next to it (using any of the means described above).<br>
+See <a href="MetaModel.html">Section&nbsp;7.1 "SDMetrics Metamodel"</a> for
+more information on how to create your own metamodel definitions.<p>
+
+<b>Metrics Definition File</b><br>
+To use a metrics definition file of your own, select the "from
+file" radio button, and specify your metrics definition file in the
+text field next to it (using any of the means described above).<br>
+See <a href="MetricDef.html">Section&nbsp;8 "Defining Custom Design Metrics and Rules"</a> for more information on how to create your own
+metrics definition files.<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProjFileExplained.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="ProjFile.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ProjFilter.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.2.1.1 "Overview of Project Files"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.2.2 "Specifying Filters"</td></tr></table>
+
+</body>
+</html>

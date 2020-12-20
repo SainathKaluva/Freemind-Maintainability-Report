@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Compound Metrics</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="SumProjection.html">Prev</a> - <a href="AttrValue.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > 8.1.2 Compound Metrics
+<hr>
+<h3><a name="CompoundMetric"></a>8.1.2 Compound Metrics</h3>
+
+A compound metric is a metric that is defined in terms of other
+metrics. As an example for a compound metric, assume we have two
+metrics defined for packages
+<ul>
+<li>"NumCls", the number of classes in the package,
+<li>"NumOps", the number operations in the classes in the package.
+</ul>
+
+We can then define a metric for the average number of operations in
+the classes of the package as follows:
+
+<pre>
+&lt;metric name="AvgOps" domain="package"&gt; 
+  &lt;description&gt;The average number of operations in the 
+  classes of the package.&lt;/description&gt;
+  &lt;compoundmetric term="NumOps/NumCls" fallback="0"/&gt;
+&lt;/metric&gt;
+</pre>
+
+The <tt>term</tt> attribute defines the metric expression to be
+evaluated, which is the return value of the metric. The optional
+<tt>fallback</tt> expression is used if the metric expression returns
+a "NaN" (not a number) or infinity. In that case, the
+<tt>fallback</tt> expression is evaluated and returned as metric
+result. This is useful to catch, e.g., divisions by zero and still
+have a well-defined metric result.<p>
+
+A second version of the compound metric allows the conditional
+evaluation of expressions:
+
+<pre>
+&lt;metric name="accessedOps" domain="class"&gt;
+  &lt;description&gt;The number of public operations of the class,
+    if it has any clients, or 0 else.&lt;/description&gt;
+  &lt;compoundmetric condition="NumClients>0" 
+                  term="NumPubOps" alt="0" /&gt;
+&lt;/metric&gt;
+</pre>
+
+For the conditional version of the compound metric, a conditional
+expression (<tt>condition</tt>) and an alternative metric expression
+(<tt>alt</tt>) is specified in addition to the <tt>term</tt>
+attribute. Their meaning is as follows. First, the <tt>condition</tt>
+expression is evaluated. If it evaluates to "true", the <tt>term</tt>
+expression is evaluated and returned as value of the metric (value 1
+is returned if no <tt>term</tt> expression is specified). If the
+<tt>condition</tt> expression is "false", the <tt>alt</tt> metric
+expression is evaluated and returned as result of the metric (value 0
+is returned if no <tt>alt</tt> expression is specified).
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="SumProjection.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="AttrValue.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.1.10 "Summary of Projection Attributes"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.1.3 "Attribute Value"</td></tr></table>
+
+</body>
+</html>

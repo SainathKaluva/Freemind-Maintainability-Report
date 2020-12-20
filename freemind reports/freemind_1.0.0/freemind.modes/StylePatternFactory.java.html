@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>StylePatternFactory.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">StylePatternFactory.java</span></div><h1>StylePatternFactory.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: StylePatternFactory.java,v 1.1.2.3.2.5 2007/09/13 20:33:07 christianfoltin Exp $*/
+
+package freemind.modes;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
+import freemind.common.TextTranslator;
+import freemind.common.XmlBindingTools;
+import freemind.controller.actions.generated.instance.Pattern;
+import freemind.controller.actions.generated.instance.PatternChild;
+import freemind.controller.actions.generated.instance.PatternEdgeColor;
+import freemind.controller.actions.generated.instance.PatternEdgeStyle;
+import freemind.controller.actions.generated.instance.PatternEdgeWidth;
+import freemind.controller.actions.generated.instance.PatternIcon;
+import freemind.controller.actions.generated.instance.PatternNodeBackgroundColor;
+import freemind.controller.actions.generated.instance.PatternNodeColor;
+import freemind.controller.actions.generated.instance.PatternNodeFontBold;
+import freemind.controller.actions.generated.instance.PatternNodeFontItalic;
+import freemind.controller.actions.generated.instance.PatternNodeFontName;
+import freemind.controller.actions.generated.instance.PatternNodeFontSize;
+import freemind.controller.actions.generated.instance.PatternNodeStyle;
+import freemind.controller.actions.generated.instance.PatternPropertyBase;
+import freemind.controller.actions.generated.instance.Patterns;
+import freemind.main.Resources;
+import freemind.main.Tools;
+
+/**
+ * This class constructs patterns from files or from nodes and saves them back.
+ */
+<span class="nc" id="L55">public class StylePatternFactory {</span>
+	public static final String FALSE_VALUE = &quot;false&quot;;
+
+	public static final String TRUE_VALUE = &quot;true&quot;;
+
+	public static List loadPatterns(File file) throws Exception {
+<span class="nc" id="L61">		return loadPatterns(new BufferedReader(new FileReader(file)));</span>
+	}
+
+	/**
+	 * @return a List of Pattern elements.
+	 * @throws Exception
+	 */
+	public static List loadPatterns(Reader reader) throws Exception {
+<span class="nc" id="L69">		Patterns patterns = (Patterns) XmlBindingTools.getInstance()</span>
+<span class="nc" id="L70">				.unMarshall(reader);</span>
+		// translate standard strings:
+<span class="nc" id="L72">		for (Iterator iterator = patterns.getListChoiceList().iterator(); iterator</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L74">			Pattern pattern = (Pattern) iterator.next();</span>
+<span class="nc" id="L75">			String originalName = pattern.getName();</span>
+<span class="nc" id="L76">			String name = originalName;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			if (name == null) {</span>
+<span class="nc" id="L78">				continue;</span>
+			}
+			// make private:
+<span class="nc" id="L81">			name = &quot;__pattern_string_&quot; + name.replace(&quot; &quot;, &quot;_&quot;);</span>
+<span class="nc" id="L82">			String translatedName = Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L83">					name);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			if (!Tools.safeEquals(translatedName, name)) {</span>
+				// there is a translation:
+<span class="nc" id="L86">				pattern.setName(translatedName);</span>
+				// store original name to be able to translate back
+<span class="nc" id="L88">				pattern.setOriginalName(originalName);</span>
+				// look, whether or not the string occurs in other situations:
+<span class="nc" id="L90">				for (Iterator it = patterns.getListChoiceList().iterator(); it</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">						.hasNext();) {</span>
+<span class="nc" id="L92">					Pattern otherPattern = (Pattern) it.next();</span>
+<span class="nc" id="L93">					PatternChild child = otherPattern.getPatternChild();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">					if (child != null) {</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">						if (Tools.safeEquals(originalName, child.getValue())) {</span>
+<span class="nc" id="L96">							child.setValue(translatedName);</span>
+						}
+					}
+				}
+			}
+		}
+<span class="nc" id="L102">		return patterns.getListChoiceList();</span>
+	}
+
+	/**
+	 * the result is written to, and it is closed afterwards List of Pattern
+	 * elements.
+	 * 
+	 * @throws Exception
+	 */
+	public static void savePatterns(Writer writer, List listOfPatterns)
+			throws Exception {
+<span class="nc" id="L113">		Patterns patterns = new Patterns();</span>
+<span class="nc" id="L114">		HashMap nameToPattern = new HashMap();</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		for (Iterator iter = listOfPatterns.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L116">			Pattern pattern = (Pattern) iter.next();</span>
+<span class="nc" id="L117">			patterns.addChoice(pattern);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (pattern.getOriginalName() != null) {</span>
+<span class="nc" id="L119">				nameToPattern.put(pattern.getName(), pattern);</span>
+<span class="nc" id="L120">				pattern.setName(pattern.getOriginalName());</span>
+<span class="nc" id="L121">				pattern.setOriginalName(null);</span>
+			}
+		}
+<span class="nc" id="L124">		for (Iterator it = patterns.getListChoiceList().iterator(); it</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L126">			Pattern pattern = (Pattern) it.next();</span>
+<span class="nc" id="L127">			PatternChild patternChild = pattern.getPatternChild();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">			if (patternChild != null</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">					&amp;&amp; nameToPattern.containsKey(patternChild.getValue())) {</span>
+<span class="nc" id="L130">				Pattern childPattern = (Pattern) nameToPattern.get(patternChild</span>
+<span class="nc" id="L131">						.getValue());</span>
+<span class="nc" id="L132">				patternChild.setValue(childPattern.getName());</span>
+			}
+		}
+<span class="nc" id="L135">		String marshalledResult = XmlBindingTools.getInstance().marshall(</span>
+<span class="nc" id="L136">				patterns);</span>
+<span class="nc" id="L137">		writer.write(marshalledResult);</span>
+<span class="nc" id="L138">		writer.close();</span>
+<span class="nc" id="L139">	}</span>
+
+	public static Pattern createPatternFromNode(MindMapNode node) {
+<span class="nc" id="L142">		Pattern pattern = new Pattern();</span>
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (node.getColor() != null) {</span>
+<span class="nc" id="L145">			PatternNodeColor subPattern = new PatternNodeColor();</span>
+<span class="nc" id="L146">			subPattern.setValue(Tools.colorToXml(node.getColor()));</span>
+<span class="nc" id="L147">			pattern.setPatternNodeColor(subPattern);</span>
+		}
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (node.getBackgroundColor() != null) {</span>
+<span class="nc" id="L150">			PatternNodeBackgroundColor subPattern = new PatternNodeBackgroundColor();</span>
+<span class="nc" id="L151">			subPattern.setValue(Tools.colorToXml(node.getBackgroundColor()));</span>
+<span class="nc" id="L152">			pattern.setPatternNodeBackgroundColor(subPattern);</span>
+		}
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (node.getStyle() != null) {</span>
+<span class="nc" id="L155">			PatternNodeStyle subPattern = new PatternNodeStyle();</span>
+<span class="nc" id="L156">			subPattern.setValue(node.getStyle());</span>
+<span class="nc" id="L157">			pattern.setPatternNodeStyle(subPattern);</span>
+		}
+
+<span class="nc" id="L160">		PatternNodeFontBold nodeFontBold = new PatternNodeFontBold();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		nodeFontBold.setValue(node.isBold() ? TRUE_VALUE : FALSE_VALUE);</span>
+<span class="nc" id="L162">		pattern.setPatternNodeFontBold(nodeFontBold);</span>
+<span class="nc" id="L163">		PatternNodeFontItalic nodeFontItalic = new PatternNodeFontItalic();</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		nodeFontItalic.setValue(node.isItalic() ? TRUE_VALUE : FALSE_VALUE);</span>
+<span class="nc" id="L165">		pattern.setPatternNodeFontItalic(nodeFontItalic);</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (node.getFontSize() != null) {</span>
+<span class="nc" id="L167">			PatternNodeFontSize nodeFontSize = new PatternNodeFontSize();</span>
+<span class="nc" id="L168">			nodeFontSize.setValue(node.getFontSize());</span>
+<span class="nc" id="L169">			pattern.setPatternNodeFontSize(nodeFontSize);</span>
+		}
+<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (node.getFontFamilyName() != null) {</span>
+<span class="nc" id="L172">			PatternNodeFontName subPattern = new PatternNodeFontName();</span>
+<span class="nc" id="L173">			subPattern.setValue(node.getFontFamilyName());</span>
+<span class="nc" id="L174">			pattern.setPatternNodeFontName(subPattern);</span>
+		}
+
+<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (node.getIcons().size() == 1) {</span>
+<span class="nc" id="L178">			PatternIcon iconPattern = new PatternIcon();</span>
+<span class="nc" id="L179">			iconPattern.setValue(((MindIcon) node.getIcons().get(0)).getName());</span>
+<span class="nc" id="L180">			pattern.setPatternIcon(iconPattern);</span>
+		}
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (node.getEdge().getColor() != null) {</span>
+<span class="nc" id="L183">			PatternEdgeColor subPattern = new PatternEdgeColor();</span>
+<span class="nc" id="L184">			subPattern.setValue(Tools.colorToXml(node.getEdge().getColor()));</span>
+<span class="nc" id="L185">			pattern.setPatternEdgeColor(subPattern);</span>
+		}
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (node.getEdge().getStyle() != null) {</span>
+<span class="nc" id="L188">			PatternEdgeStyle subPattern = new PatternEdgeStyle();</span>
+<span class="nc" id="L189">			subPattern.setValue(node.getEdge().getStyle());</span>
+<span class="nc" id="L190">			pattern.setPatternEdgeStyle(subPattern);</span>
+		}
+<span class="nc bnc" id="L192" title="All 2 branches missed.">		if (node.getEdge().getWidth() != EdgeAdapter.DEFAULT_WIDTH) {</span>
+<span class="nc" id="L193">			PatternEdgeWidth subPattern = new PatternEdgeWidth();</span>
+<span class="nc" id="L194">			subPattern.setValue(&quot;&quot; + node.getEdge().getWidth());</span>
+<span class="nc" id="L195">			pattern.setPatternEdgeWidth(subPattern);</span>
+		}
+
+<span class="nc" id="L198">		return pattern;</span>
+	}
+
+	public static String toString(Pattern pPattern, TextTranslator translator) {
+<span class="nc" id="L202">		String result = &quot;&quot;;</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">		if (pPattern.getPatternNodeColor() != null) {</span>
+<span class="nc" id="L204">			result = addSeparatorIfNecessary(result);</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			if (pPattern.getPatternNodeColor().getValue() == null) {</span>
+<span class="nc" id="L206">				result += &quot;-&quot; + translator.getText(&quot;PatternToString.color&quot;);</span>
+<span class="nc" id="L207">			} else {</span>
+<span class="nc" id="L208">				result += &quot;+&quot; + translator.getText(&quot;PatternToString.color&quot;);</span>
+			}
+		}
+<span class="nc bnc" id="L211" title="All 2 branches missed.">		if (pPattern.getPatternNodeBackgroundColor() != null) {</span>
+<span class="nc" id="L212">			result = addSeparatorIfNecessary(result);</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">			if (pPattern.getPatternNodeBackgroundColor().getValue() == null) {</span>
+<span class="nc" id="L214">				result += &quot;-&quot;</span>
+<span class="nc" id="L215">						+ translator.getText(&quot;PatternToString.backgroundColor&quot;);</span>
+<span class="nc" id="L216">			} else {</span>
+<span class="nc" id="L217">				result += &quot;+&quot;</span>
+<span class="nc" id="L218">						+ translator.getText(&quot;PatternToString.backgroundColor&quot;);</span>
+			}
+		}
+<span class="nc" id="L221">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L222">				pPattern.getPatternNodeFontSize(),</span>
+<span class="nc" id="L223">				&quot;PatternToString.NodeFontSize&quot;);</span>
+<span class="nc" id="L224">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L225">				pPattern.getPatternNodeFontName(), &quot;PatternToString.FontName&quot;);</span>
+<span class="nc" id="L226">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L227">				pPattern.getPatternNodeFontBold(), &quot;PatternToString.FontBold&quot;);</span>
+<span class="nc" id="L228">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L229">				pPattern.getPatternNodeFontItalic(),</span>
+<span class="nc" id="L230">				&quot;PatternToString.FontItalic&quot;);</span>
+<span class="nc" id="L231">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L232">				pPattern.getPatternEdgeStyle(), &quot;PatternToString.EdgeStyle&quot;);</span>
+<span class="nc" id="L233">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L234">				pPattern.getPatternEdgeColor(), &quot;PatternToString.EdgeColor&quot;);</span>
+<span class="nc" id="L235">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L236">				pPattern.getPatternEdgeWidth(), &quot;PatternToString.EdgeWidth&quot;);</span>
+<span class="nc" id="L237">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L238">				pPattern.getPatternIcon(), &quot;PatternToString.Icon&quot;);</span>
+<span class="nc" id="L239">		result = addSubPatternToString(translator, result,</span>
+<span class="nc" id="L240">				pPattern.getPatternChild(), &quot;PatternToString.Child&quot;);</span>
+<span class="nc" id="L241">		return result;</span>
+	}
+
+	private static String addSubPatternToString(TextTranslator translator,
+			String result, PatternPropertyBase patternType, String patternString) {
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (patternType != null) {</span>
+<span class="nc" id="L247">			result = addSeparatorIfNecessary(result);</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">			if (patternType.getValue() == null) {</span>
+<span class="nc" id="L249">				result += &quot;-&quot; + translator.getText(patternString);</span>
+<span class="nc" id="L250">			} else {</span>
+<span class="nc" id="L251">				result += &quot;+&quot; + translator.getText(patternString) + &quot; &quot;</span>
+<span class="nc" id="L252">						+ patternType.getValue();</span>
+			}
+		}
+<span class="nc" id="L255">		return result;</span>
+	}
+
+	private static String addSeparatorIfNecessary(String result) {
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		if (result.length() &gt; 0) {</span>
+<span class="nc" id="L260">			result += &quot;, &quot;;</span>
+		}
+<span class="nc" id="L262">		return result;</span>
+	}
+
+	private static final String PATTERN_DUMMY = &quot;&lt;pattern name='dummy'/&gt;&quot;;
+
+	public static Pattern getPatternFromString(String pattern) {
+<span class="nc" id="L268">		String patternString = pattern;</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		if (patternString == null) {</span>
+<span class="nc" id="L270">			patternString = PATTERN_DUMMY;</span>
+		}
+<span class="nc" id="L272">		Pattern pat = (Pattern) XmlBindingTools.getInstance().unMarshall(</span>
+<span class="nc" id="L273">				patternString);</span>
+<span class="nc" id="L274">		return pat;</span>
+	}
+
+	private static final String PATTERNS_DUMMY = &quot;&lt;patterns/&gt;&quot;;
+
+	public static Patterns getPatternsFromString(String patterns) {
+<span class="nc" id="L280">		String patternsString = patterns;</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		if (patternsString == null) {</span>
+<span class="nc" id="L282">			patternsString = PATTERNS_DUMMY;</span>
+		}
+<span class="nc" id="L284">		Patterns pat = (Patterns) XmlBindingTools.getInstance().unMarshall(</span>
+<span class="nc" id="L285">				patternsString);</span>
+<span class="nc" id="L286">		return pat;</span>
+	}
+
+	/**
+	 * Build the intersection of two patterns. Only, if the property is the
+	 * same, or both properties are to be removed, it is kept, otherwise it is
+	 * set to 'don't touch'.
+	 */
+	public static Pattern intersectPattern(Pattern p1, Pattern p2) {
+<span class="nc" id="L295">		Pattern result = new Pattern();</span>
+<span class="nc" id="L296">		result.setPatternEdgeColor((PatternEdgeColor) processPatternProperties(</span>
+<span class="nc" id="L297">				p1.getPatternEdgeColor(), p2.getPatternEdgeColor(),</span>
+<span class="nc" id="L298">				new PatternEdgeColor()));</span>
+<span class="nc" id="L299">		result.setPatternEdgeStyle((PatternEdgeStyle) processPatternProperties(</span>
+<span class="nc" id="L300">				p1.getPatternEdgeStyle(), p2.getPatternEdgeStyle(),</span>
+<span class="nc" id="L301">				new PatternEdgeStyle()));</span>
+<span class="nc" id="L302">		result.setPatternEdgeWidth((PatternEdgeWidth) processPatternProperties(</span>
+<span class="nc" id="L303">				p1.getPatternEdgeWidth(), p2.getPatternEdgeWidth(),</span>
+<span class="nc" id="L304">				new PatternEdgeWidth()));</span>
+<span class="nc" id="L305">		result.setPatternIcon((PatternIcon) processPatternProperties(</span>
+<span class="nc" id="L306">				p1.getPatternIcon(), p2.getPatternIcon(), new PatternIcon()));</span>
+<span class="nc" id="L307">		result.setPatternNodeBackgroundColor((PatternNodeBackgroundColor) processPatternProperties(</span>
+<span class="nc" id="L308">				p1.getPatternNodeBackgroundColor(),</span>
+<span class="nc" id="L309">				p2.getPatternNodeBackgroundColor(),</span>
+<span class="nc" id="L310">				new PatternNodeBackgroundColor()));</span>
+<span class="nc" id="L311">		result.setPatternNodeColor((PatternNodeColor) processPatternProperties(</span>
+<span class="nc" id="L312">				p1.getPatternNodeColor(), p2.getPatternNodeColor(),</span>
+<span class="nc" id="L313">				new PatternNodeColor()));</span>
+<span class="nc" id="L314">		result.setPatternNodeFontBold((PatternNodeFontBold) processPatternProperties(</span>
+<span class="nc" id="L315">				p1.getPatternNodeFontBold(), p2.getPatternNodeFontBold(),</span>
+<span class="nc" id="L316">				new PatternNodeFontBold()));</span>
+<span class="nc" id="L317">		result.setPatternNodeFontItalic((PatternNodeFontItalic) processPatternProperties(</span>
+<span class="nc" id="L318">				p1.getPatternNodeFontItalic(), p2.getPatternNodeFontItalic(),</span>
+<span class="nc" id="L319">				new PatternNodeFontItalic()));</span>
+<span class="nc" id="L320">		result.setPatternNodeFontName((PatternNodeFontName) processPatternProperties(</span>
+<span class="nc" id="L321">				p1.getPatternNodeFontName(), p2.getPatternNodeFontName(),</span>
+<span class="nc" id="L322">				new PatternNodeFontName()));</span>
+<span class="nc" id="L323">		result.setPatternNodeFontSize((PatternNodeFontSize) processPatternProperties(</span>
+<span class="nc" id="L324">				p1.getPatternNodeFontSize(), p2.getPatternNodeFontSize(),</span>
+<span class="nc" id="L325">				new PatternNodeFontSize()));</span>
+<span class="nc" id="L326">		result.setPatternNodeStyle((PatternNodeStyle) processPatternProperties(</span>
+<span class="nc" id="L327">				p1.getPatternNodeStyle(), p2.getPatternNodeStyle(),</span>
+<span class="nc" id="L328">				new PatternNodeStyle()));</span>
+<span class="nc" id="L329">		return result;</span>
+	}
+
+	private static PatternPropertyBase processPatternProperties(
+			PatternPropertyBase prop1, PatternPropertyBase prop2,
+			PatternPropertyBase destination) {
+<span class="nc bnc" id="L335" title="All 4 branches missed.">		if (prop1 == null || prop2 == null) {</span>
+<span class="nc" id="L336">			return null;</span>
+		}
+		// both delete the value or both have the same value:
+<span class="nc bnc" id="L339" title="All 2 branches missed.">		if (Tools.safeEquals(prop1.getValue(), prop2.getValue())) {</span>
+<span class="nc" id="L340">			destination.setValue(prop1.getValue());</span>
+<span class="nc" id="L341">			return destination;</span>
+		}
+<span class="nc" id="L343">		return null;</span>
+	}
+
+	public static Pattern createPatternFromSelected(MindMapNode focussed,
+			List selected) {
+<span class="nc" id="L348">		Pattern nodePattern = createPatternFromNode(focussed);</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">		for (Iterator iter = selected.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L350">			MindMapNode node = (MindMapNode) iter.next();</span>
+<span class="nc" id="L351">			Pattern tempNodePattern = createPatternFromNode(node);</span>
+<span class="nc" id="L352">			nodePattern = intersectPattern(nodePattern, tempNodePattern);</span>
+		}
+<span class="nc" id="L354">		return nodePattern;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

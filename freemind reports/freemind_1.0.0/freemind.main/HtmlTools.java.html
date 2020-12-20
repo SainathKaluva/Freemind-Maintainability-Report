@@ -1,0 +1,740 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>HtmlTools.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">HtmlTools.java</span></div><h1>HtmlTools.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2006  Christian Foltin &lt;christianfoltin@users.sourceforge.net&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: HtmlTools.java,v 1.1.2.28 2010/12/04 21:07:23 christianfoltin Exp $*/
+
+package freemind.main;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.swing.text.BadLocationException;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.helpers.DefaultHandler;
+
+/** */
+public class HtmlTools {
+
+	public static final String NBSP = &quot;\u00A0&quot;;
+
+	private static Logger logger;
+
+<span class="fc" id="L48">	private static HtmlTools sInstance = new HtmlTools();</span>
+
+<span class="fc" id="L50">	private static final Pattern HTML_PATTERN = Pattern</span>
+<span class="fc" id="L51">			.compile(&quot;(?s)^\\s*&lt;\\s*html.*?&gt;.*&quot;);</span>
+<span class="fc" id="L52">	private static final Pattern FIND_TAGS_PATTERN = Pattern</span>
+<span class="fc" id="L53">			.compile(&quot;([^&lt;]*)(&lt;[^&gt;]+&gt;)&quot;);</span>
+<span class="fc" id="L54">	private static final Pattern SLASHED_TAGS_PATTERN = Pattern.compile(&quot;&lt;((&quot;</span>
+			+ &quot;br|area|base|basefont|&quot; + &quot;bgsound|button|col|colgroup|embed|hr&quot;
+			+ &quot;|img|input|isindex|keygen|link|meta&quot;
+			+ &quot;|object|plaintext|spacer|wbr&quot; + &quot;)(\\s[^&gt;]*)?)/&gt;&quot;);
+
+<span class="fc" id="L59">	private static final Pattern TAGS_PATTERN = Pattern.compile(&quot;(?s)&lt;[^&gt;&lt;]*&gt;&quot;);</span>
+
+<span class="fc" id="L61">	public static final String SP = &quot;&amp;#160;&quot;;</span>
+
+	/**
+     * 
+     */
+	private HtmlTools() {
+<span class="fc" id="L67">		super();</span>
+<span class="fc" id="L68">		logger = Resources.getInstance().getLogger(HtmlTools.class.getName());</span>
+<span class="fc" id="L69">	}</span>
+
+	public static HtmlTools getInstance() {
+<span class="fc" id="L72">		return sInstance;</span>
+	}
+
+	public String toXhtml(String htmlText) {
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">		if (!isHtmlNode(htmlText)) {</span>
+<span class="nc" id="L77">			return null;</span>
+		}
+<span class="fc" id="L79">		logger.fine(&quot;Enter toXhtml with &quot; + htmlText);</span>
+<span class="fc" id="L80">		StringReader reader = new StringReader(htmlText);</span>
+<span class="fc" id="L81">		StringWriter writer = new StringWriter();</span>
+		try {
+<span class="fc" id="L83">			XHTMLWriter.html2xhtml(reader, writer);</span>
+<span class="fc" id="L84">			String resultXml = writer.toString();</span>
+			// for safety:
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">			if (isWellformedXml(resultXml)) {</span>
+<span class="fc" id="L87">				logger.fine(&quot;Leave toXhtml with &quot; + resultXml);</span>
+<span class="fc" id="L88">				return resultXml;</span>
+			}
+<span class="nc" id="L90">		} catch (IOException e) {</span>
+<span class="nc" id="L91">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L92">		} catch (BadLocationException e) {</span>
+<span class="nc" id="L93">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+		// fallback:
+<span class="nc" id="L96">		String fallbackText = toXMLEscapedText(htmlText);</span>
+<span class="nc" id="L97">		logger.fine(&quot;Leave toXhtml with fallback &quot; + fallbackText);</span>
+<span class="nc" id="L98">		return fallbackText;</span>
+	}
+
+	public String toHtml(String xhtmlText) {
+		// Remove '/' from &lt;.../&gt; of elements that do not have '/' there in HTML
+<span class="fc" id="L103">		return SLASHED_TAGS_PATTERN.matcher(xhtmlText).replaceAll(&quot;&lt;$1&gt;&quot;);</span>
+	}
+
+	public static class IndexPair {
+		public int originalStart;
+		public int originalEnd;
+		public int replacedStart;
+		public int replacedEnd;
+		public boolean mIsTag;
+<span class="fc" id="L112">		public boolean mIsAlreadyAppended = false;</span>
+
+		/**
+		 * @param pIsTag
+		 *            TODO
+		 */
+		public IndexPair(int pOriginalStart, int pOriginalEnd,
+				int pReplacedStart, int pReplacedEnd, boolean pIsTag) {
+<span class="fc" id="L120">			super();</span>
+
+<span class="fc" id="L122">			originalStart = pOriginalStart;</span>
+<span class="fc" id="L123">			originalEnd = pOriginalEnd;</span>
+<span class="fc" id="L124">			replacedStart = pReplacedStart;</span>
+<span class="fc" id="L125">			replacedEnd = pReplacedEnd;</span>
+<span class="fc" id="L126">			mIsTag = pIsTag;</span>
+<span class="fc" id="L127">		}</span>
+
+		/**
+		 * generated by CodeSugar http://sourceforge.net/projects/codesugar
+		 */
+
+		public String toString() {
+<span class="nc" id="L134">			StringBuffer buffer = new StringBuffer();</span>
+<span class="nc" id="L135">			buffer.append(&quot;[IndexPair:&quot;);</span>
+<span class="nc" id="L136">			buffer.append(&quot; originalStart: &quot;);</span>
+<span class="nc" id="L137">			buffer.append(originalStart);</span>
+<span class="nc" id="L138">			buffer.append(&quot; originalEnd: &quot;);</span>
+<span class="nc" id="L139">			buffer.append(originalEnd);</span>
+<span class="nc" id="L140">			buffer.append(&quot; replacedStart: &quot;);</span>
+<span class="nc" id="L141">			buffer.append(replacedStart);</span>
+<span class="nc" id="L142">			buffer.append(&quot; replacedEnd: &quot;);</span>
+<span class="nc" id="L143">			buffer.append(replacedEnd);</span>
+<span class="nc" id="L144">			buffer.append(&quot; is a tag: &quot;);</span>
+<span class="nc" id="L145">			buffer.append(mIsTag);</span>
+<span class="nc" id="L146">			buffer.append(&quot;]&quot;);</span>
+<span class="nc" id="L147">			return buffer.toString();</span>
+		}
+	}
+
+	/**
+	 * Replaces text in node content without replacing tags. fc, 19.12.06: This
+	 * method is very difficult. If you have a simplier method, please supply
+	 * it. But look that it complies with FindTextTests!!!
+	 */
+	public String getReplaceResult(Pattern pattern, String replacement,
+			String text) {
+<span class="fc" id="L158">		ArrayList splittedStringList = new ArrayList();</span>
+<span class="fc" id="L159">		String stringWithoutTags = null;</span>
+		// remove tags and denote their positions:
+		{
+<span class="fc" id="L162">			StringBuffer sb = new StringBuffer();</span>
+<span class="fc" id="L163">			Matcher matcher = FIND_TAGS_PATTERN.matcher(text);</span>
+<span class="fc" id="L164">			int lastMatchEnd = 0;</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">			while (matcher.find()) {</span>
+<span class="fc" id="L166">				String textWithoutTag = matcher.group(1);</span>
+				// Append text without tags:
+<span class="fc" id="L168">				int replStart = sb.length();</span>
+<span class="fc" id="L169">				matcher.appendReplacement(sb, &quot;$1&quot;);</span>
+				IndexPair indexPair;
+<span class="fc bfc" id="L171" title="All 2 branches covered.">				if (textWithoutTag.length() &gt; 0) {</span>
+<span class="fc" id="L172">					indexPair = new IndexPair(lastMatchEnd, matcher.end(1),</span>
+<span class="fc" id="L173">							replStart, sb.length(), false);</span>
+<span class="fc" id="L174">					lastMatchEnd = matcher.end(1);</span>
+					// System.out.println(sb.toString()
+					// + &quot;, &quot;
+					// + input.substring(indexPair.originalStart,
+					// indexPair.originalEnd) + &quot;, &quot; + indexPair);
+<span class="fc" id="L179">					splittedStringList.add(indexPair);</span>
+				}
+				// String tag = matcher.group(2);
+<span class="fc" id="L182">				replStart = sb.length();</span>
+<span class="fc" id="L183">				indexPair = new IndexPair(lastMatchEnd, matcher.end(2),</span>
+<span class="fc" id="L184">						replStart, sb.length(), true);</span>
+<span class="fc" id="L185">				lastMatchEnd = matcher.end(2);</span>
+				// System.out.println(sb.toString() + &quot;, &quot; +
+				// input.substring(indexPair.originalStart,
+				// indexPair.originalEnd)+ &quot;, &quot; + indexPair);
+<span class="fc" id="L189">				splittedStringList.add(indexPair);</span>
+			}
+<span class="fc" id="L191">			int replStart = sb.length();</span>
+<span class="fc" id="L192">			matcher.appendTail(sb);</span>
+			// append tail only if there is a tail
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">			if (sb.length() != replStart) {</span>
+<span class="nc" id="L195">				IndexPair indexPair = new IndexPair(lastMatchEnd,</span>
+<span class="nc" id="L196">						text.length(), replStart, sb.length(), false);</span>
+				// System.out.println(sb.toString() + &quot;, &quot; + indexPair);
+<span class="nc" id="L198">				splittedStringList.add(indexPair);</span>
+			}
+			// System.out.println(sb.toString());
+<span class="fc" id="L201">			stringWithoutTags = sb.toString();</span>
+		}
+
+		// // give it out:
+		// for (Iterator iter = splittedStringList.iterator(); iter.hasNext();)
+		// {
+		// IndexPair pair = (IndexPair) iter.next();
+		// System.out.println(text.substring(pair.originalStart,
+		// pair.originalEnd) + &quot;, &quot; + pair);
+		// }
+
+		/**
+		 * For each pair which is not a tag we find concurrences and replace
+		 * them, if pair is a tag then we just append
+		 */
+<span class="fc" id="L216">		StringBuffer sbResult = new StringBuffer();</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">		for (Iterator iter = splittedStringList.iterator(); iter.hasNext();) {</span>
+<span class="fc" id="L218">			IndexPair pair = (IndexPair) iter.next();</span>
+
+<span class="fc bfc" id="L220" title="All 2 branches covered.">			if (pair.mIsTag)</span>
+<span class="fc" id="L221">				append(sbResult, text, pair.originalStart, pair.originalEnd);</span>
+			else {
+
+<span class="fc" id="L224">				Matcher matcher = pattern.matcher(text.substring(</span>
+<span class="fc" id="L225">						pair.originalStart, pair.originalEnd));</span>
+<span class="fc" id="L226">				int mStart = 0;</span>
+<span class="fc" id="L227">				int mEnd = 0;</span>
+<span class="fc" id="L228">				int mEndOld = 0;</span>
+<span class="fc" id="L229">				int mStartOld = 0;</span>
+
+<span class="fc bfc" id="L231" title="All 2 branches covered.">				while (matcher.find()) {</span>
+<span class="fc" id="L232">					mStart = matcher.start();</span>
+<span class="fc" id="L233">					mEnd = matcher.end();</span>
+
+<span class="fc" id="L235">					append(sbResult, text, pair.originalStart + mEndOld,</span>
+<span class="fc" id="L236">							pair.originalStart + mStart);</span>
+					/**
+					 * If it's a first iteration then we append text between
+					 * start and first concurrence, and when it's not first
+					 * iteration (mEndOld != 0) we append text between two
+					 * concurrences
+					 */
+
+					// sbResult.append(text, pair.originalStart + mStart,
+					// pair.originalStart + mEnd);
+					// original text
+<span class="fc" id="L247">					sbResult.append(replacement);</span>
+<span class="fc" id="L248">					mEndOld = mEnd;</span>
+<span class="fc" id="L249">					mStartOld = mStart;</span>
+				}
+<span class="fc" id="L251">				append(sbResult, text, pair.originalStart + mEndOld,</span>
+<span class="fc" id="L252">						pair.originalEnd);</span>
+				// append tail
+			}
+		}
+		// System.out.println(&quot;Result:'&quot;+sbResult.toString()+&quot;'&quot;);
+<span class="fc" id="L257">		return sbResult.toString();</span>
+	}
+
+	/**
+	 * Need to program this, as the stringbuffer method appears in java 1.5
+	 * first.
+	 * */
+	private void append(StringBuffer pSbResult, String pText, int pStart,
+			int pEnd) {
+<span class="fc" id="L266">		pSbResult.append(pText.substring(pStart, pEnd));</span>
+<span class="fc" id="L267">	}</span>
+
+	public int getMinimalOriginalPosition(int pI, ArrayList pListOfIndices) {
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">		for (Iterator iter = pListOfIndices.iterator(); iter.hasNext();) {</span>
+<span class="fc" id="L271">			IndexPair pair = (IndexPair) iter.next();</span>
+<span class="pc bpc" id="L272" title="1 of 4 branches missed.">			if (pI &gt;= pair.replacedStart &amp;&amp; pI &lt;= pair.replacedEnd) {</span>
+<span class="fc" id="L273">				return pair.originalStart + pI - pair.replacedStart;</span>
+			}
+		}
+<span class="nc" id="L276">		throw new IllegalArgumentException(&quot;Position &quot; + pI + &quot; not found.&quot;);</span>
+	}
+
+	/**
+	 * @return the maximal index i such that pI is mapped to i by removing all
+	 *         tags from the original input.
+	 */
+	public int getMaximalOriginalPosition(int pI, ArrayList pListOfIndices) {
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">		for (int i = pListOfIndices.size() - 1; i &gt;= 0; --i) {</span>
+<span class="fc" id="L285">			IndexPair pair = (IndexPair) pListOfIndices.get(i);</span>
+<span class="fc bfc" id="L286" title="All 2 branches covered.">			if (pI &gt;= pair.replacedStart) {</span>
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">				if (!pair.mIsTag) {</span>
+<span class="fc" id="L288">					return pair.originalStart + pI - pair.replacedStart;</span>
+				} else {
+<span class="nc" id="L290">					return pair.originalEnd;</span>
+				}
+			}
+		}
+<span class="nc" id="L294">		throw new IllegalArgumentException(&quot;Position &quot; + pI + &quot; not found.&quot;);</span>
+	}
+
+	/**
+     */
+	public static boolean isHtmlNode(String text) {
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">		for (int i = 0; i &lt; text.length(); i++) {</span>
+<span class="fc" id="L301">			final char ch = text.charAt(i);</span>
+<span class="fc bfc" id="L302" title="All 2 branches covered.">			if (ch == '&lt;') {</span>
+<span class="fc" id="L303">				break;</span>
+			}
+<span class="pc bpc" id="L305" title="3 of 4 branches missed.">			if (!Character.isWhitespace(ch) || i == text.length()) {</span>
+<span class="fc" id="L306">				return false;</span>
+			}
+		}
+<span class="fc" id="L309">		return HTML_PATTERN.matcher(text.toLowerCase(Locale.ENGLISH)).matches();</span>
+	}
+
+	/**
+	 * Changes all unicode characters into &amp;#xxx values.
+	 * Opposite to {@link HtmlTools#unescapeHTMLUnicodeEntity(String)}
+	 */
+	public static String unicodeToHTMLUnicodeEntity(String text, boolean pPreserveNewlines) {
+		/*
+		 * Heuristic reserve for expansion : factor 1.2
+		 */
+<span class="fc" id="L320">		StringBuffer result = new StringBuffer((int) (text.length() * 1.2));</span>
+		int intValue;
+		char myChar;
+<span class="fc bfc" id="L323" title="All 2 branches covered.">		for (int i = 0; i &lt; text.length(); ++i) {</span>
+<span class="fc" id="L324">			myChar = text.charAt(i);</span>
+<span class="fc" id="L325">			intValue = (int) text.charAt(i);</span>
+<span class="pc bpc" id="L326" title="1 of 4 branches missed.">			boolean outOfRange = intValue &lt; 32  || intValue &gt; 126;</span>
+<span class="pc bpc" id="L327" title="3 of 4 branches missed.">			if(pPreserveNewlines &amp;&amp; myChar == '\n') {</span>
+<span class="nc" id="L328">				outOfRange = false;</span>
+			}
+<span class="pc bpc" id="L330" title="3 of 4 branches missed.">			if(pPreserveNewlines &amp;&amp; myChar == '\r') {</span>
+<span class="nc" id="L331">				outOfRange = false;</span>
+			}
+<span class="fc bfc" id="L333" title="All 2 branches covered.">			if (outOfRange) {</span>
+<span class="fc" id="L334">				result.append(&quot;&amp;#x&quot;).append(Integer.toString(intValue, 16))</span>
+<span class="fc" id="L335">						.append(';');</span>
+<span class="fc" id="L336">			} else {</span>
+<span class="fc" id="L337">				result.append(myChar);</span>
+			}
+		}
+<span class="fc" id="L340">		return result.toString();</span>
+	}
+
+	/**
+	 * Converts XML unicode entity-encoded characters into plain Java unicode
+	 * characters; for example, ''&amp;amp;#xff;'' gets converted. Removes all
+	 * XML-invalid entity characters, such as &amp;amp;#xb;.
+	 * 
+	 * Opposite to {@link HtmlTools#unicodeToHTMLUnicodeEntity(String, boolean)}
+	 * 
+	 * @param text
+	 *            input
+	 * @return the converted output.
+	 */
+	public static String unescapeHTMLUnicodeEntity(String text) {
+<span class="fc" id="L355">		StringBuffer result = new StringBuffer(text.length());</span>
+<span class="fc" id="L356">		StringBuffer entity = new StringBuffer();</span>
+<span class="fc" id="L357">		boolean readingEntity = false;</span>
+		char myChar;
+		char entityChar;
+<span class="fc bfc" id="L360" title="All 2 branches covered.">		for (int i = 0; i &lt; text.length(); ++i) {</span>
+<span class="fc" id="L361">			myChar = text.charAt(i);</span>
+<span class="fc bfc" id="L362" title="All 2 branches covered.">			if (readingEntity) {</span>
+<span class="fc bfc" id="L363" title="All 2 branches covered.">				if (myChar == ';') {</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">					if (entity.charAt(0) == '#') {</span>
+						try {
+<span class="pc bpc" id="L366" title="1 of 2 branches missed.">							if (entity.charAt(1) == 'x') {</span>
+								// Hexadecimal
+<span class="fc" id="L368">								entityChar = (char) Integer.parseInt(</span>
+<span class="fc" id="L369">										entity.substring(2), 16);</span>
+<span class="fc" id="L370">							} else {</span>
+								// Decimal
+<span class="nc" id="L372">								entityChar = (char) Integer.parseInt(</span>
+<span class="nc" id="L373">										entity.substring(1), 10);</span>
+							}
+<span class="pc bpc" id="L375" title="1 of 2 branches missed.">							if (isXMLValidCharacter(entityChar))</span>
+<span class="fc" id="L376">								result.append(entityChar);</span>
+<span class="pc" id="L377">						} catch (NumberFormatException e) {</span>
+<span class="nc" id="L378">							result.append('&amp;').append(entity).append(';');</span>
+						}
+<span class="nc" id="L380">					} else {</span>
+<span class="fc" id="L381">						result.append('&amp;').append(entity).append(';');</span>
+					}
+<span class="fc" id="L383">					entity.setLength(0);</span>
+<span class="fc" id="L384">					readingEntity = false;</span>
+<span class="fc" id="L385">				} else {</span>
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">					if (isXMLValidCharacter(myChar))</span>
+<span class="fc" id="L387">						entity.append(myChar);</span>
+				}
+<span class="fc" id="L389">			} else {</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">				if (myChar == '&amp;') {</span>
+<span class="fc" id="L391">					readingEntity = true;</span>
+<span class="fc" id="L392">				} else {</span>
+<span class="pc bpc" id="L393" title="1 of 2 branches missed.">					if (isXMLValidCharacter(myChar))</span>
+<span class="fc" id="L394">						result.append(myChar);</span>
+				}
+			}
+		}
+<span class="pc bpc" id="L398" title="1 of 2 branches missed.">		if (entity.length() &gt; 0) {</span>
+<span class="nc" id="L399">			result.append('&amp;').append(entity).append(';');</span>
+		}
+<span class="fc" id="L401">		return result.toString();</span>
+	}
+
+	/**
+	 * Removes all tags (&lt;..&gt;) from a string if it starts with &quot;&lt;html&gt;...&quot; to
+	 * make it compareable.
+	 */
+	public static String removeHtmlTagsFromString(String text) {
+<span class="fc bfc" id="L409" title="All 2 branches covered.">		if (HtmlTools.isHtmlNode(text)) {</span>
+<span class="fc" id="L410">			return removeAllTagsFromString(text); // (?s) enables that . matches</span>
+													// newline.
+		} else {
+<span class="fc" id="L413">			return text;</span>
+		}
+	}
+
+	public static String removeAllTagsFromString(String text) {
+<span class="fc" id="L418">		return TAGS_PATTERN.matcher(text).replaceAll(&quot;&quot;);</span>
+	}
+
+	public static String htmlToPlain(String text) {
+<span class="fc" id="L422">		return htmlToPlain(text, /* strictHTMLOnly= */true);</span>
+	}
+
+	public static String htmlToPlain(String text, boolean strictHTMLOnly) {
+		// 0. remove all newlines
+		// 1. replace newlines, paragraphs, and table rows
+		// 2. remove XML tags
+		// 3. replace HTML entities including &amp;nbsp;
+		// 4. unescape unicode entities
+		// This is a very basic conversion, fixing the most annoying
+		// inconvenience. You can imagine much better conversion of
+		// HTML to plain text. Most of HTML tags can be handled
+		// sensibly, like web browsers do it.
+<span class="pc bpc" id="L435" title="2 of 4 branches missed.">		if (strictHTMLOnly &amp;&amp; !isHtmlNode(text)) {</span>
+<span class="nc" id="L436">			return text;</span>
+		}
+		// System.err.println(&quot;base:&quot;+text);
+<span class="fc" id="L439">		String intermediate = text</span>
+<span class="fc" id="L440">				.replaceAll(&quot;(?ims)[\n\t]&quot;, &quot;&quot;)</span>
+				. // Remove newlines
+<span class="fc" id="L442">				replaceAll(&quot;(?ims) +&quot;, &quot; &quot;)</span>
+				. // Condense spaces
+<span class="fc" id="L444">				replaceAll(&quot;(?ims)&lt;br.*?&gt;&quot;, &quot;\n&quot;)</span>
+<span class="fc" id="L445">				.replaceAll(&quot;(?ims)&lt;p.*?&gt;&quot;, &quot;\n\n&quot;)</span>
+				. // Paragraph
+<span class="fc" id="L447">				replaceAll(&quot;(?ims)&lt;div.*?&gt;&quot;, &quot;\n&quot;)</span>
+				. // Div - block
+<span class="fc" id="L449">				replaceAll(&quot;(?ims)&lt;tr.*?&gt;&quot;, &quot;\n&quot;)</span>
+<span class="fc" id="L450">				.replaceAll(&quot;(?ims)&lt;dt.*?&gt;&quot;, &quot;\n&quot;)</span>
+				. // Defined term
+<span class="fc" id="L452">				replaceAll(&quot;(?ims)&lt;dd.*?&gt;&quot;, &quot;\n   &quot;)</span>
+				. // Definition of defined term
+<span class="fc" id="L454">				replaceAll(&quot;(?ims)&lt;td.*?&gt;&quot;, &quot; &quot;)</span>
+<span class="fc" id="L455">				.replaceAll(&quot;(?ims)&lt;[uo]l.*?&gt;&quot;, &quot;\n&quot;)</span>
+				. // Beginning of a list
+<span class="fc" id="L457">				replaceAll(&quot;(?ims)&lt;li.*?&gt;&quot;, &quot;\n   * &quot;)</span>
+<span class="fc" id="L458">				.replaceAll(&quot;(?ims) *&lt;/[^&gt;]*&gt;&quot;, &quot;&quot;). // Remaining closing HTML</span>
+														// tags
+<span class="fc" id="L460">				replaceAll(&quot;(?ims)&lt;[^/][^&gt;]*&gt; *&quot;, &quot;&quot;). // Remaining opening HTML</span>
+														// tags
+				// FIXME Dimitry: is removing of all new lines at the begin a
+				// good idea?
+<span class="fc" id="L464">				replaceAll(&quot;^\n+&quot;, &quot;&quot;).</span>
+				// fc: to remove start and end spaces.
+<span class="fc" id="L466">				trim();</span>
+
+<span class="fc" id="L468">		intermediate = HtmlTools.unescapeHTMLUnicodeEntity(intermediate);</span>
+
+		// Entities, with the exception of &amp;.
+
+<span class="fc" id="L472">		intermediate = intermediate.replaceAll(&quot;(?ims)&amp;lt;&quot;, &quot;&lt;&quot;)</span>
+<span class="fc" id="L473">				.replaceAll(&quot;(?ims)&amp;gt;&quot;, &quot;&gt;&quot;).replaceAll(&quot;(?ims)&amp;quot;&quot;, &quot;\&quot;&quot;)</span>
+<span class="fc" id="L474">				.replaceAll(&quot;(?ims)&amp;nbsp;&quot;, &quot; &quot;);</span>
+		// System.err.println(&quot;intermediate:&quot;+intermediate);
+<span class="fc" id="L476">		return intermediate.replaceAll(&quot;(?ims)&amp;amp;&quot;, &quot;&amp;&quot;);</span>
+	}
+
+	public static String plainToHTML(String text) {
+		char myChar;
+<span class="nc" id="L481">		String textTabsExpanded = text.replaceAll(&quot;\t&quot;, &quot;         &quot;); // Use</span>
+																		// eight
+																		// spaces
+																		// as
+																		// tab
+																		// width.
+<span class="nc" id="L487">		StringBuffer result = new StringBuffer(textTabsExpanded.length()); // Heuristic</span>
+<span class="nc" id="L488">		int lengthMinus1 = textTabsExpanded.length() - 1;</span>
+<span class="nc" id="L489">		result.append(&quot;&lt;html&gt;&lt;body&gt;&lt;p&gt;&quot;);</span>
+<span class="nc bnc" id="L490" title="All 2 branches missed.">		for (int i = 0; i &lt; textTabsExpanded.length(); ++i) {</span>
+<span class="nc" id="L491">			myChar = textTabsExpanded.charAt(i);</span>
+<span class="nc bnc" id="L492" title="All 6 branches missed.">			switch (myChar) {</span>
+			case '&amp;':
+<span class="nc" id="L494">				result.append(&quot;&amp;amp;&quot;);</span>
+<span class="nc" id="L495">				break;</span>
+			case '&lt;':
+<span class="nc" id="L497">				result.append(&quot;&amp;lt;&quot;);</span>
+<span class="nc" id="L498">				break;</span>
+			case '&gt;':
+<span class="nc" id="L500">				result.append(&quot;&amp;gt;&quot;);</span>
+<span class="nc" id="L501">				break;</span>
+			case ' ':
+<span class="nc bnc" id="L503" title="All 4 branches missed.">				if (i &gt; 0 &amp;&amp; i &lt; lengthMinus1</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">						&amp;&amp; (int) textTabsExpanded.charAt(i - 1) &gt; 32</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">						&amp;&amp; (int) textTabsExpanded.charAt(i + 1) &gt; 32) {</span>
+<span class="nc" id="L506">					result.append(' ');</span>
+<span class="nc" id="L507">				} else {</span>
+<span class="nc" id="L508">					result.append(&quot;&amp;nbsp;&quot;);</span>
+				}
+<span class="nc" id="L510">				break;</span>
+			case '\n':
+<span class="nc" id="L512">				result.append(&quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L513">				break;</span>
+			default:
+<span class="nc" id="L515">				result.append(myChar);</span>
+			}
+		}
+<span class="nc" id="L518">		return result.toString();</span>
+	}
+
+	public static String toXMLUnescapedText(String text) {
+<span class="fc" id="L522">		return text.replaceAll(&quot;&amp;lt;&quot;, &quot;&lt;&quot;).replaceAll(&quot;&amp;gt;&quot;, &quot;&gt;&quot;)</span>
+<span class="fc" id="L523">				.replaceAll(&quot;&amp;quot;&quot;, &quot;\&quot;&quot;).replaceAll(&quot;&amp;amp;&quot;, &quot;&amp;&quot;);</span>
+	}
+
+	public static String toXMLEscapedTextExpandingWhitespace(String text) {
+		// Spaces and tabs are handled
+<span class="nc" id="L528">		text = text.replaceAll(&quot;\t&quot;, &quot;         &quot;); // Use eight spaces as tab</span>
+													// width.
+<span class="nc" id="L530">		int len = text.length();</span>
+<span class="nc" id="L531">		StringBuffer result = new StringBuffer(len);</span>
+		char myChar;
+<span class="nc bnc" id="L533" title="All 2 branches missed.">		for (int i = 0; i &lt; len; ++i) {</span>
+<span class="nc" id="L534">			myChar = text.charAt(i);</span>
+<span class="nc bnc" id="L535" title="All 5 branches missed.">			switch (myChar) {</span>
+			case '&amp;':
+<span class="nc" id="L537">				result.append(&quot;&amp;amp;&quot;);</span>
+<span class="nc" id="L538">				break;</span>
+			case '&lt;':
+<span class="nc" id="L540">				result.append(&quot;&amp;lt;&quot;);</span>
+<span class="nc" id="L541">				break;</span>
+			case '&gt;':
+<span class="nc" id="L543">				result.append(&quot;&amp;gt;&quot;);</span>
+<span class="nc" id="L544">				break;</span>
+			case ' ':
+<span class="nc bnc" id="L546" title="All 6 branches missed.">				if (i &gt; 0 &amp;&amp; i &lt; len - 1 &amp;&amp; (int) text.charAt(i - 1) &gt; 32</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">						&amp;&amp; (int) text.charAt(i + 1) &gt; 32) {</span>
+<span class="nc" id="L548">					result.append(' ');</span>
+<span class="nc" id="L549">				} else {</span>
+<span class="nc" id="L550">					result.append(&quot;&amp;nbsp;&quot;);</span>
+				}
+<span class="nc" id="L552">				break;</span>
+			default:
+<span class="nc" id="L554">				result.append(myChar);</span>
+			}
+		}
+<span class="nc" id="L557">		return result.toString();</span>
+	}
+
+	public static String toXMLEscapedText(String text) {
+<span class="pc bpc" id="L561" title="1 of 2 branches missed.">		if(text == null) {</span>
+<span class="nc" id="L562">			return &quot;ERROR: none&quot;;</span>
+		}
+<span class="fc" id="L564">		return text.replaceAll(&quot;&amp;&quot;, &quot;&amp;amp;&quot;).replaceAll(&quot;&lt;&quot;, &quot;&amp;lt;&quot;)</span>
+<span class="fc" id="L565">				.replaceAll(&quot;&gt;&quot;, &quot;&amp;gt;&quot;).replaceAll(&quot;\&quot;&quot;, &quot;&amp;quot;&quot;);</span>
+	}
+
+	/**
+	 * @return true, if well formed XML.
+	 */
+	public boolean isWellformedXml(String xml) {
+		try {
+			// Create a builder factory
+<span class="fc" id="L574">			SAXParserFactory factory = SAXParserFactory.newInstance();</span>
+<span class="fc" id="L575">			factory.setValidating(false);</span>
+
+			// Create the builder and parse the file
+<span class="fc" id="L578">			factory.newSAXParser().parse(</span>
+<span class="fc" id="L579">					new InputSource(new StringReader(xml)),</span>
+<span class="fc" id="L580">					new DefaultHandler());</span>
+<span class="fc" id="L581">			return true;</span>
+<span class="fc" id="L582">		} catch (SAXParseException e) {</span>
+<span class="fc" id="L583">			logger.log(</span>
+<span class="fc" id="L584">					Level.SEVERE,</span>
+<span class="fc" id="L585">					&quot;XmlParseError on line &quot; + e.getLineNumber() + &quot; of &quot; + xml,</span>
+<span class="fc" id="L586">					e);</span>
+<span class="nc" id="L587">		} catch (Exception e) {</span>
+<span class="nc" id="L588">			logger.log(Level.SEVERE, &quot;XmlParseError&quot;, e);</span>
+		}
+<span class="fc" id="L590">		return false;</span>
+	}
+
+	/** \0 is not allowed: */
+	public static String makeValidXml(String pXmlNoteText) {
+<span class="nc" id="L595">		return pXmlNoteText.replaceAll(&quot;\0&quot;, &quot;&quot;).replaceAll(&quot;&amp;#0;&quot;, &quot;&quot;);</span>
+	}
+
+	public static String replaceIllegalXmlCharacters(String fileContents) {
+		// replace &amp;xa; by newline.
+<span class="nc" id="L600">		fileContents = fileContents.replaceAll(&quot;&amp;#x0*[Aa];&quot;, &quot;\n&quot;);</span>
+		/*
+		 * &amp;#xb; is illegal, but sometimes occurs in 0.8.x maps. Thus, we
+		 * exclude all from 0 - 1f and replace them by nothing. TODO: Which more
+		 * are illegal??
+		 */
+<span class="nc" id="L606">		fileContents = fileContents.replaceAll(&quot;&amp;#x0*1?[0-9A-Fa-f];&quot;, &quot;&quot;);</span>
+		// decimal: 0-31
+<span class="nc" id="L608">		fileContents = fileContents.replaceAll(&quot;&amp;#0*[1-2]?[0-9];&quot;, &quot;&quot;);</span>
+<span class="nc" id="L609">		fileContents = fileContents.replaceAll(&quot;&amp;#0*3[0-1];&quot;, &quot;&quot;);</span>
+<span class="nc" id="L610">		return fileContents;</span>
+	}
+
+	/**
+	 * Determines whether the character is valid in XML. Invalid characters
+	 * include most of the range x00-x1F, and more.
+	 * 
+	 * @see http://www.w3.org/TR/2000/REC-xml-20001006#NT-Char.
+	 */
+	public static boolean isXMLValidCharacter(char character) {
+		// Order the tests in such a sequence that the most probable
+		// conditions are tested first.
+<span class="pc bpc" id="L622" title="4 of 8 branches missed.">		return character &gt;= 0x20 &amp;&amp; character &lt;= 0xD7FF || character == 0x9</span>
+<span class="pc bpc" id="L623" title="5 of 6 branches missed.">				|| character == 0xA || character == 0xD || character &gt;= 0xE000</span>
+<span class="nc bnc" id="L624" title="All 4 branches missed.">				&amp;&amp; character &lt;= 0xFFFD || character &gt;= 0x10000</span>
+<span class="nc" id="L625">				&amp;&amp; character &lt;= 0x10FFFF;</span>
+	}
+
+	/** Precondition: The input text contains XML unicode entities rather
+	   than Java unicode text.
+	
+	   The algorithm:
+	   Search the string for XML entities. For each XML entity inspect
+	   whether it is valid. If valid, append it. To be on the safe side,
+	   also inspect for no-entity unicode whether it is XML-valid, and
+	   pass on only XML-valid characters.
+	
+	   This method uses the method isXMLValidCharacter, which makes use
+	   of http://www.w3.org/TR/2000/REC-xml-20001006#NT-Char. */
+	public static String removeInvalidXmlCharacters(String text) {
+<span class="nc" id="L640">		StringBuffer result = new StringBuffer(text.length());</span>
+<span class="nc" id="L641">		StringBuffer entity = new StringBuffer();</span>
+<span class="nc" id="L642">		boolean readingEntity = false;</span>
+		char myChar;
+		char entityChar;
+<span class="nc bnc" id="L645" title="All 2 branches missed.">		for (int i = 0; i &lt; text.length(); ++i) {</span>
+<span class="nc" id="L646">			myChar = text.charAt(i);</span>
+<span class="nc bnc" id="L647" title="All 2 branches missed.">			if (readingEntity) {</span>
+<span class="nc bnc" id="L648" title="All 2 branches missed.">				if (myChar == ';') {</span>
+<span class="nc bnc" id="L649" title="All 2 branches missed.">					if (entity.charAt(0) == '#') {</span>
+						try {
+<span class="nc bnc" id="L651" title="All 2 branches missed.">							if (entity.charAt(1) == 'x') {</span>
+								// Hexadecimal
+<span class="nc" id="L653">								entityChar = (char) Integer.parseInt(</span>
+<span class="nc" id="L654">										entity.substring(2), 16);</span>
+<span class="nc" id="L655">							} else {</span>
+								// Decimal
+<span class="nc" id="L657">								entityChar = (char) Integer.parseInt(</span>
+<span class="nc" id="L658">										entity.substring(1), 10);</span>
+							}
+<span class="nc bnc" id="L660" title="All 2 branches missed.">							if (isXMLValidCharacter(entityChar))</span>
+<span class="nc" id="L661">								result.append('&amp;').append(entity).append(';');</span>
+<span class="nc" id="L662">						} catch (NumberFormatException e) {</span>
+<span class="nc" id="L663">							result.append('&amp;').append(entity).append(';');</span>
+						}
+<span class="nc" id="L665">					} else {</span>
+<span class="nc" id="L666">						result.append('&amp;').append(entity).append(';');</span>
+					}
+<span class="nc" id="L668">					entity.setLength(0);</span>
+<span class="nc" id="L669">					readingEntity = false;</span>
+<span class="nc" id="L670">				} else {</span>
+<span class="nc" id="L671">					entity.append(myChar);</span>
+				}
+<span class="nc" id="L673">			} else {</span>
+<span class="nc bnc" id="L674" title="All 2 branches missed.">				if (myChar == '&amp;') {</span>
+<span class="nc" id="L675">					readingEntity = true;</span>
+<span class="nc" id="L676">				} else {</span>
+					// The following test is superfluous under the assumption
+					// that the string only contains unicode in XML entities.
+					// Removing this test could significantly speed up this
+					// method; maybe.
+<span class="nc bnc" id="L681" title="All 2 branches missed.">					if (isXMLValidCharacter(myChar))</span>
+<span class="nc" id="L682">						result.append(myChar);</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L686" title="All 2 branches missed.">		if (entity.length() &gt; 0) {</span>
+<span class="nc" id="L687">			result.append('&amp;').append(entity).append(';');</span>
+		}
+<span class="nc" id="L689">		return result.toString();</span>
+	}
+
+	public static String extractHtmlBody(String output) {
+<span class="pc bpc" id="L693" title="1 of 2 branches missed.">		if (output.startsWith(&quot;&lt;html&quot;)) {</span>
+<span class="fc" id="L694">			output = output.substring(6); // do not write</span>
+		}
+<span class="fc" id="L696">		int start = output.indexOf(&quot;&lt;body&quot;);</span>
+<span class="pc bpc" id="L697" title="1 of 2 branches missed.">		if (start == -1) {</span>
+<span class="nc" id="L698">			start = output.indexOf('&gt;') + 1;</span>
+<span class="nc" id="L699">		} else {</span>
+<span class="fc" id="L700">			start = output.indexOf('&gt;', start + 5) + 1;</span>
+		}
+<span class="fc" id="L702">		int end = output.indexOf(&quot;&lt;/body&gt;&quot;);</span>
+<span class="pc bpc" id="L703" title="1 of 2 branches missed.">		if (end == -1) {</span>
+<span class="nc" id="L704">			end = output.indexOf(&quot;&lt;/html&gt;&quot;);</span>
+		}
+<span class="pc bpc" id="L706" title="1 of 2 branches missed.">		if (end == -1) {</span>
+<span class="nc" id="L707">			end = output.length();</span>
+		}
+<span class="fc" id="L709">		output = output.substring(start, end);</span>
+<span class="fc" id="L710">		return output;</span>
+	}
+
+	/**
+	 * Is used from XSLT! Don't change, unless you change the freemind_version_updater.xslt, too.
+	 * @param input
+	 * @return
+	 */
+	public static String replaceSpacesToNonbreakableSpaces(String input) {
+<span class="fc" id="L719">		StringBuffer result = new StringBuffer(input.length());</span>
+<span class="fc" id="L720">		boolean readingSpaces = false;</span>
+		char myChar;
+<span class="fc bfc" id="L722" title="All 2 branches covered.">		for (int i = 0; i &lt; input.length(); ++i) {</span>
+<span class="fc" id="L723">			myChar = input.charAt(i);</span>
+<span class="fc bfc" id="L724" title="All 2 branches covered.">			if (myChar == ' ') {</span>
+<span class="fc bfc" id="L725" title="All 2 branches covered.">				if (readingSpaces) {</span>
+<span class="fc" id="L726">					result.append(NBSP);</span>
+<span class="fc" id="L727">				} else {</span>
+<span class="fc" id="L728">					result.append(myChar);</span>
+<span class="fc" id="L729">					readingSpaces = true;</span>
+				}
+<span class="fc" id="L731">			} else {</span>
+<span class="fc" id="L732">				readingSpaces = false;</span>
+<span class="fc" id="L733">				result.append(myChar);</span>
+			}
+		}
+<span class="fc" id="L736">		return result.toString();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

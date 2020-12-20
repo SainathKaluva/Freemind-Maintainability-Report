@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MultipleImage.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">MultipleImage.java</span></div><h1>MultipleImage.java</h1><pre class="source lang-java linenums">/*FreeMindget - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: MultipleImage.java,v 1.1.18.2 2006/03/14 21:56:28 christianfoltin Exp $*/
+
+package freemind.view.mindmapview;
+
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.util.Iterator;
+import java.util.Vector;
+
+import javax.swing.ImageIcon;
+
+public class MultipleImage extends ImageIcon {
+<span class="nc" id="L35">	private Vector mImages = new Vector();</span>
+<span class="nc" id="L36">	private double zoomFactor = 1;</span>
+	private boolean isDirty;
+
+<span class="nc" id="L39">	public MultipleImage(double zoom) {</span>
+<span class="nc" id="L40">		zoomFactor = zoom;</span>
+<span class="nc" id="L41">		isDirty = true;</span>
+<span class="nc" id="L42">	};</span>
+
+	public int getImageCount() {
+<span class="nc" id="L45">		return mImages.size();</span>
+	};
+
+	public void addImage(ImageIcon image) {
+<span class="nc" id="L49">		mImages.add(image);</span>
+<span class="nc" id="L50">		setImage(image.getImage());</span>
+<span class="nc" id="L51">		isDirty = true;</span>
+<span class="nc" id="L52">	};</span>
+
+	public Image getImage() {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (!isDirty)</span>
+<span class="nc" id="L56">			return super.getImage();</span>
+<span class="nc" id="L57">		int w = getIconWidth();</span>
+<span class="nc" id="L58">		int h = getIconHeight();</span>
+<span class="nc bnc" id="L59" title="All 4 branches missed.">		if (w == 0 || h == 0) {</span>
+<span class="nc" id="L60">			return null;</span>
+		}
+<span class="nc" id="L62">		BufferedImage outImage = new BufferedImage(w, h,</span>
+<span class="nc" id="L63">				BufferedImage.TYPE_INT_ARGB);</span>
+<span class="nc" id="L64">		Graphics2D g = outImage.createGraphics();</span>
+<span class="nc" id="L65">		double myX = 0;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		for (Iterator i = mImages.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L67">			ImageIcon currentIcon = (ImageIcon) i.next();</span>
+			// py = /* center: */ ( myHeight -
+			// (int)(currentIcon.getIconHeight()* zoomFactor)) /2;
+			// int pheight = (int) (currentIcon.getIconHeight() * zoomFactor);
+<span class="nc" id="L71">			double pwidth = (currentIcon.getIconWidth() * zoomFactor);</span>
+<span class="nc" id="L72">			AffineTransform inttrans = AffineTransform.getScaleInstance(</span>
+<span class="nc" id="L73">					zoomFactor, zoomFactor);</span>
+<span class="nc" id="L74">			g.drawImage(currentIcon.getImage(), inttrans, null);</span>
+<span class="nc" id="L75">			g.translate(pwidth, 0);</span>
+<span class="nc" id="L76">			myX += pwidth;</span>
+		}
+<span class="nc" id="L78">		g.dispose();</span>
+<span class="nc" id="L79">		setImage(outImage);</span>
+<span class="nc" id="L80">		isDirty = false;</span>
+<span class="nc" id="L81">		return super.getImage();</span>
+	}
+
+	public void paintIcon(Component c, Graphics g, int x, int y) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (getImage() != null) {</span>
+<span class="nc" id="L86">			super.paintIcon(c, g, x, y);</span>
+		}
+<span class="nc" id="L88">	}</span>
+
+	// public void paintIcon(Component c,
+	// Graphics g,
+	// int x,
+	// int y)
+	// {
+	// int myX = x;
+	// int myHeight = getIconHeight();
+	// for(int i = 0 ; i &lt; mImages.size(); i++) {
+	// ImageIcon currentIcon = ((ImageIcon) mImages.get(i));
+	// int px,py,pwidth, pheight;
+	// px = myX;
+	// py = y /* center: */ + ( myHeight - (int)(currentIcon.getIconHeight()*
+	// zoomFactor)) /2;
+	// pwidth = (int) (currentIcon.getIconWidth() * zoomFactor);
+	// pheight = (int) (currentIcon.getIconHeight() * zoomFactor);
+	// /* code from ImageIcon.*/
+	// if(currentIcon.getImageObserver() == null) {
+	// g.drawImage(currentIcon.getImage(), px, py, pwidth, pheight, c);
+	// } else {
+	// g.drawImage(currentIcon.getImage(), px, py, pwidth, pheight,
+	// currentIcon.getImageObserver());
+	// }
+	// /* end code*/
+	// myX += pwidth;
+	// }
+	// };
+
+	public int getIconWidth() {
+<span class="nc" id="L118">		int myX = 0;</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		for (int i = 0; i &lt; mImages.size(); i++) {</span>
+<span class="nc" id="L120">			myX += ((ImageIcon) mImages.get(i)).getIconWidth();</span>
+		}
+		// System.out.println(&quot;width: &quot;+myX);
+<span class="nc" id="L123">		return (int) (myX * zoomFactor);</span>
+	}
+
+	public int getIconHeight() {
+<span class="nc" id="L127">		int myY = 0;</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		for (int i = 0; i &lt; mImages.size(); i++) {</span>
+<span class="nc" id="L129">			int otherHeight = ((ImageIcon) mImages.get(i)).getIconHeight();</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">			if (otherHeight &gt; myY)</span>
+<span class="nc" id="L131">				myY = otherHeight;</span>
+		}
+		// System.out.println(&quot;height: &quot;+myY);
+<span class="nc" id="L134">		return (int) (myY * zoomFactor);</span>
+	}
+
+};
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

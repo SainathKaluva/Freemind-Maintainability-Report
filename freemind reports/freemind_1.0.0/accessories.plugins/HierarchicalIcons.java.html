@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>HierarchicalIcons.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">HierarchicalIcons.java</span></div><h1>HierarchicalIcons.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package accessories.plugins;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.TreeSet;
+
+import freemind.extensions.UndoEventReceiver;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.hooks.PermanentMindMapNodeHookAdapter;
+import freemind.view.mindmapview.MultipleImage;
+
+/** */
+public class HierarchicalIcons extends PermanentMindMapNodeHookAdapter
+		implements UndoEventReceiver {
+
+<span class="nc" id="L37">	private HashMap /* of MindMapNode to a TreeSet */nodeIconSets = new HashMap();</span>
+
+	public void shutdownMapHook() {
+		// remove all icons:
+<span class="nc" id="L41">		MindMapNode root = getMindMapController().getRootNode();</span>
+<span class="nc" id="L42">		removeIcons(root);</span>
+<span class="nc" id="L43">		super.shutdownMapHook();</span>
+<span class="nc" id="L44">	}</span>
+
+	/**
+     */
+	private void removeIcons(MindMapNode node) {
+<span class="nc" id="L49">		node.setStateIcon(getName(), null);</span>
+<span class="nc" id="L50">		getMindMapController().nodeRefresh(node);</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		for (Iterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L52">			MindMapNode child = (MindMapNode) i.next();</span>
+<span class="nc" id="L53">			removeIcons(child);</span>
+		}
+<span class="nc" id="L55">	}</span>
+
+	/**
+     *
+     */
+	public HierarchicalIcons() {
+<span class="nc" id="L61">		super();</span>
+
+<span class="nc" id="L63">	}</span>
+
+	private void setStyle(MindMapNode node) {
+		// precondition: all children are contained in nodeIconSets
+
+		// gather all icons of my children and of me here:
+<span class="nc" id="L69">		TreeSet iconSet = new TreeSet();</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		for (Iterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L71">			MindMapNode child = (MindMapNode) i.next();</span>
+<span class="nc" id="L72">			addAccumulatedIconsToTreeSet(child, iconSet,</span>
+<span class="nc" id="L73">					(TreeSet) nodeIconSets.get(child));</span>
+		}
+		// remove my icons from the treeset:
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		for (Iterator i = node.getIcons().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L77">			MindIcon icon = (MindIcon) i.next();</span>
+<span class="nc" id="L78">			iconSet.remove(icon.getName());</span>
+		}
+<span class="nc" id="L80">		boolean dirty = true;</span>
+		// look for a change:
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (nodeIconSets.containsKey(node)) {</span>
+<span class="nc" id="L83">			TreeSet storedIconSet = (TreeSet) nodeIconSets.get(node);</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">			if (storedIconSet.equals(iconSet)) {</span>
+<span class="nc" id="L85">				dirty = false;</span>
+			}
+		}
+<span class="nc" id="L88">		nodeIconSets.put(node, iconSet);</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (dirty) {</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (iconSet.size() &gt; 0) {</span>
+				// create multiple image:
+<span class="nc" id="L93">				MultipleImage image = new MultipleImage(0.75f);</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">				for (Iterator i = iconSet.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L95">					String iconName = (String) i.next();</span>
+					// logger.info(&quot;Adding icon &quot;+iconName + &quot; to node &quot;+
+					// node.toString());
+<span class="nc" id="L98">					MindIcon icon = MindIcon.factory(iconName);</span>
+<span class="nc" id="L99">					image.addImage(icon.getIcon());</span>
+				}
+<span class="nc" id="L101">				node.setStateIcon(getName(), image);</span>
+<span class="nc" id="L102">			} else {</span>
+<span class="nc" id="L103">				node.setStateIcon(getName(), null);</span>
+			}
+<span class="nc" id="L105">			getMindMapController().nodeRefresh(node);</span>
+		}
+
+<span class="nc" id="L108">	}</span>
+
+	/**
+     */
+	private void addAccumulatedIconsToTreeSet(MindMapNode child,
+			TreeSet iconSet, TreeSet childsTreeSet) {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		for (Iterator i = child.getIcons().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L115">			MindIcon icon = (MindIcon) i.next();</span>
+<span class="nc" id="L116">			iconSet.add(icon.getName());</span>
+		}
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (childsTreeSet == null)</span>
+<span class="nc" id="L119">			return;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		for (Iterator i = childsTreeSet.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L121">			String iconName = (String) i.next();</span>
+<span class="nc" id="L122">			iconSet.add(iconName);</span>
+		}
+<span class="nc" id="L124">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHook#onAddChild(freemind.modes.MindMapNode
+	 * )
+	 */
+	public void onAddChildren(MindMapNode newChildNode) {
+<span class="nc" id="L134">		logger.finest(&quot;onAddChildren &quot; + newChildNode);</span>
+<span class="nc" id="L135">		super.onAddChild(newChildNode);</span>
+<span class="nc" id="L136">		setStyleRecursive(newChildNode);</span>
+<span class="nc" id="L137">	}</span>
+
+	public void onRemoveChildren(MindMapNode removedChild, MindMapNode oldDad) {
+<span class="nc" id="L140">		logger.finest(&quot;onRemoveChildren &quot; + removedChild);</span>
+<span class="nc" id="L141">		super.onRemoveChildren(removedChild, oldDad);</span>
+<span class="nc" id="L142">		setStyleRecursive(oldDad);</span>
+<span class="nc" id="L143">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHook#onUpdateChildrenHook(freemind.modes
+	 * .MindMapNode)
+	 */
+	public void onUpdateChildrenHook(MindMapNode updatedNode) {
+<span class="nc" id="L153">		super.onUpdateChildrenHook(updatedNode);</span>
+<span class="nc" id="L154">		setStyleRecursive(updatedNode);</span>
+<span class="nc" id="L155">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#onUpdateNodeHook()
+	 */
+	public void onUpdateNodeHook() {
+<span class="nc" id="L163">		super.onUpdateNodeHook();</span>
+<span class="nc" id="L164">		setStyle(getNode());</span>
+<span class="nc" id="L165">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.NodeHook#invoke(freemind.modes.MindMapNode)
+	 */
+	public void invoke(MindMapNode node) {
+<span class="nc" id="L173">		super.invoke(node);</span>
+<span class="nc" id="L174">		gatherLeavesAndSetStyle(node);</span>
+<span class="nc" id="L175">		gatherLeavesAndSetParentsStyle(node);</span>
+<span class="nc" id="L176">	}</span>
+
+	/**
+     */
+	private void gatherLeavesAndSetStyle(MindMapNode node) {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (node.getChildCount() == 0) {</span>
+			// call setStyle for all leaves:
+<span class="nc" id="L183">			setStyle(node);</span>
+<span class="nc" id="L184">			return;</span>
+		}
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		for (Iterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L187">			MindMapNode child = (MindMapNode) i.next();</span>
+<span class="nc" id="L188">			gatherLeavesAndSetStyle(child);</span>
+		}
+<span class="nc" id="L190">	}</span>
+
+	/**
+     */
+	private void gatherLeavesAndSetParentsStyle(MindMapNode node) {
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		if (node.getChildCount() == 0) {</span>
+			// call setStyleRecursive for all parents:
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			if (node.getParentNode() != null) {</span>
+<span class="nc" id="L198">				setStyleRecursive(node.getParentNode());</span>
+			}
+<span class="nc" id="L200">			return;</span>
+		}
+<span class="nc bnc" id="L202" title="All 2 branches missed.">		for (Iterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L203">			MindMapNode child = (MindMapNode) i.next();</span>
+<span class="nc" id="L204">			gatherLeavesAndSetParentsStyle(child);</span>
+		}
+<span class="nc" id="L206">	}</span>
+
+	/**
+     */
+	private void setStyleRecursive(MindMapNode node) {
+		// logger.finest(&quot;setStyle &quot; + node);
+<span class="nc" id="L212">		setStyle(node);</span>
+		// recurse:
+<span class="nc bnc" id="L214" title="All 2 branches missed.">		if (node.getParentNode() != null) {</span>
+<span class="nc" id="L215">			setStyleRecursive(node.getParentNode());</span>
+		}
+<span class="nc" id="L217">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

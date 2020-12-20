@@ -1,0 +1,1125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>TimeList.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.time</a> &gt; <span class="el_source">TimeList.java</span></div><h1>TimeList.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2005  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 04.02.2005
+ */
+
+package accessories.plugins.time;
+
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.text.DateFormat;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EventListener;
+import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
+import java.util.regex.Pattern;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+
+import freemind.controller.MapModuleManager.MapModuleChangeObserver;
+import freemind.controller.MenuItemSelectedListener;
+import freemind.controller.StructuredMenuHolder;
+import freemind.controller.actions.generated.instance.TimeWindowColumnSetting;
+import freemind.controller.actions.generated.instance.TimeWindowConfigurationStorage;
+import freemind.controller.actions.generated.instance.WindowConfigurationStorage;
+import freemind.main.HtmlTools;
+import freemind.main.Tools;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.Mode;
+import freemind.modes.ModeController;
+import freemind.modes.common.plugins.ReminderHookBase;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.hooks.MindMapHookAdapter;
+import freemind.view.MapModule;
+import freemind.view.mindmapview.MultipleImage;
+
+/**
+ * @author foltin
+ * 
+ *         TODO: - Extract HTML from nodes and notes.
+ */
+<span class="nc" id="L97">public class TimeList extends MindMapHookAdapter implements</span>
+		MapModuleChangeObserver {
+
+	private static final int TYPE_DELAY_TIME = 500;
+
+<span class="fc" id="L102">	private static String COLUMN_MODIFIED = &quot;Modified&quot;;</span>
+
+<span class="fc" id="L104">	private static String COLUMN_CREATED = &quot;Created&quot;;</span>
+
+<span class="fc" id="L106">	private static String COLUMN_ICONS = &quot;Icons&quot;;</span>
+
+<span class="fc" id="L108">	private static String COLUMN_TEXT = &quot;Text&quot;;</span>
+
+<span class="fc" id="L110">	private static String COLUMN_DATE = &quot;Date&quot;;</span>
+
+<span class="fc" id="L112">	private static String COLUMN_NOTES = &quot;Notes&quot;;</span>
+
+	private static final int DATE_COLUMN = 0;
+
+	public static final int NODE_TEXT_COLUMN = 1;
+
+	protected static final int NODE_ICON_COLUMN = 2;
+
+	protected static final int NODE_CREATED_COLUMN = 3;
+
+	protected static final int NODE_MODIFIED_COLUMN = 4;
+
+	protected static final int NODE_NOTES_COLUMN = 5;
+
+	private JDialog dialog;
+
+	private JPanel timePanel;
+
+	private JTable timeTable;
+
+	private DefaultTableModel timeTableModel;
+
+	private accessories.plugins.time.TableSorter sorter;
+
+	private DateRenderer dateRenderer;
+
+	private NodeRenderer nodeRenderer;
+
+	private IconsRenderer iconsRenderer;
+
+<span class="nc" id="L142">	private boolean showAllNodes = false;</span>
+
+<span class="fc" id="L144">	private static final String WINDOW_PREFERENCE_STORAGE_PROPERTY = TimeList.class</span>
+<span class="fc" id="L145">			.getName() + &quot;_properties&quot;;</span>
+
+	private FlatNodeTableFilterModel mFlatNodeTableFilterModel;
+
+	private JTextField mFilterTextSearchField;
+
+	private JTextField mFilterTextReplaceField;
+
+	private NotesRenderer notesRenderer;
+
+	private JLabel mTreeLabel;
+
+	private MindMapController mMyMindMapController;
+	
+<span class="nc" id="L159">	private boolean mViewFoldedNodes = true;</span>
+
+	public void startupMapHook() {
+<span class="nc" id="L162">		super.startupMapHook();</span>
+
+<span class="nc" id="L164">		mMyMindMapController = super.getMindMapController();</span>
+<span class="nc" id="L165">		getMindMapController().getController().getMapModuleManager()</span>
+<span class="nc" id="L166">				.addListener(this);</span>
+
+		// get strings from resources:
+<span class="nc" id="L169">		COLUMN_MODIFIED = getResourceString(&quot;plugins/TimeList.xml_Modified&quot;);</span>
+<span class="nc" id="L170">		COLUMN_CREATED = getResourceString(&quot;plugins/TimeList.xml_Created&quot;);</span>
+<span class="nc" id="L171">		COLUMN_ICONS = getResourceString(&quot;plugins/TimeList.xml_Icons&quot;);</span>
+<span class="nc" id="L172">		COLUMN_TEXT = getResourceString(&quot;plugins/TimeList.xml_Text&quot;);</span>
+<span class="nc" id="L173">		COLUMN_DATE = getResourceString(&quot;plugins/TimeList.xml_Date&quot;);</span>
+<span class="nc" id="L174">		COLUMN_NOTES = getResourceString(&quot;plugins/TimeList.xml_Notes&quot;);</span>
+
+<span class="nc" id="L176">		showAllNodes = Tools.xmlToBoolean(getResourceString(&quot;show_all_nodes&quot;));</span>
+<span class="nc" id="L177">		dialog = new JDialog(getController().getFrame().getJFrame(), false /* unmodal */);</span>
+		String windowTitle;
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		if (showAllNodes) {</span>
+<span class="nc" id="L180">			windowTitle = &quot;plugins/TimeManagement.xml_WindowTitle_All_Nodes&quot;;</span>
+<span class="nc" id="L181">		} else {</span>
+<span class="nc" id="L182">			windowTitle = &quot;plugins/TimeManagement.xml_WindowTitle&quot;;</span>
+		}
+<span class="nc" id="L184">		dialog.setTitle(getResourceString(windowTitle));</span>
+<span class="nc" id="L185">		dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L186">		dialog.addWindowListener(new WindowAdapter() {</span>
+			public void windowClosing(WindowEvent event) {
+<span class="nc" id="L188">				disposeDialog();</span>
+<span class="nc" id="L189">			}</span>
+		});
+<span class="nc" id="L191">		Tools.addEscapeActionToDialog(dialog, new AbstractAction() {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L193">				disposeDialog();</span>
+<span class="nc" id="L194">			}</span>
+		});
+<span class="nc" id="L196">		Container contentPane = dialog.getContentPane();</span>
+<span class="nc" id="L197">		GridBagLayout gbl = new GridBagLayout();</span>
+<span class="nc" id="L198">		gbl.columnWeights = new double[] { 1.0f };</span>
+<span class="nc" id="L199">		gbl.rowWeights = new double[] { 1.0f };</span>
+<span class="nc" id="L200">		contentPane.setLayout(gbl);</span>
+<span class="nc" id="L201">		contentPane.add(new JLabel(</span>
+<span class="nc" id="L202">				getResourceString(&quot;plugins/TimeManagement.xml_Find&quot;)),</span>
+<span class="nc" id="L203">				new GridBagConstraints(0, 0, 1, 1, 1.0, 0.0,</span>
+<span class="nc" id="L204">						GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,</span>
+<span class="nc" id="L205">						new Insets(0, 0, 0, 0), 0, 0));</span>
+<span class="nc" id="L206">		mFilterTextSearchField = new JTextField();</span>
+<span class="nc" id="L207">		mFilterTextSearchField.getDocument().addDocumentListener(</span>
+<span class="nc" id="L208">				new FilterTextDocumentListener());</span>
+<span class="nc" id="L209">		mFilterTextSearchField.addKeyListener(new KeyAdapter() {</span>
+			public void keyPressed(KeyEvent pEvent) {
+				// logger.info(&quot;Key event:&quot; + pEvent.getKeyCode());
+<span class="nc bnc" id="L212" title="All 2 branches missed.">				if (pEvent.getKeyCode() == KeyEvent.VK_DOWN) {</span>
+<span class="nc" id="L213">					logger.info(&quot;Set Focus to replace fields&quot;);</span>
+<span class="nc" id="L214">					mFilterTextReplaceField.requestFocusInWindow();</span>
+				}
+<span class="nc" id="L216">			}</span>
+		});
+<span class="nc" id="L218">		contentPane.add(/* new JScrollPane */(mFilterTextSearchField),</span>
+<span class="nc" id="L219">				new GridBagConstraints(0, 1, 1, 1, 1.0, 0.0,</span>
+<span class="nc" id="L220">						GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,</span>
+<span class="nc" id="L221">						new Insets(0, 0, 0, 0), 0, 0));</span>
+<span class="nc" id="L222">		contentPane.add(new JLabel(</span>
+<span class="nc" id="L223">				getResourceString(&quot;plugins/TimeManagement.xml_Replace&quot;)),</span>
+<span class="nc" id="L224">				new GridBagConstraints(0, 2, 1, 1, 1.0, 0.0,</span>
+<span class="nc" id="L225">						GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,</span>
+<span class="nc" id="L226">						new Insets(0, 0, 0, 0), 0, 0));</span>
+<span class="nc" id="L227">		mFilterTextReplaceField = new JTextField();</span>
+<span class="nc" id="L228">		contentPane.add(/* new JScrollPane */(mFilterTextReplaceField),</span>
+<span class="nc" id="L229">				new GridBagConstraints(0, 3, 1, 1, 1.0, 0.0,</span>
+<span class="nc" id="L230">						GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,</span>
+<span class="nc" id="L231">						new Insets(0, 0, 0, 0), 0, 0));</span>
+<span class="nc" id="L232">		mFilterTextReplaceField.addKeyListener(new KeyAdapter() {</span>
+			public void keyPressed(KeyEvent pEvent) {
+<span class="nc bnc" id="L234" title="All 2 branches missed.">				if (pEvent.getKeyCode() == KeyEvent.VK_DOWN) {</span>
+<span class="nc" id="L235">					logger.info(&quot;Set Focus to table&quot;);</span>
+<span class="nc" id="L236">					timeTable.requestFocusInWindow();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">				} else if (pEvent.getKeyCode() == KeyEvent.VK_UP) {</span>
+<span class="nc" id="L238">					logger.info(&quot;Set Focus to table&quot;);</span>
+<span class="nc" id="L239">					mFilterTextSearchField.requestFocusInWindow();</span>
+				}
+<span class="nc" id="L241">			}</span>
+		});
+<span class="nc" id="L243">		dateRenderer = new DateRenderer();</span>
+<span class="nc" id="L244">		nodeRenderer = new NodeRenderer();</span>
+<span class="nc" id="L245">		notesRenderer = new NotesRenderer();</span>
+<span class="nc" id="L246">		iconsRenderer = new IconsRenderer(getController());</span>
+<span class="nc" id="L247">		timeTable = new FlatNodeTable();</span>
+<span class="nc" id="L248">		timeTable.addKeyListener(new FlatNodeTableKeyListener());</span>
+		// double click = goto.
+<span class="nc" id="L250">		timeTable.addMouseListener(new FlatNodeTableMouseAdapter());</span>
+		// disable moving:
+<span class="nc" id="L252">		timeTable.getTableHeader().setReorderingAllowed(false);</span>
+<span class="nc" id="L253">		updateModel();</span>
+
+<span class="nc" id="L255">		sorter.setTableHeader(timeTable.getTableHeader());</span>
+<span class="nc" id="L256">		sorter.setColumnComparator(Date.class,</span>
+<span class="nc" id="L257">				TableSorter.COMPARABLE_COMAPRATOR);</span>
+<span class="nc" id="L258">		sorter.setColumnComparator(NodeHolder.class,</span>
+<span class="nc" id="L259">				TableSorter.LEXICAL_COMPARATOR);</span>
+<span class="nc" id="L260">		sorter.setColumnComparator(NotesHolder.class,</span>
+<span class="nc" id="L261">				TableSorter.LEXICAL_COMPARATOR);</span>
+<span class="nc" id="L262">		sorter.setColumnComparator(IconsHolder.class,</span>
+<span class="nc" id="L263">				TableSorter.COMPARABLE_COMAPRATOR);</span>
+		// Sort by default by date.
+<span class="nc" id="L265">		sorter.setSortingStatus(DATE_COLUMN, TableSorter.ASCENDING);</span>
+<span class="nc" id="L266">		JScrollPane pane = new JScrollPane(timeTable);</span>
+<span class="nc" id="L267">		contentPane.add(pane, new GridBagConstraints(0, 4, 1, 1, 1.0, 10.0,</span>
+<span class="nc" id="L268">				GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(0,</span>
+<span class="nc" id="L269">						0, 0, 0), 0, 0));</span>
+
+<span class="nc" id="L271">		mTreeLabel = new JLabel();</span>
+<span class="nc" id="L272">		contentPane.add(new JScrollPane(mTreeLabel), new GridBagConstraints(0,</span>
+<span class="nc" id="L273">				5, 1, 1, 1.0, 1.0, GridBagConstraints.WEST,</span>
+<span class="nc" id="L274">				GridBagConstraints.BOTH, new Insets(0, 0, 0, 0), 0, 0));</span>
+		// button bar
+<span class="nc" id="L276">		AbstractAction selectAction = new AbstractAction(</span>
+<span class="nc" id="L277">				getResourceString(&quot;plugins/TimeManagement.xml_Select&quot;)) {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L279">				selectSelectedRows();</span>
+<span class="nc" id="L280">			}</span>
+		};
+<span class="nc" id="L282">		AbstractAction exportAction = new AbstractAction(</span>
+<span class="nc" id="L283">				getResourceString(&quot;plugins/TimeManagement.xml_Export&quot;)) {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L285">				exportSelectedRowsAndClose();</span>
+<span class="nc" id="L286">			}</span>
+		};
+<span class="nc" id="L288">		AbstractAction replaceAllAction = new AbstractAction(</span>
+<span class="nc" id="L289">				getResourceString(&quot;plugins/TimeManagement.xml_Replace_All&quot;)) {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L291">				replace(new ReplaceAllInfo());</span>
+<span class="nc" id="L292">			}</span>
+		};
+<span class="nc" id="L294">		AbstractAction replaceSelectedAction = new AbstractAction(</span>
+<span class="nc" id="L295">				getResourceString(&quot;plugins/TimeManagement.xml_Replace_Selected&quot;)) {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L297">				replace(new ReplaceSelectedInfo());</span>
+<span class="nc" id="L298">			}</span>
+		};
+<span class="nc" id="L300">		AbstractAction gotoAction = new AbstractAction(</span>
+<span class="nc" id="L301">				getResourceString(&quot;plugins/TimeManagement.xml_Goto&quot;)) {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L303">				selectSelectedRows();</span>
+<span class="nc" id="L304">				disposeDialog();</span>
+<span class="nc" id="L305">			}</span>
+		};
+<span class="nc" id="L307">		AbstractAction disposeAction = new AbstractAction(</span>
+<span class="nc" id="L308">				getResourceString(&quot;plugins/TimeManagement.xml_Cancel&quot;)) {</span>
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L310">				disposeDialog();</span>
+<span class="nc" id="L311">			}</span>
+		};
+
+<span class="nc" id="L314">		AbstractAction toggleViewFoldedNodesAction = new ToggleViewFoldedNodesAction(</span>
+<span class="nc" id="L315">				getResourceString(&quot;plugins/TimeManagement.xml_ToggleViewFoldedNodesAction&quot;));</span>
+
+		/** Menu **/
+<span class="nc" id="L318">		StructuredMenuHolder menuHolder = new StructuredMenuHolder();</span>
+<span class="nc" id="L319">		JMenuBar menuBar = new JMenuBar();</span>
+<span class="nc" id="L320">		JMenu menu = new JMenu(</span>
+<span class="nc" id="L321">				getResourceString(&quot;plugins/TimeManagement.xml_menu_actions&quot;));</span>
+<span class="nc" id="L322">		menuHolder.addMenu(menu, &quot;main/actions/.&quot;);</span>
+<span class="nc" id="L323">		final JMenuItem selectMenuItem = addAccelerator(</span>
+<span class="nc" id="L324">				menuHolder.addAction(selectAction, &quot;main/actions/select&quot;),</span>
+<span class="nc" id="L325">				&quot;keystroke_plugins/TimeList_select&quot;);</span>
+<span class="nc" id="L326">		final JMenuItem gotoMenuItem = addAccelerator(</span>
+<span class="nc" id="L327">				menuHolder.addAction(gotoAction, &quot;main/actions/goto&quot;),</span>
+<span class="nc" id="L328">				&quot;keystroke_plugins/TimeList_goto&quot;);</span>
+<span class="nc" id="L329">		final JMenuItem replaceSelectedMenuItem = addAccelerator(</span>
+<span class="nc" id="L330">				menuHolder.addAction(replaceSelectedAction,</span>
+<span class="nc" id="L331">						&quot;main/actions/replaceSelected&quot;),</span>
+<span class="nc" id="L332">				&quot;keystroke_plugins/TimeList_replaceSelected&quot;);</span>
+<span class="nc" id="L333">		final JMenuItem replaceAllMenuItem = addAccelerator(</span>
+<span class="nc" id="L334">				menuHolder.addAction(replaceAllAction,</span>
+<span class="nc" id="L335">						&quot;main/actions/replaceAll&quot;),</span>
+<span class="nc" id="L336">				&quot;keystroke_plugins/TimeList_replaceAll&quot;);</span>
+
+<span class="nc" id="L338">		final JMenuItem exportMenuItem = addAccelerator(</span>
+<span class="nc" id="L339">				menuHolder.addAction(exportAction, &quot;main/actions/export&quot;),</span>
+<span class="nc" id="L340">				&quot;keystroke_plugins/TimeList_export&quot;);</span>
+<span class="nc" id="L341">		addAccelerator(</span>
+<span class="nc" id="L342">				menuHolder.addAction(disposeAction, &quot;main/actions/dispose&quot;),</span>
+<span class="nc" id="L343">				&quot;keystroke_plugins/TimeList_dispose&quot;);</span>
+<span class="nc" id="L344">		JMenu viewMenu = new JMenu(</span>
+<span class="nc" id="L345">				getResourceString(&quot;plugins/TimeManagement.xml_menu_view&quot;));</span>
+<span class="nc" id="L346">		menuHolder.addMenu(viewMenu, &quot;main/view/.&quot;);</span>
+<span class="nc" id="L347">		addAccelerator(menuHolder.addAction(toggleViewFoldedNodesAction,</span>
+<span class="nc" id="L348">				&quot;main/view/showFoldedNodes&quot;),</span>
+<span class="nc" id="L349">				&quot;keystroke_plugins/TimeList_showFoldedNodes&quot;);</span>
+<span class="nc" id="L350">		menuHolder.updateMenus(menuBar, &quot;main/&quot;);</span>
+<span class="nc" id="L351">		dialog.setJMenuBar(menuBar);</span>
+
+		/* Initial State */
+<span class="nc" id="L354">		selectMenuItem.setEnabled(false);</span>
+<span class="nc" id="L355">		gotoMenuItem.setEnabled(false);</span>
+<span class="nc" id="L356">		exportMenuItem.setEnabled(false);</span>
+<span class="nc" id="L357">		replaceSelectedMenuItem.setEnabled(false);</span>
+
+		// table selection listeners to enable/disable menu actions:
+<span class="nc" id="L360">		ListSelectionModel rowSM = timeTable.getSelectionModel();</span>
+<span class="nc" id="L361">		rowSM.addListSelectionListener(new ListSelectionListener() {</span>
+			public void valueChanged(ListSelectionEvent e) {
+				// Ignore extra messages.
+<span class="nc bnc" id="L364" title="All 2 branches missed.">				if (e.getValueIsAdjusting())</span>
+<span class="nc" id="L365">					return;</span>
+
+<span class="nc" id="L367">				ListSelectionModel lsm = (ListSelectionModel) e.getSource();</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">				boolean enable = !(lsm.isSelectionEmpty());</span>
+<span class="nc" id="L369">				replaceSelectedMenuItem.setEnabled(enable);</span>
+<span class="nc" id="L370">				selectMenuItem.setEnabled(enable);</span>
+<span class="nc" id="L371">				gotoMenuItem.setEnabled(enable);</span>
+<span class="nc" id="L372">				exportMenuItem.setEnabled(enable);</span>
+<span class="nc" id="L373">			}</span>
+		});
+		// table selection listener to display the history of the selected nodes
+<span class="nc" id="L376">		rowSM.addListSelectionListener(new ListSelectionListener() {</span>
+			String getNodeText(MindMapNode node) {
+<span class="nc" id="L378">				return Tools.getNodeTextHierarchy(node, getMindMapController());</span>
+			}
+
+			public void valueChanged(ListSelectionEvent e) {
+				// Ignore extra messages.
+<span class="nc bnc" id="L383" title="All 2 branches missed.">				if (e.getValueIsAdjusting())</span>
+<span class="nc" id="L384">					return;</span>
+
+<span class="nc" id="L386">				ListSelectionModel lsm = (ListSelectionModel) e.getSource();</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">				if (lsm.isSelectionEmpty()) {</span>
+<span class="nc" id="L388">					mTreeLabel.setText(&quot;&quot;);</span>
+<span class="nc" id="L389">					return;</span>
+				}
+<span class="nc" id="L391">				int selectedRow = lsm.getLeadSelectionIndex();</span>
+<span class="nc" id="L392">				MindMapNode mindMapNode = getMindMapNode(selectedRow);</span>
+<span class="nc" id="L393">				mTreeLabel.setText(getNodeText(mindMapNode));</span>
+<span class="nc" id="L394">			}</span>
+		});
+
+		// restore preferences:
+		// Retrieve window size and column positions.
+<span class="nc" id="L399">		WindowConfigurationStorage storage = getMindMapController()</span>
+<span class="nc" id="L400">				.decorateDialog(dialog, WINDOW_PREFERENCE_STORAGE_PROPERTY);</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">		if (storage != null) {</span>
+<span class="nc" id="L402">			setTableConfiguration(storage);</span>
+		}
+<span class="nc" id="L404">		dialog.setVisible(true);</span>
+<span class="nc" id="L405">	}</span>
+
+	protected void setTableConfiguration(WindowConfigurationStorage storage) {
+		// Disable auto resizing
+<span class="nc" id="L409">		timeTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);</span>
+<span class="nc" id="L410">		final TimeWindowConfigurationStorage timeStorage = (TimeWindowConfigurationStorage) storage;</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">		if(mViewFoldedNodes != timeStorage.getViewFoldedNodes()) {</span>
+<span class="nc" id="L412">			toggleViewFoldedNodes();</span>
+		}
+<span class="nc" id="L414">		int column = 0;</span>
+<span class="nc" id="L415">		for (Iterator i = timeStorage</span>
+<span class="nc" id="L416">				.getListTimeWindowColumnSettingList().iterator(); i</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L418">			TimeWindowColumnSetting setting = (TimeWindowColumnSetting) i</span>
+<span class="nc" id="L419">					.next();</span>
+<span class="nc" id="L420">			timeTable.getColumnModel().getColumn(column)</span>
+<span class="nc" id="L421">					.setPreferredWidth(setting.getColumnWidth());</span>
+<span class="nc" id="L422">			sorter.setSortingStatus(column, setting.getColumnSorting());</span>
+<span class="nc" id="L423">			column++;</span>
+		}
+<span class="nc" id="L425">	}</span>
+
+	/**
+	 * 
+	 */
+	protected void toggleViewFoldedNodes() {
+<span class="nc bnc" id="L431" title="All 2 branches missed.">		mViewFoldedNodes = ! mViewFoldedNodes;</span>
+<span class="nc" id="L432">		updateModel();</span>
+		
+<span class="nc" id="L434">	}</span>
+
+	protected void decorateButtonAndAction(String stringProperty,
+			final AbstractAction selectAction, JButton selectButton) {
+<span class="nc" id="L438">		String resourceString = getResourceString(stringProperty);</span>
+<span class="nc" id="L439">		selectAction.putValue(AbstractAction.NAME,</span>
+<span class="nc" id="L440">				resourceString.replaceAll(&quot;&amp;&quot;, &quot;&quot;));</span>
+<span class="nc" id="L441">		Tools.setLabelAndMnemonic(selectButton, resourceString);</span>
+<span class="nc" id="L442">	}</span>
+
+	protected void exportSelectedRowsAndClose() {
+<span class="nc" id="L445">		int[] selectedRows = timeTable.getSelectedRows();</span>
+<span class="nc" id="L446">		Vector selectedNodes = new Vector();</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">		for (int i = 0; i &lt; selectedRows.length; i++) {</span>
+<span class="nc" id="L448">			int row = selectedRows[i];</span>
+<span class="nc" id="L449">			selectedNodes.add(getMindMapNode(row));</span>
+		}
+		// create new map:
+<span class="nc" id="L452">		MindMap newMap = getMindMapController().newMap();</span>
+<span class="nc" id="L453">		MindMapController newMindMapController = (MindMapController) newMap</span>
+<span class="nc" id="L454">				.getModeController();</span>
+		// Tools.BooleanHolder booleanHolder = new Tools.BooleanHolder();
+		// booleanHolder.setValue(false);
+<span class="nc bnc" id="L457" title="All 2 branches missed.">		for (Iterator iter = selectedNodes.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L458">			MindMapNode node = (MindMapNode) iter.next();</span>
+			// MindMapNode newNode = newMindMapController.addNewNode(
+			// newMap.getRootNode(), 0, booleanHolder);
+			// // copy style:
+			// freemind.controller.actions.generated.instance.Pattern pattern =
+			// StylePatternFactory.createPatternFromNode(node);
+			// newMindMapController.applyPattern(newNode, pattern);
+			// // copy text:
+			// newMindMapController.setNodeText(newNode, node.getText());
+<span class="nc" id="L467">			MindMapNode copy = node.shallowCopy();</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			if (copy != null) {</span>
+<span class="nc" id="L469">				newMindMapController.insertNodeInto(copy, newMap.getRootNode());</span>
+			}
+		}
+<span class="nc" id="L472">		disposeDialog();</span>
+<span class="nc" id="L473">	}</span>
+
+	/**
+	 * @author foltin
+	 * @date 25.04.2012
+	 */
+<span class="nc" id="L479">	private final class MindmapTableModel extends DefaultTableModel {</span>
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see javax.swing.table.AbstractTableModel#getColumnClass(int)
+		 */
+		public Class getColumnClass(int arg0) {
+<span class="nc bnc" id="L486" title="All 5 branches missed.">			switch (arg0) {</span>
+			case DATE_COLUMN:
+			case NODE_CREATED_COLUMN:
+			case NODE_MODIFIED_COLUMN:
+<span class="nc" id="L490">				return Date.class;</span>
+			case NODE_TEXT_COLUMN:
+<span class="nc" id="L492">				return NodeHolder.class;</span>
+			case NODE_ICON_COLUMN:
+<span class="nc" id="L494">				return IconsHolder.class;</span>
+			case NODE_NOTES_COLUMN:
+<span class="nc" id="L496">				return NotesHolder.class;</span>
+			default:
+<span class="nc" id="L498">				return Object.class;</span>
+			}
+		}
+	}
+
+	/**
+	 * @author foltin
+	 * @date 25.04.2012
+	 */
+	private final class ToggleViewFoldedNodesAction extends AbstractAction implements MenuItemSelectedListener {
+		/**
+		 * @param pName
+		 */
+<span class="nc" id="L511">		private ToggleViewFoldedNodesAction(String pName) {</span>
+<span class="nc" id="L512">			super(pName);</span>
+<span class="nc" id="L513">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L516">			toggleViewFoldedNodes();</span>
+<span class="nc" id="L517">		}</span>
+
+		/* (non-Javadoc)
+		 * @see freemind.controller.MenuItemSelectedListener#isSelected(javax.swing.JMenuItem, javax.swing.Action)
+		 */
+		public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+<span class="nc" id="L523">			return mViewFoldedNodes;</span>
+		}
+	}
+
+	public interface IReplaceInputInformation {
+		int getLength();
+
+		NodeHolder getNodeHolderAt(int i);
+
+		void changeString(NodeHolder holder, String newText);
+	}
+
+	private void replace(IReplaceInputInformation info) {
+		try {
+<span class="nc" id="L537">			String searchString = getText(mFilterTextSearchField.getDocument());</span>
+<span class="nc" id="L538">			String replaceString = getText(mFilterTextReplaceField</span>
+<span class="nc" id="L539">					.getDocument());</span>
+<span class="nc" id="L540">			replace(info, searchString, replaceString);</span>
+<span class="nc" id="L541">			timeTableModel.fireTableDataChanged();</span>
+<span class="nc" id="L542">			mFlatNodeTableFilterModel.resetFilter();</span>
+<span class="nc" id="L543">			mFilterTextSearchField.setText(&quot;&quot;);</span>
+<span class="nc" id="L544">		} catch (BadLocationException e) {</span>
+<span class="nc" id="L545">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+
+<span class="nc" id="L548">	}</span>
+
+	public static void replace(IReplaceInputInformation info,
+			String searchString, String replaceString) {
+<span class="fc" id="L552">		String regExp = &quot;(&quot; + (searchString) + &quot;)&quot;;</span>
+<span class="fc" id="L553">		Pattern p = Pattern.compile(regExp, Pattern.CASE_INSENSITIVE);</span>
+		// String replacement = getPureRegularExpression(replaceString);
+<span class="fc" id="L555">		String replacement = (replaceString);</span>
+<span class="fc" id="L556">		int length = info.getLength();</span>
+<span class="pc bpc" id="L557" title="1 of 2 branches missed.">		for (int i = 0; i &lt; length; i++) {</span>
+<span class="fc" id="L558">			NodeHolder nodeHolder = info.getNodeHolderAt(i);</span>
+<span class="fc" id="L559">			String text = nodeHolder.node.getText();</span>
+<span class="fc" id="L560">			String replaceResult = HtmlTools.getInstance().getReplaceResult(p,</span>
+<span class="fc" id="L561">					replacement, text);</span>
+<span class="nc bnc" id="L562" title="All 2 branches missed.">			if (!Tools.safeEquals(text, replaceResult)) {</span>
+				// set new node text only, if different.
+<span class="nc" id="L564">				info.changeString(nodeHolder, replaceResult);</span>
+			}
+		}
+<span class="nc" id="L567">	}</span>
+
+<span class="nc" id="L569">	private class ReplaceAllInfo implements IReplaceInputInformation {</span>
+		public int getLength() {
+<span class="nc" id="L571">			return mFlatNodeTableFilterModel.getRowCount();</span>
+		}
+
+		public NodeHolder getNodeHolderAt(int i) {
+<span class="nc" id="L575">			return (NodeHolder) mFlatNodeTableFilterModel.getValueAt(i,</span>
+<span class="nc" id="L576">					NODE_TEXT_COLUMN);</span>
+		}
+
+		public void changeString(NodeHolder nodeHolder, String newText) {
+<span class="nc" id="L580">			getMindMapController().setNodeText(nodeHolder.node, newText);</span>
+<span class="nc" id="L581">		}</span>
+	}
+
+<span class="nc" id="L584">	private class ReplaceSelectedInfo implements IReplaceInputInformation {</span>
+		public int getLength() {
+<span class="nc" id="L586">			return timeTable.getSelectedRowCount();</span>
+		}
+
+		public NodeHolder getNodeHolderAt(int i) {
+<span class="nc" id="L590">			return (NodeHolder) sorter.getValueAt(</span>
+<span class="nc" id="L591">					timeTable.getSelectedRows()[i], NODE_TEXT_COLUMN);</span>
+		}
+
+		public void changeString(NodeHolder nodeHolder, String newText) {
+<span class="nc" id="L595">			getMindMapController().setNodeText(nodeHolder.node, newText);</span>
+<span class="nc" id="L596">		}</span>
+	}
+
+	private void selectSelectedRows() {
+<span class="nc" id="L600">		selectNodes(timeTable.getSelectedRow(), timeTable.getSelectedRows());</span>
+<span class="nc" id="L601">	}</span>
+
+	private void gotoNodesAndClose(int focussedRow, int[] selectedRows) {
+<span class="nc" id="L604">		selectNodes(focussedRow, selectedRows);</span>
+<span class="nc" id="L605">		disposeDialog();</span>
+<span class="nc" id="L606">	}</span>
+
+	private void selectNodes(int focussedRow, int[] selectedRows) {
+<span class="nc bnc" id="L609" title="All 2 branches missed.">		if (focussedRow &gt;= 0) {</span>
+<span class="nc" id="L610">			MindMapNode focussedNode = getMindMapNode(focussedRow);</span>
+			// getController().centerNode(focussedNode);
+<span class="nc" id="L612">			Vector selectedNodes = new Vector();</span>
+<span class="nc bnc" id="L613" title="All 2 branches missed.">			for (int i = 0; i &lt; selectedRows.length; i++) {</span>
+<span class="nc" id="L614">				int row = selectedRows[i];</span>
+<span class="nc" id="L615">				selectedNodes.add(getMindMapNode(row));</span>
+			}
+<span class="nc" id="L617">			getMindMapController().select(focussedNode, selectedNodes);</span>
+		}
+<span class="nc" id="L619">	}</span>
+
+	/**
+     */
+	private MindMapNode getMindMapNode(int focussedRow) {
+<span class="nc" id="L624">		MindMapNode selectedNode = ((NodeHolder) timeTable.getModel()</span>
+<span class="nc" id="L625">				.getValueAt(focussedRow, NODE_TEXT_COLUMN)).node;</span>
+<span class="nc" id="L626">		return selectedNode;</span>
+	}
+
+	/**
+	 * Creates a table model for the new table and returns it.
+	 */
+	private DefaultTableModel updateModel() {
+<span class="nc" id="L633">		TimeWindowConfigurationStorage storage = null;</span>
+		// if not first call, get configuration
+<span class="nc bnc" id="L635" title="All 2 branches missed.">		if(sorter != null) {</span>
+<span class="nc" id="L636">			storage = getTableConfiguration();</span>
+		}
+<span class="nc" id="L638">		DefaultTableModel model = new MindmapTableModel();</span>
+<span class="nc" id="L639">		model.addColumn(COLUMN_DATE);</span>
+<span class="nc" id="L640">		model.addColumn(COLUMN_TEXT);</span>
+<span class="nc" id="L641">		model.addColumn(COLUMN_ICONS);</span>
+<span class="nc" id="L642">		model.addColumn(COLUMN_CREATED);</span>
+<span class="nc" id="L643">		model.addColumn(COLUMN_MODIFIED);</span>
+<span class="nc" id="L644">		model.addColumn(COLUMN_NOTES);</span>
+<span class="nc" id="L645">		MindMapNode node = getMindMapController().getMap().getRootNode();</span>
+<span class="nc" id="L646">		updateModel(model, node);</span>
+<span class="nc" id="L647">		timeTableModel = model;</span>
+<span class="nc" id="L648">		mFlatNodeTableFilterModel = new FlatNodeTableFilterModel(</span>
+<span class="nc" id="L649">				timeTableModel, NODE_TEXT_COLUMN, NODE_NOTES_COLUMN);</span>
+<span class="nc bnc" id="L650" title="All 2 branches missed.">		if(sorter == null) {</span>
+<span class="nc" id="L651">			sorter = new TableSorter(mFlatNodeTableFilterModel);</span>
+<span class="nc" id="L652">			timeTable.setModel(sorter);</span>
+<span class="nc" id="L653">		} else {</span>
+<span class="nc" id="L654">			sorter.setTableModel(mFlatNodeTableFilterModel);</span>
+		}
+<span class="nc bnc" id="L656" title="All 2 branches missed.">		if(storage != null) {</span>
+<span class="nc" id="L657">			setTableConfiguration(storage);</span>
+		}
+		try {
+<span class="nc" id="L660">			String text = getRegularExpression(getText(mFilterTextSearchField</span>
+<span class="nc" id="L661">					.getDocument()));</span>
+<span class="nc" id="L662">			mFlatNodeTableFilterModel.setFilter(text);</span>
+<span class="nc" id="L663">		} catch (BadLocationException e) {</span>
+<span class="nc" id="L664">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L666">		return model;</span>
+	}
+
+	private void updateModel(DefaultTableModel model, MindMapNode node) {
+<span class="nc" id="L670">		ReminderHookBase hook = TimeManagementOrganizer.getHook(node);</span>
+		// show all nodes or only those with reminder:
+<span class="nc bnc" id="L672" title="All 4 branches missed.">		if (showAllNodes || hook != null) {</span>
+<span class="nc" id="L673">			Date date = null;</span>
+<span class="nc bnc" id="L674" title="All 2 branches missed.">			if (hook != null) {</span>
+<span class="nc" id="L675">				date = new Date(hook.getRemindUserAt());</span>
+			}
+<span class="nc" id="L677">			model.addRow(new Object[] { date, new NodeHolder(node),</span>
+<span class="nc" id="L678">					new IconsHolder(node),</span>
+<span class="nc" id="L679">					node.getHistoryInformation().getCreatedAt(),</span>
+<span class="nc" id="L680">					node.getHistoryInformation().getLastModifiedAt(),</span>
+<span class="nc" id="L681">					new NotesHolder(node) });</span>
+		}
+<span class="nc bnc" id="L683" title="All 4 branches missed.">		if((!mViewFoldedNodes) &amp;&amp; node.isFolded()) {</span>
+			// no recursion, if folded nodes should be hidden.
+<span class="nc" id="L685">			return;</span>
+		}
+<span class="nc bnc" id="L687" title="All 2 branches missed.">		for (Iterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L688">			MindMapNode child = (MindMapNode) i.next();</span>
+<span class="nc" id="L689">			updateModel(model, child);</span>
+		}
+<span class="nc" id="L691">	}</span>
+
+	/**
+	 */
+	private JPanel getTimePanel() {
+<span class="nc bnc" id="L696" title="All 2 branches missed.">		if (timePanel == null) {</span>
+<span class="nc" id="L697">			timePanel = new JPanel();</span>
+<span class="nc" id="L698">			timePanel.setLayout(new GridBagLayout());</span>
+			// {
+			// GridBagConstraints gb2 = new GridBagConstraints();
+			// gb2.gridx = 0;
+			// gb2.gridy = 0;
+			// gb2.fill = GridBagConstraints.HORIZONTAL;
+			// timePanel.add(new JLabel(
+			// getResourceString(&quot;plugins/TimeManagement.xml_hour&quot;)),
+			// gb2);
+			// }
+		}
+<span class="nc" id="L709">		return timePanel;</span>
+	}
+
+	/**
+	 *
+	 */
+	private void disposeDialog() {
+		// store window positions:
+
+<span class="nc" id="L718">		TimeWindowConfigurationStorage storage = getTableConfiguration();</span>
+<span class="nc" id="L719">		getMindMapController().storeDialogPositions(dialog, storage,</span>
+<span class="nc" id="L720">				WINDOW_PREFERENCE_STORAGE_PROPERTY);</span>
+
+<span class="nc" id="L722">		getMindMapController().getController().getMapModuleManager()</span>
+<span class="nc" id="L723">				.removeListener(this);</span>
+<span class="nc" id="L724">		dialog.setVisible(false);</span>
+<span class="nc" id="L725">		dialog.dispose();</span>
+<span class="nc" id="L726">	}</span>
+
+	protected TimeWindowConfigurationStorage getTableConfiguration() {
+<span class="nc" id="L729">		TimeWindowConfigurationStorage storage = new TimeWindowConfigurationStorage();</span>
+<span class="nc" id="L730">		storage.setViewFoldedNodes(mViewFoldedNodes);</span>
+<span class="nc bnc" id="L731" title="All 2 branches missed.">		for (int i = 0; i &lt; timeTable.getColumnCount(); i++) {</span>
+<span class="nc" id="L732">			TimeWindowColumnSetting setting = new TimeWindowColumnSetting();</span>
+<span class="nc" id="L733">			setting.setColumnWidth(timeTable.getColumnModel().getColumn(i)</span>
+<span class="nc" id="L734">					.getWidth());</span>
+<span class="nc" id="L735">			setting.setColumnSorting(sorter.getSortingStatus(i));</span>
+<span class="nc" id="L736">			storage.addTimeWindowColumnSetting(setting);</span>
+		}
+<span class="nc" id="L738">		return storage;</span>
+	}
+
+	public static String getRegularExpression(String text)
+			throws BadLocationException {
+<span class="nc" id="L743">		text = &quot;.*(&quot; + text + &quot;).*&quot;;</span>
+<span class="nc" id="L744">		return text;</span>
+	}
+
+	/**
+	 * @throws BadLocationException
+	 */
+	private String getText(Document document) throws BadLocationException {
+<span class="nc" id="L751">		String text = document.getText(0, document.getLength());</span>
+<span class="nc" id="L752">		return text;</span>
+	}
+
+	/**
+	 * Removes all regular expression stuff with exception of &quot;*&quot;, which is
+	 * replaced by &quot;.*&quot;.
+	 */
+	public static String getPureRegularExpression(String text) {
+		// remove regexp:
+<span class="fc" id="L761">		text = text.replaceAll(&quot;([().\\[\\]^$|])&quot;, &quot;\\\\$1&quot;);</span>
+<span class="fc" id="L762">		text = text.replaceAll(&quot;\\*&quot;, &quot;.*&quot;);</span>
+<span class="fc" id="L763">		return text;</span>
+	}
+
+<span class="nc" id="L766">	private final class FilterTextDocumentListener implements DocumentListener {</span>
+<span class="nc" id="L767">		private Timer mTypeDelayTimer = null;</span>
+
+		private synchronized void change(DocumentEvent event) {
+			// stop old timer, if present:
+<span class="nc bnc" id="L771" title="All 2 branches missed.">			if (mTypeDelayTimer != null) {</span>
+<span class="nc" id="L772">				mTypeDelayTimer.cancel();</span>
+<span class="nc" id="L773">				mTypeDelayTimer = null;</span>
+			}
+<span class="nc" id="L775">			mTypeDelayTimer = new Timer();</span>
+<span class="nc" id="L776">			mTypeDelayTimer.schedule(new DelayedTextEntry(event),</span>
+<span class="nc" id="L777">					TYPE_DELAY_TIME);</span>
+<span class="nc" id="L778">		}</span>
+
+		public void insertUpdate(DocumentEvent event) {
+<span class="nc" id="L781">			change(event);</span>
+<span class="nc" id="L782">		}</span>
+
+		public void removeUpdate(DocumentEvent event) {
+<span class="nc" id="L785">			change(event);</span>
+
+<span class="nc" id="L787">		}</span>
+
+		public void changedUpdate(DocumentEvent event) {
+<span class="nc" id="L790">			change(event);</span>
+
+<span class="nc" id="L792">		}</span>
+
+		protected class DelayedTextEntry extends TimerTask {
+
+			private final DocumentEvent event;
+
+<span class="nc" id="L798">			DelayedTextEntry(DocumentEvent event) {</span>
+<span class="nc" id="L799">				this.event = event;</span>
+<span class="nc" id="L800">			}</span>
+
+			public void run() {
+<span class="nc" id="L803">				SwingUtilities.invokeLater(new Runnable() {</span>
+					public void run() {
+						try {
+<span class="nc" id="L806">							Document document = event.getDocument();</span>
+<span class="nc" id="L807">							String text = getRegularExpression(getText(document));</span>
+<span class="nc" id="L808">							mFlatNodeTableFilterModel.setFilter(text);</span>
+<span class="nc" id="L809">						} catch (BadLocationException e) {</span>
+<span class="nc" id="L810">							freemind.main.Resources.getInstance().logException(</span>
+<span class="nc" id="L811">									e);</span>
+<span class="nc" id="L812">							mFlatNodeTableFilterModel.resetFilter();</span>
+						}
+<span class="nc" id="L814">					}</span>
+				});
+<span class="nc" id="L816">			}</span>
+		}
+
+	}
+
+<span class="nc" id="L821">	private final class FlatNodeTableMouseAdapter extends MouseAdapter {</span>
+		public void mouseClicked(MouseEvent e) {
+<span class="nc bnc" id="L823" title="All 2 branches missed.">			if (e.getClickCount() == 2) {</span>
+<span class="nc" id="L824">				Point p = e.getPoint();</span>
+<span class="nc" id="L825">				int row = timeTable.rowAtPoint(p);</span>
+<span class="nc" id="L826">				gotoNodesAndClose(row, new int[] { row });</span>
+			}
+<span class="nc" id="L828">		}</span>
+	}
+
+<span class="nc" id="L831">	private final class FlatNodeTableKeyListener implements KeyListener {</span>
+		public void keyTyped(KeyEvent arg0) {
+<span class="nc" id="L833">		}</span>
+
+		public void keyPressed(KeyEvent arg0) {
+<span class="nc" id="L836">		}</span>
+
+		public void keyReleased(KeyEvent arg0) {
+<span class="nc bnc" id="L839" title="All 2 branches missed.">			if (arg0.getKeyCode() == KeyEvent.VK_ESCAPE) {</span>
+<span class="nc" id="L840">				disposeDialog();</span>
+			}
+<span class="nc bnc" id="L842" title="All 2 branches missed.">			if (arg0.getKeyCode() == KeyEvent.VK_ENTER) {</span>
+<span class="nc" id="L843">				selectSelectedRows();</span>
+<span class="nc" id="L844">				disposeDialog();</span>
+			}
+<span class="nc" id="L846">		}</span>
+	}
+
+<span class="nc" id="L849">	private final class FlatNodeTable extends JTable {</span>
+		public TableCellRenderer getCellRenderer(int row, int column) {
+<span class="nc" id="L851">			Object object = getModel().getValueAt(row, column);</span>
+<span class="nc bnc" id="L852" title="All 2 branches missed.">			if (object instanceof Date)</span>
+<span class="nc" id="L853">				return dateRenderer;</span>
+<span class="nc bnc" id="L854" title="All 2 branches missed.">			if (object instanceof NodeHolder)</span>
+<span class="nc" id="L855">				return nodeRenderer;</span>
+<span class="nc bnc" id="L856" title="All 2 branches missed.">			if (object instanceof NotesHolder)</span>
+<span class="nc" id="L857">				return notesRenderer;</span>
+<span class="nc bnc" id="L858" title="All 2 branches missed.">			if (object instanceof IconsHolder)</span>
+<span class="nc" id="L859">				return iconsRenderer;</span>
+<span class="nc" id="L860">			return super.getCellRenderer(row, column);</span>
+		}
+
+		public boolean isCellEditable(int rowIndex, int vColIndex) {
+<span class="nc" id="L864">			return false;</span>
+		}
+
+		protected void processKeyEvent(KeyEvent e) {
+<span class="nc bnc" id="L868" title="All 2 branches missed.">			if (e.getKeyCode() == KeyEvent.VK_ENTER) {</span>
+<span class="nc" id="L869">				EventListener[] el = super.getListeners(KeyListener.class);</span>
+<span class="nc bnc" id="L870" title="All 2 branches missed.">				if (e.getID() != KeyEvent.KEY_RELEASED)</span>
+<span class="nc" id="L871">					return;</span>
+<span class="nc bnc" id="L872" title="All 2 branches missed.">				for (int i = 0; i &lt; el.length; i++) {</span>
+<span class="nc" id="L873">					KeyListener kl = (KeyListener) el[i];</span>
+<span class="nc" id="L874">					kl.keyReleased(e);</span>
+				}
+<span class="nc" id="L876">				return;</span>
+			}
+<span class="nc" id="L878">			super.processKeyEvent(e);</span>
+<span class="nc" id="L879">		}</span>
+	}
+
+	static class DateRenderer extends DefaultTableCellRenderer {
+		DateFormat formatter;
+
+		public DateRenderer() {
+<span class="nc" id="L886">			super();</span>
+<span class="nc" id="L887">		}</span>
+
+		public void setValue(Object value) {
+<span class="nc bnc" id="L890" title="All 2 branches missed.">			if (formatter == null) {</span>
+<span class="nc" id="L891">				formatter = DateFormat.getDateTimeInstance();</span>
+			}
+<span class="nc bnc" id="L893" title="All 2 branches missed.">			setText((value == null) ? &quot;&quot; : formatter.format(value));</span>
+<span class="nc" id="L894">		}</span>
+	}
+
+	static class NodeRenderer extends DefaultTableCellRenderer {
+		public NodeRenderer() {
+<span class="nc" id="L899">			super();</span>
+<span class="nc" id="L900">		}</span>
+
+		public void setValue(Object value) {
+<span class="nc bnc" id="L903" title="All 2 branches missed.">			setText((value == null) ? &quot;&quot; : ((NodeHolder) value)</span>
+<span class="nc" id="L904">					.getUntaggedNodeText());</span>
+<span class="nc" id="L905">		}</span>
+	}
+
+	static class NotesRenderer extends DefaultTableCellRenderer {
+		public NotesRenderer() {
+<span class="nc" id="L910">			super();</span>
+<span class="nc" id="L911">		}</span>
+
+		public void setValue(Object value) {
+<span class="nc bnc" id="L914" title="All 2 branches missed.">			setText((value == null) ? &quot;&quot; : ((NotesHolder) value)</span>
+<span class="nc" id="L915">					.getUntaggedNotesText());</span>
+<span class="nc" id="L916">		}</span>
+	}
+
+	/** removes html in nodes before comparison. */
+	public static class NodeHolder implements Comparable {
+		private final MindMapNode node;
+<span class="fc" id="L922">		private String untaggedNodeText = null;</span>
+		/**
+		 * Holds the original node content to cache the untaggedNodeText and to
+		 * see whether or not the cache is dirty.
+		 */
+<span class="fc" id="L927">		private String originalNodeText = null;</span>
+
+		/**
+		 *
+		 */
+<span class="fc" id="L932">		public NodeHolder(MindMapNode node) {</span>
+<span class="fc" id="L933">			this.node = node;</span>
+<span class="fc" id="L934">		}</span>
+
+		public int compareTo(Object compareToObject) {
+<span class="nc" id="L937">			return toString().compareTo(compareToObject.toString());</span>
+		}
+
+		public String toString() {
+<span class="fc" id="L941">			return getUntaggedNodeText();</span>
+		}
+
+		public String getUntaggedNodeText() {
+<span class="fc" id="L945">			String nodeText = node.getText();</span>
+			// cache empty or dirty?:
+<span class="pc bpc" id="L947" title="1 of 2 branches missed.">			if (untaggedNodeText == null</span>
+<span class="nc bnc" id="L948" title="All 2 branches missed.">					|| (originalNodeText != null &amp;&amp; !originalNodeText</span>
+<span class="nc bnc" id="L949" title="All 2 branches missed.">							.equals(nodeText))) {</span>
+<span class="fc" id="L950">				originalNodeText = nodeText;</span>
+				// remove tags:
+<span class="fc" id="L952">				untaggedNodeText = HtmlTools.htmlToPlain(nodeText)</span>
+<span class="fc" id="L953">						.replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+			}
+<span class="fc" id="L955">			return untaggedNodeText;</span>
+		}
+
+	}
+
+	/** removes html in notes before comparison. */
+	public static class NotesHolder implements Comparable {
+		private final MindMapNode node;
+<span class="fc" id="L963">		private String untaggedNotesText = null;</span>
+<span class="fc" id="L964">		private String originalNotesText = null;</span>
+
+		/**
+		 *
+		 */
+<span class="fc" id="L969">		public NotesHolder(MindMapNode node) {</span>
+<span class="fc" id="L970">			this.node = node;</span>
+<span class="fc" id="L971">		}</span>
+
+		public int compareTo(Object compareToObject) {
+<span class="nc" id="L974">			return toString().compareTo(compareToObject.toString());</span>
+		}
+
+		public String toString() {
+<span class="fc" id="L978">			return getUntaggedNotesText();</span>
+		}
+
+		public String getUntaggedNotesText() {
+<span class="fc" id="L982">			String notesText = node.getNoteText();</span>
+<span class="pc bpc" id="L983" title="1 of 2 branches missed.">			if (notesText == null)</span>
+<span class="fc" id="L984">				return &quot;&quot;;</span>
+<span class="nc bnc" id="L985" title="All 2 branches missed.">			if (untaggedNotesText == null</span>
+<span class="nc bnc" id="L986" title="All 2 branches missed.">					|| (originalNotesText != null &amp;&amp; !originalNotesText</span>
+<span class="nc bnc" id="L987" title="All 2 branches missed.">							.equals(notesText))) {</span>
+<span class="nc" id="L988">				originalNotesText = notesText;</span>
+				// remove tags:
+<span class="nc" id="L990">				untaggedNotesText = HtmlTools.removeHtmlTagsFromString(</span>
+<span class="nc" id="L991">						notesText).replaceAll(&quot;\\s+&quot;, &quot; &quot;);</span>
+			}
+<span class="nc" id="L993">			return untaggedNotesText;</span>
+		}
+
+	}
+
+	static class IconsHolder implements Comparable {
+<span class="nc" id="L999">		Vector icons = new Vector();</span>
+
+		private Vector iconNames;
+
+<span class="nc" id="L1003">		public IconsHolder(MindMapNode node) {</span>
+<span class="nc" id="L1004">			icons.addAll(node.getIcons());</span>
+			// sorting the output.
+<span class="nc" id="L1006">			iconNames = new Vector();</span>
+<span class="nc bnc" id="L1007" title="All 2 branches missed.">			for (Iterator i = icons.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L1008">				MindIcon icon = (MindIcon) i.next();</span>
+<span class="nc" id="L1009">				iconNames.add(icon.getName());</span>
+			}
+<span class="nc" id="L1011">			Collections.sort(iconNames);</span>
+<span class="nc" id="L1012">		}</span>
+
+		public int compareTo(Object compareToObject) {
+<span class="nc" id="L1015">			return toString().compareTo(compareToObject.toString());</span>
+		}
+
+		public Vector getIcons() {
+<span class="nc" id="L1019">			return icons;</span>
+		}
+
+		/** Returns a sorted list of icon names. */
+		public String toString() {
+<span class="nc" id="L1024">			String result = &quot;&quot;;</span>
+<span class="nc bnc" id="L1025" title="All 2 branches missed.">			for (Iterator i = iconNames.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L1026">				String name = (String) i.next();</span>
+<span class="nc" id="L1027">				result += name + &quot; &quot;;</span>
+			}
+<span class="nc" id="L1029">			return result;</span>
+		}
+	}
+
+	static class IconsRenderer extends DefaultTableCellRenderer {
+		private final ModeController modeController;
+
+		public IconsRenderer(ModeController controller) {
+<span class="nc" id="L1037">			super();</span>
+<span class="nc" id="L1038">			modeController = controller;</span>
+<span class="nc" id="L1039">		}</span>
+
+		public void setValue(Object value) {
+<span class="nc bnc" id="L1042" title="All 2 branches missed.">			if (value instanceof IconsHolder) {</span>
+<span class="nc" id="L1043">				IconsHolder iconsHolder = (IconsHolder) value;</span>
+<span class="nc" id="L1044">				MultipleImage iconImages = new MultipleImage(1.0f);</span>
+<span class="nc" id="L1045">				for (Iterator i = iconsHolder.getIcons().iterator(); i</span>
+<span class="nc bnc" id="L1046" title="All 2 branches missed.">						.hasNext();) {</span>
+<span class="nc" id="L1047">					MindIcon icon = (MindIcon) i.next();</span>
+<span class="nc" id="L1048">					iconImages.addImage(icon.getIcon());</span>
+				}
+<span class="nc bnc" id="L1050" title="All 2 branches missed.">				if (iconImages.getImageCount() &gt; 0) {</span>
+<span class="nc" id="L1051">					setIcon(iconImages);</span>
+<span class="nc" id="L1052">				} else {</span>
+<span class="nc" id="L1053">					setIcon(null);</span>
+				}
+			}
+<span class="nc" id="L1056">		}</span>
+	}
+
+	/**
+	 * Overwritten, as this dialog is not modal, but after the plugin has
+	 * terminated, the dialog is still present and needs the controller to store
+	 * its values.
+	 * */
+	public MindMapController getMindMapController() {
+<span class="nc" id="L1065">		return mMyMindMapController;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.MapModuleManager.MapModuleChangeObserver#
+	 * isMapModuleChangeAllowed(freemind.view.MapModule, freemind.modes.Mode,
+	 * freemind.view.MapModule, freemind.modes.Mode)
+	 */
+	public boolean isMapModuleChangeAllowed(MapModule pOldMapModule,
+			Mode pOldMode, MapModule pNewMapModule, Mode pNewMode) {
+<span class="nc" id="L1077">		return true;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.MapModuleManager.MapModuleChangeObserver#
+	 * beforeMapModuleChange(freemind.view.MapModule, freemind.modes.Mode,
+	 * freemind.view.MapModule, freemind.modes.Mode)
+	 */
+	public void beforeMapModuleChange(MapModule pOldMapModule, Mode pOldMode,
+			MapModule pNewMapModule, Mode pNewMode) {
+
+<span class="nc" id="L1090">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.MapModuleManager.MapModuleChangeObserver#afterMapClose
+	 * (freemind.view.MapModule, freemind.modes.Mode)
+	 */
+	public void afterMapClose(MapModule pOldMapModule, Mode pOldMode) {
+<span class="nc" id="L1100">		disposeDialog();</span>
+<span class="nc" id="L1101">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.MapModuleManager.MapModuleChangeObserver#
+	 * afterMapModuleChange(freemind.view.MapModule, freemind.modes.Mode,
+	 * freemind.view.MapModule, freemind.modes.Mode)
+	 */
+	public void afterMapModuleChange(MapModule pOldMapModule, Mode pOldMode,
+			MapModule pNewMapModule, Mode pNewMode) {
+<span class="nc" id="L1112">		disposeDialog();</span>
+
+<span class="nc" id="L1114">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.MapModuleManager.MapModuleChangeObserver#
+	 * numberOfOpenMapInformation(int, int)
+	 */
+	public void numberOfOpenMapInformation(int pNumber, int pIndex) {
+<span class="nc" id="L1123">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

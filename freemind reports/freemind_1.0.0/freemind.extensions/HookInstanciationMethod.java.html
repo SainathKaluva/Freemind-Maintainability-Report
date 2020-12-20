@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>HookInstanciationMethod.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.extensions</a> &gt; <span class="el_source">HookInstanciationMethod.java</span></div><h1>HookInstanciationMethod.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 22.07.2004
+ */
+/*$Id: HookInstanciationMethod.java,v 1.1.4.1.16.3 2007/06/05 20:53:30 dpolivaev Exp $*/
+package freemind.extensions;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+
+public class HookInstanciationMethod {
+	private static interface DestinationNodesGetter {
+		Collection getDestinationNodes(ModeController controller,
+				MindMapNode focussed, List selecteds);
+
+		MindMapNode getCenterNode(ModeController controller,
+				MindMapNode focussed, List selecteds);
+	}
+
+<span class="nc" id="L43">	private static class DefaultDestinationNodesGetter implements</span>
+			DestinationNodesGetter {
+		public Collection getDestinationNodes(ModeController controller,
+				MindMapNode focussed, List selecteds) {
+<span class="nc" id="L47">			return selecteds;</span>
+		}
+
+		public MindMapNode getCenterNode(ModeController controller,
+				MindMapNode focussed, List selecteds) {
+<span class="nc" id="L52">			return focussed;</span>
+		}
+	}
+
+<span class="nc" id="L56">	private static class RootDestinationNodesGetter implements</span>
+			DestinationNodesGetter {
+		public Collection getDestinationNodes(ModeController controller,
+				MindMapNode focussed, List selecteds) {
+<span class="nc" id="L60">			Vector returnValue = new Vector();</span>
+<span class="nc" id="L61">			returnValue.add(controller.getMap().getRoot());</span>
+<span class="nc" id="L62">			return returnValue;</span>
+		}
+
+		public MindMapNode getCenterNode(ModeController controller,
+				MindMapNode focussed, List selecteds) {
+<span class="nc" id="L67">			return controller.getMap().getRootNode();</span>
+		}
+	}
+
+<span class="nc" id="L71">	private static class AllDestinationNodesGetter implements</span>
+			DestinationNodesGetter {
+		private void addChilds(MindMapNode node, Collection allNodeCollection) {
+<span class="nc" id="L74">			allNodeCollection.add(node);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			for (Iterator i = node.childrenFolded(); i.hasNext();) {</span>
+<span class="nc" id="L76">				MindMapNode child = (MindMapNode) i.next();</span>
+<span class="nc" id="L77">				addChilds(child, allNodeCollection);</span>
+			}
+<span class="nc" id="L79">		}</span>
+
+		public Collection getDestinationNodes(ModeController controller,
+				MindMapNode focussed, List selecteds) {
+<span class="nc" id="L83">			Vector returnValue = new Vector();</span>
+<span class="nc" id="L84">			addChilds(controller.getMap().getRootNode(), returnValue);</span>
+<span class="nc" id="L85">			return returnValue;</span>
+		}
+
+		public MindMapNode getCenterNode(ModeController controller,
+				MindMapNode focussed, List selecteds) {
+<span class="nc" id="L90">			return focussed;</span>
+		}
+
+	}
+
+	private boolean isSingleton;
+	private DestinationNodesGetter getter;
+	private final boolean isPermanent;
+	private final boolean isUndoable;
+
+	public boolean isSingleton() {
+<span class="nc" id="L101">		return isSingleton;</span>
+	}
+
+	/**
+	 * @return Returns the isPermanent.
+	 */
+	public boolean isPermanent() {
+<span class="nc" id="L108">		return isPermanent;</span>
+	}
+
+<span class="nc" id="L111">	private HookInstanciationMethod(boolean isPermanent, boolean isSingleton,</span>
+			DestinationNodesGetter getter, boolean isUndoable) {
+<span class="nc" id="L113">		this.isPermanent = isPermanent;</span>
+<span class="nc" id="L114">		this.isSingleton = isSingleton;</span>
+<span class="nc" id="L115">		this.getter = getter;</span>
+<span class="nc" id="L116">		this.isUndoable = isUndoable;</span>
+<span class="nc" id="L117">	}</span>
+
+<span class="nc" id="L119">	static final public HookInstanciationMethod Once = new HookInstanciationMethod(</span>
+<span class="nc" id="L120">			true, true, new DefaultDestinationNodesGetter(), true);</span>
+	/** The hook should only be added/removed to the root node. */
+<span class="nc" id="L122">	static final public HookInstanciationMethod OnceForRoot = new HookInstanciationMethod(</span>
+<span class="nc" id="L123">			true, true, new RootDestinationNodesGetter(), true);</span>
+	/** Each (or none) node should have the hook. */
+<span class="nc" id="L125">	static final public HookInstanciationMethod OnceForAllNodes = new HookInstanciationMethod(</span>
+<span class="nc" id="L126">			true, true, new AllDestinationNodesGetter(), true);</span>
+	/**
+	 * This is for MindMapHooks in general. Here, no undo- or redoaction are
+	 * performed, the undo information is given by the actions the hook
+	 * performs.
+	 */
+<span class="nc" id="L132">	static final public HookInstanciationMethod Other = new HookInstanciationMethod(</span>
+<span class="nc" id="L133">			false, false, new DefaultDestinationNodesGetter(), false);</span>
+	/**
+	 * This is for MindMapHooks that wish to be applied to root, whereevery they
+	 * are called from. Here, no undo- or redoaction are performed, the undo
+	 * information is given by the actions the hook performs.
+	 */
+<span class="nc" id="L139">	static final public HookInstanciationMethod ApplyToRoot = new HookInstanciationMethod(</span>
+<span class="nc" id="L140">			false, false, new RootDestinationNodesGetter(), false);</span>
+
+	static final public HashMap getAllInstanciationMethods() {
+<span class="nc" id="L143">		HashMap res = new HashMap();</span>
+<span class="nc" id="L144">		res.put(&quot;Once&quot;, Once);</span>
+<span class="nc" id="L145">		res.put(&quot;OnceForRoot&quot;, OnceForRoot);</span>
+<span class="nc" id="L146">		res.put(&quot;OnceForAllNodes&quot;, OnceForAllNodes);</span>
+<span class="nc" id="L147">		res.put(&quot;Other&quot;, Other);</span>
+<span class="nc" id="L148">		res.put(&quot;ApplyToRoot&quot;, ApplyToRoot);</span>
+<span class="nc" id="L149">		return res;</span>
+	}
+
+	/**
+	 */
+	public Collection getDestinationNodes(ModeController controller,
+			MindMapNode focussed, List selecteds) {
+<span class="nc" id="L156">		return getter.getDestinationNodes(controller, focussed, selecteds);</span>
+	}
+
+	/**
+	 */
+	public boolean isAlreadyPresent(ModeController controller, String hookName,
+			MindMapNode focussed) {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		for (Iterator i = focussed.getActivatedHooks().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L164">			PermanentNodeHook hook = (PermanentNodeHook) i.next();</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">			if (hookName.equals(hook.getName())) {</span>
+<span class="nc" id="L166">				return true;</span>
+			}
+		}
+<span class="nc" id="L169">		return false;</span>
+	}
+
+	/**
+	 */
+	public MindMapNode getCenterNode(ModeController controller,
+			MindMapNode focussed, List selecteds) {
+<span class="nc" id="L176">		return getter.getCenterNode(controller, focussed, selecteds);</span>
+	}
+
+	/**
+     */
+	public boolean isUndoable() {
+<span class="nc" id="L182">		return isUndoable;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

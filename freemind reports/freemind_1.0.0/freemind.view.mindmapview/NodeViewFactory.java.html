@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeViewFactory.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">NodeViewFactory.java</span></div><h1>NodeViewFactory.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2007  Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.view.mindmapview;
+
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.LayoutManager;
+
+import javax.swing.JComponent;
+
+import freemind.modes.EdgeAdapter;
+import freemind.modes.MindMapNode;
+
+class NodeViewFactory {
+
+	private static class ContentPane extends JComponent {
+<span class="nc" id="L35">		static private LayoutManager layoutManager = new ContentPaneLayout();</span>
+
+<span class="nc" id="L37">		ContentPane() {</span>
+<span class="nc" id="L38">			setLayout(layoutManager);</span>
+<span class="nc" id="L39">		}</span>
+	}
+
+<span class="nc" id="L42">	private static class ContentPaneLayout implements LayoutManager {</span>
+
+		public void addLayoutComponent(String name, Component comp) {
+<span class="nc" id="L45">		}</span>
+
+		public void layoutContainer(Container parent) {
+<span class="nc" id="L48">			final int componentCount = parent.getComponentCount();</span>
+<span class="nc" id="L49">			final int width = parent.getWidth();</span>
+<span class="nc" id="L50">			int y = 0;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">			for (int i = 0; i &lt; componentCount; i++) {</span>
+<span class="nc" id="L52">				final Component component = parent.getComponent(i);</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">				if (component.isVisible()) {</span>
+<span class="nc" id="L54">					final Dimension preferredCompSize = component</span>
+<span class="nc" id="L55">							.getPreferredSize();</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">					if (component instanceof MainView) {</span>
+<span class="nc" id="L57">						component.setBounds(0, y, width,</span>
+<span class="nc" id="L58">								preferredCompSize.height);</span>
+<span class="nc" id="L59">					} else {</span>
+<span class="nc" id="L60">						int x = (int) (component.getAlignmentX() * (width - preferredCompSize.width));</span>
+<span class="nc" id="L61">						component.setBounds(x, y, preferredCompSize.width,</span>
+<span class="nc" id="L62">								preferredCompSize.height);</span>
+					}
+<span class="nc" id="L64">					y += preferredCompSize.height;</span>
+				}
+			}
+<span class="nc" id="L67">		}</span>
+
+		public Dimension minimumLayoutSize(Container parent) {
+<span class="nc" id="L70">			return preferredLayoutSize(parent);</span>
+		}
+
+		public Dimension preferredLayoutSize(Container parent) {
+<span class="nc" id="L74">			final Dimension prefSize = new Dimension(0, 0);</span>
+<span class="nc" id="L75">			final int componentCount = parent.getComponentCount();</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			for (int i = 0; i &lt; componentCount; i++) {</span>
+<span class="nc" id="L77">				final Component component = parent.getComponent(i);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">				if (component.isVisible()) {</span>
+<span class="nc" id="L79">					final Dimension preferredCompSize = component</span>
+<span class="nc" id="L80">							.getPreferredSize();</span>
+<span class="nc" id="L81">					prefSize.height += preferredCompSize.height;</span>
+<span class="nc" id="L82">					prefSize.width = Math.max(prefSize.width,</span>
+<span class="nc" id="L83">							preferredCompSize.width);</span>
+				}
+			}
+<span class="nc" id="L86">			return prefSize;</span>
+		}
+
+		public void removeLayoutComponent(Component comp) {
+<span class="nc" id="L90">		}</span>
+
+	}
+
+	private static NodeViewFactory factory;
+	private EdgeView sharpBezierEdgeView;
+	private EdgeView sharpLinearEdgeView;
+	private EdgeView bezierEdgeView;
+	private EdgeView linearEdgeView;
+
+	// Singleton
+<span class="nc" id="L101">	private NodeViewFactory() {</span>
+
+<span class="nc" id="L103">	}</span>
+
+	static NodeViewFactory getInstance() {
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (factory == null) {</span>
+<span class="nc" id="L107">			factory = new NodeViewFactory();</span>
+		}
+<span class="nc" id="L109">		return factory;</span>
+	}
+
+	EdgeView getEdge(NodeView newView) {
+<span class="nc" id="L113">		final int edgeStyle = newView.getModel().getEdge().getStyleAsInt();</span>
+<span class="nc bnc" id="L114" title="All 5 branches missed.">		switch(edgeStyle) {</span>
+		case EdgeAdapter.INT_EDGESTYLE_LINEAR:
+<span class="nc" id="L116">			return getLinearEdgeView();</span>
+		case EdgeAdapter.INT_EDGESTYLE_BEZIER:
+<span class="nc" id="L118">			return getBezierEdgeView();</span>
+		case EdgeAdapter.INT_EDGESTYLE_SHARP_LINEAR:
+<span class="nc" id="L120">			return getSharpLinearEdgeView();</span>
+		case EdgeAdapter.INT_EDGESTYLE_SHARP_BEZIER:
+<span class="nc" id="L122">			return getSharpBezierEdgeView();</span>
+		default:
+<span class="nc" id="L124">			return getLinearEdgeView();</span>
+		}
+	}
+
+	private EdgeView getSharpBezierEdgeView() {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (sharpBezierEdgeView == null) {</span>
+<span class="nc" id="L130">			sharpBezierEdgeView = new SharpBezierEdgeView();</span>
+		}
+<span class="nc" id="L132">		return sharpBezierEdgeView;</span>
+	}
+
+	private EdgeView getSharpLinearEdgeView() {
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (sharpLinearEdgeView == null) {</span>
+<span class="nc" id="L137">			sharpLinearEdgeView = new SharpLinearEdgeView();</span>
+		}
+<span class="nc" id="L139">		return sharpLinearEdgeView;</span>
+	}
+
+	private EdgeView getBezierEdgeView() {
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (bezierEdgeView == null) {</span>
+<span class="nc" id="L144">			bezierEdgeView = new BezierEdgeView();</span>
+		}
+<span class="nc" id="L146">		return bezierEdgeView;</span>
+	}
+
+	private EdgeView getLinearEdgeView() {
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		if (linearEdgeView == null) {</span>
+<span class="nc" id="L151">			linearEdgeView = new LinearEdgeView();</span>
+		}
+<span class="nc" id="L153">		return linearEdgeView;</span>
+	}
+
+	/**
+	 * Factory method which creates the right NodeView for the model.
+	 */
+	NodeView newNodeView(MindMapNode model, int position, MapView map,
+			Container parent) {
+<span class="nc" id="L161">		NodeView newView = new NodeView(model, position, map, parent);</span>
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (model.isRoot()) {</span>
+<span class="nc" id="L164">			final MainView mainView = new RootMainView();</span>
+<span class="nc" id="L165">			newView.setMainView(mainView);</span>
+<span class="nc" id="L166">			newView.setLayout(VerticalRootNodeViewLayout.getInstance());</span>
+
+<span class="nc" id="L168">		} else {</span>
+<span class="nc" id="L169">			newView.setMainView(newMainView(model));</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">			if (newView.isLeft()) {</span>
+<span class="nc" id="L171">				newView.setLayout(LeftNodeViewLayout.getInstance());</span>
+<span class="nc" id="L172">			} else {</span>
+<span class="nc" id="L173">				newView.setLayout(RightNodeViewLayout.getInstance());</span>
+			}
+		}
+
+<span class="nc" id="L177">		model.addViewer(newView);</span>
+<span class="nc" id="L178">		newView.update();</span>
+<span class="nc" id="L179">		fireNodeViewCreated(newView);</span>
+<span class="nc" id="L180">		return newView;</span>
+	}
+
+	MainView newMainView(MindMapNode model) {
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (model.isRoot()) {</span>
+<span class="nc" id="L185">			return new RootMainView();</span>
+		}
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		if (model.getStyle().equals(MindMapNode.STYLE_FORK)) {</span>
+<span class="nc" id="L188">			return new ForkMainView();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		} else if (model.getStyle().equals(MindMapNode.STYLE_BUBBLE)) {</span>
+<span class="nc" id="L190">			return new BubbleMainView();</span>
+		} else {
+<span class="nc" id="L192">			System.err.println(&quot;Tried to create a NodeView of unknown Style.&quot;);</span>
+<span class="nc" id="L193">			return new ForkMainView();</span>
+		}
+	}
+
+	private void fireNodeViewCreated(NodeView newView) {
+<span class="nc" id="L198">		newView.getMap().getModel().getModeController()</span>
+<span class="nc" id="L199">				.onViewCreatedHook(newView);</span>
+<span class="nc" id="L200">	}</span>
+
+	JComponent newContentPane(NodeView view) {
+<span class="nc" id="L203">		return new ContentPane();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

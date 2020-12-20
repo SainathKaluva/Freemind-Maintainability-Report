@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>JZoomedHotEqn.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.latex</a> &gt; <span class="el_source">JZoomedHotEqn.java</span></div><h1>JZoomedHotEqn.java</h1><pre class="source lang-java linenums">package plugins.latex;
+
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.MouseEvent;
+import java.awt.geom.AffineTransform;
+
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
+<span class="nc" id="L14">import atp.sHotEqn;</span>
+
+public class JZoomedHotEqn extends sHotEqn {
+	static private double zoom = 1f;
+	static String editorTitle = null;
+	private LatexNodeHook model;
+
+	JZoomedHotEqn(LatexNodeHook model) {
+		setDebug(false);
+		setEditable(false);
+		setBorder(true);
+		this.model = model;
+		setEquation(model.getContent(null));
+		if (editorTitle == null) {
+			editorTitle = model.getMindMapController().getText(
+					&quot;plugins/latex/LatexNodeHook.editorTitle&quot;);
+		}
+	}
+
+	public Dimension getPreferredSize() {
+<span class="nc" id="L34">		Dimension dimension = isValid() ? super.getPreferredSize()</span>
+				: getSizeof(getEquation());
+		dimension.height *= zoom;
+		dimension.width *= zoom;
+		return dimension;
+	}
+
+	public void paint(Graphics g) {
+		if (zoom != 1F) {
+			Graphics2D g2 = (Graphics2D) g;
+			final AffineTransform transform = g2.getTransform();
+			g2.scale(zoom, zoom);
+<span class="nc" id="L46">			super.paint(g);</span>
+			g2.setTransform(transform);
+		} else {
+			super.paint(g);
+		}
+	}
+
+	public void setBounds(int x, int y, int w, int h) {
+		if (zoom &lt; 1f) {
+<span class="nc" id="L55">			super.setBounds(x, y, (int) (w / zoom), (int) (h / zoom));</span>
+		} else {
+			super.setBounds(x, y, (int) (w), (int) (h));
+		}
+	}
+
+	public void mouseClicked(MouseEvent e) {
+		if (e.getButton() == MouseEvent.BUTTON1) {
+			edit();
+			e.consume();
+			return;
+		}
+<span class="nc" id="L67">		super.mouseClicked(e);</span>
+	}
+
+	private void edit() {
+<span class="nc" id="L71">		JTextArea textArea = new JTextArea(getEquation());</span>
+		textArea.setLineWrap(true);
+		textArea.setWrapStyleWord(true);
+		final JScrollPane editorScrollPane = new JScrollPane(textArea);
+		editorScrollPane
+				.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		editorScrollPane.setPreferredSize(new Dimension(500, 160));
+		JDialog edit = new JDialog(JOptionPane.getFrameForComponent(this),
+				editorTitle, true);
+		edit.getContentPane().add(editorScrollPane);
+		edit.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		edit.pack();
+		edit.setLocationRelativeTo(this);
+		edit.setVisible(true);
+		String eq = textArea.getText();
+		model.setContent(null, eq);
+	}
+
+	public void setModel(LatexNodeHook model) {
+		this.model = model;
+<span class="nc" id="L91">		setEquation(model.getContent(null));</span>
+		revalidate();
+		repaint();
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

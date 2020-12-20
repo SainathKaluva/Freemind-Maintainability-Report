@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeNoteRegistration.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">NodeNoteRegistration.java</span></div><h1>NodeNoteRegistration.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2007  Christian Foltin, Dimitry Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 11.09.2007
+ */
+/*$Id: NodeNoteRegistration.java,v 1.1.2.25 2010/10/07 21:19:51 christianfoltin Exp $*/
+
+package accessories.plugins;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.net.URL;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.KeyStroke;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.html.HTMLDocument;
+
+import com.inet.jortho.SpellChecker;
+import com.lightdev.app.shtm.SHTMLPanel;
+import com.lightdev.app.shtm.TextResources;
+
+import freemind.controller.MenuItemSelectedListener;
+import freemind.controller.actions.generated.instance.EditNoteToNodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.extensions.HookRegistration;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindCommon;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.ModeController.NodeLifetimeListener;
+import freemind.modes.ModeController.NodeSelectionListener;
+import freemind.modes.common.plugins.NodeNoteBase;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+import freemind.view.mindmapview.NodeView;
+
+public class NodeNoteRegistration implements HookRegistration, ActorXml,
+		MenuItemSelectedListener {
+<span class="nc" id="L72">	public static final class SimplyHtmlResources implements TextResources {</span>
+		public String getString(String pKey) {
+			// no splash for SimplyHtml.
+<span class="nc bnc" id="L75" title="All 2 branches missed.">			if (Tools.safeEquals(&quot;show_splash_screen&quot;, pKey)) {</span>
+<span class="nc" id="L76">				return &quot;false&quot;;</span>
+			}
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (Tools.safeEquals(&quot;default_paste_mode&quot;, pKey)) {</span>
+<span class="nc" id="L79">				return &quot;PASTE_HTML&quot;;</span>
+			}
+<span class="nc" id="L81">			pKey = &quot;simplyhtml.&quot; + pKey;</span>
+			String resourceString;
+<span class="nc" id="L83">			resourceString = Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L84">					pKey, null);</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if (resourceString == null) {</span>
+<span class="nc" id="L86">				resourceString = Resources.getInstance().getProperty(pKey);</span>
+			}
+//			if(resourceString == null) {
+//				System.err.println(&quot;Can't find string &quot; + pKey);
+//			}
+<span class="nc" id="L91">			return resourceString;</span>
+		}
+	}
+
+	private static class SouthPanel extends JPanel {
+		private static final long serialVersionUID = -4624762713662343786L;
+
+		public SouthPanel() {
+<span class="nc" id="L99">			super(new BorderLayout());</span>
+<span class="nc" id="L100">			setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));</span>
+<span class="nc" id="L101">		}</span>
+
+		protected boolean processKeyBinding(KeyStroke ks, KeyEvent e,
+				int condition, boolean pressed) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			return super.processKeyBinding(ks, e, condition, pressed)</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">					|| e.getKeyChar() == KeyEvent.VK_SPACE</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">					|| e.getKeyChar() == KeyEvent.VK_ALT;</span>
+		}
+	}
+
+<span class="nc" id="L111">	private final class NoteDocumentListener implements DocumentListener {</span>
+		private MindMapNode mNode;
+
+		public void changedUpdate(DocumentEvent arg0) {
+<span class="nc" id="L115">			docEvent();</span>
+<span class="nc" id="L116">		}</span>
+
+		private void docEvent() {
+			// test if not already marked as dirty:
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (getMindMapController().getMap().isSaved()) {</span>
+				// now test, if different:
+<span class="nc" id="L122">				String documentText = normalizeString(getDocumentText());</span>
+<span class="nc" id="L123">				String noteText = normalizeString(mNode.getNoteText());</span>
+<span class="nc" id="L124">				logger.fine(&quot;Old doc =\n'&quot; + noteText</span>
+<span class="nc" id="L125">						+ &quot;', Current document: \n'&quot; + documentText</span>
+<span class="nc" id="L126">						+ &quot;'. Comparison: '&quot;</span>
+<span class="nc" id="L127">						+ Tools.compareText(noteText, documentText) + &quot;'.&quot;);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">				if (!Tools.safeEquals(noteText, documentText)) {</span>
+<span class="nc" id="L129">					logger.finest(&quot;Making map dirty.&quot;);</span>
+					// make map dirty in order to enable automatic save on note
+					// change.
+<span class="nc" id="L132">					getMindMapController().getMap().setSaved(false);</span>
+				}
+			}
+<span class="nc" id="L135">		}</span>
+
+		public void insertUpdate(DocumentEvent arg0) {
+<span class="nc" id="L138">			docEvent();</span>
+<span class="nc" id="L139">		}</span>
+
+		public void removeUpdate(DocumentEvent arg0) {
+<span class="nc" id="L142">			docEvent();</span>
+<span class="nc" id="L143">		}</span>
+
+		public void setNode(MindMapNode pNode) {
+<span class="nc" id="L146">			mNode = pNode;</span>
+<span class="nc" id="L147">		}</span>
+	}
+
+	// private NodeTextListener listener;
+
+	private final class NotesManager implements NodeSelectionListener,
+			NodeLifetimeListener {
+
+		private MindMapNode node;
+
+<span class="nc" id="L157">		public NotesManager() {</span>
+<span class="nc" id="L158">		}</span>
+
+		public void onLostFocusNode(NodeView node) {
+			// logger.info(&quot;onDeselectHook for node &quot; + node +
+			// &quot; and noteViewerComponent=&quot; + noteViewerComponent);
+<span class="nc" id="L163">			noteViewerComponent.getDocument().removeDocumentListener(</span>
+<span class="nc" id="L164">					mNoteDocumentListener);</span>
+			// store its content:
+<span class="nc" id="L166">			onSaveNode(node.getModel());</span>
+<span class="nc" id="L167">			this.node = null;</span>
+			// getHtmlEditorPanel().setCurrentDocumentContent(&quot;Note&quot;, &quot;&quot;);
+<span class="nc" id="L169">		}</span>
+
+		public void onFocusNode(NodeView nodeView) {
+			// logger.info(&quot;onSelectHook for node &quot; + node +
+			// &quot; and noteViewerComponent=&quot; + noteViewerComponent);
+<span class="nc" id="L174">			this.node = nodeView.getModel();</span>
+<span class="nc" id="L175">			final HTMLDocument document = noteViewerComponent.getDocument();</span>
+			// remove listener to avoid unnecessary dirty events.
+<span class="nc" id="L177">			document.removeDocumentListener(mNoteDocumentListener);</span>
+			try {
+				// Dimitry:
+				// Images referenced from documents with bases given by
+				// pFile.toURI().toURL() are not shown in SimplyHTML
+				// (bug [ freemind-Bugs-2019223 ] Images are not shown in the
+				// Notes view)
+				// =&gt; the old method File.toURL() must be used again.
+<span class="nc" id="L185">				document.setBase(node.getMap().getFile().toURI().toURL());</span>
+<span class="nc" id="L186">			} catch (Exception e) {</span>
+			}
+
+			// logger.info(&quot;onReceiveFocuse for node &quot; + node.toString());
+<span class="nc" id="L190">			String note = node.getNoteText();</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">			if (note != null) {</span>
+<span class="nc" id="L192">				noteViewerComponent.setCurrentDocumentContent(note);</span>
+<span class="nc" id="L193">				mLastContentEmpty = false;</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			} else if (!mLastContentEmpty) {</span>
+<span class="nc" id="L195">				noteViewerComponent.setCurrentDocumentContent(&quot;&quot;);</span>
+<span class="nc" id="L196">				mLastContentEmpty = true;</span>
+			}
+<span class="nc" id="L198">			mNoteDocumentListener.setNode(node);</span>
+<span class="nc" id="L199">			document.addDocumentListener(mNoteDocumentListener);</span>
+<span class="nc" id="L200">		}</span>
+
+		public void onUpdateNodeHook(MindMapNode node) {
+<span class="nc" id="L203">		}</span>
+
+		public void onSaveNode(MindMapNode node) {
+<span class="nc bnc" id="L206" title="All 2 branches missed.">			if (this.node != node) {</span>
+<span class="nc" id="L207">				return;</span>
+			}
+<span class="nc" id="L209">			boolean editorContentEmpty = true;</span>
+			// // TODO: Save the style with the note.
+			// StyleSheet styleSheet = noteViewerComponent.getDocument()
+			// .getStyleSheet();
+			// styleSheet.removeStyle(&quot;body&quot;);
+			// styleSheet.removeStyle(&quot;p&quot;);
+<span class="nc" id="L215">			JEditorPane editorPane = noteViewerComponent.getEditorPane();</span>
+<span class="nc" id="L216">			int caretPosition = editorPane.getCaretPosition();</span>
+<span class="nc" id="L217">			int selectionStart = editorPane.getSelectionStart();</span>
+<span class="nc" id="L218">			int selectionEnd = editorPane.getSelectionEnd();</span>
+<span class="nc" id="L219">			String documentText = getDocumentText();</span>
+<span class="nc" id="L220">			editorContentEmpty = documentText</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">					.equals(NodeNote.EMPTY_EDITOR_STRING)</span>
+<span class="nc" id="L222">					|| documentText</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">							.equals(NodeNote.EMPTY_EDITOR_STRING_ALTERNATIVE)</span>
+<span class="nc" id="L224">					|| documentText</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">							.equals(NodeNote.EMPTY_EDITOR_STRING_ALTERNATIVE2);</span>
+			// String noteText = node.getNoteText();
+			// logger.info(&quot;Old doc =\n'&quot; +
+			// ((noteText==null)?noteText:noteText.replaceAll(&quot;\n&quot;, &quot;\\\\n&quot;)) +
+			// &quot;', Current document: \n'&quot; + documentText.replaceAll(&quot;\n&quot;,
+			// &quot;\\\\n&quot;) + &quot;', empty=&quot;+editorContentEmpty);
+<span class="nc" id="L231">			controller.deregisterNodeSelectionListener(this);</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">			if (noteViewerComponent.needsSaving()) {</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">				if (editorContentEmpty) {</span>
+<span class="nc" id="L234">					changeNoteText(null, node);</span>
+<span class="nc" id="L235">				} else {</span>
+<span class="nc" id="L236">					changeNoteText(documentText, node);</span>
+				}
+<span class="nc" id="L238">				mLastContentEmpty = editorContentEmpty;</span>
+			}
+<span class="nc" id="L240">			controller.registerNodeSelectionListener(this, false);</span>
+<span class="nc" id="L241">			editorPane.setCaretPosition(caretPosition);</span>
+<span class="nc" id="L242">			editorPane.setSelectionEnd(selectionEnd);</span>
+<span class="nc" id="L243">			editorPane.setSelectionStart(selectionStart);</span>
+<span class="nc" id="L244">		}</span>
+
+		public void onCreateNodeHook(MindMapNode node) {
+<span class="nc bnc" id="L247" title="All 2 branches missed.">			if (node.getXmlNoteText() != null) {</span>
+<span class="nc" id="L248">				setStateIcon(node, true);</span>
+			}
+<span class="nc" id="L250">		}</span>
+
+		public void onPreDeleteNode(MindMapNode node) {
+<span class="nc" id="L253">		}</span>
+
+		public void onPostDeleteNode(MindMapNode pNode, MindMapNode pParent) {
+<span class="nc" id="L256">		}</span>
+
+		/* (non-Javadoc)
+		 * @see freemind.modes.ModeController.NodeSelectionListener#onSelectionChange(freemind.modes.MindMapNode, boolean)
+		 */
+		public void onSelectionChange(NodeView pNode, boolean pIsSelected) {
+<span class="nc" id="L262">		}</span>
+	}
+
+	private static SHTMLPanel htmlEditorPanel;
+
+	/**
+	 * Indicates, whether or not the main panel has to be refreshed with new
+	 * content. The typical content will be empty, so this state is saved here.
+	 */
+<span class="nc" id="L271">	private static boolean mLastContentEmpty = true;</span>
+
+	private final MindMapController controller;
+
+	protected SHTMLPanel noteViewerComponent;
+
+	private final java.util.logging.Logger logger;
+
+	private NotesManager mNotesManager;
+
+<span class="nc" id="L281">	private static ImageIcon noteIcon = null;</span>
+
+	private NoteDocumentListener mNoteDocumentListener;
+
+<span class="nc" id="L285">	static Integer sPositionToRecover = null;</span>
+
+<span class="nc" id="L287">	private JSplitPane mSplitPane = null;</span>
+
+<span class="nc" id="L289">	public NodeNoteRegistration(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L290">		this.controller = (MindMapController) controller;</span>
+<span class="nc" id="L291">		logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L292">	}</span>
+
+	public boolean shouldUseSplitPane() {
+<span class="nc" id="L295">		return &quot;true&quot;.equals(controller.getFrame().getProperty(</span>
+<span class="nc" id="L296">				FreeMind.RESOURCES_USE_SPLIT_PANE));</span>
+	}
+
+<span class="nc" id="L299">	class JumpToMapAction extends AbstractAction {</span>
+		private static final long serialVersionUID = -531070508254258791L;
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L303" title="All 2 branches missed.">			if (sPositionToRecover != null) {</span>
+<span class="nc" id="L304">				mSplitPane.setDividerLocation(sPositionToRecover.intValue());</span>
+<span class="nc" id="L305">				sPositionToRecover = null;</span>
+			}
+<span class="nc" id="L307">			logger.info(&quot;Jumping back to map!&quot;);</span>
+<span class="nc" id="L308">			controller.getController().obtainFocusForSelected();</span>
+<span class="nc" id="L309">		}</span>
+	};
+
+	public void register() {
+<span class="nc" id="L313">		logger.fine(&quot;Registration of note handler.&quot;);</span>
+<span class="nc" id="L314">		controller.getActionFactory().registerActor(this, getDoActionClass());</span>
+		// moved to registration:
+<span class="nc" id="L316">		noteViewerComponent = getNoteViewerComponent();</span>
+		// register &quot;leave note&quot; action:
+<span class="nc" id="L318">		Action jumpToMapAction = new JumpToMapAction();</span>
+<span class="nc" id="L319">		String keystroke = controller</span>
+<span class="nc" id="L320">				.getFrame()</span>
+<span class="nc" id="L321">				.getAdjustableProperty(</span>
+<span class="nc" id="L322">						&quot;keystroke_accessories/plugins/NodeNote_jumpto.keystroke.alt_N&quot;);</span>
+<span class="nc" id="L323">		noteViewerComponent.getInputMap(</span>
+<span class="nc" id="L324">				JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(</span>
+<span class="nc" id="L325">				KeyStroke.getKeyStroke(keystroke), &quot;jumpToMapAction&quot;);</span>
+
+		// Register action
+<span class="nc" id="L328">		noteViewerComponent.getActionMap().put(&quot;jumpToMapAction&quot;,</span>
+<span class="nc" id="L329">				jumpToMapAction);</span>
+
+<span class="nc bnc" id="L331" title="All 2 branches missed.">		if (shouldUseSplitPane()) {</span>
+<span class="nc" id="L332">			showNotesPanel();</span>
+		}
+<span class="nc" id="L334">		mNotesManager = new NotesManager();</span>
+<span class="nc" id="L335">		controller.registerNodeSelectionListener(mNotesManager, false);</span>
+<span class="nc" id="L336">		controller.registerNodeLifetimeListener(mNotesManager, true);</span>
+<span class="nc" id="L337">		mNoteDocumentListener = new NoteDocumentListener();</span>
+<span class="nc" id="L338">	}</span>
+
+	public void deRegister() {
+<span class="nc" id="L341">		controller.deregisterNodeSelectionListener(mNotesManager);</span>
+<span class="nc" id="L342">		controller.deregisterNodeLifetimeListener(mNotesManager);</span>
+
+<span class="nc bnc" id="L344" title="All 4 branches missed.">		if (noteViewerComponent != null &amp;&amp; shouldUseSplitPane()) {</span>
+<span class="nc" id="L345">			noteViewerComponent.getActionMap().remove(&quot;jumpToMapAction&quot;);</span>
+<span class="nc" id="L346">			hideNotesPanel();</span>
+<span class="nc" id="L347">			noteViewerComponent = null;</span>
+		}
+<span class="nc" id="L349">		logger.fine(&quot;Deregistration of note undo handler.&quot;);</span>
+<span class="nc" id="L350">		controller.getActionFactory().deregisterActor(getDoActionClass());</span>
+<span class="nc" id="L351">	}</span>
+
+	public void showNotesPanel() {
+<span class="nc" id="L354">		SouthPanel southPanel = new SouthPanel();</span>
+<span class="nc" id="L355">		southPanel.add(noteViewerComponent, BorderLayout.CENTER);</span>
+<span class="nc" id="L356">		noteViewerComponent.setVisible(true);</span>
+<span class="nc" id="L357">		if (&quot;true&quot;.equals(controller.getFrame().getProperty(</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">				FreeMind.RESOURCES_USE_DEFAULT_FONT_FOR_NOTES_TOO))) {</span>
+			// set default font for notes:
+<span class="nc" id="L360">			Font defaultFont = controller.getController().getDefaultFont();</span>
+<span class="nc" id="L361">			if (Resources.getInstance().getBoolProperty(</span>
+<span class="nc bnc" id="L362" title="All 2 branches missed.">					&quot;experimental_font_sizing_for_long_node_editors&quot;)) {</span>
+				/*
+				 * This is a proposal of Dan, but it doesn't work as expected.
+				 * 
+				 * http://sourceforge.net/tracker/?func=detail&amp;aid=2800933&amp;group_id
+				 * =7118&amp;atid=107118
+				 */
+<span class="nc" id="L369">				defaultFont = Tools.updateFontSize(defaultFont,</span>
+<span class="nc" id="L370">						this.getMindMapController().getView().getZoom(),</span>
+<span class="nc" id="L371">						defaultFont.getSize());</span>
+			}
+<span class="nc" id="L373">			String rule = &quot;BODY {&quot;;</span>
+<span class="nc" id="L374">			rule += &quot;font-family: &quot; + defaultFont.getFamily() + &quot;;&quot;;</span>
+<span class="nc" id="L375">			rule += &quot;font-size: &quot; + defaultFont.getSize() + &quot;pt;&quot;;</span>
+<span class="nc" id="L376">			rule += &quot;}\n&quot;;</span>
+<span class="nc" id="L377">			if (&quot;true&quot;.equals(controller.getFrame().getProperty(</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">					FreeMind.RESOURCES_USE_MARGIN_TOP_ZERO_FOR_NOTES))) {</span>
+				/*
+				 * this is used for paragraph spacing. I put it here, too, as
+				 * the tooltip display uses the same spacing. But it is to be
+				 * discussed. fc, 23.3.2009.
+				 */
+<span class="nc" id="L384">				rule += &quot;p {&quot;;</span>
+<span class="nc" id="L385">				rule += &quot;margin-top:0;&quot;;</span>
+<span class="nc" id="L386">				rule += &quot;}\n&quot;;</span>
+			}
+<span class="nc" id="L388">			noteViewerComponent.getDocument().getStyleSheet().addRule(rule);</span>
+			// done setting default font.
+		}
+<span class="nc" id="L391">		noteViewerComponent.setOpenHyperlinkHandler(new ActionListener() {</span>
+
+			public void actionPerformed(ActionEvent pE) {
+				try {
+<span class="nc" id="L395">					getMindMapController().getFrame().openDocument(</span>
+<span class="nc" id="L396">							new URL(pE.getActionCommand()));</span>
+<span class="nc" id="L397">				} catch (Exception e) {</span>
+<span class="nc" id="L398">					freemind.main.Resources.getInstance().logException(e);</span>
+				}
+<span class="nc" id="L400">			}</span>
+		});
+<span class="nc" id="L402">		mSplitPane = controller.getFrame().insertComponentIntoSplitPane(</span>
+<span class="nc" id="L403">				southPanel);</span>
+<span class="nc" id="L404">		southPanel.revalidate();</span>
+<span class="nc" id="L405">	}</span>
+
+	public void hideNotesPanel() {
+		// shut down the display:
+<span class="nc" id="L409">		noteViewerComponent.setVisible(false);</span>
+<span class="nc" id="L410">		controller.getFrame().removeSplitPane();</span>
+<span class="nc" id="L411">		mSplitPane = null;</span>
+<span class="nc" id="L412">	}</span>
+
+	protected void setStateIcon(MindMapNode node, boolean enabled) {
+		// icon
+<span class="nc bnc" id="L416" title="All 2 branches missed.">		if (noteIcon == null) {</span>
+<span class="nc" id="L417">			noteIcon = new ImageIcon(</span>
+<span class="nc" id="L418">					controller.getResource(&quot;images/knotes.png&quot;));</span>
+		}
+<span class="nc" id="L420">		boolean showIcon = enabled;</span>
+<span class="nc" id="L421">		if (Resources.getInstance().getBoolProperty(</span>
+<span class="nc bnc" id="L422" title="All 2 branches missed.">				FreeMind.RESOURCES_DON_T_SHOW_NOTE_ICONS)) {</span>
+<span class="nc" id="L423">			showIcon = false;</span>
+		}
+<span class="nc bnc" id="L425" title="All 2 branches missed.">		node.setStateIcon(NodeNoteBase.NODE_NOTE_ICON, (showIcon) ? noteIcon</span>
+<span class="nc" id="L426">				: null);</span>
+		// tooltip, first try.
+<span class="nc" id="L428">		if (!Resources.getInstance().getBoolProperty(</span>
+<span class="nc bnc" id="L429" title="All 2 branches missed.">				FreeMind.RESOURCES_DON_T_SHOW_NOTE_TOOLTIPS)) {</span>
+<span class="nc" id="L430">			getMindMapController().setToolTip(node, &quot;nodeNoteText&quot;,</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">					(enabled) ? node.getNoteText() : null);</span>
+		}
+<span class="nc" id="L433">	}</span>
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L436" title="All 2 branches missed.">		if (action instanceof EditNoteToNodeAction) {</span>
+<span class="nc" id="L437">			EditNoteToNodeAction noteTextAction = (EditNoteToNodeAction) action;</span>
+<span class="nc" id="L438">			MindMapNode node = controller.getNodeFromID(noteTextAction</span>
+<span class="nc" id="L439">					.getNode());</span>
+<span class="nc" id="L440">			String newText = noteTextAction.getText();</span>
+<span class="nc" id="L441">			String oldText = node.getNoteText();</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">			if (!Tools.safeEquals(newText, oldText)) {</span>
+<span class="nc" id="L443">				node.setNoteText(newText);</span>
+				// update display only, if the node is displayed.
+<span class="nc bnc" id="L445" title="All 2 branches missed.">				if (node == controller.getSelected()</span>
+<span class="nc" id="L446">						&amp;&amp; (!Tools.safeEquals(newText, getHtmlEditorPanel()</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">								.getDocumentText()))) {</span>
+<span class="nc" id="L448">					getHtmlEditorPanel().setCurrentDocumentContent(</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">							newText == null ? &quot;&quot; : newText);</span>
+				}
+<span class="nc bnc" id="L451" title="All 4 branches missed.">				setStateIcon(node, !(newText == null || newText.equals(&quot;&quot;)));</span>
+<span class="nc" id="L452">				controller.nodeChanged(node);</span>
+			}
+		}
+<span class="nc" id="L455">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L458">		return EditNoteToNodeAction.class;</span>
+	}
+
+	/**
+	 * Set text with undo:
+	 * 
+	 */
+	public void changeNoteText(String text, MindMapNode node) {
+<span class="nc" id="L466">		getMindMapController().setNoteText(node, text);</span>
+<span class="nc" id="L467">	}</span>
+
+	private MindMapController getMindMapController() {
+<span class="nc" id="L470">		return controller;</span>
+	}
+
+	protected SHTMLPanel getNoteViewerComponent() {
+<span class="nc" id="L474">		return getHtmlEditorPanel();</span>
+	}
+
+	public static SHTMLPanel getHtmlEditorPanel() {
+<span class="nc bnc" id="L478" title="All 2 branches missed.">		if (htmlEditorPanel == null) {</span>
+<span class="nc" id="L479">			SHTMLPanel.setResources(new SimplyHtmlResources());</span>
+<span class="nc" id="L480">			htmlEditorPanel = SHTMLPanel.createSHTMLPanel();</span>
+<span class="nc" id="L481">			htmlEditorPanel.setMinimumSize(new Dimension(100, 100));</span>
+
+<span class="nc" id="L483">	        boolean checkSpelling = Resources.getInstance().</span>
+<span class="nc" id="L484">	        		getBoolProperty(FreeMindCommon.CHECK_SPELLING);</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">			if (checkSpelling) {</span>
+<span class="nc" id="L486">				SpellChecker.register(htmlEditorPanel.getEditorPane());</span>
+			}
+		}
+<span class="nc" id="L489">		return htmlEditorPanel;</span>
+	}
+
+	public JSplitPane getSplitPane() {
+<span class="nc" id="L493">		return mSplitPane;</span>
+	}
+
+	public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+<span class="nc bnc" id="L497" title="All 2 branches missed.">		return getSplitPane() != null;</span>
+	}
+
+	private String getDocumentText() {
+<span class="nc" id="L501">		String documentText = noteViewerComponent.getDocumentText();</span>
+		// (?s) makes . matching newline as well.
+<span class="nc" id="L503">		documentText = documentText.replaceFirst(&quot;(?s)&lt;style.*?&lt;/style&gt;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L504">		return documentText;</span>
+	}
+
+	private String normalizeString(String input) {
+<span class="nc bnc" id="L508" title="All 2 branches missed.">		if (input == null)</span>
+<span class="nc" id="L509">			input = NodeNote.EMPTY_EDITOR_STRING;</span>
+		// return null;
+<span class="nc" id="L511">		return input.replaceAll(&quot;\\s+&quot;, &quot; &quot;).replaceAll(&quot;  +&quot;, &quot; &quot;).trim();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

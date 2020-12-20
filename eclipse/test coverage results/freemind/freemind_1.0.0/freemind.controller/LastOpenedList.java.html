@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>LastOpenedList.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller</a> &gt; <span class="el_source">LastOpenedList.java</span></div><h1>LastOpenedList.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: LastOpenedList.java,v 1.8.18.2.2.2 2008/04/11 16:58:31 christianfoltin Exp $*/
+package freemind.controller;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.StringTokenizer;
+
+import freemind.main.Tools;
+import freemind.main.XMLParseException;
+import freemind.view.MapModule;
+
+/**
+ * This class manages a list of the maps that were opened last. It aims to
+ * provide persistence for the last recent maps. Maps should be shown in the
+ * format:&quot;mode\:key&quot;,ie.&quot;Mindmap\:/home/joerg/freemind.mm&quot;
+ */
+public class LastOpenedList {
+	private Controller mController;
+<span class="fc" id="L44">	private int maxEntries = 25; // is rewritten from property anyway</span>
+	/**
+	 * Contains Restore strings.
+	 */
+<span class="fc" id="L48">	private List mlastOpenedList = new LinkedList();</span>
+	/**
+	 * Contains Restore string =&gt; map name (map.toString()).
+	 */
+<span class="fc" id="L52">	private Map mRestorableToMapName = new HashMap();</span>
+
+<span class="fc" id="L54">	public LastOpenedList(Controller c, String restored) {</span>
+<span class="fc" id="L55">		this.mController = c;</span>
+		try {
+<span class="fc" id="L57">			maxEntries = new Integer(c.getFrame().getProperty(</span>
+<span class="fc" id="L58">					&quot;last_opened_list_length&quot;)).intValue();</span>
+<span class="pc" id="L59">		} catch (NumberFormatException e) {</span>
+<span class="nc" id="L60">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="fc" id="L62">		load(restored);</span>
+<span class="fc" id="L63">	}</span>
+
+	public void mapOpened(MapModule mapModule) {
+<span class="nc bnc" id="L66" title="All 4 branches missed.">		if (mapModule == null || mapModule.getModel() == null)</span>
+<span class="nc" id="L67">			return;</span>
+<span class="nc" id="L68">		String restoreString = mapModule.getModel().getRestorable();</span>
+<span class="nc" id="L69">		String name = mapModule.toString();</span>
+<span class="nc" id="L70">		add(restoreString, name);</span>
+<span class="nc" id="L71">	}</span>
+
+	/**
+	 * For testing purposes, this method is public
+	 */
+	public void add(String restoreString, String name) {
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">		if (restoreString == null)</span>
+<span class="nc" id="L78">			return;</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">		if (mlastOpenedList.contains(restoreString)) {</span>
+<span class="nc" id="L80">			mlastOpenedList.remove(restoreString);</span>
+		}
+<span class="fc" id="L82">		mlastOpenedList.add(0, restoreString);</span>
+<span class="fc" id="L83">		mRestorableToMapName.put(restoreString, name);</span>
+
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		while (mlastOpenedList.size() &gt; maxEntries) {</span>
+<span class="nc" id="L86">			mlastOpenedList.remove(mlastOpenedList.size() - 1); // remove last elt</span>
+		}
+<span class="fc" id="L88">	}</span>
+
+	void mapClosed(MapModule map) {
+		// hash.remove(map.getModel().getRestoreable());
+		// not needed
+<span class="nc" id="L93">	}</span>
+
+	/** fc, 8.8.2004: This method returns a string representation of this class. */
+	public String save() {
+<span class="fc" id="L97">		String str = new String();</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">		for (ListIterator it = listIterator(); it.hasNext();) {</span>
+<span class="fc" id="L99">			str = str.concat((String) it.next() + &quot;;&quot;);</span>
+		}
+<span class="fc" id="L101">		return str;</span>
+	}
+
+	/**
+     * 
+     */
+	void load(String data) {
+		// Take care that there are no &quot;;&quot; in restorable names!
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">		if (data != null) {</span>
+<span class="nc" id="L110">			StringTokenizer token = new StringTokenizer(data, &quot;;&quot;);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			while (token.hasMoreTokens())</span>
+<span class="nc" id="L112">				mlastOpenedList.add(token.nextToken());</span>
+		}
+<span class="fc" id="L114">	}</span>
+
+	public boolean open(String restoreable) throws FileNotFoundException,
+			XMLParseException, MalformedURLException, IOException,
+			URISyntaxException {
+<span class="nc" id="L119">		boolean changedToMapModule = mController.getMapModuleManager()</span>
+<span class="nc" id="L120">				.tryToChangeToMapModule(</span>
+<span class="nc" id="L121">						(String) mRestorableToMapName.get(restoreable));</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">		if ((restoreable != null) &amp;&amp; !(changedToMapModule)) {</span>
+<span class="nc" id="L123">			String mode = Tools.getModeFromRestorable(restoreable);</span>
+<span class="nc" id="L124">			String fileName = Tools.getFileNameFromRestorable(restoreable);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (mController.createNewMode(mode)) {</span>
+<span class="nc" id="L126">				mController.getMode().restore(fileName);</span>
+<span class="nc" id="L127">				return true;</span>
+			}
+		}
+<span class="nc" id="L130">		return false;</span>
+	}
+
+	ListIterator listIterator() {
+<span class="fc" id="L134">		return mlastOpenedList.listIterator();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

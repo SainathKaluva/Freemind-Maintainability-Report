@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Conditional XMI Transformations</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="OptionalID.html">Prev</a> - <a href="MetricDef.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetaTrans.html">7 SDMetrics Metamodel and XMI Transformation Files</a> > <a href="TransFile.html">7.2 XMI Transformation Files</a> > <a href="TrigMisc.html">7.2.3 Tips on Writing XMI Transformations</a> > 7.2.3.6 Conditional XMI Transformations
+<hr>
+<h4><a name="CondXMITrans"></a>7.2.3.6 Conditional XMI Transformations</h4>
+
+The XMI transformations we have discussed so far were unconditional:
+they are used whenever an XMI element matching the transformation's
+XMI pattern is encountered.<p>
+
+It is possible to make the use of an XMI transformation conditional.
+You may specify a condition for the attributes of the XMI element that
+must be fulfilled for a XMI transformation to become effective.
+
+With this feature, you can filter certain XMI elements, or you can
+conditionally map one XMI element onto different metamodel element
+types, depending on the values of its attributes.<p>
+
+For example, the MagicDraw&trade; UML modeling tool uses a proprietary
+XMI extension to encode diagram information as follows:
+
+<pre>
+&lt;mdElement elementClass = 'DiagramData' xmi.id = 'ID2546'&gt;
+  &lt;parentID xmi.idref = 'ID0002' /&gt;
+  &lt;type&gt;Class Diagram&lt;/type&gt;
+  &lt;mdElement elementClass = 'DiagramView' xmi.id = 'ID2547'&gt;
+    &lt;elementID xmi.idref = 'ID2546' /&gt;
+    &lt;zoomFactor xmi.value = '1.0' /&gt;
+    &lt;mdOwnedViews&gt;
+      &lt;mdElement elementClass = 'ClassView' xmi.id = 'ID2548'&gt;
+       &lt;elementID xmi.idref = 'ID00dd' /&gt;
+       &lt;geometry&gt;165, 16, 358, 60&lt;/geometry&gt;
+      &lt;/mdElement&gt;
+      &lt;mdElement elementClass = 'ClassView' xmi.id = 'ID2549'&gt;
+       &lt;elementID xmi.idref = 'ID15f2' /&gt;
+       &lt;geometry&gt;40, 170, 600, 111&lt;/geometry&gt;
+      &lt;/mdElement&gt;
+      ...
+</pre>
+
+The XML element <tt>mdElement</tt> represents both diagrams and
+diagram elements, indicated by the value of attribute
+<tt>elementClass</tt>. The value "DiagramData" denotes a diagram (and
+we can then extract additional information on diagram type and owner).
+A value other than "DiagramData" denotes a diagram element (which
+contains a cross-reference to the UML model element it represents). To
+define diagram-specific metrics, we must be able distinguish diagrams
+from diagram elements:
+
+<pre>
+&lt;xmitransformation modelelement="diagram" xmipattern="mdElement" 
+                   <b>condition="elementClass='DiagramData'"</b> recurse="true"&gt;
+  &lt;trigger name="style" type="ctext" src="type" /&gt;
+  &lt;trigger name="context" type="cattrval" src="parentID" attr="xmi.idref" /&gt;
+&lt;/xmitransformation&gt;
+
+&lt;xmitransformation modelelement="diagramelement" xmipattern="mdElement" 
+                   <b>condition="elementClass!='DiagramData'"</b>&gt;
+  &lt;trigger name="element" type="cattrval" src="elementID" attr="xmi.idref" /&gt;
+&lt;/xmitransformation&gt;
+</pre>
+
+The first <tt>xmitransformation</tt> for model element "diagram"
+specifies a condition that the "mdElement" XML element must have an
+attribute elementClass of value "DiagramData". The second
+<tt>xmitransformation</tt> for model element "diagramelement" picks up
+all mdElement instances with an elementClass different from
+"DiagramData". As a result, "mdElement" DiagramData elements are
+stored as "diagram" metamodel elements, all others are stored as
+instances of "diagramelement".<p>
+
+SDMetrics uses the following strategy when searching a suitable XMI
+transformation for an XML element in the XMI source file:
+
+<ul>
+
+<li>First, the conditional XMI transformations are tested against the
+current XML element. If a matching XMI transformation is found, it
+is used to process the XML element. The order in which the conditional
+XMI transformations are tested is undefined. Therefore, you should
+choose the conditions so that at most one condition can evaluate to
+true for any given XML element.
+
+<li>If no conditional XMI transformation matches the current XML
+element, an unconditional XMI transformation is used, if one
+exists. Thus, the unconditional XMI transformation can serve as
+default, "catch-all" transformation. If no unconditional XMI
+transformation exists, the XML element is ignored.
+
+</ul>
+
+The condition you specify is a Boolean expression using operands <ul>
+<li>&amp; (and), <li>| (or), <li>! (not), <li>= (equals), <li>!= (not
+equals), </ul>
+
+as described in <a href="DefCondExp.html">Section&nbsp;8.5.4 "Condition Expressions"</a>. Identifiers (such as elementClass,
+see <a href="Ident.html">Section&nbsp;8.5.1.2 "Identifiers"</a>) refer to XML attributes.  Values of XML attributes
+can be compared to string constants, which are enclosed in single
+quotes (see <a href="Constants.html">Section&nbsp;8.5.1.1 "Constants"</a>).
+
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="OptionalID.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="TrigMisc.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="MetricDef.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;7.2.3.5 "Optional XMI ID"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8 "Defining Custom Design Metrics and Rules"</td></tr></table>
+
+</body>
+</html>

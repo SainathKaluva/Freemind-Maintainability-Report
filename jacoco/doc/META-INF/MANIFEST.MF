@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: travis
+Build-Jdk: 1.7.0_76
+Eclipse-SourceReferences: scm:git:git://github.com/jacoco/jacoco.git;p
+ ath="org.jacoco.examples";commitId=a6bcbe3f67cf2d4296562b6bfda227dab4
+ 236f75
+Bundle-ManifestVersion: 2
+Bundle-Name: JaCoCo API Usage Examples
+Bundle-SymbolicName: org.jacoco.examples
+Bundle-Version: 0.7.7.201605040943
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
+Bundle-Vendor: Mountainminds GmbH & Co. KG
+Import-Package: org.jacoco.core.analysis;bundle-version="[0.7.7,0.7.8)
+ ",org.jacoco.core.data;bundle-version="[0.7.7,0.7.8)",org.jacoco.core
+ .instr;bundle-version="[0.7.7,0.7.8)",org.jacoco.core.runtime;bundle-
+ version="[0.7.7,0.7.8)",org.jacoco.core.tools;bundle-version="[0.7.7,
+ 0.7.8)",org.jacoco.report;bundle-version="[0.7.7,0.7.8)",org.jacoco.r
+ eport.html;bundle-version="[0.7.7,0.7.8)",org.objectweb.asm;version="
+ [5.0.4,5.1.0)"
+

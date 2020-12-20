@@ -1,0 +1,839 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapMapModel.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode</a> &gt; <span class="el_source">MindMapMapModel.java</span></div><h1>MindMapMapModel.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMindget - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.mindmapmode;
+
+import java.awt.Color;
+import java.awt.EventQueue;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.channels.FileLock;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
+
+import javax.swing.JOptionPane;
+
+import freemind.common.OptionalDontShowMeAgainDialog;
+import freemind.common.UnicodeReader;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindMain;
+import freemind.main.HtmlTools;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.XMLParseException;
+import freemind.modes.MapAdapter;
+import freemind.modes.MindMapLinkRegistry;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.NodeAdapter;
+
+public class MindMapMapModel extends MapAdapter {
+
+	public static final String MAP_INITIAL_START = &quot;&lt;map version=\&quot;&quot;;
+	public static final String RESTORE_MODE_MIND_MAP = &quot;MindMap:&quot;;
+	public static final String FREEMIND_VERSION_UPDATER_XSLT = &quot;freemind/modes/mindmapmode/freemind_version_updater.xslt&quot;;
+	LockManager lockManager;
+	private MindMapLinkRegistry linkRegistry;
+	private Timer timerForAutomaticSaving;
+	/**
+	 * The current version and all other version that don't need XML update for
+	 * sure.
+	 */
+<span class="nc" id="L79">	public static final String EXPECTED_START_STRINGS[] = {</span>
+<span class="nc" id="L80">			MAP_INITIAL_START + FreeMind.XML_VERSION + &quot;\&quot;&quot;,</span>
+<span class="nc" id="L81">			MAP_INITIAL_START + &quot;0.7.1\&quot;&quot; };</span>
+
+	//
+	// Constructors
+	//
+
+	public MindMapMapModel(FreeMindMain frame, ModeController modeController) {
+<span class="nc" id="L88">		this(null, frame, modeController);</span>
+<span class="nc" id="L89">	}</span>
+
+	public MindMapMapModel(MindMapNodeModel root, FreeMindMain frame,
+			ModeController modeController) {
+<span class="nc" id="L93">		super(frame, modeController);</span>
+<span class="nc" id="L94">		lockManager = Resources.getInstance().getBoolProperty(</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">				&quot;experimental_file_locking_on&quot;) ? new LockManager()</span>
+<span class="nc" id="L96">				: new DummyLockManager();</span>
+
+		// register new LinkRegistryAdapter
+<span class="nc" id="L99">		linkRegistry = new MindMapLinkRegistry();</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">		if (root == null)</span>
+<span class="nc" id="L102">			root = new MindMapNodeModel(frame.getResourceString(&quot;new_mindmap&quot;),</span>
+<span class="nc" id="L103">					frame, this);</span>
+<span class="nc" id="L104">		setRoot(root);</span>
+<span class="nc" id="L105">		readOnly = false;</span>
+		// automatic save: start timer after the map is completely loaded
+<span class="nc" id="L107">		EventQueue.invokeLater(new Runnable() {</span>
+
+			public void run() {
+<span class="nc" id="L110">				scheduleTimerForAutomaticSaving();</span>
+<span class="nc" id="L111">			}</span>
+		});
+<span class="nc" id="L113">	}</span>
+
+	//
+
+	public MindMapLinkRegistry getLinkRegistry() {
+<span class="nc" id="L118">		return linkRegistry;</span>
+	}
+
+	public String getRestorable() {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		return getFile() == null ? null : RESTORE_MODE_MIND_MAP</span>
+<span class="nc" id="L123">				+ getFile().getAbsolutePath();</span>
+	}
+
+	public void changeNode(MindMapNode node, String newText) {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (node.toString().startsWith(&quot;&lt;html&gt;&quot;)) {</span>
+<span class="nc" id="L128">			node.setUserObject(HtmlTools.unescapeHTMLUnicodeEntity(newText));</span>
+<span class="nc" id="L129">		} else {</span>
+<span class="nc" id="L130">			node.setUserObject(newText);</span>
+		}
+<span class="nc" id="L132">		nodeChanged(node);</span>
+<span class="nc" id="L133">	}</span>
+
+	//
+	// Other methods
+	//
+
+	public String toString() {
+<span class="nc bnc" id="L140" title="All 2 branches missed.">		return getFile() == null ? null : getFile().getName();</span>
+	}
+
+	//
+	// Export and saving
+	//
+
+	public String getAsHTML(List mindMapNodes) {
+		// Returns success of the operation.
+		try {
+<span class="nc" id="L150">			StringWriter stringWriter = new StringWriter();</span>
+<span class="nc" id="L151">			BufferedWriter fileout = new BufferedWriter(stringWriter);</span>
+<span class="nc" id="L152">			MindMapController.saveHTML(mindMapNodes, fileout);</span>
+<span class="nc" id="L153">			fileout.close();</span>
+
+<span class="nc" id="L155">			return stringWriter.toString();</span>
+<span class="nc" id="L156">		} catch (Exception e) {</span>
+<span class="nc" id="L157">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L158">			return null;</span>
+		}
+	}
+
+	public String getAsPlainText(List mindMapNodes) {
+		// Returns success of the operation.
+		try {
+<span class="nc" id="L165">			StringWriter stringWriter = new StringWriter();</span>
+<span class="nc" id="L166">			BufferedWriter fileout = new BufferedWriter(stringWriter);</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">			for (ListIterator it = mindMapNodes.listIterator(); it.hasNext();) {</span>
+<span class="nc" id="L169">				((MindMapNodeModel) it.next()).saveTXT(fileout,/* depth= */0);</span>
+			}
+
+<span class="nc" id="L172">			fileout.close();</span>
+<span class="nc" id="L173">			return stringWriter.toString();</span>
+
+<span class="nc" id="L175">		} catch (Exception e) {</span>
+<span class="nc" id="L176">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L177">			return null;</span>
+		}
+	}
+
+	public boolean saveTXT(MindMapNodeModel rootNodeOfBranch, File file) {
+		// Returns success of the operation.
+		try {
+<span class="nc" id="L184">			BufferedWriter fileout = new BufferedWriter(new OutputStreamWriter(</span>
+<span class="nc" id="L185">					new FileOutputStream(file)));</span>
+<span class="nc" id="L186">			rootNodeOfBranch.saveTXT(fileout,/* depth= */0);</span>
+<span class="nc" id="L187">			fileout.close();</span>
+<span class="nc" id="L188">			return true;</span>
+
+<span class="nc" id="L190">		} catch (Exception e) {</span>
+<span class="nc" id="L191">			System.err.println(&quot;Error in MindMapMapModel.saveTXT(): &quot;);</span>
+<span class="nc" id="L192">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L193">			return false;</span>
+		}
+	}
+
+	public String getAsRTF(List mindMapNodes) {
+		// Returns success of the operation.
+		try {
+<span class="nc" id="L200">			StringWriter stringWriter = new StringWriter();</span>
+<span class="nc" id="L201">			BufferedWriter fileout = new BufferedWriter(stringWriter);</span>
+<span class="nc" id="L202">			saveRTF(mindMapNodes, fileout);</span>
+<span class="nc" id="L203">			fileout.close();</span>
+
+<span class="nc" id="L205">			return stringWriter.toString();</span>
+<span class="nc" id="L206">		} catch (Exception e) {</span>
+<span class="nc" id="L207">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L208">			return null;</span>
+		}
+	}
+
+	public boolean saveRTF(List mindMapNodes, BufferedWriter fileout) {
+		// Returns success of the operation.
+		try {
+
+			// First collect all used colors
+<span class="nc" id="L217">			HashSet colors = new HashSet();</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">			for (ListIterator it = mindMapNodes.listIterator(); it.hasNext();) {</span>
+<span class="nc" id="L219">				((MindMapNodeModel) it.next()).collectColors(colors);</span>
+			}
+
+			// Prepare table of colors containing indices to color table
+<span class="nc" id="L223">			String colorTableString = &quot;{\\colortbl;\\red0\\green0\\blue255;&quot;;</span>
+			// 0 - Automatic, 1 - blue for links
+
+<span class="nc" id="L226">			HashMap colorTable = new HashMap();</span>
+<span class="nc" id="L227">			int colorPosition = 2;</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">			for (Iterator it = colors.iterator(); it.hasNext(); ++colorPosition) {</span>
+<span class="nc" id="L229">				Color color = (Color) it.next();</span>
+<span class="nc" id="L230">				colorTableString += &quot;\\red&quot; + color.getRed() + &quot;\\green&quot;</span>
+<span class="nc" id="L231">						+ color.getGreen() + &quot;\\blue&quot; + color.getBlue() + &quot;;&quot;;</span>
+<span class="nc" id="L232">				colorTable.put(color, new Integer(colorPosition));</span>
+			}
+<span class="nc" id="L234">			colorTableString += &quot;}&quot;;</span>
+
+<span class="nc" id="L236">			fileout.write(&quot;{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang1033{\\fonttbl{\\f0\\fswiss\\fcharset0 Arial;}&quot;</span>
+<span class="nc" id="L237">					+ colorTableString</span>
+<span class="nc" id="L238">					+ &quot;}&quot;</span>
+<span class="nc" id="L239">					+ &quot;\\viewkind4\\uc1\\pard\\f0\\fs20{}&quot;);</span>
+			// ^ If \\ud is appended here, Unicode does not work in MS Word.
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			for (ListIterator it = mindMapNodes.listIterator(); it.hasNext();) {</span>
+<span class="nc" id="L243">				((MindMapNodeModel) it.next()).saveRTF(fileout,/* depth= */0,</span>
+<span class="nc" id="L244">						colorTable);</span>
+			}
+
+<span class="nc" id="L247">			fileout.write(&quot;}&quot;);</span>
+<span class="nc" id="L248">			return true;</span>
+<span class="nc" id="L249">		} catch (Exception e) {</span>
+<span class="nc" id="L250">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L251">			return false;</span>
+		}
+	}
+
+	/**
+	 * Return the success of saving
+	 */
+	public boolean save(File file) {
+		boolean result;
+<span class="nc" id="L260">		synchronized (this) {</span>
+<span class="nc" id="L261">			result = saveInternal(file, false);</span>
+			// TODO: Set only, when ok?
+<span class="nc bnc" id="L263" title="All 2 branches missed.">			if (result) {</span>
+<span class="nc" id="L264">				setFileTime();</span>
+			}
+		}
+<span class="nc" id="L267">		return result;</span>
+	}
+
+	/**
+	 * This method is intended to provide both normal save routines and saving
+	 * of temporary (internal) files.
+	 */
+	private boolean saveInternal(File file, boolean isInternal) {
+<span class="nc bnc" id="L275" title="All 4 branches missed.">		if (!isInternal &amp;&amp; readOnly) { // unexpected situation, yet it's better</span>
+										// to back it up
+<span class="nc" id="L277">			System.err.println(&quot;Attempt to save read-only map.&quot;);</span>
+<span class="nc" id="L278">			return false;</span>
+		}
+		try {
+			// Generating output Stream
+<span class="nc bnc" id="L282" title="All 2 branches missed.">			if (timerForAutomaticSaving != null) {</span>
+<span class="nc" id="L283">				timerForAutomaticSaving.cancel();</span>
+			}
+<span class="nc" id="L285">			BufferedWriter fileout = new BufferedWriter(new OutputStreamWriter(</span>
+<span class="nc" id="L286">					new FileOutputStream(file)));</span>
+<span class="nc" id="L287">			getXml(fileout);</span>
+
+<span class="nc bnc" id="L289" title="All 2 branches missed.">			if (!isInternal) {</span>
+<span class="nc" id="L290">				setFile(file);</span>
+<span class="nc" id="L291">				setSaved(true);</span>
+			}
+<span class="nc" id="L293">			scheduleTimerForAutomaticSaving();</span>
+<span class="nc" id="L294">			return true;</span>
+<span class="nc" id="L295">		} catch (FileNotFoundException e) {</span>
+<span class="nc" id="L296">			String message = Tools.expandPlaceholders(getText(&quot;save_failed&quot;),</span>
+<span class="nc" id="L297">					file.getName());</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">			if (!isInternal)</span>
+<span class="nc" id="L299">				getFrame().getController().errorMessage(message);</span>
+			else
+<span class="nc" id="L301">				getFrame().out(message);</span>
+<span class="nc" id="L302">		} catch (Exception e) {</span>
+<span class="nc" id="L303">			logger.severe(&quot;Error in MindMapMapModel.save(): &quot;);</span>
+<span class="nc" id="L304">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L306">		scheduleTimerForAutomaticSaving();</span>
+<span class="nc" id="L307">		return false;</span>
+	}
+
+	/**
+	 * writes the content of the map to a writer.
+	 * 
+	 * @throws IOException
+	 */
+	public void getXml(Writer fileout, boolean saveInvisible)
+			throws IOException {
+<span class="nc" id="L317">		getXml(fileout, saveInvisible, getRootNode());</span>
+<span class="nc" id="L318">	}</span>
+
+	/**
+	 * writes the content of the map to a writer.
+	 * 
+	 * @throws IOException
+	 */
+	public void getXml(Writer fileout, boolean saveInvisible,
+			MindMapNode pRootNode) throws IOException {
+<span class="nc" id="L327">		fileout.write(&quot;&lt;map &quot;);</span>
+<span class="nc" id="L328">		fileout.write(&quot;version=\&quot;&quot; + FreeMind.XML_VERSION + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L329">		fileout.write(&quot;&gt;\n&quot;);</span>
+<span class="nc" id="L330">		fileout.write(&quot;&lt;!-- To view this file, download free mind mapping software FreeMind from http://freemind.sourceforge.net --&gt;\n&quot;);</span>
+<span class="nc" id="L331">		getRegistry().save(fileout);</span>
+<span class="nc" id="L332">		pRootNode.save(fileout, this.getLinkRegistry(), saveInvisible, true);</span>
+<span class="nc" id="L333">		fileout.write(&quot;&lt;/map&gt;\n&quot;);</span>
+<span class="nc" id="L334">		fileout.close();</span>
+<span class="nc" id="L335">	}</span>
+
+	public void getXml(Writer fileout) throws IOException {
+<span class="nc" id="L338">		getXml(fileout, true);</span>
+<span class="nc" id="L339">	}</span>
+
+	public void getFilteredXml(Writer fileout) throws IOException {
+<span class="nc" id="L342">		getXml(fileout, false);</span>
+<span class="nc" id="L343">	}</span>
+
+	/**
+	 * Attempts to lock the map using a semaphore file
+	 * 
+	 * @return If the map is locked, return the name of the locking user,
+	 *         otherwise return null.
+	 * @throws Exception
+	 *             , when the locking failed for other reasons than that the
+	 *             file is being edited.
+	 */
+	public String tryToLock(File file) throws Exception {
+<span class="nc" id="L355">		String lockingUser = lockManager.tryToLock(file);</span>
+<span class="nc" id="L356">		String lockingUserOfOldLock = lockManager.popLockingUserOfOldLock();</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		if (lockingUserOfOldLock != null) {</span>
+<span class="nc" id="L358">			getFrame().getController().informationMessage(</span>
+<span class="nc" id="L359">					Tools.expandPlaceholders(</span>
+<span class="nc" id="L360">							getText(&quot;locking_old_lock_removed&quot;),</span>
+<span class="nc" id="L361">							file.getName(), lockingUserOfOldLock));</span>
+		}
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		if (lockingUser == null) {</span>
+<span class="nc" id="L364">			readOnly = false;</span>
+		} // The map sure is not read only when the locking suceeded.
+<span class="nc" id="L366">		return lockingUser;</span>
+	}
+
+	public void load(URL url) throws FileNotFoundException, IOException,
+			XMLParseException, URISyntaxException {
+<span class="nc" id="L371">		logger.info(&quot;Loading file: &quot; + url.toString());</span>
+<span class="nc" id="L372">		File file = Tools.urlToFile(url);</span>
+<span class="nc" id="L373">		load(file);</span>
+<span class="nc" id="L374">	}</span>
+
+	public void load(File file) throws FileNotFoundException, IOException {
+<span class="nc bnc" id="L377" title="All 2 branches missed.">		if (!file.exists()) {</span>
+<span class="nc" id="L378">			throw new FileNotFoundException(Tools.expandPlaceholders(</span>
+<span class="nc" id="L379">					getText(&quot;file_not_found&quot;), file.getPath()));</span>
+		}
+<span class="nc bnc" id="L381" title="All 2 branches missed.">		if (!file.canWrite()) {</span>
+<span class="nc" id="L382">			readOnly = true;</span>
+<span class="nc" id="L383">		} else {</span>
+			// try to lock the map
+			try {
+<span class="nc" id="L386">				String lockingUser = tryToLock(file);</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">				if (lockingUser != null) {</span>
+<span class="nc" id="L388">					getFrame().getController().informationMessage(</span>
+<span class="nc" id="L389">							Tools.expandPlaceholders(</span>
+<span class="nc" id="L390">									getText(&quot;map_locked_by_open&quot;),</span>
+<span class="nc" id="L391">									file.getName(), lockingUser));</span>
+<span class="nc" id="L392">					readOnly = true;</span>
+<span class="nc" id="L393">				} else {</span>
+<span class="nc" id="L394">					readOnly = false;</span>
+				}
+<span class="nc" id="L396">			} catch (Exception e) { // Thrown by tryToLock</span>
+<span class="nc" id="L397">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L398">				getFrame().getController().informationMessage(</span>
+<span class="nc" id="L399">						Tools.expandPlaceholders(</span>
+<span class="nc" id="L400">								getText(&quot;locking_failed_by_open&quot;),</span>
+<span class="nc" id="L401">								file.getName()));</span>
+<span class="nc" id="L402">				readOnly = true;</span>
+			}
+		}
+
+<span class="nc" id="L406">		synchronized (this) {</span>
+<span class="nc" id="L407">			MindMapNodeModel root = loadTree(file);</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">			if (root != null) {</span>
+<span class="nc" id="L409">				setRoot(root);</span>
+			}
+<span class="nc" id="L411">			setFile(file);</span>
+<span class="nc" id="L412">			setFileTime();</span>
+		}
+<span class="nc" id="L414">	}</span>
+
+	/** When a map is closed, this method is called. */
+	public void destroy() {
+<span class="nc" id="L418">		super.destroy();</span>
+<span class="nc" id="L419">		lockManager.releaseLock();</span>
+<span class="nc" id="L420">		lockManager.releaseTimer();</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">		if (timerForAutomaticSaving != null) {</span>
+			/* cancel the timer, if map is closed. */
+<span class="nc" id="L423">			timerForAutomaticSaving.cancel();</span>
+		}
+<span class="nc" id="L425">	}</span>
+
+	MindMapNodeModel loadTree(final File pFile) throws XMLParseException,
+			IOException {
+<span class="nc" id="L429">		return loadTree(new FileReaderCreator(pFile));</span>
+	}
+
+	public static class StringReaderCreator implements ReaderCreator {
+
+		private final String mString;
+
+<span class="nc" id="L436">		public StringReaderCreator(String pString) {</span>
+<span class="nc" id="L437">			mString = pString;</span>
+<span class="nc" id="L438">		}</span>
+
+		public Reader createReader() throws FileNotFoundException {
+<span class="nc" id="L441">			return new StringReader(mString);</span>
+		}
+
+		public String toString() {
+<span class="nc" id="L445">			return mString;</span>
+		}
+	}
+
+	private static class FileReaderCreator implements ReaderCreator {
+		private final File mFile;
+
+<span class="nc" id="L452">		public FileReaderCreator(File pFile) {</span>
+<span class="nc" id="L453">			mFile = pFile;</span>
+<span class="nc" id="L454">		}</span>
+
+		public Reader createReader() throws FileNotFoundException {
+<span class="nc" id="L457">			return new UnicodeReader(new FileInputStream(mFile), &quot;UTF-8&quot;);</span>
+		}
+
+		public String toString() {
+<span class="nc" id="L461">			return mFile.getName();</span>
+		}
+	}
+
+	public interface ReaderCreator {
+		Reader createReader() throws FileNotFoundException;
+	}
+
+	MindMapNodeModel loadTree(ReaderCreator pReaderCreator)
+			throws XMLParseException, IOException {
+<span class="nc" id="L471">		return loadTree(pReaderCreator, true);</span>
+	}
+
+	public MindMapNodeModel loadTree(ReaderCreator pReaderCreator,
+			boolean pAskUserBeforeUpdate) throws XMLParseException, IOException {
+		int versionInfoLength;
+<span class="nc" id="L477">		versionInfoLength = EXPECTED_START_STRINGS[0].length();</span>
+		// reading the start of the file:
+<span class="nc" id="L479">		StringBuffer buffer = readFileStart(pReaderCreator.createReader(),</span>
+<span class="nc" id="L480">				versionInfoLength);</span>
+		// the resulting file is accessed by the reader:
+<span class="nc" id="L482">		Reader reader = null;</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">		for (int i = 0; i &lt; EXPECTED_START_STRINGS.length; i++) {</span>
+<span class="nc" id="L484">			versionInfoLength = EXPECTED_START_STRINGS[i].length();</span>
+<span class="nc" id="L485">			String mapStart = &quot;&quot;;</span>
+<span class="nc bnc" id="L486" title="All 2 branches missed.">			if (buffer.length() &gt;= versionInfoLength) {</span>
+<span class="nc" id="L487">				mapStart = buffer.substring(0, versionInfoLength);</span>
+			}
+<span class="nc bnc" id="L489" title="All 2 branches missed.">			if (mapStart.startsWith(EXPECTED_START_STRINGS[i])) {</span>
+				// actual version:
+<span class="nc" id="L491">				reader = Tools.getActualReader(pReaderCreator.createReader());</span>
+<span class="nc" id="L492">				break;</span>
+			}
+		}
+<span class="nc bnc" id="L495" title="All 2 branches missed.">		if (reader == null) {</span>
+<span class="nc bnc" id="L496" title="All 4 branches missed.">			if (pAskUserBeforeUpdate &amp;&amp; !Tools.isHeadless()) {</span>
+<span class="nc" id="L497">				int showResult = new OptionalDontShowMeAgainDialog(</span>
+<span class="nc" id="L498">						mModeController.getFrame().getJFrame(),</span>
+<span class="nc" id="L499">						mModeController.getSelectedView(),</span>
+<span class="nc" id="L500">						&quot;really_convert_to_current_version2&quot;,</span>
+<span class="nc" id="L501">						&quot;confirmation&quot;,</span>
+<span class="nc" id="L502">						mModeController,</span>
+<span class="nc" id="L503">						new OptionalDontShowMeAgainDialog.StandardPropertyHandler(</span>
+<span class="nc" id="L504">								mModeController.getController(),</span>
+<span class="nc" id="L505">								FreeMind.RESOURCES_CONVERT_TO_CURRENT_VERSION),</span>
+<span class="nc" id="L506">						OptionalDontShowMeAgainDialog.ONLY_OK_SELECTION_IS_STORED)</span>
+<span class="nc" id="L507">						.show().getResult();</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">				if (showResult != JOptionPane.OK_OPTION) {</span>
+<span class="nc" id="L509">					throw new IllegalArgumentException(</span>
+<span class="nc" id="L510">							&quot;We should not open the reader &quot; + pReaderCreator);</span>
+				}
+			}
+<span class="nc" id="L513">			reader = Tools.getUpdateReader(pReaderCreator.createReader(),</span>
+<span class="nc" id="L514">					FREEMIND_VERSION_UPDATER_XSLT, getFrame());</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">			if (reader == null) {</span>
+				// something went wrong on update:
+				// FIXME: Translate me.
+<span class="nc" id="L518">				this.getModeController()</span>
+<span class="nc" id="L519">						.getFrame()</span>
+<span class="nc" id="L520">						.out(&quot;Error on conversion. Continue without conversion. Some elements may be lost!&quot;);</span>
+<span class="nc" id="L521">				reader = Tools.getActualReader(pReaderCreator.createReader());</span>
+			}
+		}
+		try {
+<span class="nc" id="L525">			HashMap IDToTarget = new HashMap();</span>
+<span class="nc" id="L526">			return (MindMapNodeModel) mModeController.createNodeTreeFromXml(</span>
+<span class="nc" id="L527">					reader, IDToTarget);</span>
+			// MindMapXMLElement mapElement = new
+			// MindMapXMLElement(mModeController);
+			// mapElement.parseFromReader(reader);
+			// // complete the arrow links:
+			// mapElement.processUnfinishedLinks(getLinkRegistry());
+			// // we wait with &quot;invokeHooksRecursively&quot; until the map is fully
+			// // registered.
+			// return (MindMapNodeModel) mapElement.getMapChild();
+<span class="nc" id="L536">		} catch (Exception ex) {</span>
+<span class="nc" id="L537">			String errorMessage = &quot;Error while parsing file:&quot; + ex;</span>
+<span class="nc" id="L538">			System.err.println(errorMessage);</span>
+<span class="nc" id="L539">			freemind.main.Resources.getInstance().logException(ex);</span>
+<span class="nc" id="L540">			MindMapXMLElement mapElement = new MindMapXMLElement(</span>
+<span class="nc" id="L541">					mModeController);</span>
+<span class="nc" id="L542">			NodeAdapter result = mapElement.createNodeAdapter(getFrame(), null);</span>
+<span class="nc" id="L543">			result.setText(errorMessage);</span>
+<span class="nc" id="L544">			return (MindMapNodeModel) result;</span>
+<span class="nc" id="L545">		} finally {</span>
+<span class="nc bnc" id="L546" title="All 6 branches missed.">			if (reader != null) {</span>
+<span class="nc" id="L547">				reader.close();</span>
+			}
+<span class="nc" id="L549">		}</span>
+	}
+
+	/**
+	 * Returns pMinimumLength bytes of the files content.
+	 * 
+	 * @return an empty string buffer, if something fails.
+	 */
+	private StringBuffer readFileStart(Reader pReader, int pMinimumLength) {
+<span class="nc" id="L558">		BufferedReader in = null;</span>
+<span class="nc" id="L559">		StringBuffer buffer = new StringBuffer();</span>
+		try {
+			// get the file start into the memory:
+<span class="nc" id="L562">			in = new BufferedReader(pReader);</span>
+			String str;
+<span class="nc bnc" id="L564" title="All 2 branches missed.">			while ((str = in.readLine()) != null) {</span>
+<span class="nc" id="L565">				buffer.append(str);</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">				if (buffer.length() &gt;= pMinimumLength)</span>
+<span class="nc" id="L567">					break;</span>
+			}
+<span class="nc" id="L569">			in.close();</span>
+<span class="nc" id="L570">		} catch (Exception e) {</span>
+<span class="nc" id="L571">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L572">			return new StringBuffer();</span>
+		}
+<span class="nc" id="L574">		return buffer;</span>
+	}
+
+	private void scheduleTimerForAutomaticSaving() {
+<span class="nc" id="L578">		int numberOfTempFiles = Integer.parseInt(getFrame().getProperty(</span>
+<span class="nc" id="L579">				&quot;number_of_different_files_for_automatic_save&quot;));</span>
+<span class="nc" id="L580">		boolean filesShouldBeDeletedAfterShutdown = Resources.getInstance()</span>
+<span class="nc" id="L581">				.getBoolProperty(&quot;delete_automatic_saves_at_exit&quot;);</span>
+<span class="nc" id="L582">		String path = getFrame().getProperty(&quot;path_to_automatic_saves&quot;);</span>
+		/* two standard values: */
+<span class="nc bnc" id="L584" title="All 2 branches missed.">		if (Tools.safeEquals(path, &quot;default&quot;)) {</span>
+<span class="nc" id="L585">			path = null;</span>
+		}
+<span class="nc bnc" id="L587" title="All 2 branches missed.">		if (Tools.safeEquals(path, &quot;freemind_home&quot;)) {</span>
+<span class="nc" id="L588">			path = getFrame().getFreemindDirectory();</span>
+		}
+<span class="nc" id="L590">		int delay = Integer.parseInt(getFrame().getProperty(</span>
+<span class="nc" id="L591">				&quot;time_for_automatic_save&quot;));</span>
+<span class="nc" id="L592">		File dirToStore = null;</span>
+<span class="nc bnc" id="L593" title="All 2 branches missed.">		if (path != null) {</span>
+<span class="nc" id="L594">			dirToStore = new File(path);</span>
+			/* existence? */
+<span class="nc bnc" id="L596" title="All 2 branches missed.">			if (!dirToStore.isDirectory()) {</span>
+<span class="nc" id="L597">				dirToStore = null;</span>
+<span class="nc" id="L598">				System.err.println(&quot;Temporary directory &quot; + path</span>
+<span class="nc" id="L599">						+ &quot; not found. Disabling automatic store.&quot;);</span>
+<span class="nc" id="L600">				delay = Integer.MAX_VALUE;</span>
+<span class="nc" id="L601">				return;</span>
+			}
+		}
+<span class="nc" id="L604">		timerForAutomaticSaving = new Timer();</span>
+<span class="nc" id="L605">		timerForAutomaticSaving.schedule(new DoAutomaticSave(</span>
+<span class="nc" id="L606">				MindMapMapModel.this, numberOfTempFiles,</span>
+<span class="nc" id="L607">				filesShouldBeDeletedAfterShutdown, dirToStore), delay, delay);</span>
+<span class="nc" id="L608">	}</span>
+
+<span class="nc" id="L610">	private class LockManager extends TimerTask {</span>
+<span class="nc" id="L611">		File lockedSemaphoreFile = null;</span>
+<span class="nc" id="L612">		Timer lockTimer = null;</span>
+<span class="nc" id="L613">		final long lockUpdatePeriod = 4 * 60 * 1000; // four minutes</span>
+<span class="nc" id="L614">		final long lockSafetyPeriod = 5 * 60 * 1000; // five minutes</span>
+<span class="nc" id="L615">		String lockingUserOfOldLock = null;</span>
+
+		private File getSemaphoreFile(File mapFile) {
+<span class="nc" id="L618">			return new File(mapFile.getParent()</span>
+<span class="nc" id="L619">					+ System.getProperty(&quot;file.separator&quot;) + &quot;$~&quot;</span>
+<span class="nc" id="L620">					+ mapFile.getName() + &quot;~&quot;);</span>
+		}
+
+		public synchronized String popLockingUserOfOldLock() {
+<span class="nc" id="L624">			String toReturn = lockingUserOfOldLock;</span>
+<span class="nc" id="L625">			lockingUserOfOldLock = null;</span>
+<span class="nc" id="L626">			return toReturn;</span>
+		}
+
+		private void writeSemaphoreFile(File inSemaphoreFile) throws Exception {
+<span class="nc" id="L630">			FileOutputStream semaphoreOutputStream = new FileOutputStream(</span>
+<span class="nc" id="L631">					inSemaphoreFile);</span>
+<span class="nc" id="L632">			FileLock lock = null;</span>
+			try {
+<span class="nc" id="L634">				lock = semaphoreOutputStream.getChannel().tryLock();</span>
+<span class="nc bnc" id="L635" title="All 2 branches missed.">				if (lock == null) {</span>
+<span class="nc" id="L636">					semaphoreOutputStream.close();</span>
+<span class="nc" id="L637">					System.err.println(&quot;Locking failed.&quot;);</span>
+<span class="nc" id="L638">					throw new Exception();</span>
+				}
+			} // locking failed
+<span class="nc" id="L641">			catch (UnsatisfiedLinkError eUle) {</span>
+			} // This may come with Windows95. We don't insist on detailed
+				// locking in that case.
+<span class="nc" id="L644">			catch (NoClassDefFoundError eDcdf) {</span>
+			} // ^ just like above.
+			// ^ On Windows95, the necessary libraries are missing.
+<span class="nc" id="L647">			semaphoreOutputStream.write(System.getProperty(&quot;user.name&quot;)</span>
+<span class="nc" id="L648">					.getBytes());</span>
+<span class="nc" id="L649">			semaphoreOutputStream.write('\n');</span>
+<span class="nc" id="L650">			semaphoreOutputStream.write(String.valueOf(</span>
+<span class="nc" id="L651">					System.currentTimeMillis()).getBytes());</span>
+<span class="nc" id="L652">			semaphoreOutputStream.close();</span>
+<span class="nc" id="L653">			semaphoreOutputStream = null;</span>
+<span class="nc" id="L654">			Tools.setHidden(inSemaphoreFile, true, /* synchro= */false); // Exception</span>
+																			// free
+<span class="nc bnc" id="L656" title="All 2 branches missed.">			if (lock != null)</span>
+<span class="nc" id="L657">				lock.release();</span>
+<span class="nc" id="L658">		}</span>
+
+		public synchronized String tryToLock(File file) throws Exception {
+			// Locking should work for opening as well as for saving as.
+			// We are especially carefull when it comes to exclusivity of
+			// writing.
+
+<span class="nc" id="L665">			File semaphoreFile = getSemaphoreFile(file);</span>
+<span class="nc bnc" id="L666" title="All 2 branches missed.">			if (semaphoreFile == lockedSemaphoreFile) {</span>
+<span class="nc" id="L667">				return null;</span>
+			}
+			try {
+<span class="nc" id="L670">				BufferedReader semaphoreReader = new BufferedReader(</span>
+<span class="nc" id="L671">						new FileReader(semaphoreFile));</span>
+<span class="nc" id="L672">				String lockingUser = semaphoreReader.readLine();</span>
+
+<span class="nc" id="L674">				long lockTime = new Long(semaphoreReader.readLine())</span>
+<span class="nc" id="L675">						.longValue();</span>
+<span class="nc" id="L676">				long timeDifference = System.currentTimeMillis() - lockTime;</span>
+				// catch (NumberFormatException enf) {} // This means that the
+				// time was not written at all - lock is corrupt
+<span class="nc bnc" id="L679" title="All 2 branches missed.">				if (timeDifference &gt; lockSafetyPeriod) { // the lock is old</span>
+<span class="nc" id="L680">					semaphoreReader.close();</span>
+<span class="nc" id="L681">					lockingUserOfOldLock = lockingUser;</span>
+<span class="nc" id="L682">					semaphoreFile.delete();</span>
+<span class="nc" id="L683">				} else</span>
+<span class="nc" id="L684">					return lockingUser;</span>
+<span class="nc" id="L685">			} catch (FileNotFoundException e) {</span>
+			}
+
+<span class="nc" id="L688">			writeSemaphoreFile(semaphoreFile);</span>
+
+<span class="nc bnc" id="L690" title="All 2 branches missed.">			if (lockTimer == null) {</span>
+<span class="nc" id="L691">				lockTimer = new Timer();</span>
+<span class="nc" id="L692">				lockTimer.schedule(this, lockUpdatePeriod, lockUpdatePeriod);</span>
+			}
+<span class="nc" id="L694">			releaseLock();</span>
+<span class="nc" id="L695">			lockedSemaphoreFile = semaphoreFile;</span>
+<span class="nc" id="L696">			return null;</span>
+		}
+
+		public synchronized void releaseLock() {
+<span class="nc bnc" id="L700" title="All 2 branches missed.">			if (lockedSemaphoreFile != null) {</span>
+<span class="nc" id="L701">				lockedSemaphoreFile.delete();</span>
+<span class="nc" id="L702">				lockedSemaphoreFile = null;</span>
+			}
+<span class="nc" id="L704">		} // this may fail, TODO: ensure real deletion</span>
+
+		public synchronized void releaseTimer() {
+<span class="nc bnc" id="L707" title="All 2 branches missed.">			if (lockTimer != null) {</span>
+<span class="nc" id="L708">				lockTimer.cancel();</span>
+<span class="nc" id="L709">				lockTimer = null;</span>
+			}
+<span class="nc" id="L711">		}</span>
+
+		public synchronized void run() { // update semaphore file
+<span class="nc bnc" id="L714" title="All 2 branches missed.">			if (lockedSemaphoreFile == null) {</span>
+<span class="nc" id="L715">				System.err</span>
+<span class="nc" id="L716">						.println(&quot;unexpected: lockedSemaphoreFile is null upon lock update&quot;);</span>
+<span class="nc" id="L717">				return;</span>
+			}
+			try {
+<span class="nc" id="L720">				Tools.setHidden(lockedSemaphoreFile, false, /* synchro= */true); // Exception</span>
+																					// free
+				// ^ We unhide the file before overwriting because JavaRE1.4.2
+				// does
+				// not let us open hidden files for writing. This is a
+				// workaround for Java bug,
+				// I guess.
+
+<span class="nc" id="L728">				writeSemaphoreFile(lockedSemaphoreFile);</span>
+<span class="nc" id="L729">			} catch (Exception e) {</span>
+<span class="nc" id="L730">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+<span class="nc" id="L732">		}</span>
+	}
+
+<span class="nc" id="L735">	private class DummyLockManager extends LockManager {</span>
+		public synchronized String popLockingUserOfOldLock() {
+<span class="nc" id="L737">			return null;</span>
+		}
+
+		public synchronized String tryToLock(File file) throws Exception {
+<span class="nc" id="L741">			return null;</span>
+		}
+
+		public synchronized void releaseLock() {
+<span class="nc" id="L745">		}</span>
+
+		public synchronized void releaseTimer() {
+<span class="nc" id="L748">		}</span>
+
+		public synchronized void run() {
+<span class="nc" id="L751">		}</span>
+	}
+
+	static private class DoAutomaticSave extends TimerTask {
+		private MindMapMapModel model;
+		private Vector tempFileStack;
+		private int numberOfFiles;
+		private boolean filesShouldBeDeletedAfterShutdown;
+		private File pathToStore;
+		/**
+		 * This value is compared with the result of
+		 * getNumberOfChangesSinceLastSave(). If the values coincide, no further
+		 * automatic saving is performed until the value changes again.
+		 */
+		private int changeState;
+
+<span class="nc" id="L767">		DoAutomaticSave(MindMapMapModel model, int numberOfTempFiles,</span>
+				boolean filesShouldBeDeletedAfterShutdown, File pathToStore) {
+<span class="nc" id="L769">			this.model = model;</span>
+<span class="nc" id="L770">			tempFileStack = new Vector();</span>
+<span class="nc bnc" id="L771" title="All 2 branches missed.">			numberOfFiles = ((numberOfTempFiles &gt; 0) ? numberOfTempFiles : 1);</span>
+<span class="nc" id="L772">			this.filesShouldBeDeletedAfterShutdown = filesShouldBeDeletedAfterShutdown;</span>
+<span class="nc" id="L773">			this.pathToStore = pathToStore;</span>
+<span class="nc" id="L774">			changeState = model.getNumberOfChangesSinceLastSave();</span>
+<span class="nc" id="L775">		}</span>
+
+		public void run() {
+			/* Map is dirty enough? */
+<span class="nc bnc" id="L779" title="All 2 branches missed.">			if (model.getNumberOfChangesSinceLastSave() == changeState)</span>
+<span class="nc" id="L780">				return;</span>
+<span class="nc" id="L781">			changeState = model.getNumberOfChangesSinceLastSave();</span>
+<span class="nc bnc" id="L782" title="All 2 branches missed.">			if (changeState == 0) {</span>
+				/* map was recently saved. */
+<span class="nc" id="L784">				return;</span>
+			}
+			try {
+<span class="nc" id="L787">				cancel();</span>
+<span class="nc" id="L788">				EventQueue.invokeAndWait(new Runnable() {</span>
+					public void run() {
+						/* Now, it is dirty, we save it. */
+						File tempFile;
+<span class="nc bnc" id="L792" title="All 2 branches missed.">						if (tempFileStack.size() &gt;= numberOfFiles)</span>
+<span class="nc" id="L793">							tempFile = (File) tempFileStack.remove(0); // pop</span>
+						else {
+							try {
+<span class="nc" id="L796">								tempFile = File.createTempFile(</span>
+<span class="nc" id="L797">										&quot;FM_&quot;</span>
+<span class="nc bnc" id="L798" title="All 2 branches missed.">												+ ((model.toString() == null) ? &quot;unnamed&quot;</span>
+<span class="nc" id="L799">														: model.toString()),</span>
+<span class="nc" id="L800">										freemind.main.FreeMindCommon.FREEMIND_FILE_EXTENSION,</span>
+<span class="nc" id="L801">										pathToStore);</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">								if (filesShouldBeDeletedAfterShutdown)</span>
+<span class="nc" id="L803">									tempFile.deleteOnExit();</span>
+<span class="nc" id="L804">							} catch (Exception e) {</span>
+<span class="nc" id="L805">								System.err</span>
+<span class="nc" id="L806">										.println(&quot;Error in automatic MindMapMapModel.save(): &quot;</span>
+<span class="nc" id="L807">												+ e.getMessage());</span>
+<span class="nc" id="L808">								freemind.main.Resources.getInstance()</span>
+<span class="nc" id="L809">										.logException(e);</span>
+<span class="nc" id="L810">								return;</span>
+							}
+						}
+						try {
+<span class="nc" id="L814">							model.saveInternal(tempFile, true /* =internal call */);</span>
+<span class="nc" id="L815">							model.getFrame()</span>
+<span class="nc" id="L816">									.out(Resources</span>
+<span class="nc" id="L817">											.getInstance()</span>
+<span class="nc" id="L818">											.format(&quot;automatically_save_message&quot;,</span>
+<span class="nc" id="L819">													new Object[] { tempFile</span>
+<span class="nc" id="L820">															.toString() }));</span>
+<span class="nc" id="L821">						} catch (Exception e) {</span>
+<span class="nc" id="L822">							System.err</span>
+<span class="nc" id="L823">									.println(&quot;Error in automatic MindMapMapModel.save(): &quot;</span>
+<span class="nc" id="L824">											+ e.getMessage());</span>
+<span class="nc" id="L825">							freemind.main.Resources.getInstance().logException(</span>
+<span class="nc" id="L826">									e);</span>
+						}
+<span class="nc" id="L828">						tempFileStack.add(tempFile); // add at the back.</span>
+<span class="nc" id="L829">					}</span>
+				});
+<span class="nc" id="L831">			} catch (InterruptedException e) {</span>
+<span class="nc" id="L832">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L833">			} catch (InvocationTargetException e) {</span>
+<span class="nc" id="L834">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+<span class="nc" id="L836">		}</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>BubbleMainView.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">BubbleMainView.java</span></div><h1>BubbleMainView.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2007  Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.view.mindmapview;
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Stroke;
+
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+
+<span class="nc" id="L33">class BubbleMainView extends MainView {</span>
+<span class="nc" id="L34">	private final static Stroke BOLD_STROKE = new BasicStroke(2.0f,</span>
+<span class="nc" id="L35">			BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1f, new float[] { 2f,</span>
+<span class="nc" id="L36">					2f }, 0f);</span>
+<span class="nc" id="L37">	final static Stroke DEF_STROKE = new BasicStroke();</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.view.mindmapview.NodeView.MainView#getPreferredSize()
+	 */
+	public Dimension getPreferredSize() {
+<span class="nc" id="L45">		Dimension prefSize = super.getPreferredSize();</span>
+<span class="nc" id="L46">		prefSize.width += getNodeView().getMap().getZoomed(5);</span>
+<span class="nc" id="L47">		return prefSize;</span>
+	}
+
+	public void paint(Graphics graphics) {
+<span class="nc" id="L51">		Graphics2D g = (Graphics2D) graphics;</span>
+<span class="nc" id="L52">		final NodeView nodeView = getNodeView();</span>
+<span class="nc" id="L53">		final MindMapNode model = nodeView.getModel();</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (model == null)</span>
+<span class="nc" id="L55">			return;</span>
+
+<span class="nc" id="L57">		Object renderingHint = getController().setEdgesRenderingHint(g);</span>
+<span class="nc" id="L58">		paintSelected(g);</span>
+<span class="nc" id="L59">		paintDragOver(g);</span>
+
+		// change to bold stroke
+		// g.setStroke(BOLD_STROKE); // Changed by Daniel
+
+		// Draw a standard node
+<span class="nc" id="L65">		g.setColor(model.getEdge().getColor());</span>
+		// g.drawOval(0,0,size.width-1,size.height-1); // Changed by Daniel
+
+		// return to std stroke
+<span class="nc" id="L69">		g.setStroke(DEF_STROKE);</span>
+<span class="nc" id="L70">		g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);</span>
+<span class="nc" id="L71">		Tools.restoreAntialiasing(g, renderingHint);</span>
+
+<span class="nc" id="L73">		super.paint(g);</span>
+<span class="nc" id="L74">	}</span>
+
+	public void paintSelected(Graphics2D graphics) {
+<span class="nc" id="L77">		super.paintSelected(graphics);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		if (getNodeView().useSelectionColors()) {</span>
+<span class="nc" id="L79">			graphics.setColor(MapView.standardSelectColor);</span>
+<span class="nc" id="L80">			graphics.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10,</span>
+<span class="nc" id="L81">					10);</span>
+		}
+<span class="nc" id="L83">	}</span>
+
+	protected void paintBackground(Graphics2D graphics, Color color) {
+<span class="nc" id="L86">		graphics.setColor(color);</span>
+<span class="nc" id="L87">		graphics.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);</span>
+<span class="nc" id="L88">	}</span>
+
+	Point getLeftPoint() {
+<span class="nc" id="L91">		Point in = new Point(0, getHeight() / 2);</span>
+<span class="nc" id="L92">		return in;</span>
+	}
+
+	Point getCenterPoint() {
+<span class="nc" id="L96">		Point in = getLeftPoint();</span>
+<span class="nc" id="L97">		in.x = getWidth() / 2;</span>
+<span class="nc" id="L98">		return in;</span>
+	}
+
+	Point getRightPoint() {
+<span class="nc" id="L102">		Point in = getLeftPoint();</span>
+<span class="nc" id="L103">		in.x = getWidth() - 1;</span>
+<span class="nc" id="L104">		return in;</span>
+	}
+
+	protected int getMainViewWidthWithFoldingMark() {
+<span class="nc" id="L108">		int width = getWidth();</span>
+<span class="nc" id="L109">		int dW = getZoomedFoldingSymbolHalfWidth() * 2;</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (getNodeView().getModel().isFolded()) {</span>
+<span class="nc" id="L111">			width += dW;</span>
+		}
+<span class="nc" id="L113">		return width + dW;</span>
+	}
+
+	public int getDeltaX() {
+<span class="nc bnc" id="L117" title="All 4 branches missed.">		if (getNodeView().getModel().isFolded() &amp;&amp; getNodeView().isLeft()) {</span>
+<span class="nc" id="L118">			return super.getDeltaX() + getZoomedFoldingSymbolHalfWidth() * 2;</span>
+		}
+<span class="nc" id="L120">		return super.getDeltaX();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.view.mindmapview.NodeView#getStyle()
+	 */
+	String getStyle() {
+<span class="nc" id="L129">		return MindMapNode.STYLE_BUBBLE;</span>
+	}
+
+	/**
+	 * Returns the relative position of the Edge
+	 */
+	int getAlignment() {
+<span class="nc" id="L136">		return NodeView.ALIGN_CENTER;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.view.mindmapview.NodeView#getTextWidth()
+	 */
+	public int getTextWidth() {
+<span class="nc" id="L145">		return super.getTextWidth() + getNodeView().getMap().getZoomed(5);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.view.mindmapview.NodeView#getTextX()
+	 */
+	public int getTextX() {
+<span class="nc" id="L154">		return super.getTextX() + getNodeView().getMap().getZoomed(2);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

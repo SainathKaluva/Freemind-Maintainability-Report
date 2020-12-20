@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Multiple Triggers per Attribute</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="LinkBack.html">Prev</a> - <a href="ContextDefault.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetaTrans.html">7 SDMetrics Metamodel and XMI Transformation Files</a> > <a href="TransFile.html">7.2 XMI Transformation Files</a> > <a href="TrigMisc.html">7.2.3 Tips on Writing XMI Transformations</a> > 7.2.3.2 Multiple Triggers per Attribute
+<hr>
+<h4><a name="MultipleTrig"></a>7.2.3.2 Multiple Triggers per Attribute</h4> 
+
+It is possible to specify multiple triggers for one attribute or
+relation. For example, in XMI1.1 and XMI1.2, most model element
+information can be specified either via XML attributes or via XML
+elements. For instance, the name of a class can be specified like
+this:
+
+<pre>
+&lt;UML:Class xmi.id="cls1" name="Rectangle" /&gt;
+</pre>
+
+or like this:
+<pre>
+&lt;UML:Class xmi.id="cls1"&gt;
+  &lt;UML:ModelElement.name&gt;Rectangle&lt;/UML:ModelElement.name&gt;
+&lt;/UML:Class&gt;
+</pre>
+
+Therefore, the XMI transformations for these XMI versions have two
+triggers for most attributes, one trigger for each option. In the
+above example, the triggers to retrieve the class names are:
+
+<pre>
+&lt;xmitransformation modelelement="class" xmipattern="UML:Class"&gt;
+   &lt;trigger name="name" type="attrval" attr="name" /&gt;
+   &lt;trigger name="name" type="ctext" src="UML:ModelElement.name" /&gt;
+   ...
+&lt;/xmitransformation&gt;
+</pre>
+
+Multiple triggers are also useful to support modeling tools that
+deviate in minor ways from the UML standards. For example, some
+modeling tools denote the parent/child elements in a UML1.x
+generalization by "supertype" and "subtype", instead of the proper
+"parent" and "child". In many cases, you can simply add a trigger for
+the nonstandard way of representing the attribute, and a single XMI
+transformation file is thus capable of handling various XMI
+exporters.<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="LinkBack.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="TrigMisc.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ContextDefault.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;7.2.3.1 "The "linkbackattr" Trigger Attribute"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;7.2.3.3 ""Context" Attribute Defaults"</td></tr></table>
+
+</body>
+</html>

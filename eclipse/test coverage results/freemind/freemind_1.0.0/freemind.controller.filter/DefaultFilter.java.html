@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>DefaultFilter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter</a> &gt; <span class="el_source">DefaultFilter.java</span></div><h1>DefaultFilter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 07.05.2005
+ *
+ */
+package freemind.controller.filter;
+
+import java.util.LinkedList;
+import java.util.ListIterator;
+
+import freemind.controller.Controller;
+import freemind.controller.filter.condition.Condition;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author dimitri 07.05.2005
+ */
+public class DefaultFilter implements Filter {
+
+<span class="nc" id="L41">	private Condition condition = null;</span>
+<span class="nc" id="L42">	private int options = 0;</span>
+
+	/**
+     */
+	public DefaultFilter(Condition condition, boolean areAnchestorsShown,
+			boolean areDescendantsShown) {
+<span class="nc" id="L48">		super();</span>
+<span class="nc" id="L49">		this.condition = condition;</span>
+<span class="nc" id="L50">		this.options = FILTER_INITIAL_VALUE | FILTER_SHOW_MATCHED;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (areAnchestorsShown)</span>
+<span class="nc" id="L52">			options += FILTER_SHOW_ANCESTOR;</span>
+<span class="nc" id="L53">		options += FILTER_SHOW_ECLIPSED;</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (areDescendantsShown)</span>
+<span class="nc" id="L55">			options += FILTER_SHOW_DESCENDANT;</span>
+<span class="nc" id="L56">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.Filter#applyFilter(freemind.modes.MindMap)
+	 */
+	public void applyFilter(Controller c) {
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (condition != null) {</span>
+			try {
+<span class="nc" id="L67">				c.getFrame().setWaitingCursor(true);</span>
+<span class="nc" id="L68">				MindMap map = c.getModel();</span>
+<span class="nc" id="L69">				MapView mapView = c.getView();</span>
+<span class="nc" id="L70">				MindMapNode root = map.getRootNode();</span>
+<span class="nc" id="L71">				resetFilter(root);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">				if (filterChildren(root, c, condition.checkNode(c, root), false)) {</span>
+<span class="nc" id="L73">					addFilterResult(root, FILTER_SHOW_ANCESTOR);</span>
+				}
+<span class="nc" id="L75">				selectVisibleNode(mapView);</span>
+<span class="nc" id="L76">			} finally {</span>
+<span class="nc" id="L77">				c.getFrame().setWaitingCursor(false);</span>
+<span class="nc" id="L78">			}</span>
+		}
+<span class="nc" id="L80">	}</span>
+
+	static public void selectVisibleNode(MapView mapView) {
+<span class="nc" id="L83">		LinkedList selectedNodes = mapView.getSelecteds();</span>
+<span class="nc" id="L84">		final int lastSelectedIndex = selectedNodes.size() - 1;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (lastSelectedIndex == -1) {</span>
+<span class="nc" id="L86">			return;</span>
+		}
+<span class="nc" id="L88">		ListIterator iterator = selectedNodes.listIterator(lastSelectedIndex);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		while (iterator.hasPrevious()) {</span>
+<span class="nc" id="L90">			NodeView previous = (NodeView) iterator.previous();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (!previous.getModel().isVisible()) {</span>
+<span class="nc" id="L92">				mapView.toggleSelected(previous);</span>
+			}
+		}
+<span class="nc" id="L95">		NodeView selected = mapView.getSelected();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (!selected.getModel().isVisible()) {</span>
+<span class="nc" id="L97">			selected = getNearestVisibleParent(selected);</span>
+<span class="nc" id="L98">			mapView.selectAsTheOnlyOneSelected(selected);</span>
+		}
+<span class="nc" id="L100">		mapView.setSiblingMaxLevel(selected.getModel().getNodeLevel());</span>
+<span class="nc" id="L101">	}</span>
+
+	static private NodeView getNearestVisibleParent(NodeView selectedNode) {
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (selectedNode.getModel().isVisible())</span>
+<span class="nc" id="L105">			return selectedNode;</span>
+<span class="nc" id="L106">		return getNearestVisibleParent(selectedNode.getParentView());</span>
+	}
+
+	/**
+	 * @param c
+	 *            TODO
+	 */
+	private boolean filterChildren(MindMapNode parent, Controller c,
+			boolean isAncestorSelected, boolean isAncestorEclipsed) {
+<span class="nc" id="L115">		ListIterator iterator = parent.childrenUnfolded();</span>
+<span class="nc" id="L116">		boolean isDescendantSelected = false;</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		while (iterator.hasNext()) {</span>
+<span class="nc" id="L118">			MindMapNode node = (MindMapNode) iterator.next();</span>
+<span class="nc" id="L119">			isDescendantSelected = applyFilter(node, c, isAncestorSelected,</span>
+<span class="nc" id="L120">					isAncestorEclipsed, isDescendantSelected);</span>
+		}
+<span class="nc" id="L122">		return isDescendantSelected;</span>
+	}
+
+	private boolean applyFilter(MindMapNode node, Controller c,
+			boolean isAncestorSelected, boolean isAncestorEclipsed,
+			boolean isDescendantSelected) {
+<span class="nc" id="L128">		resetFilter(node);</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (isAncestorSelected)</span>
+<span class="nc" id="L130">			addFilterResult(node, FILTER_SHOW_DESCENDANT);</span>
+<span class="nc" id="L131">		boolean conditionSatisfied = condition.checkNode(c, node);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (conditionSatisfied) {</span>
+<span class="nc" id="L133">			isDescendantSelected = true;</span>
+<span class="nc" id="L134">			addFilterResult(node, FILTER_SHOW_MATCHED);</span>
+<span class="nc" id="L135">		} else {</span>
+<span class="nc" id="L136">			addFilterResult(node, FILTER_SHOW_HIDDEN);</span>
+		}
+<span class="nc bnc" id="L138" title="All 2 branches missed.">		if (isAncestorEclipsed) {</span>
+<span class="nc" id="L139">			addFilterResult(node, FILTER_SHOW_ECLIPSED);</span>
+		}
+<span class="nc bnc" id="L141" title="All 4 branches missed.">		if (filterChildren(node, c, conditionSatisfied || isAncestorSelected,</span>
+<span class="nc bnc" id="L142" title="All 6 branches missed.">				!conditionSatisfied || isAncestorEclipsed)) {</span>
+<span class="nc" id="L143">			addFilterResult(node, FILTER_SHOW_ANCESTOR);</span>
+<span class="nc" id="L144">			isDescendantSelected = true;</span>
+		}
+<span class="nc" id="L146">		return isDescendantSelected;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.Filter#isVisible(freemind.modes.MindMapNode)
+	 */
+	public boolean isVisible(MindMapNode node) {
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (condition == null)</span>
+<span class="nc" id="L157">			return true;</span>
+<span class="nc" id="L158">		int filterResult = node.getFilterInfo().get();</span>
+<span class="nc bnc" id="L159" title="All 4 branches missed.">		return ((options &amp; FILTER_SHOW_ANCESTOR) != 0 || (options &amp; FILTER_SHOW_ECLIPSED) &gt;= (filterResult &amp; FILTER_SHOW_ECLIPSED))</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">				&amp;&amp; ((options &amp; filterResult &amp; ~FILTER_SHOW_ECLIPSED) != 0);</span>
+
+	}
+
+	static public void resetFilter(MindMapNode node) {
+<span class="nc" id="L165">		node.getFilterInfo().reset();</span>
+<span class="nc" id="L166">	}</span>
+
+	static void addFilterResult(MindMapNode node, int flag) {
+<span class="nc" id="L169">		node.getFilterInfo().add(flag);</span>
+<span class="nc" id="L170">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.filter.Filter#areMatchedShown()
+	 */
+	public boolean areMatchedShown() {
+<span class="nc" id="L178">		return true;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.filter.Filter#areHiddenShown()
+	 */
+	public boolean areHiddenShown() {
+<span class="nc" id="L187">		return false;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.filter.Filter#areAncestorsShown()
+	 */
+	public boolean areAncestorsShown() {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">		return 0 != (options &amp; FILTER_SHOW_ANCESTOR);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.filter.Filter#areDescendantsShown()
+	 */
+	public boolean areDescendantsShown() {
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		return 0 != (options &amp; FILTER_SHOW_DESCENDANT);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.controller.filter.Filter#areEclipsedShown()
+	 */
+	public boolean areEclipsedShown() {
+<span class="nc" id="L214">		return true;</span>
+	}
+
+	public Object getCondition() {
+<span class="nc" id="L218">		return condition;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

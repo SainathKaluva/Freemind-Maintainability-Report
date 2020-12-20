@@ -1,0 +1,336 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Metamodel for UML 1.3/1.4</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="LOMeta.html">Prev</a> - <a href="Meta2.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LOMeta.html">A: Metamodels</a> > A.1 Metamodel for UML 1.3/1.4
+<hr>
+<h2><a name="Meta1"></a>A.1 Metamodel for UML 1.3/1.4</h2>
+
+All metamodel elements inherit by default from a special metamodel
+element <tt>"sdmetricsbase"</tt>, which defines, amongst others, the
+attributes "id", "name", and "context" that all model elements must
+possess (see <a href="MetaModel.html">Section&nbsp;7.1 "SDMetrics Metamodel"</a>). Table&nbsp;6 shows these default
+attributes.<p>
+
+Column "Attributes" provides the name of the attributes, column "Type"
+indicates if the attribute is a data or cross-reference attribute,
+column "Mult." indicates the multiplicity of the attribute ("one" for
+single-valued, "many" for multi-valued attributes).<p>
+
+<table><tr><th>Attribute</th><th>Type</th><th>Multi.</th><th>Description</th></tr>
+<tr><td>context</td><td>ref</td><td>one</td><td>
+Owner of the element in the UML model.
+</td></tr>
+<tr><td>id</td><td>data</td><td>one</td><td>
+Unique identifier of the model element.
+</td></tr>
+<tr><td>name</td><td>data</td><td>one</td><td>
+Name of the element in UML model.
+</td></tr>
+<tr><td>stereotypes</td><td>ref</td><td>many</td><td>
+The stereotypes of the model element.
+</td></tr>
+</table>
+<b>Table 6:&nbsp;Default attributes for the UML1.x metamodel</b><p>
+
+In Table&nbsp;7, column "Model Element" lists all elements of the
+UML1.4 metamodel. The remaining columns provide the details about all
+further attributes the metamodel elements define in addition to the
+inherited attributes.<p>
+
+<table><tr><th>Model Element</th><th>Attribute</th><th>Type</th><th>Multi.</th><th>Description</th></tr>
+<tr><td valign="top" rowspan="3"><a name="uml1class"/>class</td>
+<td>visibility</td><td>data</td><td>one</td><td>
+Visibility of the class (public, private, protected, package).
+</td></tr>
+<tr><td>abstract</td><td>data</td><td>one</td><td>
+Boolean indicating if class is abstract.
+</td></tr>
+<tr><td>leaf</td><td>data</td><td>one</td><td>
+Boolean indicating if a class must not have subclasses.
+</td></tr>
+
+<tr><td><a name="uml1interface"/>interface</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1datatype"/>datatype</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="3"><a name="uml1attribute"/>attribute</td>
+<td>visibility</td><td>data</td><td>one</td><td>
+Visibility of the attribute (public, private, protected, package).
+</td></tr>
+<tr><td>attributetype</td><td>ref</td><td>one</td><td>
+Reference to the attribute type (class, data type etc).
+</td></tr>
+<tr><td>changeability</td><td>data</td><td>one</td><td>
+Changeability of the attribute (changeable or none, frozen, addOnly).
+</td></tr>
+
+<tr><td valign="top" rowspan="3"><a name="uml1operation"/>operation</td>
+<td>visibility</td><td>data</td><td>one</td><td>
+Visibility of the operation (public, private, protected, package).
+</td></tr>
+<tr><td>abstract</td><td>data</td><td>one</td><td>
+Boolean indicating if operation is abstract.
+</td></tr>
+<tr><td>isquery</td><td>data</td><td>one</td><td>
+Boolean indicating if operation is a query that does not change the classifier's state.
+</td></tr>
+
+<tr><td valign="top" rowspan="2"><a name="uml1parameter"/>parameter</td>
+<td>kind</td><td>data</td><td>one</td><td>
+The kind of parameter (in, out, inout, return).
+</td></tr>
+<tr><td>parametertype</td><td>ref</td><td>one</td><td>
+Reference to the parameter type (class, data type etc).
+</td></tr>
+
+<tr><td><a name="uml1method"/>method</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1model"/>model</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1package"/>package</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1subsystem"/>subsystem</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1association"/>association</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1associationclass"/>associationclass</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="3"><a name="uml1associationend"/>associationend</td>
+<td>navigable</td><td>data</td><td>one</td><td>
+Boolean indicating if the association end is navigable.
+</td></tr>
+<tr><td>aggregation</td><td>data</td><td>one</td><td>
+Indicates if the association end is an aggregation or composite.
+</td></tr>
+<tr><td>associationendtype</td><td>ref</td><td>one</td><td>
+A link to the element attached to the association end.
+</td></tr>
+
+<tr><td valign="top" rowspan="2"><a name="uml1generalization"/>generalization</td>
+<td>genchild</td><td>ref</td><td>one</td><td>
+Link to the child in the generalization.
+</td></tr>
+<tr><td>genparent</td><td>ref</td><td>one</td><td>
+Link to the parent in the generalization.
+</td></tr>
+
+<tr><td valign="top" rowspan="2"><a name="uml1abstraction"/>abstraction</td>
+<td>abssupplier</td><td>ref</td><td>one</td><td>
+Link to the interface.
+</td></tr>
+<tr><td>absclient</td><td>ref</td><td>one</td><td>
+Link to the element implementing the interface
+</td></tr>
+
+<tr><td valign="top" rowspan="2"><a name="uml1dependency"/>dependency</td>
+<td>depsupplier</td><td>ref</td><td>one</td><td>
+Link to the supplier of the dependency.
+</td></tr>
+<tr><td>depclient</td><td>ref</td><td>one</td><td>
+Link to the client of the dependency.
+</td></tr>
+
+<tr><td valign="top" rowspan="2"><a name="uml1usage"/>usage</td>
+<td>depsupplier</td><td>ref</td><td>one</td><td>
+Link to the supplier of the usage.
+</td></tr>
+<tr><td>depclient</td><td>ref</td><td>one</td><td>
+Link to the client of the usage.
+</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1object"/>object</td>
+<td>objtype</td><td>ref</td><td>one</td><td>
+Link to the element of which this object is an instance.
+</td></tr>
+
+<tr><td valign="top" rowspan="3"><a name="uml1stimulus"/>stimulus</td>
+<td>stimsender</td><td>ref</td><td>one</td><td>
+Sender of the stimulus.
+</td></tr>
+<tr><td>stimreceiver</td><td>ref</td><td>one</td><td>
+Receiver of the stimulus.
+</td></tr>
+<tr><td>stimaction</td><td>ref</td><td>one</td><td>
+The action that the stimulus dispatches.
+</td></tr>
+
+<tr><td><a name="uml1link"/>link</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1linkend"/>linkend</td>
+<td>linkendtype</td><td>ref</td><td>one</td><td>
+The element that is attached to the link end.
+</td></tr>
+
+<tr><td><a name="uml1collaboration"/>collaboration</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1classifierrole"/>classifierrole</td>
+<td>classifierbase</td><td>ref</td><td>one</td><td>
+The classifier which the classifier role is a view of.
+</td></tr>
+
+<tr><td><a name="uml1interaction"/>interaction</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="3"><a name="uml1message"/>message</td>
+<td>messagesender</td><td>ref</td><td>one</td><td>
+The sender of the message.
+</td></tr>
+<tr><td>messagereceiver</td><td>ref</td><td>one</td><td>
+The receiver of the message.
+</td></tr>
+<tr><td>messageaction</td><td>ref</td><td>one</td><td>
+The action that the message dispatches.
+</td></tr>
+
+<tr><td><a name="uml1statemachine"/>statemachine</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="6"><a name="uml1state"/>state</td>
+<td>entryaction</td><td>ref</td><td>many</td><td>
+The entry actions of the state.
+</td></tr>
+<tr><td>exitaction</td><td>ref</td><td>many</td><td>
+The exit actions of the state.
+</td></tr>
+<tr><td>doactivity</td><td>ref</td><td>many</td><td>
+The do actions of the state.
+</td></tr>
+<tr><td>internaltrans</td><td>ref</td><td>many</td><td>
+The internal transitions of the state.
+</td></tr>
+<tr><td>kind</td><td>data</td><td>one</td><td>
+The kind of state (simple, composite, submachine, stub, synch, final; initial, deepHistory, shallowHistory, join, fork, choice or branch, junction; action, objectflow, call, subactivity).
+</td></tr>
+<tr><td>isconcurrent</td><td>data</td><td>one</td><td>
+Indicates if a composite state is concurrent.
+</td></tr>
+
+<tr><td valign="top" rowspan="3"><a name="uml1transition"/>transition</td>
+<td>transsource</td><td>ref</td><td>one</td><td>
+The source state of the transition.
+</td></tr>
+<tr><td>transtarget</td><td>ref</td><td>one</td><td>
+The target state of the transition.
+</td></tr>
+<tr><td>trigger</td><td>ref</td><td>one</td><td>
+The event that triggers the transition.
+</td></tr>
+
+<tr><td valign="top" rowspan="2"><a name="uml1event"/>event</td>
+<td>kind</td><td>data</td><td>one</td><td>
+The kind of event (signal, call, change, time).
+</td></tr>
+<tr><td>linkedeventelement</td><td>ref</td><td>one</td><td>
+The element (signal, operation, boolean expression, or deadline) that raised the event.
+</td></tr>
+
+<tr><td valign="top" rowspan="2"><a name="uml1action"/>action</td>
+<td>kind</td><td>data</td><td>one</td><td>
+The kind of action (send, return, create, destroy, call, terminate, uninterpreted).
+</td></tr>
+<tr><td>linkedactionelement</td><td>ref</td><td>one</td><td>
+Depending on the kind of action, the operation or signal that is invoked when the action is executed, or the classifier of which an instance is created.
+</td></tr>
+
+<tr><td><a name="uml1guard"/>guard</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1partition"/>partition</td>
+<td>contents</td><td>ref</td><td>many</td><td>
+The elements contained in the swimlane.
+</td></tr>
+
+<tr><td><a name="uml1activitygraph"/>activitygraph</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1signal"/>signal</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1usecase"/>usecase</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td><a name="uml1actor"/>actor</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="3"><a name="uml1usecaseextend"/>usecaseextend</td>
+<td>usecaseextbase</td><td>ref</td><td>one</td><td>
+The use case that is extended.
+</td></tr>
+<tr><td>usecaseextension</td><td>ref</td><td>one</td><td>
+The use case that is the extension.
+</td></tr>
+<tr><td>usecaseextensionpoint</td><td>ref</td><td>one</td><td>
+The extension point in the extended use case.
+</td></tr>
+
+<tr><td valign="top" rowspan="2"><a name="uml1usecaseinclude"/>usecaseinclude</td>
+<td>usecaseincbase</td><td>ref</td><td>one</td><td>
+The including use case.
+</td></tr>
+<tr><td>usecaseaddition</td><td>ref</td><td>one</td><td>
+The included use case.
+</td></tr>
+
+<tr><td><a name="uml1extensionpoint"/>extensionpoint</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1component"/>component</td>
+<td>deploymentlocation</td><td>ref</td><td>one</td><td>
+The node on which the component is deployed.
+</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1componentinstance"/>componentinstance</td>
+<td>componenttype</td><td>ref</td><td>one</td><td>
+The component that is instantiated.
+</td></tr>
+
+<tr><td><a name="uml1node"/>node</td><td>---</td><td>---</td><td>---</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1nodeinstance"/>nodeinstance</td>
+<td>nodetype</td><td>ref</td><td>one</td><td>
+The node that is instantiated.
+</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1stereotype"/>stereotype</td>
+<td>extendedelements</td><td>ref</td><td>many</td><td>
+The set of elements that the stereotype extends.
+</td></tr>
+
+<tr><td valign="top" rowspan="3"><a name="uml1taggedvalue"/>taggedvalue</td>
+<td>tag</td><td>data</td><td>one</td><td>
+The tag of the tagged value (up to UML 1.3)
+</td></tr>
+<tr><td>definition</td><td>ref</td><td>one</td><td>
+Definition of the tagged value (since UML 1.4)
+</td></tr>
+<tr><td>value</td><td>data</td><td>one</td><td>
+The value of the tagged value.
+</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1tagdefinition"/>tagdefinition</td>
+<td>tagtype</td><td>data</td><td>one</td><td>
+The tag name of a tagged value's tag.
+</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1diagram"/>diagram</td>
+<td>type</td><td>data</td><td>one</td><td>
+The type of diagram (class diagram, sequence diagram, etc).
+</td></tr>
+
+<tr><td valign="top" rowspan="1"><a name="uml1diagramelement"/>diagramelement</td>
+<td>element</td><td>ref</td><td>one</td><td>
+The element that is shown on the diagram.
+</td></tr>
+
+</table>
+
+<b>Table 7:&nbsp;SDMetrics metamodel elements and attributes for UML1.x models</b><p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="LOMeta.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LOMeta.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Meta2.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;A: "Metamodels"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;A.2 "Metamodel for UML 2.x"</td></tr></table>
+
+</body>
+</html>

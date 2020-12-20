@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Attribute "valueset"</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ExcludeSelf.html">Prev</a> - <a href="SubElementSet.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefSets.html">8.2 Definition of Sets</a> > <a href="SetProjection.html">8.2.1 Projection</a> > 8.2.1.4 Attribute "valueset"
+<hr>
+<h4><a name="ValueSet"></a>8.2.1.4 Attribute "valueset"</h4>
+
+So far, the examples shown were element sets, containing UML model
+elements. With the <tt>valueset</tt> attribute, you can define value
+sets containing the values of metric expressions.<p>
+
+For example, if a metric "Signature" for operations contains the
+signature string of the operation, you can define the set of
+signatures for the operations of a class as follows:
+
+<pre>
+&lt;set name="Sigs" domain="class"&gt; 
+  &lt;description&gt;The set of signatures of the operations in the 
+     class.&lt;/description&gt;
+  &lt;projection relation="context" target="operation"
+              valueset="Signature" /&gt;
+&lt;/set&gt;
+</pre>
+
+The metric expression "Signature" is evaluated for each operation; the
+resulting values are stored in the set.<p>
+
+Attribute <tt>valueset</tt> may be used in combination with all other
+attributes except <tt>set</tt> or <tt>exclude_self</tt>.
+
+
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ExcludeSelf.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="SetProjection.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="SubElementSet.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.2.1.3 "Attribute "exclude_self""</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.2.2 "Subelements"</td></tr></table>
+
+</body>
+</html>

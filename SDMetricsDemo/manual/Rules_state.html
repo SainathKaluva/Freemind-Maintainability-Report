@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - State Rules</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Rules_region.html">Prev</a> - <a href="Rules_activitygroup.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LORules.html">C: List of Design Rules</a> > C.18 State Rules
+<hr>
+<h2><a name="Rules_state"></a>C.18 State Rules</h2>
+<a name="Rules_state_NoIncoming"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NoIncoming</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">State has no incoming transitions.<p> Without incoming transitions, the state can never be reached. Add one or more transitions to the state. <ul><li>Suggested in [<a href="References.html#References_Amb03">Amb03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_NoOutgoing"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NoOutgoing</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">State has no outgoing transitions.<p> Without outgoing transitions, the state can never be left. Check if this is merely an oversight or the actually intended behavior. In the former case, add the missing outgoing transition(s). In the latter case, consider adding an outgoing transition to a final state. <ul><li>Suggested in [<a href="References.html#References_Amb03">Amb03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_IllegalJoin"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalJoin</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Join states must have two or more incoming and exactly one outgoing transition. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: number of incoming and outgoing transitions of the join state. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_IllegalFork"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalFork</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Fork states must have exactly one incoming and two or more outgoing transitions. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: number of incoming and outgoing transitions of the fork state. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_IllegalChoice"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalChoice</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">A choice or junction state must have at least one incoming and one outgoing transition. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: number of incoming and outgoing transitions of the choice state. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_MissingGuard"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>MissingGuard</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">If there are two or more transitions from a choice state, they all must have guards.<p> A choice state realizes a dynamic conditional branch; the guards are required to evaluate the branch conditions. Check the outgoing transitions and add the missing guard(s). <ul><li>Suggested in [<a href="References.html#References_Amb03">Amb03</a>]. <li>Value returned: name of the target state of the transition without guard.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_IllegalInitial"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalInitial</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">An initial state must have no incoming and exactly one outgoing transition. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: number of incoming and outgoing transitions of the initial state. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_IllegalFinal1"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalFinal1</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">A final state cannot have any outgoing transitions. Remove the outgoing transitions from the model. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: number of outgoing transitions of the final state. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_IllegalFinal2"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalFinal2</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">A final state cannot have any regions or entry/exit/state behavior.<p> Check the state and remove all regions, entry, exit, and do activities. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: number of regions and activities of the final state. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_IllegalEntryExit"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalEntryExit</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Entry or exit point is not owned by a top-level region. Move the entry or exit point to the top-level region of the state machine. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_IllegalHistory"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalHistory</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The history state has two or more outgoing transitions.<p> A history state can have at most one outgoing transition. Check the history state and remove the surplus outgoing transitions. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of outgoing transitions of the history state. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_Unnamed"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Unnamed</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 3-low</td><td>Applies to: all areas</td></tr><tr><td colspan="2">State has no name.<p> While the UML allows for anonymous states, adding a descriptive name to the state increases the readability and understandability of the diagram. <ul> <li>Suggested in [<a href="References.html#References_Amb03">Amb03</a>]. <li>This rule does not check pseudo and final states. Their function is obvious, so they can be left unnamed. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_BadForkOutgoing"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>BadForkOutgoing</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Transitions from fork states must not have a guard or triggers. Check the outgoing transitions and remove the guards and triggers. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_ForkTargetStates1"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>ForkTargetStates1</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Fork state has transitions to states in identical regions.<p> The transitions from a fork state must target states of different regions of a concurrent state. Check the outgoing transitions and make sure they all target different regions. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_state_ForkTargetStates2"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>ForkTargetStates2</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Fork state has transitions to states in different concurrent states.<p> The transitions from a fork state in a state machine must target regions of the same concurrent state. Check the outgoing transitions and make sure they all target the same concurrent state.  <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_state_JoinSourceStates1"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>JoinSourceStates1</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Join state has transitions from states in identical regions.<p> The transitions to a join state must originate from states of different regions of a concurrent state. Check the incoming transitions and make sure they all come from different regions. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_state_JoinSourceStates2"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>JoinSourceStates2</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Join state has transitions from states in different concurrent states.<p> The transitions to a join state in a state machine must originate from regions of the same concurrent state. Check the incoming transitions and make sure they all come from the same concurrent state. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_state_BadForkTarget"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>BadForkTarget</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Transitions from fork states in a state machine must not target a pseudo state. Check the outgoing transitions and make sure they do not point to any pseudo states. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_BadJoinSource"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>BadJoinSource</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Transitions to join states in a state machine must not originate from a pseudo state. Check the incoming transitions and make sure they do not come from pseudo states. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_BadIncoming"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>BadIncoming</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Transitions to join states must not have triggers or guards. Check the incoming transitions and remove all triggers and guards. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_BadOutgoing"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>BadOutgoing</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Transitions from pseudo states must not have any triggers. Check the outgoing transitions and remove all triggers and guards. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_state_MissingTarget"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>MissingTarget</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">State has an outgoing transition not attached to a target state. Check the outgoing transitions of the state and attach any loose ends to the proper target states. <ul><li>Suggested in [<a href="References.html#References_JRH04">JRH04</a>].</ul>
+</td></tr></table><hr><p>
+<a name="Rules_state_MissingSource"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>MissingSource</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">State has an incoming transition not attached to a source state. Check the incoming transitions of the state and attach any loose ends to the proper source states. <ul><li>Suggested in [<a href="References.html#References_JRH04">JRH04</a>].</ul> 
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Rules_region.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LORules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Rules_activitygroup.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;C.17 "Region Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;C.19 "Activitygroup Rules"</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Getting Started</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="UnInst.html">Prev</a> - <a href="MainWind.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > 3 Getting Started
+<hr>
+<h1><a name="GetStart"></a>3 Getting Started</h1>
+
+The following guided tour takes you through the steps to
+calculate a set of metrics for your UML design.
+
+Let's assume you have exported a UML design you want to analyze as an
+XMI file from your UML design tool. Refer to the manual of your UML
+modeling tool how to accomplish this.
+
+Start SDMetrics as described in <a href="Install.html">Section&nbsp;2 "Installation"</a>, and you are presented with the SDMetrics main window.<p>
+
+<img src="images/initframe.png" alt="SDMetrics Main Window"><br>
+<b>Figure 1:&nbsp;SDMetrics main window</b><p>
+
+Calculating a set of metrics takes four steps:
+<ol>
+<li>Specify the XMI file with your UML design
+<li>Calculate the metrics
+<li>Explore the metric data
+<li>Export the metric data for further processing
+</ol>
+
+<b>Step 1: Specify the XMI file to read</b><p> Click the <img
+src="images/setting.gif" alt="Project File Settings Button">&nbsp;button 
+or select "Project -&gt; Edit Project Settings" from the menu bar.<p>
+
+<img src="images/projsetting.png" alt="Project File Settings Dialog"><br>
+<b>Figure 2:&nbsp;Project File Settings Dialog</b><p>
+
+You specify the XMI file to read in the &quot;XMI Source File&quot;
+box at the top of the project settings dialog. Click the topmost &quot;Browse...&quot;
+button and use the file chooser dialog to select your XMI file.<p>
+
+At this point, you don't need to worry about the remaining options in
+the Project File Settings dialog; leave everything at &quot;Automatic&quot;
+and &quot;use default&quot;, and click the &quot;OK&quot; button to
+confirm your selection.<p>
+
+<b>Step 2: Calculate the metrics</b><p>
+
+After you specified your project files, select
+&quot;Project-&gt;Calculate Metrics&quot; from the menu bar, or click the
+<img src="images/recalc.gif" alt="Calculate Button">&nbsp;button on
+the tool bar. SDMetrics will read your XMI design file and calculate
+the metrics. This is a fully automated process that usually takes a few seconds. 
+You can monitor its progress on the status bar.<p>
+
+<img src="images/tableview.png" alt="Metric Data Tables"><br>
+<b>Figure 3:&nbsp;Table view of calculated metrics</b><p>
+
+<b>Step 3: Explore the metric data</b><p>
+
+To explore the metric data, SDMetrics provides several views of the data, for instance:
+
+<ul>
+<li>Metric data tables<br> 
+
+Presents a tabular view of all metric data. Select the type of elements (packages, classes, etc) you want to see 
+from the dropdown list in the upper tool bar of the view. You can sort the table according 
+to metric values, and highlight outliers (model elements with relatively high metric values).
+
+<li>Histograms<br>
+
+In this view you can browse histograms and cumulative distribution
+charts for the metrics. The view also displays descriptive statistics such as
+mean/minimum/maximum values and percentiles for one metric at a time.
+
+<li>Kiviat Diagrams<br>
+
+This view shows Kiviat diagrams for the model elements. The diagrams provide 
+a summary of all metric values for one design element at a time.
+
+</ul>
+
+Open these views and more from the "Views" menu in the menu bar.<p>
+
+<b>Step 4: Export the metrics data for further processing</b><p>
+
+You can export the metric data tables for further processing with your
+favorite spreadsheet software or statistical software packages.
+Go back to the "Metric Data Tables" view and click the <img src="images/save.gif" alt="Save
+Button">&nbsp;button on the upper right corner of the view. This opens the data export dialog
+window.<p>
+
+<img src="images/exportdlg.png" alt="Export Data Dialog"><br>
+<b>Figure 4:&nbsp;Data Export Dialog</b><p>
+
+Here you can specify whether to write the data tables to one or
+several output files, and select the file format for the output files
+(tab-separated text, HTML, etc).<p>
+
+This completes the brief guided tour of some of SDMetrics' most important features.
+The following section describes these and all other features of SDMetrics in detail.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="UnInst.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="index.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="MainWind.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;2.6 "Uninstalling SDMetrics"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4 "The SDMetrics User Interface"</td></tr></table>
+
+</body>
+</html>

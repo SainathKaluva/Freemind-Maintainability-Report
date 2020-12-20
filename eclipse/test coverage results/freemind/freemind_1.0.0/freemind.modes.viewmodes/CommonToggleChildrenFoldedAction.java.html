@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>CommonToggleChildrenFoldedAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.viewmodes</a> &gt; <span class="el_source">CommonToggleChildrenFoldedAction.java</span></div><h1>CommonToggleChildrenFoldedAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2005  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 09.11.2005
+ */
+
+package freemind.modes.viewmodes;
+
+import java.awt.event.ActionEvent;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * 
+ */
+public class CommonToggleChildrenFoldedAction extends AbstractAction {
+
+	private ViewControllerAdapter modeController;
+
+	private Logger logger;
+
+	public CommonToggleChildrenFoldedAction(ViewControllerAdapter controller) {
+<span class="nc" id="L43">		super(controller.getText(&quot;toggle_children_folded&quot;));</span>
+<span class="nc" id="L44">		this.modeController = controller;</span>
+<span class="nc" id="L45">		logger = modeController.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L46">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L49">		NodeView selected = modeController.getSelectedView();</span>
+<span class="nc" id="L50">		modeController.toggleFolded.toggleFolded(selected.getModel()</span>
+<span class="nc" id="L51">				.childrenUnfolded());</span>
+<span class="nc" id="L52">		modeController.getView().selectAsTheOnlyOneSelected(selected);</span>
+<span class="nc" id="L53">		modeController.getController().obtainFocusForSelected();</span>
+<span class="nc" id="L54">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

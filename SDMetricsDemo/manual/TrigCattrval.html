@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Trigger Type "cattrval"</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="TrigCtext.html">Prev</a> - <a href="TrigGcattrval.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetaTrans.html">7 SDMetrics Metamodel and XMI Transformation Files</a> > <a href="TransFile.html">7.2 XMI Transformation Files</a> > <a href="TFTransTrig.html">7.2.2 XMI Transformations and Triggers</a> > 7.2.2.3 Trigger Type "cattrval"
+<hr>
+<h4><a name="TrigCattrval"></a>7.2.2.3 Trigger Type "cattrval"</h4>
+
+This trigger retrieves the value from an XMI attribute of a child
+element in the XMI tree.
+<br>
+In our example, the visibility information of the operation is stored
+in the attribute "xmi.value" of the child element
+"Foundation.Core.ModelElement.visibility". We retrieve its value with the
+trigger
+<pre>&lt;trigger name=&quot;visibility&quot; type=&quot;cattrval&quot;
+         src=&quot;Foundation.Core.ModelElement.visibility&quot; attr=&quot;xmi.value&quot;/&gt;
+</pre>
+The "src" and "attr" attributes of the trigger specify the
+element/attribute we are interested in.<p>
+
+We can also use this trigger for multi-valued attributes. For example,
+a partition in a UML2 activity may be serialized in XMI2.0 as follows:
+
+<pre>
+&lt;group xmi:type='UML:ActivityPartition' name='mySwimlane' xmi:id='xmi12'&gt;
+  &lt;containedNode xmi:idref='xmi35'/&gt;
+  &lt;containedNode xmi:idref='xmi61'/&gt;
+  &lt;containedNode xmi:idref='xmi115'/&gt;
+&lt;/group&gt;
+</pre>
+
+In the SDMetrics metamodel for UML2, the model element "activitygroup"
+that stores partitions has a multi-valued attribute "nodes" (see
+<a href="Meta2.html">Appendix&nbsp;A.2 "Metamodel for UML 2.x"</a>). With the trigger
+
+<pre>&lt;trigger name="nodes" type="cattrval" src="containedNode" 
+         attr="xmi:idref" /&gt;</pre>
+
+SDMetrics will pick up each "containedNode" child XML element, and
+store the values of their "xmi:idref" attributes in the multi-valued
+SDMetrics metamodel attribute "nodes" of the activity partition.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="TrigCtext.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="TFTransTrig.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="TrigGcattrval.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;7.2.2.2 "Trigger Type "ctext""</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;7.2.2.4 "Trigger Type "gcattrval""</td></tr></table>
+
+</body>
+</html>

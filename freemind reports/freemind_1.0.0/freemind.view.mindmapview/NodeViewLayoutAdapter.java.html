@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeViewLayoutAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">NodeViewLayoutAdapter.java</span></div><h1>NodeViewLayoutAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2007  Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.view.mindmapview;
+
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.Point;
+
+import javax.swing.JComponent;
+
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+
+/**
+ * @author foltin
+ * @date 11.07.2013
+ */
+abstract public class NodeViewLayoutAdapter implements NodeViewLayout {
+<span class="nc" id="L37">	protected final int LISTENER_VIEW_WIDTH = 10;</span>
+<span class="nc" id="L38">	protected static java.util.logging.Logger logger = null;</span>
+<span class="nc" id="L39">	protected Point location = new Point();</span>
+<span class="nc" id="L40">	private static Dimension minDimension;</span>
+	private NodeView view;
+	private MindMapNode model;
+	private int childCount;
+	private JComponent content;
+	private int vGap;
+	private int spaceAround;
+
+<span class="nc" id="L48">	public NodeViewLayoutAdapter() {</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L50">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L51">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L53">	}</span>
+	
+	public void addLayoutComponent(String arg0, Component arg1) {
+<span class="nc" id="L56">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.LayoutManager#removeLayoutComponent(java.awt.Component)
+	 */
+	public void removeLayoutComponent(Component arg0) {
+<span class="nc" id="L64">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.LayoutManager#minimumLayoutSize(java.awt.Container)
+	 */
+	public Dimension minimumLayoutSize(Container arg0) {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (minDimension == null)</span>
+<span class="nc" id="L73">			minDimension = new Dimension(0, 0);</span>
+<span class="nc" id="L74">		return minDimension;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.LayoutManager#preferredLayoutSize(java.awt.Container)
+	 */
+	public Dimension preferredLayoutSize(Container c) {
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (!c.isValid()) {</span>
+<span class="nc" id="L84">			c.validate();</span>
+		}
+<span class="nc" id="L86">		return c.getSize();</span>
+	}
+
+	public void layoutContainer(Container c) {
+<span class="nc" id="L90">		setUp(c);</span>
+<span class="nc" id="L91">		layout();</span>
+<span class="nc" id="L92">		Point location2 = view.getLocation();</span>
+<span class="nc" id="L93">		Tools.convertPointToAncestor(view, location2, view.getMap());</span>
+//		logger.info(&quot;Layouting node '&quot; + view.getModel() + &quot;' to &quot; + location2);
+<span class="nc" id="L95">		layoutOtherItems();</span>
+<span class="nc" id="L96">		shutDown();</span>
+<span class="nc" id="L97">	}</span>
+
+	/**
+	 * 
+	 */
+	private void layoutOtherItems() {
+<span class="nc" id="L103">		final int componentCount = view.getComponentCount();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		for (int i = 0; i &lt; componentCount; i++) {</span>
+<span class="nc" id="L105">			final Component component = view.getComponent(i);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (component instanceof NodeMotionListenerView) {</span>
+<span class="nc" id="L107">				NodeMotionListenerView nodeMotionListenerView = (NodeMotionListenerView) component;</span>
+<span class="nc" id="L108">				layoutNodeMotionListenerView(nodeMotionListenerView);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			} else if (component instanceof NodeFoldingComponent) {</span>
+<span class="nc" id="L110">				NodeFoldingComponent foldingComponent = (NodeFoldingComponent) component;</span>
+<span class="nc" id="L111">				layoutNodeFoldingComponent(foldingComponent);</span>
+			}
+		}
+
+<span class="nc" id="L115">	}</span>
+
+	abstract protected void layout();
+
+	private void setUp(Container c) {
+<span class="nc" id="L120">		final NodeView localView = (NodeView) c;</span>
+<span class="nc" id="L121">		localView.syncronizeAttributeView();</span>
+<span class="nc" id="L122">		final int localChildCount = localView.getComponentCount() - 1;</span>
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		for (int i = 0; i &lt; localChildCount; i++) {</span>
+<span class="nc" id="L125">			localView.getComponent(i).validate();</span>
+		}
+
+<span class="nc" id="L128">		this.view = localView;</span>
+<span class="nc" id="L129">		this.model = localView.getModel();</span>
+<span class="nc" id="L130">		this.childCount = localChildCount;</span>
+<span class="nc" id="L131">		this.content = localView.getContent();</span>
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (getModel().isVisible()) {</span>
+<span class="nc" id="L134">			this.vGap = getView().getVGap();</span>
+<span class="nc" id="L135">		} else {</span>
+<span class="nc" id="L136">			this.vGap = getView().getVisibleParentView().getVGap();</span>
+		}
+<span class="nc" id="L138">		spaceAround = view.getMap().getZoomed(NodeView.SPACE_AROUND);</span>
+<span class="nc" id="L139">	}</span>
+
+	private void shutDown() {
+<span class="nc" id="L142">		this.view = null;</span>
+<span class="nc" id="L143">		this.model = null;</span>
+<span class="nc" id="L144">		this.content = null;</span>
+<span class="nc" id="L145">		this.childCount = 0;</span>
+<span class="nc" id="L146">		this.vGap = 0;</span>
+<span class="nc" id="L147">		this.spaceAround = 0;</span>
+<span class="nc" id="L148">	}</span>
+
+	/**
+	 * @return Returns the view.
+	 */
+	protected NodeView getView() {
+<span class="nc" id="L154">		return view;</span>
+	}
+
+	/**
+	 * @return Returns the model.
+	 */
+	protected MindMapNode getModel() {
+<span class="nc" id="L161">		return model;</span>
+	}
+
+	/**
+	 * @return Returns the childCount.
+	 */
+	protected int getChildCount() {
+<span class="nc" id="L168">		return childCount;</span>
+	}
+
+	/**
+	 * @return Returns the content.
+	 */
+	protected JComponent getContent() {
+<span class="nc" id="L175">		return content;</span>
+	}
+
+	protected int getChildContentHeight(boolean isLeft) {
+<span class="nc" id="L179">		final int childCount = getChildCount();</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">		if (childCount == 0) {</span>
+<span class="nc" id="L181">			return 0;</span>
+		}
+<span class="nc" id="L183">		int height = 0;</span>
+<span class="nc" id="L184">		int count = 0;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">		for (int i = 0; i &lt; childCount; i++) {</span>
+<span class="nc" id="L186">			Component component = getView().getComponent(i);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (component instanceof NodeView) {</span>
+<span class="nc" id="L188">				NodeView child = (NodeView) component;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">				if (child.isLeft() == isLeft) {</span>
+<span class="nc" id="L190">					final int additionalCloudHeigth = child</span>
+<span class="nc" id="L191">							.getAdditionalCloudHeigth();</span>
+<span class="nc" id="L192">					final int contentHeight = child.getContent().getHeight();</span>
+<span class="nc" id="L193">					height += contentHeight + additionalCloudHeigth;</span>
+<span class="nc" id="L194">					count++;</span>
+				}
+			}
+		}
+<span class="nc" id="L198">		return height + vGap * (count - 1);</span>
+	}
+
+	/**
+	 * @param isLeft
+	 * @return a shift, which is less than or equal zero
+	 */
+	protected int getChildVerticalShift(boolean isLeft) {
+<span class="nc" id="L206">		int shift = 0;</span>
+<span class="nc" id="L207">		boolean isFirstNodeView = false;</span>
+<span class="nc" id="L208">		boolean foundNodeView = false;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">		for (int i = 0; i &lt; getChildCount(); i++) {</span>
+<span class="nc" id="L210">			Component component = getView().getComponent(i);</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">			if (component instanceof NodeView) {</span>
+<span class="nc" id="L212">				NodeView child = (NodeView) component;</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">				if (child.isLeft() == isLeft) {</span>
+<span class="nc" id="L214">					final int childShift = child.getShift();</span>
+<span class="nc bnc" id="L215" title="All 4 branches missed.">					if (childShift &lt; 0 || isFirstNodeView) {</span>
+<span class="nc" id="L216">						shift += childShift;</span>
+<span class="nc" id="L217">						isFirstNodeView = false;</span>
+					}
+<span class="nc" id="L219">					shift -= (child.getContent().getY() - getSpaceAround());</span>
+<span class="nc" id="L220">					foundNodeView = true;</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if(foundNodeView) {</span>
+<span class="nc" id="L225">			shift -= getSpaceAround();</span>
+		}
+<span class="nc" id="L227">		return shift;</span>
+	}
+
+	protected int getChildHorizontalShift() {
+<span class="nc bnc" id="L231" title="All 2 branches missed.">		if (getChildCount() == 0)</span>
+<span class="nc" id="L232">			return 0;</span>
+<span class="nc" id="L233">		int shift = 0;</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		for (int i = 0; i &lt; getChildCount(); i++) {</span>
+<span class="nc" id="L235">			Component component = getView().getComponent(i);</span>
+<span class="nc bnc" id="L236" title="All 2 branches missed.">			if (component instanceof NodeView) {</span>
+<span class="nc" id="L237">				NodeView child = (NodeView) component;</span>
+				int shiftCandidate;
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				if (child.isLeft()) {</span>
+<span class="nc" id="L240">					shiftCandidate = -child.getContent().getX()</span>
+<span class="nc" id="L241">							- child.getContent().getWidth();</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">					if (child.isContentVisible()) {</span>
+<span class="nc" id="L243">						shiftCandidate -= child.getHGap()</span>
+<span class="nc" id="L244">								+ child.getAdditionalCloudHeigth() / 2;</span>
+					}
+<span class="nc" id="L246">				} else {</span>
+<span class="nc" id="L247">					shiftCandidate = -child.getContent().getX();</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">					if (child.isContentVisible()) {</span>
+<span class="nc" id="L249">						shiftCandidate += child.getHGap();</span>
+					}
+				}
+	
+<span class="nc" id="L253">				shift = Math.min(shift, shiftCandidate);</span>
+			}
+		}
+<span class="nc" id="L256">		return shift;</span>
+	}
+
+	/**
+	 * Implemented in the base class, as the root layout needs it, too.
+	 * @param childVerticalShift
+	 */
+	protected void placeRightChildren(int childVerticalShift) {
+<span class="nc" id="L264">		final int baseX = getContent().getX() + getContent().getWidth();</span>
+<span class="nc" id="L265">		int y = getContent().getY() + childVerticalShift;</span>
+<span class="nc" id="L266">		int right = baseX + getSpaceAround();</span>
+
+<span class="nc" id="L268">		NodeView child = null;</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		for (int i = 0; i &lt; getChildCount(); i++) {</span>
+<span class="nc" id="L270">			Component componentC = getView().getComponent(i);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">			if (componentC instanceof NodeView) {</span>
+<span class="nc" id="L272">				NodeView component = (NodeView) componentC;</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">				if (component.isLeft()) {</span>
+<span class="nc" id="L274">					continue;</span>
+				}
+<span class="nc" id="L276">				child = component;</span>
+<span class="nc" id="L277">				final int additionalCloudHeigth = child.getAdditionalCloudHeigth() / 2;</span>
+<span class="nc" id="L278">				y += additionalCloudHeigth;</span>
+<span class="nc" id="L279">				int shiftY = child.getShift();</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">				final int childHGap = child.getContent().isVisible() ? child</span>
+<span class="nc" id="L281">						.getHGap() : 0;</span>
+<span class="nc" id="L282">				int x = baseX + childHGap - child.getContent().getX();</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">				if (shiftY &lt; 0) {</span>
+<span class="nc" id="L284">					child.setLocation(x, y);</span>
+<span class="nc" id="L285">					y -= shiftY;</span>
+<span class="nc" id="L286">				} else {</span>
+<span class="nc" id="L287">					y += shiftY;</span>
+<span class="nc" id="L288">					child.setLocation(x, y);</span>
+				}
+//				logger.info(&quot;Place of child &quot; + component.getModel().getText() + &quot;: &quot; + child.getLocation());
+				
+<span class="nc" id="L292">				y += child.getHeight() - 2 * getSpaceAround() + getVGap()</span>
+<span class="nc" id="L293">						+ additionalCloudHeigth;</span>
+<span class="nc" id="L294">				right = Math.max(right, x + child.getWidth()</span>
+<span class="nc" id="L295">						+ additionalCloudHeigth);</span>
+			}
+		}
+<span class="nc" id="L298">		int bottom = getContent().getY() + getContent().getHeight()</span>
+<span class="nc" id="L299">				+ getSpaceAround();</span>
+
+<span class="nc bnc" id="L301" title="All 2 branches missed.">		if (child != null) {</span>
+<span class="nc" id="L302">			getView().setSize(</span>
+<span class="nc" id="L303">					right,</span>
+<span class="nc" id="L304">					Math.max(</span>
+<span class="nc" id="L305">							bottom,</span>
+<span class="nc" id="L306">							child.getY() + child.getHeight()</span>
+<span class="nc" id="L307">									+ child.getAdditionalCloudHeigth() / 2));</span>
+<span class="nc" id="L308">		} else {</span>
+<span class="nc" id="L309">			getView().setSize(right, bottom);</span>
+		}
+<span class="nc" id="L311">	}</span>
+
+	/**
+ 	 * Implemented in the base class, as the root layout needs it, too.
+	 * @param childVerticalShift
+	 */
+	protected void placeLeftChildren(int childVerticalShift) {
+<span class="nc" id="L318">		final int baseX = getContent().getX();</span>
+<span class="nc" id="L319">		int y = getContent().getY() + childVerticalShift;</span>
+<span class="nc" id="L320">		int right = baseX + getContent().getWidth() + getSpaceAround();</span>
+<span class="nc" id="L321">		NodeView child = null;</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">		for (int i = 0; i &lt; getChildCount(); i++) {</span>
+<span class="nc" id="L323">			Component componentC = getView().getComponent(i);</span>
+<span class="nc bnc" id="L324" title="All 2 branches missed.">			if (componentC instanceof NodeView) {</span>
+<span class="nc" id="L325">				NodeView component = (NodeView) componentC;</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">				if (!component.isLeft()) {</span>
+<span class="nc" id="L327">					continue;</span>
+				}
+<span class="nc" id="L329">				child = component;</span>
+<span class="nc" id="L330">				final int additionalCloudHeigth = child.getAdditionalCloudHeigth() / 2;</span>
+<span class="nc" id="L331">				y += additionalCloudHeigth;</span>
+<span class="nc" id="L332">				int shiftY = child.getShift();</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">				final int childHGap = child.getContent().isVisible() ? child</span>
+<span class="nc" id="L334">						.getHGap() : 0;</span>
+<span class="nc" id="L335">				int x = baseX - childHGap - child.getContent().getX()</span>
+<span class="nc" id="L336">						- child.getContent().getWidth();</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">				if (shiftY &lt; 0) {</span>
+<span class="nc" id="L338">					child.setLocation(x, y);</span>
+<span class="nc" id="L339">					y -= shiftY;</span>
+<span class="nc" id="L340">				} else {</span>
+<span class="nc" id="L341">					y += shiftY;</span>
+<span class="nc" id="L342">					child.setLocation(x, y);</span>
+				}
+<span class="nc" id="L344">				y += child.getHeight() - 2 * getSpaceAround() + getVGap()</span>
+<span class="nc" id="L345">						+ additionalCloudHeigth;</span>
+<span class="nc" id="L346">				right = Math.max(right, x + child.getWidth());</span>
+			}
+		}
+<span class="nc" id="L349">		int bottom = getContent().getY() + getContent().getHeight()</span>
+<span class="nc" id="L350">				+ getSpaceAround();</span>
+
+<span class="nc bnc" id="L352" title="All 2 branches missed.">		if (child != null) {</span>
+<span class="nc" id="L353">			getView().setSize(</span>
+<span class="nc" id="L354">					right,</span>
+<span class="nc" id="L355">					Math.max(</span>
+<span class="nc" id="L356">							bottom,</span>
+<span class="nc" id="L357">							child.getY() + child.getHeight()</span>
+<span class="nc" id="L358">									+ child.getAdditionalCloudHeigth() / 2));</span>
+<span class="nc" id="L359">		} else {</span>
+<span class="nc" id="L360">			getView().setSize(right, bottom);</span>
+		}
+<span class="nc" id="L362">	}</span>
+
+	/**
+	 * @return Returns the vGap.
+	 */
+	int getVGap() {
+<span class="nc" id="L368">		return vGap;</span>
+	}
+
+	/**
+	 * @return Returns the spaceAround.
+	 */
+	int getSpaceAround() {
+<span class="nc" id="L375">		return spaceAround;</span>
+	}
+
+	/* (non-Javadoc)
+	 * @see freemind.view.mindmapview.NodeViewLayout#layoutNodeFoldingComponent(freemind.view.mindmapview.NodeFoldingListenerView)
+	 */
+	public void layoutNodeFoldingComponent(
+			NodeFoldingComponent pFoldingComponent) {
+<span class="nc" id="L383">		NodeView movedView = pFoldingComponent.getNodeView();</span>
+
+<span class="nc" id="L385">		Point location = movedView.getFoldingMarkPosition();</span>
+<span class="nc" id="L386">		JComponent content = movedView.getContent();</span>
+<span class="nc" id="L387">		Tools.convertPointToAncestor(content, location, pFoldingComponent.getParent());</span>
+<span class="nc" id="L388">		pFoldingComponent.setCorrectedLocation(location);</span>
+
+<span class="nc" id="L390">		Dimension preferredSize = pFoldingComponent.getPreferredSize();</span>
+<span class="nc" id="L391">		pFoldingComponent.setSize(preferredSize.width, preferredSize.height);</span>
+<span class="nc" id="L392">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

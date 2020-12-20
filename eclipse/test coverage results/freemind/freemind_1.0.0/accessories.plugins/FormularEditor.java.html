@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FormularEditor.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">FormularEditor.java</span></div><h1>FormularEditor.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 30.03.2004
+ *
+ */
+package accessories.plugins;
+
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
+
+import freemind.main.FreeMindMain;
+import freemind.main.XMLElement;
+import freemind.modes.mindmapmode.hooks.PermanentMindMapNodeHookAdapter;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * 
+ */
+public class FormularEditor extends PermanentMindMapNodeHookAdapter {
+
+	private static final String XML_FORMULAR_TYPE = &quot;TYPE&quot;;
+
+	private abstract class FormularEntity {
+		private String value;
+		private String label;
+		private String type;
+		private String displayLabel;
+
+		public String getValue() {
+<span class="nc" id="L63">			return value;</span>
+		}
+
+		public void setValue(String string) {
+<span class="nc" id="L67">			value = string;</span>
+<span class="nc" id="L68">		}</span>
+
+		public String getLabel() {
+<span class="nc" id="L71">			return label;</span>
+		}
+
+		public void setLabel(String string) {
+<span class="nc" id="L75">			label = string;</span>
+<span class="nc" id="L76">		}</span>
+
+<span class="nc" id="L78">		public FormularEntity(String name, String value, String type,</span>
+<span class="nc" id="L79">				String display) {</span>
+<span class="nc" id="L80">			this.label = name;</span>
+<span class="nc" id="L81">			this.value = value;</span>
+<span class="nc" id="L82">			this.type = type;</span>
+<span class="nc" id="L83">			this.displayLabel = display;</span>
+<span class="nc" id="L84">		}</span>
+
+		public void addToPanel(JPanel panel, GridBagLayout l, int y) {
+<span class="nc" id="L87">			GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L88">			c.gridx = 0;</span>
+<span class="nc" id="L89">			c.gridy = y;</span>
+<span class="nc" id="L90">			c.weightx = 50;</span>
+<span class="nc" id="L91">			c.weighty = 100;</span>
+<span class="nc" id="L92">			c.fill = GridBagConstraints.VERTICAL;</span>
+<span class="nc" id="L93">			c.anchor = GridBagConstraints.EAST;</span>
+<span class="nc" id="L94">			JLabel jlabel = new JLabel(getLabel());</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if (getDisplayLabel() != null)</span>
+<span class="nc" id="L96">				jlabel.setText(getDisplayLabel());</span>
+<span class="nc" id="L97">			l.setConstraints(jlabel, c);</span>
+<span class="nc" id="L98">			panel.add(jlabel);</span>
+<span class="nc" id="L99">		}</span>
+
+		/**
+		 * @param child
+		 */
+		public void save(XMLElement child) {
+<span class="nc" id="L105">			child.setAttribute(&quot;NAME&quot;, getLabel());</span>
+<span class="nc" id="L106">			child.setAttribute(&quot;VALUE&quot;, getValue());</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">			if (getDisplayLabel() != null)</span>
+<span class="nc" id="L108">				child.setAttribute(&quot;DISPLAY&quot;, getDisplayLabel());</span>
+<span class="nc" id="L109">			child.setAttribute(XML_FORMULAR_TYPE, getType());</span>
+<span class="nc" id="L110">		}</span>
+
+		/**
+		 * @return
+		 */
+		private String getDisplayLabel() {
+<span class="nc" id="L116">			return displayLabel;</span>
+		}
+
+		/**
+		 * @param paramChild
+		 */
+		public FormularEntity(XMLElement paramChild) {
+<span class="nc" id="L123">			this(paramChild.getStringAttribute(&quot;NAME&quot;), paramChild</span>
+<span class="nc" id="L124">					.getStringAttribute(&quot;VALUE&quot;), paramChild</span>
+<span class="nc" id="L125">					.getStringAttribute(XML_FORMULAR_TYPE), paramChild</span>
+<span class="nc" id="L126">					.getStringAttribute(&quot;DISPLAY&quot;));</span>
+<span class="nc" id="L127">		}</span>
+
+		/**
+		 * @return
+		 */
+		public String getType() {
+<span class="nc" id="L133">			return type;</span>
+		}
+
+		/**
+		 * @param string
+		 */
+		public void setDisplayLabel(String string) {
+<span class="nc" id="L140">			displayLabel = string;</span>
+<span class="nc" id="L141">		}</span>
+
+	}
+
+	private class StringEntity extends FormularEntity {
+		public void addToPanel(JPanel panel, GridBagLayout l, int y) {
+<span class="nc" id="L147">			super.addToPanel(panel, l, y);</span>
+<span class="nc" id="L148">			GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L149">			c.gridx = 1;</span>
+<span class="nc" id="L150">			c.gridy = y;</span>
+<span class="nc" id="L151">			c.weightx = 100;</span>
+<span class="nc" id="L152">			c.weighty = 100;</span>
+<span class="nc" id="L153">			c.fill = GridBagConstraints.BOTH;</span>
+<span class="nc" id="L154">			final JTextField text = new JTextField(getValue());</span>
+<span class="nc" id="L155">			l.setConstraints(text, c);</span>
+<span class="nc" id="L156">			panel.add(text);</span>
+<span class="nc" id="L157">			text.getDocument().addDocumentListener(new DocumentListener() {</span>
+				public void insertUpdate(DocumentEvent arg0) {
+<span class="nc" id="L159">					changedUpdate(arg0);</span>
+<span class="nc" id="L160">				}</span>
+
+				public void removeUpdate(DocumentEvent arg0) {
+<span class="nc" id="L163">					changedUpdate(arg0);</span>
+<span class="nc" id="L164">				}</span>
+
+				public void changedUpdate(DocumentEvent e) {
+					try {
+<span class="nc" id="L168">						String text = e.getDocument().getText(0,</span>
+<span class="nc" id="L169">								e.getDocument().getLength());</span>
+<span class="nc" id="L170">						setValue(text);</span>
+<span class="nc" id="L171">						nodeChanged(getNode());</span>
+<span class="nc" id="L172">					} catch (BadLocationException e1) {</span>
+<span class="nc" id="L173">						freemind.main.Resources.getInstance().logException(e1);</span>
+					}
+<span class="nc" id="L175">				}</span>
+			});
+<span class="nc" id="L177">		}</span>
+
+		/**
+		 * @param paramChild
+		 */
+<span class="nc" id="L182">		public StringEntity(XMLElement paramChild) {</span>
+<span class="nc" id="L183">			super(paramChild);</span>
+<span class="nc" id="L184">		}</span>
+	}
+
+	private class CheckBoxEntity extends FormularEntity {
+<span class="nc" id="L188">		public CheckBoxEntity(XMLElement paramChild) {</span>
+<span class="nc" id="L189">			super(paramChild);</span>
+<span class="nc" id="L190">		}</span>
+
+		public void addToPanel(JPanel panel, GridBagLayout l, int y) {
+<span class="nc" id="L193">			super.addToPanel(panel, l, y);</span>
+<span class="nc" id="L194">			GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L195">			c.gridx = 1;</span>
+<span class="nc" id="L196">			c.gridy = y;</span>
+<span class="nc" id="L197">			c.weightx = 100;</span>
+<span class="nc" id="L198">			c.weighty = 100;</span>
+<span class="nc" id="L199">			c.fill = GridBagConstraints.BOTH;</span>
+<span class="nc" id="L200">			final JCheckBox text = new JCheckBox();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			text.setSelected(getValue().equals(&quot;true&quot;) ? true : false);</span>
+<span class="nc" id="L202">			l.setConstraints(text, c);</span>
+<span class="nc" id="L203">			panel.add(text);</span>
+<span class="nc" id="L204">			text.addItemListener(new ItemListener() {</span>
+
+				public void itemStateChanged(ItemEvent e) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">					if (e.getStateChange() == ItemEvent.DESELECTED) {</span>
+<span class="nc" id="L208">						setValue(&quot;false&quot;);</span>
+<span class="nc" id="L209">					} else {</span>
+<span class="nc" id="L210">						setValue(&quot;true&quot;);</span>
+					}
+<span class="nc" id="L212">				}</span>
+			});
+<span class="nc" id="L214">		}</span>
+
+	}
+
+	private class ChoiceEntity extends FormularEntity {
+		private class ChoiceElement {
+			public String enumStr;
+			public String displayValue;
+
+<span class="nc" id="L223">			public ChoiceElement(XMLElement child) {</span>
+<span class="nc" id="L224">				enumStr = child.getStringAttribute(&quot;ENUM&quot;);</span>
+<span class="nc" id="L225">				displayValue = child.getStringAttribute(&quot;DISPLAY&quot;);</span>
+<span class="nc" id="L226">			}</span>
+
+			/**
+			 * @param enumChild
+			 */
+			public void save(XMLElement enumChild) {
+<span class="nc" id="L232">				enumChild.setAttribute(&quot;ENUM&quot;, enumStr);</span>
+<span class="nc" id="L233">				enumChild.setAttribute(&quot;DISPLAY&quot;, displayValue);</span>
+<span class="nc" id="L234">			}</span>
+		}
+
+		ChoiceElement[] possibles;
+
+		public void addToPanel(JPanel panel, GridBagLayout l, int y) {
+<span class="nc" id="L240">			super.addToPanel(panel, l, y);</span>
+<span class="nc" id="L241">			GridBagConstraints c = new GridBagConstraints();</span>
+<span class="nc" id="L242">			c.gridx = 1;</span>
+<span class="nc" id="L243">			c.gridy = y;</span>
+<span class="nc" id="L244">			c.weightx = 100;</span>
+<span class="nc" id="L245">			c.weighty = 100;</span>
+<span class="nc" id="L246">			c.fill = GridBagConstraints.BOTH;</span>
+<span class="nc" id="L247">			final JComboBox choice = new JComboBox();</span>
+<span class="nc" id="L248">			int found = -1;</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			for (int i = 0; i &lt; possibles.length; ++i) {</span>
+<span class="nc" id="L250">				String itemName = possibles[i].enumStr;</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">				if (possibles[i].displayValue != null)</span>
+<span class="nc" id="L252">					itemName = possibles[i].displayValue;</span>
+<span class="nc" id="L253">				choice.addItem(itemName);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">				if (possibles[i].enumStr.equals(getValue())) {</span>
+<span class="nc" id="L255">					found = i;</span>
+				}
+			}
+<span class="nc bnc" id="L258" title="All 2 branches missed.">			if (found &lt; 0) {</span>
+<span class="nc" id="L259">				throw new IllegalArgumentException(&quot;Enum &quot; + getValue()</span>
+<span class="nc" id="L260">						+ &quot; not found in possibles &quot; + possibles);</span>
+			}
+<span class="nc" id="L262">			choice.setSelectedIndex(found);</span>
+<span class="nc" id="L263">			l.setConstraints(choice, c);</span>
+<span class="nc" id="L264">			panel.add(choice);</span>
+<span class="nc" id="L265">			choice.addItemListener(new ItemListener() {</span>
+				public void itemStateChanged(ItemEvent e) {
+<span class="nc" id="L267">					setValue(possibles[choice.getSelectedIndex()].enumStr);</span>
+<span class="nc" id="L268">					nodeChanged(getNode());</span>
+<span class="nc" id="L269">				}</span>
+			});
+<span class="nc" id="L271">		}</span>
+
+		/**
+		 * @param paramChild
+		 */
+<span class="nc" id="L276">		public ChoiceEntity(XMLElement paramChild) {</span>
+<span class="nc" id="L277">			super(paramChild);</span>
+<span class="nc" id="L278">			possibles = new ChoiceElement[paramChild.getChildren().size()];</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">			for (int i = 0; i &lt; paramChild.getChildren().size(); ++i) {</span>
+<span class="nc" id="L280">				XMLElement child = (XMLElement) paramChild.getChildren().get(i);</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">				if (child != null) {</span>
+<span class="nc" id="L282">					possibles[i] = new ChoiceElement(child);</span>
+				}
+			}
+<span class="nc" id="L285">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * accessories.plugins.FormularEditor.FormularEntity#save(freemind.main
+		 * .XMLElement)
+		 */
+		public void save(XMLElement child) {
+<span class="nc" id="L295">			super.save(child);</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">			for (int i = 0; i &lt; possibles.length; ++i) {</span>
+<span class="nc" id="L297">				XMLElement enumChild = new XMLElement();</span>
+<span class="nc" id="L298">				enumChild.setName(&quot;value&quot;);</span>
+<span class="nc" id="L299">				possibles[i].save(enumChild);</span>
+<span class="nc" id="L300">				child.addChild(enumChild);</span>
+			}
+<span class="nc" id="L302">		}</span>
+
+	}
+
+	private JPanel panel;
+	private List entities;
+
+	/**
+	 * 
+	 */
+	public FormularEditor() {
+<span class="nc" id="L313">		super();</span>
+<span class="nc" id="L314">		entities = new Vector();</span>
+<span class="nc" id="L315">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHook#loadFrom(freemind.main.XMLElement)
+	 */
+	public void loadFrom(XMLElement child) {
+<span class="nc" id="L324">		super.loadFrom(child);</span>
+<span class="nc" id="L325">		entities.clear();</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">		for (int i = 0; i &lt; child.getChildren().size(); ++i) {</span>
+<span class="nc" id="L327">			XMLElement paramChild = (XMLElement) child.getChildren().get(i);</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			if (paramChild != null) {</span>
+<span class="nc" id="L329">				String type = paramChild.getStringAttribute(XML_FORMULAR_TYPE);</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">				if (type == null)</span>
+<span class="nc" id="L331">					continue;</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">				if (type.equals(&quot;string&quot;)) {</span>
+<span class="nc" id="L333">					entities.add(new StringEntity(paramChild));</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">				} else if (type.equals(&quot;enumerator&quot;)) {</span>
+<span class="nc" id="L335">					entities.add(new ChoiceEntity(paramChild));</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">				} else if (type.equals(&quot;checkbox&quot;)) {</span>
+<span class="nc" id="L337">					entities.add(new CheckBoxEntity(paramChild));</span>
+				}
+			}
+		}
+<span class="nc" id="L341">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#save(freemind.main.XMLElement)
+	 */
+	public void save(XMLElement xml) {
+<span class="nc" id="L349">		super.save(xml);</span>
+<span class="nc bnc" id="L350" title="All 2 branches missed.">		for (Iterator i = entities.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L351">			FormularEntity entity = (FormularEntity) i.next();</span>
+<span class="nc" id="L352">			XMLElement child = new XMLElement();</span>
+<span class="nc" id="L353">			child.setName(&quot;formular&quot;);</span>
+<span class="nc" id="L354">			entity.save(child);</span>
+<span class="nc" id="L355">			xml.addChild(child);</span>
+		}
+<span class="nc" id="L357">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#onDeselectHook()
+	 */
+	public void onLostFocusNode(NodeView nodeView) {
+<span class="nc" id="L365">		super.onLostFocusNode(nodeView);</span>
+<span class="nc" id="L366">		shutDownDisplay();</span>
+<span class="nc" id="L367">	}</span>
+
+	private void shutDownDisplay() {
+<span class="nc bnc" id="L370" title="All 2 branches missed.">		if (panel != null) {</span>
+			// int y =0;
+			// // remove all display components
+			// for(Iterator i=entities.iterator(); i.hasNext();) {
+			// FormularEntity entity = (FormularEntity) i.next();
+			// entity.removeFromPanel(panel,(GridBagLayout) panel.getLayout(),
+			// y);
+			// y++;
+			// }
+			// shut down the display:
+<span class="nc" id="L380">			panel.setVisible(false);</span>
+<span class="nc" id="L381">			FreeMindMain frame = getController().getFrame();</span>
+<span class="nc" id="L382">			frame.removeSplitPane();</span>
+<span class="nc" id="L383">			panel = null;</span>
+		}
+<span class="nc" id="L385">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#onSelectHook()
+	 */
+	public void onFocusNode(NodeView nodeView) {
+<span class="nc" id="L393">		super.onFocusNode(nodeView);</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">		if (panel == null) {</span>
+			// panel:
+<span class="nc" id="L396">			panel = new JPanel(null);</span>
+<span class="nc" id="L397">			GridBagLayout gridbag = new GridBagLayout();</span>
+<span class="nc" id="L398">			int y = 0;</span>
+<span class="nc bnc" id="L399" title="All 2 branches missed.">			for (Iterator i = entities.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L400">				FormularEntity entity = (FormularEntity) i.next();</span>
+<span class="nc" id="L401">				entity.addToPanel(panel, gridbag, y);</span>
+<span class="nc" id="L402">				y++;</span>
+			}
+<span class="nc" id="L404">			panel.setLayout(gridbag);</span>
+<span class="nc" id="L405">			FreeMindMain frame = getController().getFrame();</span>
+<span class="nc" id="L406">			frame.insertComponentIntoSplitPane(panel);</span>
+		}
+<span class="nc" id="L408">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.MindMapHook#shutdownMapHook()
+	 */
+	public void shutdownMapHook() {
+<span class="nc" id="L416">		shutDownDisplay();</span>
+<span class="nc" id="L417">		super.shutdownMapHook();</span>
+<span class="nc" id="L418">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

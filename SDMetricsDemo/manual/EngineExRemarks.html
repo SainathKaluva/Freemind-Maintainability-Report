@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Metrics Engine Extension Guidelines</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="CustSetFunc.html">Prev</a> - <a href="LOMeta.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="ExtendME.html">9 Extending the Metrics and Rule Engine</a> > 9.7 Metrics Engine Extension Guidelines
+<hr>
+<h2><a name="EngineExRemarks"></a>9.7 Metrics Engine Extension Guidelines</h2>
+
+Before you embark on creating new custom procedures and functions, 
+consider the following guidelines.<p>
+
+<b>General guidelines</b><p>
+
+<ul>
+<li>The procedure and function classes must have public visibility, and
+they must have a public constructor without arguments 
+(usually the default constructor).
+<li>The classes must be stateless. Do not define or use instance fields
+in these classes. The method implementations must be reentrant.
+<li>Avoid side effects in the method implementations. For instance, do not 
+modify the intermediate sets obtained from calls to method 
+<tt>evalSetExpression</tt>, as these sets may be cached by the metrics
+engine and used elsewhere.
+</ul> 
+
+
+<b>Guidelines for metric, set, and rule procedures</b><p>
+
+<ul>
+<li>Defining new procedures should rarely be necessary. The primary means of
+defining new metrics and rules is the SDMetricsML, which is faster to do and
+only requires a text editor for tool support. Only when the capabilities
+of the SDMetricsML are absolutely insufficient should you consider defining
+new procedures.
+<li>A metric, set, or rule procedure does not define a concrete metric, set,
+or rule. It rather provides a template and algorithm for the definition of 
+a whole family of different metrics/sets/rules. Think of the many different
+metrics you can define with just the "projection" procedure. Therefore, aim
+to define the attributes of your procedures to provide as much flexibility as
+possible. Make sure that all inputs to the procedure can be specified as 
+procedure attributes, and only hardcode default values for optional attributes
+in the implementation of the procedure.
+<li>When you define the attributes for your new procedure, use established 
+groups of attributes such as the standard filter attributes 
+supported by class <tt>FilterAttributeProcessor</tt>,
+or the "sum/stat" attributes of class <tt>SummationHelper</tt>. Your new 
+procedures will better blend in and form a cohesive whole with the standard
+procedures, and the implementation of your procedure will be easier.
+</ul>
+
+
+<b>Guidelines for boolean, scalar, and set functions</b><p>
+
+<ul>
+<li>As with procedures, defining new functions should rarely be necessary.
+<li>The return type of the function determines where the function can be used:
+<ul>
+<li>Boolean functions return Booleans and are used in condition expressions.
+<li>Scalar functions return numbers, strings, or a model elements and are 
+used in metric expressions.
+<li>Set functions return sets (regular or multisets, element or value sets) 
+and are used in set expressions.
+</ul>
+<li>The types of the arguments to the function are independent from the return type of the function.
+Each function type can have condition expressions, metric expressions, and/or set expressions as
+arguments. You can mix and match the argument types as needed.
+The methods <tt>evalExpression</tt>, <tt>evalBooleanExpression</tt>, and 
+<tt>evalSetExpression</tt> are equally provided by all of the function base classes.
+</ul>
+
+<b>Where to go from here</b><p>
+
+The above examples of custom procedures and functions did not cover
+the entire metrics and rule engine API. On the SDMetrics web site,
+you can
+
+<ul>
+<li>view the JavaDocs of the complete API,
+<li>download the SDMetrics Open Core distribution, which contains
+the implementations of all the standard metric, set, and rule procedures
+described in <a href="MetricDef.html">Section&nbsp;8 "Defining Custom Design Metrics and Rules"</a>, and all the functions and operations
+described in <a href="ExpTerms.html">Section&nbsp;8.5 "Expression Terms"</a>. These implementations provide further usage 
+examples for every feature of the API.
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="CustSetFunc.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="ExtendME.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="LOMeta.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;9.6 "Set Functions"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;A: "Metamodels"</td></tr></table>
+
+</body>
+</html>

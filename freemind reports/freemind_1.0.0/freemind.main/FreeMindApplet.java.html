@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FreeMindApplet.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">FreeMindApplet.java</span></div><h1>FreeMindApplet.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: FreeMindApplet.java,v 1.18.14.13.2.25 2009/04/19 19:44:01 christianfoltin Exp $*/
+
+package freemind.main;
+
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.io.File;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Properties;
+import java.util.ResourceBundle;
+import java.util.Vector;
+
+import javax.swing.JApplet;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRootPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import freemind.controller.Controller;
+import freemind.controller.MenuBar;
+import freemind.view.mindmapview.MapView;
+
+public class FreeMindApplet extends JApplet implements FreeMindMain {
+
+<span class="nc" id="L51">	public static final VersionInformation version = FreeMind.VERSION;</span>
+	// public static final String defaultPropsURL;
+	public URL defaultPropsURL;
+	public static Properties defaultProps;
+	public static Properties userProps;
+<span class="nc" id="L56">	private JScrollPane scrollPane = new MapView.ScrollPane();</span>
+	private MenuBar menuBar;
+	private JLabel status;
+	Controller c;// the one and only controller
+	private FreeMindCommon mFreeMindCommon;
+	private JPanel southPanel;
+	private JComponent mComponentInSplitPane;
+
+<span class="nc" id="L64">	public FreeMindApplet() {</span>
+<span class="nc" id="L65">		mFreeMindCommon = new FreeMindCommon(this);</span>
+<span class="nc" id="L66">		Resources.createInstance(this);</span>
+<span class="nc" id="L67">	}// Constructor</span>
+
+	public boolean isApplet() {
+<span class="nc" id="L70">		return true;</span>
+	}
+
+	public File getPatternsFile() {
+<span class="nc" id="L74">		return null;</span>
+	}
+
+	public Controller getController() {
+<span class="nc" id="L78">		return c;</span>
+	}
+
+	public MapView getView() {
+<span class="nc" id="L82">		return c.getView();</span>
+	}
+
+	public void setView(MapView view) {
+<span class="nc" id="L86">		scrollPane.setViewportView(view);</span>
+<span class="nc" id="L87">	}</span>
+
+	public MenuBar getFreeMindMenuBar() {
+<span class="nc" id="L90">		return menuBar;</span>
+	}
+
+	public VersionInformation getFreemindVersion() {
+<span class="nc" id="L94">		return version;</span>
+	}
+
+	// &quot;dummy&quot; implementation of the interface (PN)
+	public int getWinHeight() {
+<span class="nc" id="L99">		return getRootPane().getHeight();</span>
+	}
+
+	public int getWinWidth() {
+<span class="nc" id="L103">		return getRootPane().getWidth();</span>
+	}
+
+	public int getWinState() {
+<span class="nc" id="L107">		return 6;</span>
+	}
+
+	public int getWinX() {
+<span class="nc" id="L111">		return 0;</span>
+	}
+
+	public int getWinY() {
+<span class="nc" id="L115">		return 0;</span>
+	}
+
+	/**
+	 * Returns the ResourceBundle with the current language
+	 */
+	public ResourceBundle getResources() {
+<span class="nc" id="L122">		return mFreeMindCommon.getResources();</span>
+	}
+
+	public String getResourceString(String resource) {
+<span class="nc" id="L126">		return mFreeMindCommon.getResourceString(resource);</span>
+	}
+
+	public String getResourceString(String key, String resource) {
+<span class="nc" id="L130">		return mFreeMindCommon.getResourceString(key, resource);</span>
+	}
+
+	public String getProperty(String key) {
+<span class="nc" id="L134">		return userProps.getProperty(key);</span>
+	}
+
+	public int getIntProperty(String key, int defaultValue) {
+		try {
+<span class="nc" id="L139">			return Integer.parseInt(getProperty(key));</span>
+<span class="nc" id="L140">		} catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L141">			return defaultValue;</span>
+		}
+	}
+
+	public Properties getProperties() {
+<span class="nc" id="L146">		return userProps;</span>
+	}
+
+	public void setProperty(String key, String value) {
+<span class="nc" id="L150">	}</span>
+
+	public void setDefaultProperty(String key, String value) {
+<span class="nc" id="L153">		userProps.setProperty(key, value);</span>
+<span class="nc" id="L154">	}</span>
+
+	public String getFreemindDirectory() {
+<span class="nc" id="L157">		return null;</span>
+	};
+
+<span class="nc" id="L160">	static int iMaxNodeWidth = 0;</span>
+
+	static public int getMaxNodeWidth() {
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (iMaxNodeWidth == 0) {</span>
+			try {
+<span class="nc" id="L165">				iMaxNodeWidth = Integer.parseInt(userProps</span>
+<span class="nc" id="L166">						.getProperty(&quot;max_node_width&quot;));</span>
+<span class="nc" id="L167">			} catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L168">				iMaxNodeWidth = Integer.parseInt(userProps</span>
+<span class="nc" id="L169">						.getProperty(&quot;el__max_default_window_width&quot;));</span>
+			}
+		}
+<span class="nc" id="L172">		return iMaxNodeWidth;</span>
+	}
+
+	public void saveProperties(boolean pIsShutdown) {
+<span class="nc" id="L176">	}</span>
+
+	public void setTitle(String title) {
+<span class="nc" id="L179">	}</span>
+
+	public void out(String msg) {
+<span class="nc" id="L182">		status.setText(msg);</span>
+<span class="nc" id="L183">	}</span>
+
+	public void err(String msg) {
+<span class="nc" id="L186">		status.setText(&quot;ERROR: &quot; + msg);</span>
+<span class="nc" id="L187">	}</span>
+
+	public void openDocument(URL doc) throws Exception {
+<span class="nc" id="L190">		getAppletContext().showDocument(doc, &quot;_blank&quot;);</span>
+<span class="nc" id="L191">	}</span>
+
+	public void start() {
+		// Make sure the map is centered at the very beginning.
+		try {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">			if (getView() != null) {</span>
+<span class="nc" id="L197">				getView().moveToRoot();</span>
+<span class="nc" id="L198">			} else {</span>
+<span class="nc" id="L199">				System.err.println(&quot;View is null.&quot;);</span>
+			}
+<span class="nc" id="L201">		} catch (Exception e) {</span>
+<span class="nc" id="L202">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L204">	}</span>
+
+	public void setWaitingCursor(boolean waiting) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (waiting) {</span>
+<span class="nc" id="L208">			getRootPane().getGlassPane().setCursor(</span>
+<span class="nc" id="L209">					Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));</span>
+<span class="nc" id="L210">			getRootPane().getGlassPane().setVisible(true);</span>
+<span class="nc" id="L211">		} else {</span>
+<span class="nc" id="L212">			getRootPane().getGlassPane().setCursor(</span>
+<span class="nc" id="L213">					Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));</span>
+<span class="nc" id="L214">			getRootPane().getGlassPane().setVisible(false);</span>
+		}
+<span class="nc" id="L216">	}</span>
+
+	public URL getResource(String name) {
+<span class="nc" id="L219">		final URL resourceURL = this.getClass().getResource(&quot;/&quot; + name);</span>
+<span class="nc bnc" id="L220" title="All 4 branches missed.">		if (resourceURL == null || !resourceURL.getProtocol().equals(&quot;jar&quot;)</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">				&amp;&amp; System.getProperty(&quot;freemind.debug&quot;, null) == null)</span>
+<span class="nc" id="L222">			return null;</span>
+<span class="nc" id="L223">		return resourceURL;</span>
+	}
+
+	public java.util.logging.Logger getLogger(String forClass) {
+		/*
+		 * Applet logging is anonymous due to security reasons. (Calling a named
+		 * logger is answered with a security exception).
+		 */
+<span class="nc" id="L231">		return java.util.logging.Logger.getAnonymousLogger();</span>
+	}
+
+	public void init() {
+<span class="nc" id="L235">		JRootPane rootPane = createRootPane();</span>
+		// load properties
+<span class="nc" id="L237">		defaultPropsURL = getResource(&quot;freemind.properties&quot;);</span>
+		try {
+			// load properties
+<span class="nc" id="L240">			defaultProps = new Properties();</span>
+<span class="nc" id="L241">			InputStream in = defaultPropsURL.openStream();</span>
+<span class="nc" id="L242">			defaultProps.load(in);</span>
+<span class="nc" id="L243">			in.close();</span>
+<span class="nc" id="L244">			userProps = defaultProps;</span>
+<span class="nc" id="L245">		} catch (Exception ex) {</span>
+<span class="nc" id="L246">			System.err.println(&quot;Could not load properties.&quot;);</span>
+		}
+
+<span class="nc" id="L249">		updateLookAndFeel();</span>
+
+		// try to overload some properties with given command-line (html tag)
+		// Arguments
+<span class="nc" id="L253">		Enumeration allKeys = userProps.propertyNames();</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		while (allKeys.hasMoreElements()) {</span>
+<span class="nc" id="L255">			String key = (String) allKeys.nextElement();</span>
+<span class="nc" id="L256">			setPropertyByParameter(key);</span>
+		}
+
+		// Layout everything
+<span class="nc" id="L260">		getContentPane().setLayout(new BorderLayout());</span>
+
+<span class="nc" id="L262">		c = new Controller(this);</span>
+<span class="nc" id="L263">		c.init();</span>
+
+<span class="nc" id="L265">		c.optionAntialiasAction</span>
+<span class="nc" id="L266">				.changeAntialias(getProperty(FreeMindCommon.RESOURCE_ANTIALIAS));</span>
+
+		// Create the MenuBar
+<span class="nc" id="L269">		menuBar = new MenuBar(c); // new MenuBar(c);</span>
+<span class="nc" id="L270">		setJMenuBar(menuBar);</span>
+<span class="nc" id="L271">		c.setToolbarVisible(false);</span>
+<span class="nc" id="L272">		c.setMenubarVisible(false);</span>
+
+		// Create the scroll pane.
+
+<span class="nc" id="L276">		getContentPane().add(scrollPane, BorderLayout.CENTER);</span>
+		// taken from Lukasz Pekacki, NodeText version:
+<span class="nc" id="L278">		southPanel = new JPanel(new BorderLayout());</span>
+
+<span class="nc" id="L280">		status = new JLabel();</span>
+<span class="nc" id="L281">		southPanel.add(status, BorderLayout.SOUTH);</span>
+
+<span class="nc" id="L283">		getContentPane().add(southPanel, BorderLayout.SOUTH);</span>
+		// end taken.
+
+<span class="nc" id="L286">		SwingUtilities.updateComponentTreeUI(this); // Propagate LookAndFeel to</span>
+													// JComponents
+
+		// wait until AWT thread starts
+<span class="nc" id="L290">		Tools.waitForEventQueue();</span>
+<span class="nc" id="L291">		c.createNewMode(getProperty(&quot;initial_mode&quot;));</span>
+<span class="nc" id="L292">		String initialMapName = getProperty(&quot;browsemode_initial_map&quot;);</span>
+<span class="nc bnc" id="L293" title="All 4 branches missed.">		if (initialMapName != null &amp;&amp; initialMapName.startsWith(&quot;.&quot;)) {</span>
+			/* new handling for relative urls. fc, 29.10.2003. */
+			try {
+<span class="nc" id="L296">				URL documentBaseUrl = new URL(getDocumentBase(), initialMapName);</span>
+<span class="nc" id="L297">				initialMapName = documentBaseUrl.toString();</span>
+<span class="nc" id="L298">			} catch (java.net.MalformedURLException e) {</span>
+<span class="nc" id="L299">				getController().errorMessage(</span>
+<span class="nc" id="L300">						&quot;Could not open relative URL &quot; + initialMapName</span>
+<span class="nc" id="L301">								+ &quot;. It is malformed.&quot;);</span>
+<span class="nc" id="L302">				System.err.println(e);</span>
+<span class="nc" id="L303">				return;</span>
+			}
+			/* end: new handling for relative urls. fc, 29.10.2003. */
+		}
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (initialMapName != &quot;&quot;) {</span>
+			try {
+				// get URL:
+<span class="nc" id="L310">				URL mapUrl = new URL(initialMapName);</span>
+<span class="nc" id="L311">				getController().getModeController().load(mapUrl);</span>
+<span class="nc" id="L312">			} catch (Exception e) {</span>
+<span class="nc" id="L313">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+		}
+
+<span class="nc" id="L317">	}</span>
+
+	private void setPropertyByParameter(String key) {
+<span class="nc" id="L320">		String val = getParameter(key);</span>
+		// System.out.println(&quot;Got prop:&quot;+key+&quot;:&quot;+val);
+<span class="nc bnc" id="L322" title="All 4 branches missed.">		if (val != null &amp;&amp; val != &quot;&quot;) {</span>
+<span class="nc" id="L323">			userProps.setProperty(key, val);</span>
+		}
+<span class="nc" id="L325">	}</span>
+
+	private void updateLookAndFeel() {
+		// set Look&amp;Feel
+<span class="nc" id="L329">		String lookAndFeel = &quot;&quot;;</span>
+		try {
+<span class="nc" id="L331">			setPropertyByParameter(&quot;lookandfeel&quot;);</span>
+<span class="nc" id="L332">			lookAndFeel = userProps.getProperty(&quot;lookandfeel&quot;);</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if (lookAndFeel.equals(&quot;windows&quot;)) {</span>
+				UIManager
+<span class="nc" id="L335">						.setLookAndFeel(&quot;com.sun.java.swing.plaf.windows.WindowsLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;motif&quot;)) {</span>
+				UIManager
+<span class="nc" id="L338">						.setLookAndFeel(&quot;com.sun.java.swing.plaf.motif.MotifLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;mac&quot;)) {</span>
+				// Only available on macOS
+<span class="nc" id="L341">				UIManager.setLookAndFeel(&quot;javax.swing.plaf.mac.MacLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;metal&quot;)) {</span>
+				UIManager
+<span class="nc" id="L344">						.setLookAndFeel(&quot;javax.swing.plaf.metal.MetalLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;gtk&quot;)) {</span>
+				UIManager
+<span class="nc" id="L347">						.setLookAndFeel(&quot;com.sun.java.swing.plaf.gtk.GTKLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;nothing&quot;)) {</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">			} else if (lookAndFeel.indexOf('.') != -1) { // string contains a</span>
+				// dot
+<span class="nc" id="L351">				UIManager.setLookAndFeel(lookAndFeel);</span>
+				// we assume class name
+<span class="nc" id="L353">			} else {</span>
+				// default.
+<span class="nc" id="L355">				UIManager.setLookAndFeel(UIManager</span>
+<span class="nc" id="L356">						.getSystemLookAndFeelClassName());</span>
+			}
+<span class="nc" id="L358">		} catch (Exception ex) {</span>
+<span class="nc" id="L359">			System.err.println(&quot;Error while setting Look&amp;Feel&quot; + lookAndFeel);</span>
+		}
+<span class="nc" id="L361">		mFreeMindCommon.loadUIProperties(userProps);</span>
+<span class="nc" id="L362">		userProps.put(FreeMind.RESOURCE_DRAW_RECTANGLE_FOR_SELECTION,</span>
+<span class="nc" id="L363">				Tools.BooleanToXml(true));</span>
+<span class="nc" id="L364">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.main.FreeMindMain#getSouthPanel()
+	 */
+	public JPanel getSouthPanel() {
+<span class="nc" id="L372">		return southPanel;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.main.FreeMindMain#getJFrame()
+	 */
+	public JFrame getJFrame() {
+<span class="nc" id="L381">		throw new IllegalArgumentException(&quot;The applet has no frames&quot;);</span>
+	}
+
+	public ClassLoader getFreeMindClassLoader() {
+<span class="nc" id="L385">		return mFreeMindCommon.getFreeMindClassLoader();</span>
+	}
+
+	public String getFreemindBaseDir() {
+<span class="nc" id="L389">		return mFreeMindCommon.getFreemindBaseDir();</span>
+	}
+
+	public String getAdjustableProperty(String label) {
+<span class="nc" id="L393">		return mFreeMindCommon.getAdjustableProperty(label);</span>
+	}
+
+	public JSplitPane insertComponentIntoSplitPane(JComponent pMindMapComponent) {
+<span class="nc bnc" id="L397" title="All 2 branches missed.">		if (mComponentInSplitPane == pMindMapComponent) {</span>
+<span class="nc" id="L398">			return null;</span>
+		}
+<span class="nc" id="L400">		removeSplitPane();</span>
+<span class="nc" id="L401">		mComponentInSplitPane = pMindMapComponent;</span>
+<span class="nc" id="L402">		southPanel.add(pMindMapComponent, BorderLayout.CENTER);</span>
+<span class="nc" id="L403">		southPanel.revalidate();</span>
+<span class="nc" id="L404">		return null;</span>
+	}
+
+	public void removeSplitPane() {
+<span class="nc bnc" id="L408" title="All 2 branches missed.">		if (mComponentInSplitPane != null) {</span>
+<span class="nc" id="L409">			southPanel.remove(mComponentInSplitPane);</span>
+<span class="nc" id="L410">			southPanel.revalidate();</span>
+<span class="nc" id="L411">			mComponentInSplitPane = null;</span>
+		}
+<span class="nc" id="L413">	}</span>
+
+	public JComponent getContentComponent() {
+		// TODO: Is that correct?
+<span class="nc bnc" id="L417" title="All 2 branches missed.">		if (mComponentInSplitPane != null) {</span>
+<span class="nc" id="L418">			return mComponentInSplitPane;</span>
+		}
+<span class="nc" id="L420">		return southPanel;</span>
+	}
+
+	public JScrollPane getScrollPane() {
+<span class="nc" id="L424">		return scrollPane;</span>
+	}
+
+	public void registerStartupDoneListener(
+			StartupDoneListener pStartupDoneListener) {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L431">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.main.FreeMindMain#getLoggerList()
+	 */
+	public List getLoggerList() {
+<span class="nc" id="L437">		return new Vector();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

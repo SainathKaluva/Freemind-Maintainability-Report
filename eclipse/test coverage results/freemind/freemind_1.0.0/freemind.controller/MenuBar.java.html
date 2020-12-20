@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MenuBar.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller</a> &gt; <span class="el_source">MenuBar.java</span></div><h1>MenuBar.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: MenuBar.java,v 1.24.14.17.2.22 2008/11/12 21:44:33 christianfoltin Exp $*/
+
+package freemind.controller;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+
+import javax.swing.Action;
+import javax.swing.ButtonGroup;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+
+import freemind.main.FreeMind;
+import freemind.modes.ModeController;
+import freemind.view.MapModule;
+
+/**
+ * This is the menu bar for FreeMind. Actions are defined in MenuListener.
+ * Moreover, the StructuredMenuHolder of all menus are hold here.
+ * */
+public class MenuBar extends JMenuBar {
+
+	private static java.util.logging.Logger logger;
+	public static final String MENU_BAR_PREFIX = &quot;menu_bar/&quot;;
+	public static final String GENERAL_POPUP_PREFIX = &quot;popup/&quot;;
+
+	public static final String POPUP_MENU = GENERAL_POPUP_PREFIX + &quot;popup/&quot;;
+
+	public static final String INSERT_MENU = MENU_BAR_PREFIX + &quot;insert/&quot;;
+	public static final String NAVIGATE_MENU = MENU_BAR_PREFIX + &quot;navigate/&quot;;
+	public static final String VIEW_MENU = MENU_BAR_PREFIX + &quot;view/&quot;;
+	public static final String HELP_MENU = MENU_BAR_PREFIX + &quot;help/&quot;;
+	public static final String MINDMAP_MENU = MENU_BAR_PREFIX + &quot;mindmaps/&quot;;
+	private static final String MENU_MINDMAP_CATEGORY = MINDMAP_MENU
+			+ &quot;mindmaps&quot;;
+	public static final String MODES_MENU = MINDMAP_MENU;
+	// public static final String MODES_MENU = MENU_BAR_PREFIX+&quot;modes/&quot;;
+	public static final String EDIT_MENU = MENU_BAR_PREFIX + &quot;edit/&quot;;
+	public static final String FILE_MENU = MENU_BAR_PREFIX + &quot;file/&quot;;
+	public static final String FORMAT_MENU = MENU_BAR_PREFIX + &quot;format/&quot;;
+	public static final String EXTRAS_MENU = MENU_BAR_PREFIX + &quot;extras/&quot;;
+
+	private StructuredMenuHolder menuHolder;
+
+	JPopupMenu mapsPopupMenu;
+	private JMenu filemenu;
+	private JMenu editmenu;
+	private JMenu mapsmenu;
+	Controller c;
+<span class="nc" id="L80">	ActionListener mapsMenuActionListener = new MapsMenuActionListener();</span>
+	private JMenu formatmenu;
+
+<span class="nc" id="L83">	public MenuBar(Controller controller) {</span>
+<span class="nc" id="L84">		this.c = controller;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L86">			logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+		}
+		// updateMenus();
+<span class="nc" id="L89">	}// Constructor</span>
+
+	/**
+	 * This is the only public method. It restores all menus.
+	 * 
+	 * @param newModeController
+	 */
+	public void updateMenus(ModeController newModeController) {
+<span class="nc" id="L97">		this.removeAll();</span>
+
+<span class="nc" id="L99">		menuHolder = new StructuredMenuHolder();</span>
+
+		// filemenu
+<span class="nc" id="L102">		filemenu = menuHolder.addMenu(new JMenu(c.getResourceString(&quot;file&quot;)),</span>
+<span class="nc" id="L103">				FILE_MENU + &quot;.&quot;);</span>
+		// filemenu.setMnemonic(KeyEvent.VK_F);
+
+<span class="nc" id="L106">		menuHolder.addCategory(FILE_MENU + &quot;open&quot;);</span>
+<span class="nc" id="L107">		menuHolder.addCategory(FILE_MENU + &quot;close&quot;);</span>
+<span class="nc" id="L108">		menuHolder.addSeparator(FILE_MENU);</span>
+<span class="nc" id="L109">		menuHolder.addCategory(FILE_MENU + &quot;export&quot;);</span>
+<span class="nc" id="L110">		menuHolder.addSeparator(FILE_MENU);</span>
+<span class="nc" id="L111">		menuHolder.addCategory(FILE_MENU + &quot;import&quot;);</span>
+<span class="nc" id="L112">		menuHolder.addSeparator(FILE_MENU);</span>
+<span class="nc" id="L113">		menuHolder.addCategory(FILE_MENU + &quot;print&quot;);</span>
+<span class="nc" id="L114">		menuHolder.addSeparator(FILE_MENU);</span>
+<span class="nc" id="L115">		menuHolder.addCategory(FILE_MENU + &quot;last&quot;);</span>
+<span class="nc" id="L116">		menuHolder.addSeparator(FILE_MENU);</span>
+<span class="nc" id="L117">		menuHolder.addCategory(FILE_MENU + &quot;quit&quot;);</span>
+
+		// editmenu
+<span class="nc" id="L120">		editmenu = menuHolder.addMenu(new JMenu(c.getResourceString(&quot;edit&quot;)),</span>
+<span class="nc" id="L121">				EDIT_MENU + &quot;.&quot;);</span>
+<span class="nc" id="L122">		menuHolder.addCategory(EDIT_MENU + &quot;undo&quot;);</span>
+<span class="nc" id="L123">		menuHolder.addSeparator(EDIT_MENU);</span>
+<span class="nc" id="L124">		menuHolder.addCategory(EDIT_MENU + &quot;select&quot;);</span>
+<span class="nc" id="L125">		menuHolder.addSeparator(EDIT_MENU);</span>
+<span class="nc" id="L126">		menuHolder.addCategory(EDIT_MENU + &quot;paste&quot;);</span>
+<span class="nc" id="L127">		menuHolder.addSeparator(EDIT_MENU);</span>
+<span class="nc" id="L128">		menuHolder.addCategory(EDIT_MENU + &quot;edit&quot;);</span>
+<span class="nc" id="L129">		menuHolder.addSeparator(EDIT_MENU);</span>
+<span class="nc" id="L130">		menuHolder.addCategory(EDIT_MENU + &quot;find&quot;);</span>
+
+		// view menu
+<span class="nc" id="L133">		menuHolder.addMenu(new JMenu(c.getResourceString(&quot;menu_view&quot;)),</span>
+<span class="nc" id="L134">				VIEW_MENU + &quot;.&quot;);</span>
+
+		// insert menu
+<span class="nc" id="L137">		menuHolder.addMenu(new JMenu(c.getResourceString(&quot;menu_insert&quot;)),</span>
+<span class="nc" id="L138">				INSERT_MENU + &quot;.&quot;);</span>
+<span class="nc" id="L139">		menuHolder.addCategory(INSERT_MENU + &quot;nodes&quot;);</span>
+<span class="nc" id="L140">		menuHolder.addSeparator(INSERT_MENU);</span>
+<span class="nc" id="L141">		menuHolder.addCategory(INSERT_MENU + &quot;icons&quot;);</span>
+<span class="nc" id="L142">		menuHolder.addSeparator(INSERT_MENU);</span>
+
+		// format menu
+<span class="nc" id="L145">		formatmenu = menuHolder.addMenu(</span>
+<span class="nc" id="L146">				new JMenu(c.getResourceString(&quot;menu_format&quot;)), FORMAT_MENU</span>
+						+ &quot;.&quot;);
+
+		// navigate menu
+<span class="nc" id="L150">		menuHolder.addMenu(new JMenu(c.getResourceString(&quot;menu_navigate&quot;)),</span>
+<span class="nc" id="L151">				NAVIGATE_MENU + &quot;.&quot;);</span>
+
+		// extras menu
+<span class="nc" id="L154">		menuHolder.addMenu(new JMenu(c.getResourceString(&quot;menu_extras&quot;)),</span>
+<span class="nc" id="L155">				EXTRAS_MENU + &quot;.&quot;);</span>
+<span class="nc" id="L156">		menuHolder.addCategory(EXTRAS_MENU + &quot;first&quot;);</span>
+
+		// Mapsmenu
+<span class="nc" id="L159">		mapsmenu = menuHolder.addMenu(</span>
+<span class="nc" id="L160">				new JMenu(c.getResourceString(&quot;mindmaps&quot;)), MINDMAP_MENU + &quot;.&quot;);</span>
+		// mapsmenu.setMnemonic(KeyEvent.VK_M);
+<span class="nc" id="L162">		menuHolder.addCategory(MINDMAP_MENU + &quot;navigate&quot;);</span>
+<span class="nc" id="L163">		menuHolder.addSeparator(MINDMAP_MENU);</span>
+<span class="nc" id="L164">		menuHolder.addCategory(MENU_MINDMAP_CATEGORY);</span>
+<span class="nc" id="L165">		menuHolder.addSeparator(MINDMAP_MENU);</span>
+		// Modesmenu
+<span class="nc" id="L167">		menuHolder.addCategory(MODES_MENU);</span>
+
+		// maps popup menu
+<span class="nc" id="L170">		mapsPopupMenu = new FreeMindPopupMenu();</span>
+<span class="nc" id="L171">		mapsPopupMenu.setName(c.getResourceString(&quot;mindmaps&quot;));</span>
+<span class="nc" id="L172">		menuHolder.addCategory(POPUP_MENU + &quot;navigate&quot;);</span>
+		// menuHolder.addSeparator(POPUP_MENU);
+
+		// formerly, the modes menu was an own menu, but to need less place for
+		// the menus,
+		// we integrated it into the maps menu.
+		// JMenu modesmenu = menuHolder.addMenu(new
+		// JMenu(c.getResourceString(&quot;modes&quot;)), MODES_MENU+&quot;.&quot;);
+
+<span class="nc" id="L181">		menuHolder.addMenu(new JMenu(c.getResourceString(&quot;help&quot;)), HELP_MENU</span>
+				+ &quot;.&quot;);
+<span class="nc" id="L183">		menuHolder.addAction(c.documentation, HELP_MENU + &quot;doc/documentation&quot;);</span>
+<span class="nc" id="L184">		menuHolder.addAction(c.freemindUrl, HELP_MENU + &quot;doc/freemind&quot;);</span>
+<span class="nc" id="L185">		menuHolder.addAction(c.faq, HELP_MENU + &quot;doc/faq&quot;);</span>
+<span class="nc" id="L186">		menuHolder.addAction(c.keyDocumentation, HELP_MENU</span>
+				+ &quot;doc/keyDocumentation&quot;);
+<span class="nc" id="L188">		menuHolder.addSeparator(HELP_MENU);</span>
+<span class="nc" id="L189">		menuHolder.addCategory(HELP_MENU + &quot;bugs&quot;);</span>
+<span class="nc" id="L190">		menuHolder.addSeparator(HELP_MENU);</span>
+<span class="nc" id="L191">		menuHolder.addAction(c.license, HELP_MENU + &quot;about/license&quot;);</span>
+<span class="nc" id="L192">		menuHolder.addAction(c.about, HELP_MENU + &quot;about/about&quot;);</span>
+
+<span class="nc" id="L194">		updateFileMenu();</span>
+<span class="nc" id="L195">		updateViewMenu();</span>
+<span class="nc" id="L196">		updateEditMenu();</span>
+<span class="nc" id="L197">		updateModeMenu();</span>
+<span class="nc" id="L198">		updateMapsMenu(menuHolder, MENU_MINDMAP_CATEGORY + &quot;/&quot;);</span>
+<span class="nc" id="L199">		updateMapsMenu(menuHolder, POPUP_MENU);</span>
+<span class="nc" id="L200">		addAdditionalPopupActions();</span>
+		// the modes:
+<span class="nc" id="L202">		newModeController.updateMenus(menuHolder);</span>
+<span class="nc" id="L203">		menuHolder.updateMenus(this, MENU_BAR_PREFIX);</span>
+<span class="nc" id="L204">		menuHolder.updateMenus(mapsPopupMenu, GENERAL_POPUP_PREFIX);</span>
+
+<span class="nc" id="L206">	}</span>
+
+	private void updateModeMenu() {
+<span class="nc" id="L209">		ButtonGroup group = new ButtonGroup();</span>
+<span class="nc" id="L210">		ActionListener modesMenuActionListener = new ModesMenuActionListener();</span>
+<span class="nc" id="L211">		List keys = new LinkedList(c.getModes());</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		for (ListIterator i = keys.listIterator(); i.hasNext();) {</span>
+<span class="nc" id="L213">			String key = (String) i.next();</span>
+<span class="nc" id="L214">			JRadioButtonMenuItem item = new JRadioButtonMenuItem(</span>
+<span class="nc" id="L215">					c.getResourceString(&quot;mode_&quot; + key));</span>
+<span class="nc" id="L216">			item.setActionCommand(key);</span>
+<span class="nc" id="L217">			JRadioButtonMenuItem newItem = (JRadioButtonMenuItem) menuHolder</span>
+<span class="nc" id="L218">					.addMenuItem(item, MODES_MENU + key);</span>
+<span class="nc" id="L219">			group.add(newItem);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">			if (c.getMode() != null) {</span>
+<span class="nc" id="L221">				newItem.setSelected(c.getMode().toString().equals(key));</span>
+<span class="nc" id="L222">			} else {</span>
+<span class="nc" id="L223">				newItem.setSelected(false);</span>
+			}
+<span class="nc" id="L225">			String keystroke = c.getFrame().getAdjustableProperty(</span>
+<span class="nc" id="L226">					&quot;keystroke_mode_&quot; + key);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			if (keystroke != null) {</span>
+<span class="nc" id="L228">				newItem.setAccelerator(KeyStroke.getKeyStroke(keystroke));</span>
+			}
+<span class="nc" id="L230">			newItem.addActionListener(modesMenuActionListener);</span>
+		}
+<span class="nc" id="L232">	}</span>
+
+	private void addAdditionalPopupActions() {
+<span class="nc" id="L235">		menuHolder.addSeparator(POPUP_MENU);</span>
+		JMenuItem newPopupItem;
+
+<span class="nc bnc" id="L238" title="All 2 branches missed.">		if (c.getFrame().isApplet()) {</span>
+			// We have enabled hiding of menubar only in applets. It it because
+			// when we hide menubar in application, the key accelerators from
+			// menubar do not work.
+<span class="nc" id="L242">			newPopupItem = menuHolder.addAction(c.toggleMenubar, POPUP_MENU</span>
+					+ &quot;toggleMenubar&quot;);
+<span class="nc" id="L244">			newPopupItem.setForeground(new Color(100, 80, 80));</span>
+		}
+
+<span class="nc" id="L247">		newPopupItem = menuHolder.addAction(c.toggleToolbar, POPUP_MENU</span>
+				+ &quot;toggleToolbar&quot;);
+<span class="nc" id="L249">		newPopupItem.setForeground(new Color(100, 80, 80));</span>
+
+<span class="nc" id="L251">		newPopupItem = menuHolder.addAction(c.toggleLeftToolbar, POPUP_MENU</span>
+				+ &quot;toggleLeftToolbar&quot;);
+<span class="nc" id="L253">		newPopupItem.setForeground(new Color(100, 80, 80));</span>
+<span class="nc" id="L254">	}</span>
+
+	private void updateMapsMenu(StructuredMenuHolder holder, String basicKey) {
+<span class="nc" id="L257">		MapModuleManager mapModuleManager = c.getMapModuleManager();</span>
+<span class="nc" id="L258">		List mapModuleVector = mapModuleManager.getMapModuleVector();</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		if (mapModuleVector == null) {</span>
+<span class="nc" id="L260">			return;</span>
+		}
+<span class="nc" id="L262">		ButtonGroup group = new ButtonGroup();</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		for (Iterator iterator = mapModuleVector.iterator(); iterator.hasNext();) {</span>
+<span class="nc" id="L264">			MapModule mapModule = (MapModule) iterator.next();</span>
+<span class="nc" id="L265">			String displayName = mapModule.getDisplayName();</span>
+<span class="nc" id="L266">			JRadioButtonMenuItem newItem = new JRadioButtonMenuItem(displayName);</span>
+<span class="nc" id="L267">			newItem.setSelected(false);</span>
+<span class="nc" id="L268">			group.add(newItem);</span>
+
+<span class="nc" id="L270">			newItem.addActionListener(mapsMenuActionListener);</span>
+<span class="nc" id="L271">			newItem.setMnemonic(displayName.charAt(0));</span>
+
+<span class="nc" id="L273">			MapModule currentMapModule = mapModuleManager.getMapModule();</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (currentMapModule != null) {</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">				if (mapModule == currentMapModule) {</span>
+<span class="nc" id="L276">					newItem.setSelected(true);</span>
+				}
+			}
+<span class="nc" id="L279">			holder.addMenuItem(newItem, basicKey + displayName);</span>
+		}
+<span class="nc" id="L281">	}</span>
+
+	private void updateFileMenu() {
+
+<span class="nc" id="L285">		menuHolder.addAction(c.page, FILE_MENU + &quot;print/pageSetup&quot;);</span>
+<span class="nc" id="L286">		JMenuItem print = menuHolder.addAction(c.print, FILE_MENU</span>
+				+ &quot;print/print&quot;);
+<span class="nc" id="L288">		print.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L289">				.getAdjustableProperty(&quot;keystroke_print&quot;)));</span>
+
+<span class="nc" id="L291">		JMenuItem printPreview = menuHolder.addAction(c.printPreview, FILE_MENU</span>
+				+ &quot;print/printPreview&quot;);
+<span class="nc" id="L293">		printPreview.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L294">				.getAdjustableProperty(&quot;keystroke_print_preview&quot;)));</span>
+
+<span class="nc" id="L296">		JMenuItem close = menuHolder.addAction(c.close, FILE_MENU</span>
+				+ &quot;close/close&quot;);
+<span class="nc" id="L298">		close.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L299">				.getAdjustableProperty(&quot;keystroke_close&quot;)));</span>
+
+<span class="nc" id="L301">		JMenuItem quit = menuHolder.addAction(c.quit, FILE_MENU + &quot;quit/quit&quot;);</span>
+<span class="nc" id="L302">		quit.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L303">				.getAdjustableProperty(&quot;keystroke_quit&quot;)));</span>
+<span class="nc" id="L304">		updateLastOpenedList();</span>
+<span class="nc" id="L305">	}</span>
+
+	private void updateLastOpenedList() {
+<span class="nc" id="L308">		menuHolder.addMenu(new JMenu(c.getResourceString(&quot;most_recent_files&quot;)),</span>
+<span class="nc" id="L309">				FILE_MENU + &quot;last/.&quot;);</span>
+<span class="nc" id="L310">		boolean firstElement = true;</span>
+<span class="nc" id="L311">		LastOpenedList lst = c.getLastOpenedList();</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		for (ListIterator it = lst.listIterator(); it.hasNext();) {</span>
+<span class="nc" id="L313">			String key = (String) it.next();</span>
+<span class="nc" id="L314">			JMenuItem item = new JMenuItem(key);</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">			if (firstElement) {</span>
+<span class="nc" id="L316">				firstElement = false;</span>
+<span class="nc" id="L317">				item.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L318">						.getAdjustableProperty(</span>
+<span class="nc" id="L319">								&quot;keystroke_open_first_in_history&quot;)));</span>
+			}
+<span class="nc" id="L321">			item.addActionListener(new LastOpenedActionListener(key));</span>
+
+<span class="nc" id="L323">			menuHolder.addMenuItem(item,</span>
+<span class="nc" id="L324">					FILE_MENU + &quot;last/&quot; + (key.replace('/', '_')));</span>
+		}
+<span class="nc" id="L326">	}</span>
+
+	private void updateEditMenu() {
+<span class="nc" id="L329">		JMenuItem moveToRoot = menuHolder.addAction(c.moveToRoot, NAVIGATE_MENU</span>
+				+ &quot;nodes/moveToRoot&quot;);
+<span class="nc" id="L331">		moveToRoot.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L332">				.getAdjustableProperty(&quot;keystroke_moveToRoot&quot;)));</span>
+
+<span class="nc" id="L334">		JMenuItem previousMap = menuHolder.addAction(c.navigationPreviousMap,</span>
+<span class="nc" id="L335">				MINDMAP_MENU + &quot;navigate/navigationPreviousMap&quot;);</span>
+<span class="nc" id="L336">		previousMap.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L337">				.getAdjustableProperty(FreeMind.KEYSTROKE_PREVIOUS_MAP)));</span>
+
+<span class="nc" id="L339">		JMenuItem nextMap = menuHolder.addAction(c.navigationNextMap,</span>
+<span class="nc" id="L340">				MINDMAP_MENU + &quot;navigate/navigationNextMap&quot;);</span>
+<span class="nc" id="L341">		nextMap.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L342">				.getAdjustableProperty(FreeMind.KEYSTROKE_NEXT_MAP)));</span>
+
+<span class="nc" id="L344">		JMenuItem MoveMapLeft = menuHolder.addAction(</span>
+<span class="nc" id="L345">				c.navigationMoveMapLeftAction, MINDMAP_MENU</span>
+						+ &quot;navigate/navigationMoveMapLeft&quot;);
+<span class="nc" id="L347">		MoveMapLeft.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L348">				.getAdjustableProperty(FreeMind.KEYSTROKE_MOVE_MAP_LEFT)));</span>
+
+<span class="nc" id="L350">		JMenuItem MoveMapRight = menuHolder.addAction(</span>
+<span class="nc" id="L351">				c.navigationMoveMapRightAction, MINDMAP_MENU</span>
+						+ &quot;navigate/navigationMoveMapRight&quot;);
+<span class="nc" id="L353">		MoveMapRight.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L354">				.getAdjustableProperty(FreeMind.KEYSTROKE_MOVE_MAP_RIGHT)));</span>
+
+		// option menu item moved to mindmap_menus.xml
+
+		// if (false) {
+		// preferences.add(c.background);
+		// // Background is disabled from preferences, because it has no real
+		// function.
+		// // To complete the function, one would either make sure that the
+		// color is
+		// // saved and read from auto.properties or think about storing the
+		// background
+		// // color into map (just like &lt;map backgroud=&quot;#eeeee0&quot;&gt;).
+		// }
+
+<span class="nc" id="L369">	}</span>
+
+	private void updateViewMenu() {
+<span class="nc" id="L372">		JMenuItem toggleToolbar = menuHolder.addAction(c.toggleToolbar,</span>
+<span class="nc" id="L373">				VIEW_MENU + &quot;toolbars/toggleToolbar&quot;);</span>
+<span class="nc" id="L374">		JMenuItem toggleLeftToolbar = menuHolder.addAction(c.toggleLeftToolbar,</span>
+<span class="nc" id="L375">				VIEW_MENU + &quot;toolbars/toggleLeftToolbar&quot;);</span>
+
+<span class="nc" id="L377">		menuHolder.addSeparator(VIEW_MENU);</span>
+
+<span class="nc" id="L379">		JMenuItem showSelectionAsRectangle = menuHolder.addAction(</span>
+<span class="nc" id="L380">				c.showSelectionAsRectangle, VIEW_MENU</span>
+						+ &quot;general/selectionAsRectangle&quot;);
+
+<span class="nc" id="L383">		JMenuItem zoomIn = menuHolder.addAction(c.zoomIn, VIEW_MENU</span>
+				+ &quot;zoom/zoomIn&quot;);
+<span class="nc" id="L385">		zoomIn.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L386">				.getAdjustableProperty(&quot;keystroke_zoom_in&quot;)));</span>
+
+<span class="nc" id="L388">		JMenuItem zoomOut = menuHolder.addAction(c.zoomOut, VIEW_MENU</span>
+				+ &quot;zoom/zoomOut&quot;);
+<span class="nc" id="L390">		zoomOut.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L391">				.getAdjustableProperty(&quot;keystroke_zoom_out&quot;)));</span>
+
+<span class="nc" id="L393">		menuHolder.addSeparator(VIEW_MENU);</span>
+<span class="nc" id="L394">		menuHolder.addCategory(VIEW_MENU + &quot;note_window&quot;);</span>
+<span class="nc" id="L395">		menuHolder.addSeparator(VIEW_MENU);</span>
+<span class="nc" id="L396">		JMenu attributes = menuHolder.addMenu(</span>
+<span class="nc" id="L397">				new JMenu(c.getResourceString(&quot;menu_attributes&quot;)), VIEW_MENU</span>
+						+ &quot;attributes/.&quot;);
+<span class="nc" id="L399">		ButtonGroup buttonGroup = new ButtonGroup();</span>
+<span class="nc" id="L400">		JRadioButtonMenuItem itemShowAll = (JRadioButtonMenuItem) menuHolder</span>
+<span class="nc" id="L401">				.addMenuItem(new JRadioButtonMenuItem(c.showAllAttributes),</span>
+<span class="nc" id="L402">						VIEW_MENU + &quot;attributes/showAllAttributes&quot;);</span>
+<span class="nc" id="L403">		itemShowAll.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L404">				.getAdjustableProperty(&quot;keystroke_show_all_attributes&quot;)));</span>
+<span class="nc" id="L405">		buttonGroup.add(itemShowAll);</span>
+
+<span class="nc" id="L407">		JRadioButtonMenuItem itemShowSelected = (JRadioButtonMenuItem) menuHolder</span>
+<span class="nc" id="L408">				.addMenuItem(</span>
+<span class="nc" id="L409">						new JRadioButtonMenuItem(c.showSelectedAttributes),</span>
+<span class="nc" id="L410">						VIEW_MENU + &quot;attributes/showSelectedAttributes&quot;);</span>
+<span class="nc" id="L411">		itemShowSelected.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L412">				.getAdjustableProperty(&quot;keystroke_show_selected_attributes&quot;)));</span>
+<span class="nc" id="L413">		buttonGroup.add(itemShowSelected);</span>
+
+<span class="nc" id="L415">		JRadioButtonMenuItem itemHideAll = (JRadioButtonMenuItem) menuHolder</span>
+<span class="nc" id="L416">				.addMenuItem(new JRadioButtonMenuItem(c.hideAllAttributes),</span>
+<span class="nc" id="L417">						VIEW_MENU + &quot;attributes/hideAllAttributes&quot;);</span>
+<span class="nc" id="L418">		itemHideAll.setAccelerator(KeyStroke.getKeyStroke(c.getFrame()</span>
+<span class="nc" id="L419">				.getAdjustableProperty(&quot;keystroke_hide_all_attributes&quot;)));</span>
+<span class="nc" id="L420">		buttonGroup.add(itemHideAll);</span>
+<span class="nc" id="L421">	}</span>
+
+	private void addOptionSet(Action action, String[] textIDs, JMenu menu,
+			String selectedTextID) {
+<span class="nc" id="L425">		ButtonGroup group = new ButtonGroup();</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">		for (int optionIdx = 0; optionIdx &lt; textIDs.length; optionIdx++) {</span>
+<span class="nc" id="L427">			JRadioButtonMenuItem item = new JRadioButtonMenuItem(action);</span>
+<span class="nc" id="L428">			item.setText(c.getResourceString(textIDs[optionIdx]));</span>
+<span class="nc" id="L429">			item.setActionCommand(textIDs[optionIdx]);</span>
+<span class="nc" id="L430">			group.add(item);</span>
+<span class="nc" id="L431">			menu.add(item);</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">			if (selectedTextID != null) {</span>
+<span class="nc" id="L433">				item.setSelected(selectedTextID.equals(textIDs[optionIdx]));</span>
+			}
+			// keystroke present?
+<span class="nc" id="L436">			String keystroke = c.getFrame().getAdjustableProperty(</span>
+<span class="nc" id="L437">					&quot;keystroke_&quot; + textIDs[optionIdx]);</span>
+<span class="nc bnc" id="L438" title="All 2 branches missed.">			if (keystroke != null)</span>
+<span class="nc" id="L439">				item.setAccelerator(KeyStroke.getKeyStroke(keystroke));</span>
+		}
+<span class="nc" id="L441">	}</span>
+
+	JPopupMenu getMapsPopupMenu() { // visible only in controller package
+<span class="nc" id="L444">		return mapsPopupMenu;</span>
+	}
+
+	/**
+	 * This method simpy copy's all elements of the source Menu to the end of
+	 * the second menu.
+	 */
+	private void copyMenuItems(JMenu source, JMenu dest) {
+<span class="nc" id="L452">		Component[] items = source.getMenuComponents();</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">		for (int i = 0; i &lt; items.length; i++) {</span>
+<span class="nc" id="L454">			dest.add(items[i]);</span>
+		}
+<span class="nc" id="L456">	}</span>
+
+<span class="nc" id="L458">	private class MapsMenuActionListener implements ActionListener {</span>
+		public void actionPerformed(final ActionEvent e) {
+<span class="nc" id="L460">			SwingUtilities.invokeLater(new Runnable() {</span>
+				public void run() {
+<span class="nc" id="L462">					c.getMapModuleManager().changeToMapModule(</span>
+<span class="nc" id="L463">							e.getActionCommand());</span>
+<span class="nc" id="L464">				}</span>
+			});
+<span class="nc" id="L466">		}</span>
+	}
+
+	private class LastOpenedActionListener implements ActionListener {
+		private String mKey;
+
+<span class="nc" id="L472">		public LastOpenedActionListener(String pKey) {</span>
+<span class="nc" id="L473">			mKey = pKey;</span>
+<span class="nc" id="L474">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+
+<span class="nc" id="L478">			String restoreable = mKey;</span>
+			try {
+<span class="nc" id="L480">				c.getLastOpenedList().open(restoreable);</span>
+<span class="nc" id="L481">			} catch (Exception ex) {</span>
+<span class="nc" id="L482">				c.errorMessage(&quot;An error occured on opening the file: &quot;</span>
+<span class="nc" id="L483">						+ restoreable + &quot;.&quot;);</span>
+<span class="nc" id="L484">				freemind.main.Resources.getInstance().logException(ex);</span>
+			}
+<span class="nc" id="L486">		}</span>
+	}
+
+<span class="nc" id="L489">	private class ModesMenuActionListener implements ActionListener {</span>
+		public void actionPerformed(final ActionEvent e) {
+<span class="nc" id="L491">			SwingUtilities.invokeLater(new Runnable() {</span>
+				public void run() {
+<span class="nc" id="L493">					c.createNewMode(e.getActionCommand());</span>
+<span class="nc" id="L494">				}</span>
+			});
+<span class="nc" id="L496">		}</span>
+	}
+
+	/**
+     */
+	public StructuredMenuHolder getMenuHolder() {
+<span class="nc" id="L502">		return menuHolder;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.JMenuBar#processKeyBinding(javax.swing.KeyStroke,
+	 * java.awt.event.KeyEvent, int, boolean)
+	 */
+	public boolean processKeyBinding(KeyStroke ks, KeyEvent e, int condition,
+			boolean pressed) {
+<span class="nc" id="L513">		return super.processKeyBinding(ks, e, condition, pressed);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

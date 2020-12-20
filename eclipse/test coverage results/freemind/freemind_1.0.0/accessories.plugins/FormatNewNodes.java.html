@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FormatNewNodes.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">FormatNewNodes.java</span></div><h1>FormatNewNodes.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 25.08.2004
+ */
+
+package accessories.plugins;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.logging.Logger;
+
+import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.FormatNodeAction;
+import freemind.controller.actions.generated.instance.NewNodeAction;
+import freemind.controller.actions.generated.instance.NodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.extensions.HookRegistration;
+import freemind.main.Tools;
+import freemind.modes.MindMap;
+import freemind.modes.ModeController;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionFilter;
+import freemind.modes.mindmapmode.actions.xml.ActionHandler;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+/**
+ * This plugin formats new nodes using the formats given to former nodes.
+ * 
+ * @author foltin
+ */
+public class FormatNewNodes implements ActionHandler, ActionFilter,
+		HookRegistration {
+
+	private MindMapController controller;
+
+	private MindMap mMap;
+
+	private Logger logger;
+
+	private HashMap formatActions;
+
+<span class="nc" id="L59">	public FormatNewNodes(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L60">		this.controller = (MindMapController) controller;</span>
+<span class="nc" id="L61">		mMap = map;</span>
+<span class="nc" id="L62">		logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L63">		this.formatActions = new HashMap();</span>
+<span class="nc" id="L64">	}</span>
+
+	public void register() {
+<span class="nc" id="L67">		controller.getActionFactory().registerHandler(this);</span>
+<span class="nc" id="L68">		controller.getActionFactory().registerFilter(this);</span>
+
+<span class="nc" id="L70">	}</span>
+
+	public void deRegister() {
+<span class="nc" id="L73">		controller.getActionFactory().deregisterHandler(this);</span>
+<span class="nc" id="L74">		controller.getActionFactory().deregisterFilter(this);</span>
+<span class="nc" id="L75">	}</span>
+
+	public void executeAction(XmlAction action) {
+		// detect format changes:
+<span class="nc" id="L79">		detectFormatChanges(action);</span>
+<span class="nc" id="L80">	}</span>
+
+	/**
+	 */
+	private void detectFormatChanges(XmlAction doAction) {
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (doAction instanceof CompoundAction) {</span>
+<span class="nc" id="L86">			CompoundAction compAction = (CompoundAction) doAction;</span>
+<span class="nc" id="L87">			for (Iterator i = compAction.getListChoiceList().iterator(); i</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L89">				XmlAction childAction = (XmlAction) i.next();</span>
+<span class="nc" id="L90">				detectFormatChanges(childAction);</span>
+			}
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		} else if (doAction instanceof FormatNodeAction) {</span>
+<span class="nc" id="L93">			formatActions.put(doAction.getClass().getName(), doAction);</span>
+		}
+
+<span class="nc" id="L96">	}</span>
+
+	public void startTransaction(String name) {
+<span class="nc" id="L99">	}</span>
+
+	public void endTransaction(String name) {
+<span class="nc" id="L102">	}</span>
+
+	public ActionPair filterAction(ActionPair pair) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (pair.getDoAction() instanceof NewNodeAction) {</span>
+<span class="nc" id="L106">			NewNodeAction newNodeAction = (NewNodeAction) pair.getDoAction();</span>
+			// add to a compound the newNodeAction and the other formats we
+			// have:
+<span class="nc" id="L109">			CompoundAction compound = new CompoundAction();</span>
+<span class="nc" id="L110">			compound.addChoice(newNodeAction);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">			for (Iterator i = formatActions.values().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L112">				NodeAction formatAction = (NodeAction) i.next();</span>
+				// deep copy:
+<span class="nc" id="L114">				FormatNodeAction copiedFormatAction = (FormatNodeAction) Tools</span>
+<span class="nc" id="L115">						.deepCopy(formatAction);</span>
+<span class="nc" id="L116">				copiedFormatAction.setNode(newNodeAction.getNewId());</span>
+<span class="nc" id="L117">				compound.addChoice(copiedFormatAction);</span>
+			}
+<span class="nc" id="L119">			ActionPair newPair = new ActionPair(compound, pair.getUndoAction());</span>
+<span class="nc" id="L120">			return newPair;</span>
+		}
+<span class="nc" id="L122">		return pair;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

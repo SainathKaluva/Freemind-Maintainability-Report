@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Class Metrics</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="LOMetrics.html">Prev</a> - <a href="Metrics_interface.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LOMetrics.html">B: List of Design Metrics</a> > B.1 Class Metrics
+<hr>
+<h2><a name="Metrics_class"></a>B.1 Class Metrics</h2>
+<a name="Metrics_class_NumAttr"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumAttr</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of attributes in the class.<p>  The metric counts all properties regardless of their type (data type, class or interface), visibility, changeability (read only or not), and owner scope (class-scope, i.e. static, or instance attribute).<p> Not counted are inherited properties, and properties that are members of an association, i.e., that represent navigable association ends. <ul><li>Also known as: NV (Number of Variables per class) [<a href="References.html#References_LK94">LK94</a>].</ul>  
+</td></tr></table><hr><p>
+<a name="Metrics_class_NumOps"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumOps</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of operations in a class.<p> Includes all operations in the class that are explicitly modeled (overriding operations, constructors, destructors), regardless of their visibility, owner scope (class-scope, i.e., static), or whether they are abstract or not. Inherited operations are not counted. <ul> <li>Also known as: WMC (Weighted method complexity) where each operation is assigned unity complexity [<a href="References.html#References_CK94">CK94</a>]. <li>Also known as: NM (Number of Methods) [<a href="References.html#References_LK94">LK94</a>]. </ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_NumPubOps"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumPubOps</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of public operations in a class.<p> Same as metric <a href="Metrics_class.html#Metrics_class_NumOps">NumOps</a>, but only counts operations with public visibility. Measures the size of the class in terms of its public interface. <ul><li>Also known as: NPM (Number of Public Methods) [<a href="References.html#References_LK94">LK94</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_Setters"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Setters</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of operations with a name starting with 'set'.<p> Note that this metric does not always yield accurate results. For example, an operation <code>settleAccount</code> will be counted as setter method. <ul><li>See also: <a href="Metrics_class.html#Metrics_class_Getters">Getters</a>.</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_Getters"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Getters</b></td><td class="mthead" width="66%">Category: <a href="SizeM.html#Glossary_Size">Size</a></td></tr><tr><td colspan="2">The number of operations with a name starting with 'get', 'is', or 'has'.<p> Note that this metric does not always yield accurate results. For example, an operation <code>isolateNode</code> will be counted as getter method. <ul><li>See also: <a href="Metrics_class.html#Metrics_class_Setters">Setters</a>.</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_Nesting"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Nesting</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">The nesting level of the class (for inner classes).<p> Measures how deeply a class is nested within other classes. Classes not defined in the context of another class have nesting level 0, their inner classes have nesting level 1, etc. Nesting levels deeper than 1 are unusual; an excessive nesting structure is difficult to understand, and should be revised. 
+</td></tr></table><hr><p>
+<a name="Metrics_class_IFImpl"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>IFImpl</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">The number of interfaces the class implements.<p> This only counts direct interface realization links from the class to the interface. For example, if a class <i>C</i> implements an interface <i>I</i>, which extends some other interfaces, only interface <i>I</i> will be counted, but not the interfaces that <i>I</i> extends (even though class <i>c</i> implements those interfaces, too).
+</td></tr></table><hr><p>
+<a name="Metrics_class_NOC"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NOC</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">The number of children of the class (UML Generalization).<p> Similar to <a href="CoupM.html#Glossary_Coupling (export)">export coupling</a>, NOC indicates the potential influence a class has on the design. If a class has a large number of children, it may require more testing of the methods in that class. A large number of child classes may indicate improper abstraction of the parent class. <ul><li>Defined in [<a href="References.html#References_CK94">CK94</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_NumDesc"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumDesc</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">The number of descendents of the class (UML Generalization).<p> Counts the number of children of the class, their children, and so on. <ul> <li>See also: <a href="Metrics_class.html#Metrics_class_NOC">NOC</a> (Number of Children). <li>Suggested in [<a href="References.html#References_LC94">LC94</a>] and [<a href="References.html#References_TSM92">TSM92</a>]. </ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_NumAnc"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumAnc</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">The number of ancestors of the class.<p> Counts the number of parents of the class, their parents, and so on. If multiple inheritance is not used, the metric yields the same values as <a href="Metrics_class.html#Metrics_class_DIT">DIT</a>. <ul><li>Suggested in [<a href="References.html#References_LC94">LC94</a>] and [<a href="References.html#References_TSM92">TSM92</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_DIT"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>DIT</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">The depth of the class in the inheritance hierarchy.<p> This is calculated as the longest path from the class to the root of the inheritance tree. The DIT for a class that has no parents is 0.<p> Classes with high DIT inherit from many classes and thus are more difficult to understand. Also, classes with high DIT may not be proper specializations of all of their ancestor classes. <ul><li>Defined in [<a href="References.html#References_CK94">CK94</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_CLD"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>CLD</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">Class to leaf depth. The longest path from the class to a leaf node in the inheritance hierarchy below the class. <ul><li>Defined in [<a href="References.html#References_TSM92">TSM92</a>]. <li>See also: <a href="Metrics_class.html#Metrics_class_NOC">NOC</a> (Number of Children).</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_OpsInh"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>OpsInh</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">The number of inherited operations.<p> This is calculated as the sum of metric <a href="Metrics_class.html#Metrics_class_NumOps">NumOps</a> taken over all ancestor classes of the class. <ul><li>Also known as NMI [<a href="References.html#References_LK94">LK94</a>]. <li>See also: <a href="Metrics_class.html#Metrics_class_DIT">DIT</a>.</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_AttrInh"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>AttrInh</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td colspan="2">The number of inherited attributes.<p> This is calculated as the sum of metric <a href="Metrics_class.html#Metrics_class_NumAttr">NumAttr</a> taken over all ancestor classes of the class. <ul><li>Loosely based on AIF in [<a href="References.html#References_AGE95">AGE95</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_Dep_Out"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Dep_Out</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of elements on which this class depends.<p> This metric counts outgoing plain UML dependencies and usage dependencies (shown as dashed arrows in class diagrams, usage with 'use' stereotype).
+</td></tr></table><hr><p>
+<a name="Metrics_class_Dep_In"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Dep_In</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (export)">Coupling (export)</a></td></tr><tr><td colspan="2">The number of elements that depend on this class.<p> This metric counts incoming plain UML dependencies and usage dependencies (shown as dashed arrows in class diagrams, usage with 'use' stereotype). 
+</td></tr></table><hr><p>
+<a name="Metrics_class_NumAssEl_ssc"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumAssEl_ssc</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling">Coupling</a></td></tr><tr><td colspan="2">The number of associated elements in the same scope (namespace) as the class.<p> For instance, for a class that is defined in a package <i>p</i>, this counts only associations with classes, interfaces, etc. in the same package <i>p</i>. Such associations are encouraged, because they do not cross the package boundary, and contribute to the cohesion of the package.<p> This metric does not distinguish plain, aggregate, or composite associations, as well as incoming, outgoing, or bidirectional associations; all such associations are counted. 
+</td></tr></table><hr><p>
+<a name="Metrics_class_NumAssEl_sb"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumAssEl_sb</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling">Coupling</a></td></tr><tr><td colspan="2">The number of associated elements in the same scope branch as the class.<p> For instance, for a class that is defined in a package <i>p</i>, this metric only counts associations with model elements<ul> <li>in <i>p</i> itself, <li>in packages that <i>p</i> contains (subpackages, sub-subpackages etc. of <i>p</i>), <li>in packages that contain <i>p</i> (packages of which <i>p</i> is a subpackage, sub-subpackage etc). </ul> Such associations cross package boundaries, but one of the packages is nested within the other. Therefore, a dependency between the packages is expected, anyway. <ul><li>Note: Like metric <a href="Metrics_class.html#Metrics_class_NumAssEl_ssc">NumAssEl_ssc</a>, direction and aggregation of the associations are ignored.</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_NumAssEl_nsb"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>NumAssEl_nsb</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling">Coupling</a></td></tr><tr><td colspan="2">The number of associated elements not in the same scope branch as the class.<p> For a class that is defined in a package <i>p</i>, this counts only associations with model elements in packages that neither contain <i>p</i> nor are contained by <i>p</i>. These are the least desirable associations, because they couple otherwise unrelated packages. Such associations cannot be avoided, but their use should be minimized. <ul><li>Note: Like metric <a href="Metrics_class.html#Metrics_class_NumAssEl_ssc">NumAssEl_ssc</a>, direction and aggregation of the associations are ignored.</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_EC_Attr"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>EC_Attr</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (export)">Coupling (export)</a></td></tr><tr><td colspan="2">The number of times the class is externally used as attribute type.<p> This is the number of attributes in other classes that have this class as their type. <ul><li>Version of: OAEC+AAEC in [<a href="References.html#References_BDM97">BDM97</a>].</ul>
+</td></tr></table><hr><p>
+<a name="Metrics_class_IC_Attr"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>IC_Attr</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of attributes in the class having another class or interface as their type. <ul><li>Version of: OAIC+AAIC in [<a href="References.html#References_BDM97">BDM97</a>]. <li>Also known as: DAC (data abstraction coupling) [<a href="References.html#References_LH93">LH93</a>].</ul>
+</td></tr></table><hr><p>
+<a name="Metrics_class_EC_Par"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>EC_Par</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (export)">Coupling (export)</a></td></tr><tr><td colspan="2">The number of times the class is externally used as parameter type.<p> This is the number of parameters defined outside this class, that have this class as their type. <ul><li>Version of: OMEC+AMEC in [<a href="References.html#References_BDM97">BDM97</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_IC_Par"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>IC_Par</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of parameters in the class having another class or interface as their type. <ul><li>Version of: OMIC+AMIC in [<a href="References.html#References_BDM97">BDM97</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_Connectors"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Connectors</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of connectors owned by the class.
+</td></tr></table><hr><p>
+<a name="Metrics_class_InstSpec"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>InstSpec</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">The number of instance specification where the class is a classifier.<p> Similar to <a href="CoupM.html#Glossary_Coupling (export)">export coupling</a>, the more instances of the class there are, the larger the role of the class in the system.
+</td></tr></table><hr><p>
+<a name="Metrics_class_LLInst"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>LLInst</b></td><td class="mthead" width="66%">Category: not specified</td></tr><tr><td colspan="2">The number of lifelines that represent a property of which this class is the type.<p> Similar to <a href="CoupM.html#Glossary_Coupling (export)">export coupling</a>, the more lifelines there are of the class, the larger the role of the class in the system.
+</td></tr></table><hr><p>
+<a name="Metrics_class_MsgSent"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>MsgSent</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (import)">Coupling (import)</a></td></tr><tr><td colspan="2">The number of messages sent.<p> Counts the number of messages that instances of this class send to instances of other classes, or unclassified instances. <ul><li>Version of OMMIC+AMMIC in [<a href="References.html#References_BDM97">BDM97</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_MsgRecv"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>MsgRecv</b></td><td class="mthead" width="66%">Category: <a href="CoupM.html#Glossary_Coupling (export)">Coupling (export)</a></td></tr><tr><td colspan="2">The number of messages received.<p> Counts the number of messages that instances of this class receive from instances of other classes or unclassified instances. <ul><li>Version of OMMEC+AMMEC in [<a href="References.html#References_BDM97">BDM97</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_MsgSelf"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>MsgSelf</b></td><td class="mthead" width="66%">Category: <a href="Complex.html#Glossary_Complexity">Complexity</a></td></tr><tr><td colspan="2">The number of messages sent to instances of the same class.<p> Counts the number of messages that instances of this class send to themselves or to other instances of the same class. <ul><li>Version of ICH in [<a href="References.html#References_LLW95">LLW95</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Metrics_class_Diags"/>
+<table width="100%"><tr><td class="mthead" width="34%">Metric: <b>Diags</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Diagram">Diagram</a></td></tr><tr><td colspan="2">The number of times the class appears on a diagram.
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="LOMetrics.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LOMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Metrics_interface.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;B: "List of Design Metrics"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;B.2 "Interface Metrics"</td></tr></table>
+
+</body>
+</html>

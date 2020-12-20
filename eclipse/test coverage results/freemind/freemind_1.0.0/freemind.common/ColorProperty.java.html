@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ColorProperty.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.common</a> &gt; <span class="el_source">ColorProperty.java</span></div><h1>ColorProperty.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 25.02.2006
+ */
+/*$Id: ColorProperty.java,v 1.1.2.4.2.2 2008/07/24 03:10:36 christianfoltin Exp $*/
+package freemind.common;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+
+import freemind.controller.Controller;
+import freemind.main.Tools;
+
+public class ColorProperty extends PropertyBean implements PropertyControl,
+		ActionListener {
+	String description;
+
+	String label;
+
+	Color color;
+
+	JButton mButton;
+<span class="nc" id="L50">	final JPopupMenu menu = new JPopupMenu();</span>
+
+	private final String defaultColor;
+
+	private final TextTranslator mTranslator;
+
+	/**
+	 * @param defaultColor
+	 *            TODO
+	 * @param pTranslator
+	 *            TODO
+	 */
+	public ColorProperty(String description, String label, String defaultColor,
+			TextTranslator pTranslator) {
+<span class="nc" id="L64">		super();</span>
+<span class="nc" id="L65">		this.description = description;</span>
+<span class="nc" id="L66">		this.label = label;</span>
+<span class="nc" id="L67">		this.defaultColor = defaultColor;</span>
+<span class="nc" id="L68">		mTranslator = pTranslator;</span>
+<span class="nc" id="L69">		mButton = new JButton();</span>
+<span class="nc" id="L70">		mButton.addActionListener(this);</span>
+<span class="nc" id="L71">		color = Color.BLACK;</span>
+<span class="nc" id="L72">	}</span>
+
+	public String getDescription() {
+<span class="nc" id="L75">		return description;</span>
+	}
+
+	public String getLabel() {
+<span class="nc" id="L79">		return label;</span>
+	}
+
+	public void setValue(String value) {
+<span class="nc" id="L83">		setColorValue(Tools.xmlToColor(value));</span>
+<span class="nc" id="L84">	}</span>
+
+	public String getValue() {
+<span class="nc" id="L87">		return Tools.colorToXml(getColorValue());</span>
+	}
+
+	public void layout(DefaultFormBuilder builder, TextTranslator pTranslator) {
+<span class="nc" id="L91">		JLabel label = builder.append(pTranslator.getText(getLabel()), mButton);</span>
+<span class="nc" id="L92">		label.setToolTipText(pTranslator.getText(getDescription()));</span>
+		// add &quot;reset to standard&quot; popup:
+
+		// Create and add a menu item
+<span class="nc" id="L96">		JMenuItem item = new JMenuItem(</span>
+<span class="nc" id="L97">				mTranslator.getText(&quot;ColorProperty.ResetColor&quot;));</span>
+<span class="nc" id="L98">		item.addActionListener(new ActionListener() {</span>
+
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L101">				setValue(defaultColor);</span>
+<span class="nc" id="L102">			}</span>
+		});
+<span class="nc" id="L104">		menu.add(item);</span>
+
+		// Set the component to show the popup menu
+<span class="nc" id="L107">		mButton.addMouseListener(new MouseAdapter() {</span>
+			public void mousePressed(MouseEvent evt) {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">				if (evt.isPopupTrigger()) {</span>
+<span class="nc" id="L110">					menu.show(evt.getComponent(), evt.getX(), evt.getY());</span>
+				}
+<span class="nc" id="L112">			}</span>
+
+			public void mouseReleased(MouseEvent evt) {
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (evt.isPopupTrigger()) {</span>
+<span class="nc" id="L116">					menu.show(evt.getComponent(), evt.getX(), evt.getY());</span>
+				}
+<span class="nc" id="L118">			}</span>
+		});
+<span class="nc" id="L120">	}</span>
+
+	public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L123">		Color result = Controller.showCommonJColorChooserDialog(</span>
+<span class="nc" id="L124">				mButton.getRootPane(), mTranslator.getText(getLabel()),</span>
+<span class="nc" id="L125">				getColorValue());</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (result != null) {</span>
+<span class="nc" id="L127">			setColorValue(result);</span>
+<span class="nc" id="L128">			firePropertyChangeEvent();</span>
+		}
+<span class="nc" id="L130">	}</span>
+
+	/**
+	 */
+	private void setColorValue(Color result) {
+<span class="nc" id="L135">		color = result;</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (result == null) {</span>
+<span class="nc" id="L137">			result = Color.WHITE;</span>
+		}
+<span class="nc" id="L139">		mButton.setBackground(result);</span>
+<span class="nc" id="L140">		mButton.setText(Tools.colorToXml(result));</span>
+<span class="nc" id="L141">	}</span>
+
+	/**
+	 */
+	private Color getColorValue() {
+<span class="nc" id="L146">		return color;</span>
+	}
+
+	public void setEnabled(boolean pEnabled) {
+<span class="nc" id="L150">		mButton.setEnabled(pEnabled);</span>
+<span class="nc" id="L151">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

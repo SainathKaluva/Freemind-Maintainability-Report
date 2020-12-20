@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>JMonthChooser.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.time</a> &gt; <span class="el_source">JMonthChooser.java</span></div><h1>JMonthChooser.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*</span>
+ *  JMonthChooser.java  - A bean for choosing a month
+ *  Copyright (C) 2004 Kai Toedter
+ *  kai@toedter.com
+ *  www.toedter.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package accessories.plugins.time;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.text.DateFormatSymbols;
+import java.util.Calendar;
+import java.util.Locale;
+
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+/**
+ * JMonthChooser is a bean for choosing a month.
+ * 
+ * @author Kai Toedter
+ * @version $LastChangedRevision: 100 $
+ * @version $LastChangedDate: 2006-06-04 14:36:06 +0200 (So, 04 Jun 2006) $
+ */
+public class JMonthChooser extends JPanel implements ItemListener,
+		ChangeListener {
+	public static final String MONTH_PROPERTY = &quot;month&quot;;
+
+	private static final long serialVersionUID = -2028361332231218527L;
+
+	/** true, if the month chooser has a spinner component */
+	protected boolean hasSpinner;
+
+	private Locale locale;
+
+	private int month;
+
+<span class="nc" id="L64">	private int oldSpinnerValue = 0;</span>
+
+	// needed for comparison
+	private JDayChooser dayChooser;
+
+	private JYearChooser yearChooser;
+
+	private JComboBox comboBox;
+
+	private JSpinner spinner;
+
+	private boolean initialized;
+
+	private boolean localInitialize;
+
+	/**
+	 * Default JMonthChooser constructor.
+	 */
+	public JMonthChooser() {
+<span class="nc" id="L83">		this(true);</span>
+<span class="nc" id="L84">	}</span>
+
+	/**
+	 * JMonthChooser constructor with month spinner parameter.
+	 * 
+	 * @param hasSpinner
+	 *            true, if the month chooser should have a spinner component
+	 */
+	public JMonthChooser(boolean hasSpinner) {
+<span class="nc" id="L93">		super();</span>
+<span class="nc" id="L94">		setName(&quot;JMonthChooser&quot;);</span>
+<span class="nc" id="L95">		this.hasSpinner = hasSpinner;</span>
+
+<span class="nc" id="L97">		setLayout(new BorderLayout());</span>
+
+<span class="nc" id="L99">		comboBox = new JComboBox();</span>
+<span class="nc" id="L100">		comboBox.addItemListener(this);</span>
+
+		// comboBox.addPopupMenuListener(this);
+<span class="nc" id="L103">		locale = Locale.getDefault();</span>
+<span class="nc" id="L104">		initNames();</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (hasSpinner) {</span>
+<span class="nc" id="L107">			spinner = new JSpinner() {</span>
+				private static final long serialVersionUID = 1L;
+
+<span class="nc" id="L110">				private JTextField textField = new JTextField();</span>
+
+				public Dimension getPreferredSize() {
+<span class="nc" id="L113">					Dimension size = super.getPreferredSize();</span>
+<span class="nc" id="L114">					return new Dimension(size.width,</span>
+<span class="nc" id="L115">							textField.getPreferredSize().height);</span>
+				}
+			};
+<span class="nc" id="L118">			spinner.addChangeListener(this);</span>
+<span class="nc" id="L119">			spinner.setEditor(comboBox);</span>
+<span class="nc" id="L120">			comboBox.setBorder(new EmptyBorder(0, 0, 0, 0));</span>
+<span class="nc" id="L121">			updateUI();</span>
+
+<span class="nc" id="L123">			add(spinner, BorderLayout.WEST);</span>
+<span class="nc" id="L124">		} else {</span>
+<span class="nc" id="L125">			add(comboBox, BorderLayout.WEST);</span>
+		}
+
+<span class="nc" id="L128">		initialized = true;</span>
+<span class="nc" id="L129">		setMonth(Calendar.getInstance().get(Calendar.MONTH));</span>
+<span class="nc" id="L130">	}</span>
+
+	/**
+	 * Initializes the locale specific month names.
+	 */
+	public void initNames() {
+<span class="nc" id="L136">		localInitialize = true;</span>
+
+<span class="nc" id="L138">		DateFormatSymbols dateFormatSymbols = new DateFormatSymbols(locale);</span>
+<span class="nc" id="L139">		String[] monthNames = dateFormatSymbols.getMonths();</span>
+
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (comboBox.getItemCount() == 12) {</span>
+<span class="nc" id="L142">			comboBox.removeAllItems();</span>
+		}
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		for (int i = 0; i &lt; 12; i++) {</span>
+<span class="nc" id="L146">			comboBox.addItem(monthNames[i]);</span>
+		}
+
+<span class="nc" id="L149">		localInitialize = false;</span>
+<span class="nc" id="L150">		comboBox.setSelectedIndex(month);</span>
+<span class="nc" id="L151">	}</span>
+
+	/**
+	 * Is invoked if the state of the spnner changes.
+	 * 
+	 * @param e
+	 *            the change event.
+	 */
+	public void stateChanged(ChangeEvent e) {
+<span class="nc" id="L160">		SpinnerNumberModel model = (SpinnerNumberModel) ((JSpinner) e</span>
+<span class="nc" id="L161">				.getSource()).getModel();</span>
+<span class="nc" id="L162">		int value = model.getNumber().intValue();</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		boolean increase = (value &gt; oldSpinnerValue) ? true : false;</span>
+<span class="nc" id="L164">		oldSpinnerValue = value;</span>
+
+<span class="nc" id="L166">		int month = getMonth();</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (increase) {</span>
+<span class="nc" id="L169">			month += 1;</span>
+
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			if (month == 12) {</span>
+<span class="nc" id="L172">				month = 0;</span>
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">				if (yearChooser != null) {</span>
+<span class="nc" id="L175">					int year = yearChooser.getYear();</span>
+<span class="nc" id="L176">					year += 1;</span>
+<span class="nc" id="L177">					yearChooser.setYear(year);</span>
+				}
+			}
+<span class="nc" id="L180">		} else {</span>
+<span class="nc" id="L181">			month -= 1;</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (month == -1) {</span>
+<span class="nc" id="L184">				month = 11;</span>
+
+<span class="nc bnc" id="L186" title="All 2 branches missed.">				if (yearChooser != null) {</span>
+<span class="nc" id="L187">					int year = yearChooser.getYear();</span>
+<span class="nc" id="L188">					year -= 1;</span>
+<span class="nc" id="L189">					yearChooser.setYear(year);</span>
+				}
+			}
+		}
+
+<span class="nc" id="L194">		setMonth(month);</span>
+<span class="nc" id="L195">	}</span>
+
+	/**
+	 * The ItemListener for the months.
+	 * 
+	 * @param e
+	 *            the item event
+	 */
+	public void itemStateChanged(ItemEvent e) {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">		if (e.getStateChange() == ItemEvent.SELECTED) {</span>
+<span class="nc" id="L205">			int index = comboBox.getSelectedIndex();</span>
+
+<span class="nc bnc" id="L207" title="All 4 branches missed.">			if ((index &gt;= 0) &amp;&amp; (index != month)) {</span>
+<span class="nc" id="L208">				setMonth(index, false);</span>
+			}
+		}
+<span class="nc" id="L211">	}</span>
+
+	/**
+	 * Sets the month attribute of the JMonthChooser object. Fires a property
+	 * change &quot;month&quot;.
+	 * 
+	 * @param newMonth
+	 *            the new month value
+	 * @param select
+	 *            true, if the month should be selcted in the combo box.
+	 */
+	private void setMonth(int newMonth, boolean select) {
+<span class="nc bnc" id="L223" title="All 4 branches missed.">		if (!initialized || localInitialize) {</span>
+<span class="nc" id="L224">			return;</span>
+		}
+
+<span class="nc" id="L227">		int oldMonth = month;</span>
+<span class="nc" id="L228">		month = newMonth;</span>
+
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (select) {</span>
+<span class="nc" id="L231">			comboBox.setSelectedIndex(month);</span>
+		}
+
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		if (dayChooser != null) {</span>
+<span class="nc" id="L235">			dayChooser.setMonth(month);</span>
+		}
+
+<span class="nc" id="L238">		firePropertyChange(MONTH_PROPERTY, oldMonth, month);</span>
+<span class="nc" id="L239">	}</span>
+
+	/**
+	 * Sets the month. This is a bound property. Valuse are valid between 0
+	 * (January) and 11 (December). A value &lt; 0 will be treated as 0, a value &gt;
+	 * 11 will be treated as 11.
+	 * 
+	 * @param newMonth
+	 *            the new month value
+	 * 
+	 * @see #getMonth
+	 */
+	public void setMonth(int newMonth) {
+<span class="nc bnc" id="L252" title="All 4 branches missed.">		if (newMonth &lt; 0 || newMonth == Integer.MIN_VALUE) {</span>
+<span class="nc" id="L253">			setMonth(0, true);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		} else if (newMonth &gt; 11) {</span>
+<span class="nc" id="L255">			setMonth(11, true);</span>
+<span class="nc" id="L256">		} else {</span>
+<span class="nc" id="L257">			setMonth(newMonth, true);</span>
+		}
+<span class="nc" id="L259">	}</span>
+
+	/**
+	 * Returns the month.
+	 * 
+	 * @return the month value
+	 */
+	public int getMonth() {
+<span class="nc" id="L267">		return month;</span>
+	}
+
+	/**
+	 * Convenience method set a day chooser.
+	 * 
+	 * @param dayChooser
+	 *            the day chooser
+	 */
+	public void setDayChooser(JDayChooser dayChooser) {
+<span class="nc" id="L277">		this.dayChooser = dayChooser;</span>
+<span class="nc" id="L278">	}</span>
+
+	/**
+	 * Convenience method set a year chooser. If set, the spin for the month
+	 * buttons will spin the year as well
+	 * 
+	 * @param yearChooser
+	 *            the new yearChooser value
+	 */
+	public void setYearChooser(JYearChooser yearChooser) {
+<span class="nc" id="L288">		this.yearChooser = yearChooser;</span>
+<span class="nc" id="L289">	}</span>
+
+	/**
+	 * Returns the locale.
+	 * 
+	 * @return the locale value
+	 * 
+	 * @see #setLocale
+	 */
+	public Locale getLocale() {
+<span class="nc" id="L299">		return locale;</span>
+	}
+
+	/**
+	 * Set the locale and initializes the new month names.
+	 * 
+	 * @param l
+	 *            the new locale value
+	 * 
+	 * @see #getLocale
+	 */
+	public void setLocale(Locale l) {
+<span class="nc bnc" id="L311" title="All 2 branches missed.">		if (!initialized) {</span>
+<span class="nc" id="L312">			super.setLocale(l);</span>
+<span class="nc" id="L313">		} else {</span>
+<span class="nc" id="L314">			locale = l;</span>
+<span class="nc" id="L315">			initNames();</span>
+		}
+<span class="nc" id="L317">	}</span>
+
+	/**
+	 * Enable or disable the JMonthChooser.
+	 * 
+	 * @param enabled
+	 *            the new enabled value
+	 */
+	public void setEnabled(boolean enabled) {
+<span class="nc" id="L326">		super.setEnabled(enabled);</span>
+<span class="nc" id="L327">		comboBox.setEnabled(enabled);</span>
+
+<span class="nc bnc" id="L329" title="All 2 branches missed.">		if (spinner != null) {</span>
+<span class="nc" id="L330">			spinner.setEnabled(enabled);</span>
+		}
+<span class="nc" id="L332">	}</span>
+
+	/**
+	 * Returns the month chooser's comboBox text area (which allow the focus to
+	 * be set to it).
+	 * 
+	 * @return the combo box
+	 */
+	public Component getComboBox() {
+<span class="nc" id="L341">		return this.comboBox;</span>
+	}
+
+	/**
+	 * Returns the month chooser's comboBox bar (which allow the focus to be set
+	 * to it).
+	 * 
+	 * @return Component the spinner or null, if the month chooser has no
+	 *         spinner
+	 */
+	public Component getSpinner() {
+		// Returns &lt;null&gt; if there is no spinner.
+<span class="nc" id="L353">		return spinner;</span>
+	}
+
+	/**
+	 * Returns the type of spinner the month chooser is using.
+	 * 
+	 * @return true, if the month chooser has a spinner
+	 */
+	public boolean hasSpinner() {
+<span class="nc" id="L362">		return hasSpinner;</span>
+	}
+
+	/**
+	 * Sets the font for this component.
+	 * 
+	 * @param font
+	 *            the desired &lt;code&gt;Font&lt;/code&gt; for this component
+	 */
+	public void setFont(Font font) {
+<span class="nc bnc" id="L372" title="All 2 branches missed.">		if (comboBox != null) {</span>
+<span class="nc" id="L373">			comboBox.setFont(font);</span>
+		}
+<span class="nc" id="L375">		super.setFont(font);</span>
+<span class="nc" id="L376">	}</span>
+
+	/**
+	 * Updates the UI.
+	 * 
+	 * @see javax.swing.JPanel#updateUI()
+	 */
+	public void updateUI() {
+<span class="nc" id="L384">		final JSpinner testSpinner = new JSpinner();</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">		if (spinner != null) {</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			if (&quot;Windows&quot;.equals(UIManager.getLookAndFeel().getID())) {</span>
+<span class="nc" id="L387">				spinner.setBorder(testSpinner.getBorder());</span>
+<span class="nc" id="L388">			} else {</span>
+<span class="nc" id="L389">				spinner.setBorder(new EmptyBorder(0, 0, 0, 0));</span>
+			}
+		}
+<span class="nc" id="L392">	}</span>
+
+	/**
+	 * Creates a JFrame with a JMonthChooser inside and can be used for testing.
+	 * 
+	 * @param s
+	 *            The command line arguments
+	 */
+	public static void main(String[] s) {
+<span class="nc" id="L401">		JFrame frame = new JFrame(&quot;MonthChooser&quot;);</span>
+<span class="nc" id="L402">		frame.getContentPane().add(new JMonthChooser());</span>
+<span class="nc" id="L403">		frame.pack();</span>
+<span class="nc" id="L404">		frame.setVisible(true);</span>
+<span class="nc" id="L405">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

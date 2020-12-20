@@ -1,0 +1,671 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapHTMLWriter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode</a> &gt; <span class="el_source">MindMapHTMLWriter.java</span></div><h1>MindMapHTMLWriter.java</h1><pre class="source lang-java linenums">/*
+ * Created on 04.02.2007
+ * Copyright (C) 2006 Dimitri Polivaev
+ */
+package freemind.modes.mindmapmode;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.HtmlTools;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindIcon;
+
+class MindMapHTMLWriter {
+	private Writer fileout;
+<span class="nc" id="L21">	private static String el = System.getProperty(&quot;line.separator&quot;);</span>
+	private boolean writeFoldingCode;
+	private boolean basedOnHeadings;
+	private boolean exportIcons;
+
+<span class="nc" id="L26">	MindMapHTMLWriter(Writer fileout) {</span>
+<span class="nc" id="L27">		this.fileout = fileout;</span>
+<span class="nc" id="L28">		exportIcons = false;</span>
+<span class="nc" id="L29">		writeFoldingCode = false;</span>
+<span class="nc" id="L30">		basedOnHeadings = (getProperty(&quot;html_export_folding&quot;)</span>
+<span class="nc" id="L31">				.equals(&quot;html_export_based_on_headings&quot;));</span>
+<span class="nc" id="L32">	}</span>
+
+	private static String convertSpecialChar(char c) {
+		String cvt;
+
+		// try {
+		// // Create the encoder and decoder for ISO-8859-1
+		// Charset ansi = Charset.forName(&quot;windows-1252&quot;);
+		// CharsetDecoder decoder = ansi.newDecoder();
+		//
+		// Charset utf8 = Charset.forName(&quot;UTF-8&quot;);
+		// CharsetEncoder encoder = utf8.newEncoder();
+		//
+		// // The new ByteBuffer is ready to be read.
+		// ByteBuffer bb = ByteBuffer.allocate(2);
+		// bb.putChar(c);
+		// CharBuffer cb = decoder.decode(bb);
+		//
+		// cvt = cvt + cb.toString();
+		// } catch (Exception e) {
+		// //cvt = &quot;CHAR ENC FAILED &quot; + e.getMessage();
+		// cvt = cvt + &quot;&amp;#&quot; + Character.toString(c) + &quot;;&quot;;
+		// }
+
+<span class="nc bnc" id="L56" title="All 8 branches missed.">		switch ((int) c) {</span>
+		case 0xe4:
+<span class="nc" id="L58">			cvt = &quot;&amp;auml;&quot;;</span>
+<span class="nc" id="L59">			break;</span>
+		case 0xf6:
+<span class="nc" id="L61">			cvt = &quot;&amp;ouml;&quot;;</span>
+<span class="nc" id="L62">			break;</span>
+		case 0xfc:
+<span class="nc" id="L64">			cvt = &quot;&amp;uuml;&quot;;</span>
+<span class="nc" id="L65">			break;</span>
+		case 0xc4:
+<span class="nc" id="L67">			cvt = &quot;&amp;Auml;&quot;;</span>
+<span class="nc" id="L68">			break;</span>
+		case 0xd6:
+<span class="nc" id="L70">			cvt = &quot;&amp;Ouml;&quot;;</span>
+<span class="nc" id="L71">			break;</span>
+		case 0xdc:
+<span class="nc" id="L73">			cvt = &quot;&amp;Uuml;&quot;;</span>
+<span class="nc" id="L74">			break;</span>
+		case 0xdf:
+<span class="nc" id="L76">			cvt = &quot;&amp;szlig;&quot;;</span>
+<span class="nc" id="L77">			break;</span>
+		default:
+<span class="nc" id="L79">			cvt = &quot;&amp;#&quot; + Integer.toString((int) c) + &quot;;&quot;;</span>
+			break;
+		}
+
+<span class="nc" id="L83">		return cvt;</span>
+	}
+
+	private static String saveHTML_escapeUnicodeAndSpecialCharacters(String text) {
+<span class="nc" id="L87">		int len = text.length();</span>
+<span class="nc" id="L88">		StringBuffer result = new StringBuffer(len);</span>
+		int intValue;
+		char myChar;
+<span class="nc" id="L91">		boolean previousSpace = false;</span>
+<span class="nc" id="L92">		boolean spaceOccured = false;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		for (int i = 0; i &lt; len; ++i) {</span>
+<span class="nc" id="L94">			myChar = text.charAt(i);</span>
+<span class="nc" id="L95">			intValue = (int) text.charAt(i);</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (intValue &gt;= 128) {</span>
+<span class="nc" id="L97">				result.append(convertSpecialChar(myChar));</span>
+<span class="nc" id="L98">			} else {</span>
+<span class="nc" id="L99">				spaceOccured = false;</span>
+<span class="nc bnc" id="L100" title="All 6 branches missed.">				switch (myChar) {</span>
+				case '&amp;':
+<span class="nc" id="L102">					result.append(&quot;&amp;amp;&quot;);</span>
+<span class="nc" id="L103">					break;</span>
+				case '&lt;':
+<span class="nc" id="L105">					result.append(&quot;&amp;lt;&quot;);</span>
+<span class="nc" id="L106">					break;</span>
+				case '&gt;':
+<span class="nc" id="L108">					result.append(&quot;&amp;gt;&quot;);</span>
+<span class="nc" id="L109">					break;</span>
+				case ' ':
+<span class="nc" id="L111">					spaceOccured = true;</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">					if (previousSpace) {</span>
+<span class="nc" id="L113">						result.append(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L114">					} else {</span>
+<span class="nc" id="L115">						result.append(&quot; &quot;);</span>
+					}
+<span class="nc" id="L117">					break;</span>
+				case '\n':
+<span class="nc" id="L119">					result.append(&quot;\n&lt;br&gt;\n&quot;);</span>
+<span class="nc" id="L120">					break;</span>
+				default:
+<span class="nc" id="L122">					result.append(myChar);</span>
+				}
+<span class="nc" id="L124">				previousSpace = spaceOccured;</span>
+			}
+		}
+<span class="nc" id="L127">		return result.toString();</span>
+	}
+
+	void saveHTML(List mindMapNodes) throws IOException {
+<span class="nc" id="L131">		fileout.write(&quot;&lt;html&gt;&quot; + el + &quot;&lt;head&gt;&quot; + el);</span>
+<span class="nc" id="L132">		writeStyle();</span>
+<span class="nc" id="L133">		fileout.write(el + &quot;&lt;/head&gt;&quot; + el + &quot;&lt;body&gt;&quot; + el);</span>
+<span class="nc" id="L134">		Iterator iterator = mindMapNodes.iterator();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		while (iterator.hasNext()) {</span>
+<span class="nc" id="L136">			MindMapNodeModel node = (MindMapNodeModel) iterator.next();</span>
+<span class="nc" id="L137">			saveHTML(node, &quot;1&quot;, 0, /* isRoot */true, true, /* depth */1);</span>
+		}
+<span class="nc" id="L139">		fileout.write(&quot;&lt;/body&gt;&quot; + el);</span>
+<span class="nc" id="L140">		fileout.write(&quot;&lt;/html&gt;&quot; + el);</span>
+<span class="nc" id="L141">		fileout.close();</span>
+<span class="nc" id="L142">	}</span>
+
+	void saveHTML(MindMapNodeModel rootNodeOfBranch) throws IOException {
+		// When isRoot is true, rootNodeOfBranch will be exported as folded
+		// regardless his isFolded state in the mindmap.
+		// We do all the HTML saving using just ordinary output.
+
+<span class="nc" id="L149">		String htmlExportFoldingOption = getProperty(&quot;html_export_folding&quot;);</span>
+<span class="nc" id="L150">		writeFoldingCode = (htmlExportFoldingOption</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">				.equals(&quot;html_export_fold_currently_folded&quot;) &amp;&amp; rootNodeOfBranch</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">				.hasFoldedStrictDescendant())</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">				|| htmlExportFoldingOption.equals(&quot;html_export_fold_all&quot;);</span>
+
+<span class="nc" id="L155">		exportIcons = Resources.getInstance().getBoolProperty(</span>
+<span class="nc" id="L156">				&quot;export_icons_in_html&quot;);</span>
+
+<span class="nc" id="L158">		fileout.write(&quot;&lt;!DOCTYPE HTML PUBLIC \&quot;-//W3C//DTD HTML 4.01 Transitional//EN\&quot; \&quot;http://www.w3.org/TR/html4/loose.dtd\&quot;&gt;&quot;</span>
+<span class="nc" id="L159">				+ el + &quot;&lt;html&gt;&quot; + el + &quot;&lt;head&gt;&quot; + el);</span>
+<span class="nc" id="L160">		fileout.write(&quot;&lt;title&gt;&quot;</span>
+<span class="nc" id="L161">				+ saveHTML_escapeUnicodeAndSpecialCharacters(rootNodeOfBranch</span>
+<span class="nc" id="L162">						.getPlainTextContent().replace('\n', ' ')) + &quot;&lt;/title&gt;&quot;</span>
+<span class="nc" id="L163">				+ el);</span>
+
+<span class="nc" id="L165">		writeStyle();</span>
+<span class="nc" id="L166">		fileout.write(el + &quot;&lt;/head&gt;&quot; + el + &quot;&lt;body&gt;&quot; + el);</span>
+
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if (writeFoldingCode) {</span>
+<span class="nc" id="L169">			writeBodyWithFolding(rootNodeOfBranch);</span>
+<span class="nc" id="L170">		} else {</span>
+<span class="nc" id="L171">			saveHTML(rootNodeOfBranch, &quot;1&quot;, 0, /* isRoot */true, true, /* depth */</span>
+<span class="nc" id="L172">					1);</span>
+		}
+<span class="nc" id="L174">		fileout.write(&quot;&lt;/body&gt;&quot; + el);</span>
+<span class="nc" id="L175">		fileout.write(&quot;&lt;/html&gt;&quot; + el);</span>
+<span class="nc" id="L176">		fileout.close();</span>
+<span class="nc" id="L177">	}</span>
+
+	private void writeBodyWithFolding(MindMapNodeModel rootNodeOfBranch)
+			throws IOException {
+<span class="nc" id="L181">		writeJavaScript();</span>
+
+<span class="nc" id="L183">		fileout.write(&quot;&lt;SPAN class=\&quot;foldspecial\&quot; onclick=\&quot;fold_document()\&quot;&gt;All +&lt;/SPAN&gt;&quot;</span>
+<span class="nc" id="L184">				+ el);</span>
+<span class="nc" id="L185">		fileout.write(&quot;&lt;SPAN class=\&quot;foldspecial\&quot; onclick=\&quot;unfold_document()\&quot;&gt;All -&lt;/SPAN&gt;&quot;</span>
+<span class="nc" id="L186">				+ el);</span>
+
+		// fileout.write(&quot;&lt;ul&gt;&quot;);
+
+<span class="nc" id="L190">		saveHTML(rootNodeOfBranch, &quot;1&quot;, 0, /* isRoot */true, true, /* depth */</span>
+<span class="nc" id="L191">				1);</span>
+
+		// fileout.write(&quot;&lt;/ul&gt;&quot;);
+
+<span class="nc" id="L195">		fileout.write(&quot;&lt;SCRIPT type=\&quot;text/javascript\&quot;&gt;&quot; + el);</span>
+<span class="nc" id="L196">		fileout.write(&quot;fold_document();&quot; + el);</span>
+<span class="nc" id="L197">		fileout.write(&quot;&lt;/SCRIPT&gt;&quot; + el);</span>
+<span class="nc" id="L198">	}</span>
+
+	private void writeJavaScript() throws IOException {
+<span class="nc" id="L201">		fileout.write(&quot;&quot;</span>
+<span class="nc" id="L202">				+ el</span>
+<span class="nc" id="L203">				+ &quot;&lt;script type=\&quot;text/javascript\&quot;&gt;&quot;</span>
+<span class="nc" id="L204">				+ el</span>
+<span class="nc" id="L205">				+ &quot;   // Here we implement folding. It works fine with MSIE5.5, MSIE6.0 and&quot;</span>
+<span class="nc" id="L206">				+ el</span>
+<span class="nc" id="L207">				+ &quot;   // Mozilla 0.9.6.&quot;</span>
+<span class="nc" id="L208">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L210">				+ el</span>
+<span class="nc" id="L211">				+ &quot;   if (document.layers) {&quot;</span>
+<span class="nc" id="L212">				+ el</span>
+<span class="nc" id="L213">				+ &quot;      //Netscape 4 specific code&quot;</span>
+<span class="nc" id="L214">				+ el</span>
+<span class="nc" id="L215">				+ &quot;      pre = 'document.';&quot;</span>
+<span class="nc" id="L216">				+ el</span>
+<span class="nc" id="L217">				+ &quot;      post = ''; }&quot;</span>
+<span class="nc" id="L218">				+ el</span>
+<span class="nc" id="L219">				+ &quot;   if (document.getElementById) {&quot;</span>
+<span class="nc" id="L220">				+ el</span>
+<span class="nc" id="L221">				+ &quot;      //Netscape 6 specific code&quot;</span>
+<span class="nc" id="L222">				+ el</span>
+<span class="nc" id="L223">				+ &quot;      pre = 'document.getElementById(\&quot;';&quot;</span>
+<span class="nc" id="L224">				+ el</span>
+<span class="nc" id="L225">				+ &quot;      post = '\&quot;).style'; }&quot;</span>
+<span class="nc" id="L226">				+ el</span>
+<span class="nc" id="L227">				+ &quot;   if (document.all) {&quot;</span>
+<span class="nc" id="L228">				+ el</span>
+<span class="nc" id="L229">				+ &quot;      //IE4+ specific code&quot;</span>
+<span class="nc" id="L230">				+ el</span>
+<span class="nc" id="L231">				+ &quot;      pre = 'document.all.';&quot;</span>
+<span class="nc" id="L232">				+ el</span>
+<span class="nc" id="L233">				+ &quot;      post = '.style'; }&quot;</span>
+<span class="nc" id="L234">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L236">				+ el</span>
+<span class="nc" id="L237">				+ &quot;function layer_exists(layer) {&quot;</span>
+<span class="nc" id="L238">				+ el</span>
+<span class="nc" id="L239">				+ &quot;   try {&quot;</span>
+<span class="nc" id="L240">				+ el</span>
+<span class="nc" id="L241">				+ &quot;      eval(pre + layer + post);&quot;</span>
+<span class="nc" id="L242">				+ el</span>
+<span class="nc" id="L243">				+ &quot;      return true; }&quot;</span>
+<span class="nc" id="L244">				+ el</span>
+<span class="nc" id="L245">				+ &quot;   catch (error) {&quot;</span>
+<span class="nc" id="L246">				+ el</span>
+<span class="nc" id="L247">				+ &quot;      return false; }}&quot;</span>
+<span class="nc" id="L248">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L250">				+ el</span>
+<span class="nc" id="L251">				+ &quot;function show_layer(layer) {&quot;</span>
+<span class="nc" id="L252">				+ el</span>
+<span class="nc" id="L253">				+ &quot;   eval(pre + layer + post).position = 'relative'; &quot;</span>
+<span class="nc" id="L254">				+ el</span>
+<span class="nc" id="L255">				+ &quot;   eval(pre + layer + post).visibility = 'visible'; }&quot;</span>
+<span class="nc" id="L256">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L258">				+ el</span>
+<span class="nc" id="L259">				+ &quot;function hide_layer(layer) {&quot;</span>
+<span class="nc" id="L260">				+ el</span>
+<span class="nc" id="L261">				+ &quot;   eval(pre + layer + post).visibility = 'hidden';&quot;</span>
+<span class="nc" id="L262">				+ el</span>
+<span class="nc" id="L263">				+ &quot;   eval(pre + layer + post).position = 'absolute'; }&quot;</span>
+<span class="nc" id="L264">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L266">				+ el</span>
+<span class="nc" id="L267">				+ &quot;function hide_folder(folder) {&quot;</span>
+<span class="nc" id="L268">				+ el</span>
+<span class="nc" id="L269">				+ &quot;    hide_folding_layer(folder)&quot;</span>
+<span class="nc" id="L270">				+ el</span>
+<span class="nc" id="L271">				+ &quot;    show_layer('show'+folder);&quot;</span>
+<span class="nc" id="L272">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L274">				+ el</span>
+<span class="nc" id="L275">				+ &quot;    scrollBy(0,0); // This is a work around to make it work in Browsers (Explorer, Mozilla)&quot;</span>
+<span class="nc" id="L276">				+ el</span>
+<span class="nc" id="L277">				+ &quot;}&quot;</span>
+<span class="nc" id="L278">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L280">				+ el</span>
+<span class="nc" id="L281">				+ &quot;function show_folder(folder) {&quot;</span>
+<span class="nc" id="L282">				+ el</span>
+<span class="nc" id="L283">				+ &quot;    // Precondition: all subfolders are folded&quot;</span>
+<span class="nc" id="L284">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L286">				+ el</span>
+<span class="nc" id="L287">				+ &quot;    show_layer('hide'+folder);&quot;</span>
+<span class="nc" id="L288">				+ el</span>
+<span class="nc" id="L289">				+ &quot;    hide_layer('show'+folder);&quot;</span>
+<span class="nc" id="L290">				+ el</span>
+<span class="nc" id="L291">				+ &quot;    show_layer('fold'+folder);&quot;</span>
+<span class="nc" id="L292">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L294">				+ el</span>
+<span class="nc" id="L295">				+ &quot;    scrollBy(0,0); // This is a work around to make it work in Browsers (Explorer, Mozilla)&quot;</span>
+<span class="nc" id="L296">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L298">				+ el</span>
+<span class="nc" id="L299">				+ &quot;    var i;&quot;</span>
+<span class="nc" id="L300">				+ el</span>
+<span class="nc" id="L301">				+ &quot;    for (i=1; layer_exists('fold'+folder+'_'+i); ++i) {&quot;</span>
+<span class="nc" id="L302">				+ el</span>
+<span class="nc" id="L303">				+ &quot;       show_layer('show'+folder+'_'+i); }&quot;</span>
+<span class="nc" id="L304">				+ el</span>
+<span class="nc" id="L305">				+ &quot;}&quot;</span>
+<span class="nc" id="L306">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L308">				+ &quot;function show_folder_completely(folder) {&quot;</span>
+<span class="nc" id="L309">				+ el</span>
+<span class="nc" id="L310">				+ &quot;    // Precondition: all subfolders are folded&quot;</span>
+<span class="nc" id="L311">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L313">				+ el</span>
+<span class="nc" id="L314">				+ &quot;    show_layer('hide'+folder);&quot;</span>
+<span class="nc" id="L315">				+ el</span>
+<span class="nc" id="L316">				+ &quot;    hide_layer('show'+folder);&quot;</span>
+<span class="nc" id="L317">				+ el</span>
+<span class="nc" id="L318">				+ &quot;    show_layer('fold'+folder);&quot;</span>
+<span class="nc" id="L319">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L321">				+ el</span>
+<span class="nc" id="L322">				+ &quot;    scrollBy(0,0); // This is a work around to make it work in Browsers (Explorer, Mozilla)&quot;</span>
+<span class="nc" id="L323">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L325">				+ el</span>
+<span class="nc" id="L326">				+ &quot;    var i;&quot;</span>
+<span class="nc" id="L327">				+ el</span>
+<span class="nc" id="L328">				+ &quot;    for (i=1; layer_exists('fold'+folder+'_'+i); ++i) {&quot;</span>
+<span class="nc" id="L329">				+ el</span>
+<span class="nc" id="L330">				+ &quot;       show_folder_completely(folder+'_'+i); }&quot;</span>
+<span class="nc" id="L331">				+ el</span>
+<span class="nc" id="L332">				+ &quot;}&quot;</span>
+<span class="nc" id="L333">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L335">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L337">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L339">				+ el</span>
+<span class="nc" id="L340">				+ &quot;function hide_folding_layer(folder) {&quot;</span>
+<span class="nc" id="L341">				+ el</span>
+<span class="nc" id="L342">				+ &quot;   var i;&quot;</span>
+<span class="nc" id="L343">				+ el</span>
+<span class="nc" id="L344">				+ &quot;   for (i=1; layer_exists('fold'+folder+'_'+i); ++i) {&quot;</span>
+<span class="nc" id="L345">				+ el</span>
+<span class="nc" id="L346">				+ &quot;       hide_folding_layer(folder+'_'+i); }&quot;</span>
+<span class="nc" id="L347">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L349">				+ el</span>
+<span class="nc" id="L350">				+ &quot;   hide_layer('hide'+folder);&quot;</span>
+<span class="nc" id="L351">				+ el</span>
+<span class="nc" id="L352">				+ &quot;   hide_layer('show'+folder);&quot;</span>
+<span class="nc" id="L353">				+ el</span>
+<span class="nc" id="L354">				+ &quot;   hide_layer('fold'+folder);&quot;</span>
+<span class="nc" id="L355">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L357">				+ el</span>
+<span class="nc" id="L358">				+ &quot;   scrollBy(0,0); // This is a work around to make it work in Browsers (Explorer, Mozilla)&quot;</span>
+<span class="nc" id="L359">				+ el + &quot;}&quot; + el + &quot;&quot; + el + &quot;function fold_document() {&quot; + el</span>
+<span class="nc" id="L360">				+ &quot;   var i;&quot; + el + &quot;   var folder = '1';&quot; + el</span>
+<span class="nc" id="L361">				+ &quot;   for (i=1; layer_exists('fold'+folder+'_'+i); ++i) {&quot; + el</span>
+<span class="nc" id="L362">				+ &quot;       hide_folder(folder+'_'+i); }&quot; + el + &quot;}&quot; + el + &quot;&quot;</span>
+<span class="nc" id="L363">				+ el + &quot;function unfold_document() {&quot; + el + &quot;   var i;&quot; + el</span>
+<span class="nc" id="L364">				+ &quot;   var folder = '1';&quot; + el</span>
+<span class="nc" id="L365">				+ &quot;   for (i=1; layer_exists('fold'+folder+'_'+i); ++i) {&quot; + el</span>
+<span class="nc" id="L366">				+ &quot;       show_folder_completely(folder+'_'+i); }&quot; + el + &quot;}&quot;</span>
+<span class="nc" id="L367">				+ el + &quot;&quot; + el + &quot;&lt;/script&gt;&quot; + el);</span>
+<span class="nc" id="L368">	}</span>
+
+	private void writeStyle() throws IOException {
+<span class="nc" id="L371">		fileout.write(&quot;&lt;style type=\&quot;text/css\&quot;&gt;&quot; + el);</span>
+<span class="nc" id="L372">		fileout.write(&quot;    li { list-style: none;  margin: 0; }&quot; + el);</span>
+<span class="nc" id="L373">		fileout.write(&quot;    p { margin: 0; }&quot; + el);</span>
+
+<span class="nc bnc" id="L375" title="All 2 branches missed.">		if (writeFoldingCode) {</span>
+<span class="nc" id="L376">			fileout.write(&quot;    span.foldopened { color: white; font-size: xx-small;&quot;</span>
+<span class="nc" id="L377">					+ el</span>
+<span class="nc" id="L378">					+ &quot;    border-width: 1; font-family: monospace; padding: 0em 0.25em 0em 0.25em; background: #e0e0e0;&quot;</span>
+<span class="nc" id="L379">					+ el</span>
+<span class="nc" id="L380">					+ &quot;    VISIBILITY: visible;&quot;</span>
+<span class="nc" id="L381">					+ el</span>
+<span class="nc" id="L382">					+ &quot;    cursor:pointer; }&quot;</span>
+<span class="nc" id="L383">					+ el</span>
+					+ &quot;&quot;
+<span class="nc" id="L385">					+ el</span>
+					+ &quot;&quot;
+<span class="nc" id="L387">					+ el</span>
+<span class="nc" id="L388">					+ &quot;    span.foldclosed { color: #666666; font-size: xx-small;&quot;</span>
+<span class="nc" id="L389">					+ el</span>
+<span class="nc" id="L390">					+ &quot;    border-width: 1; font-family: monospace; padding: 0em 0.25em 0em 0.25em; background: #e0e0e0;&quot;</span>
+<span class="nc" id="L391">					+ el</span>
+<span class="nc" id="L392">					+ &quot;    VISIBILITY: hidden;&quot;</span>
+<span class="nc" id="L393">					+ el</span>
+<span class="nc" id="L394">					+ &quot;    cursor:pointer; }&quot;</span>
+<span class="nc" id="L395">					+ el</span>
+					+ &quot;&quot;
+<span class="nc" id="L397">					+ el</span>
+<span class="nc" id="L398">					+ &quot;    span.foldspecial { color: #666666; font-size: xx-small; border-style: none solid solid none;&quot;</span>
+<span class="nc" id="L399">					+ el</span>
+<span class="nc" id="L400">					+ &quot;    border-color: #CCCCCC; border-width: 1; font-family: sans-serif; padding: 0em 0.1em 0em 0.1em; background: #e0e0e0;&quot;</span>
+<span class="nc" id="L401">					+ el + &quot;    cursor:pointer; }&quot; + el);</span>
+		}
+<span class="nc" id="L403">		fileout.write(el</span>
+<span class="nc" id="L404">				+ &quot;    span.l { color: red; font-weight: bold; }&quot;</span>
+<span class="nc" id="L405">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L407">				+ el</span>
+<span class="nc" id="L408">				+ &quot;    a.mapnode:link {text-decoration: none; color: black; }&quot;</span>
+<span class="nc" id="L409">				+ el</span>
+<span class="nc" id="L410">				+ &quot;    a.mapnode:visited {text-decoration: none; color: black; }&quot;</span>
+<span class="nc" id="L411">				+ el</span>
+<span class="nc" id="L412">				+ &quot;    a.mapnode:active {text-decoration: none; color: black; }&quot;</span>
+<span class="nc" id="L413">				+ el</span>
+<span class="nc" id="L414">				+ &quot;    a.mapnode:hover {text-decoration: none; color: black; background: #eeeee0; }&quot;</span>
+<span class="nc" id="L415">				+ el</span>
+				+ &quot;&quot;
+<span class="nc" id="L417">				+ el</span>
+<span class="nc" id="L418">				+ &quot;&lt;/style&gt;&quot;</span>
+<span class="nc" id="L419">				+ el</span>
+<span class="nc" id="L420">				+ &quot;&lt;!-- ^ Position is not set to relative / absolute here because of Mozilla --&gt;&quot;);</span>
+<span class="nc" id="L421">	}</span>
+
+	private int saveHTML(MindMapNodeModel model, String parentID,
+			int lastChildNumber, boolean isRoot, boolean treatAsParagraph,
+			int depth) throws IOException {
+		// return lastChildNumber
+		// Not very beautiful solution, but working at least and logical too.
+
+<span class="nc" id="L429">		boolean createFolding = model.isFolded();</span>
+<span class="nc bnc" id="L430" title="All 2 branches missed.">		if (getProperty(&quot;html_export_folding&quot;).equals(&quot;html_export_fold_all&quot;)) {</span>
+<span class="nc" id="L431">			createFolding = model.hasChildren();</span>
+		}
+<span class="nc bnc" id="L433" title="All 2 branches missed.">		if (getProperty(&quot;html_export_folding&quot;).equals(&quot;html_export_no_folding&quot;)</span>
+<span class="nc bnc" id="L434" title="All 4 branches missed.">				|| basedOnHeadings || isRoot) {</span>
+<span class="nc" id="L435">			createFolding = false;</span>
+		}
+
+<span class="nc" id="L438">		final boolean heading = isHeading(model, depth);</span>
+<span class="nc bnc" id="L439" title="All 4 branches missed.">		if (!treatAsParagraph &amp;&amp; !basedOnHeadings)</span>
+<span class="nc" id="L440">			fileout.write(&quot;&lt;li&gt;&quot;);</span>
+		else {
+<span class="nc bnc" id="L442" title="All 2 branches missed.">			if (heading) {</span>
+<span class="nc" id="L443">				fileout.write(&quot;&lt;h&quot; + depth + &quot;&gt;&quot;);</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">			} else if (!hasHtml(model)) {</span>
+<span class="nc" id="L445">				fileout.write(&quot;&lt;p&gt;&quot;);</span>
+			}
+		}
+<span class="nc" id="L448">		String localParentID = parentID;</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">		if (createFolding) {</span>
+			// lastChildNumber = new Integer lastChildNumber.intValue() + 1;
+			// Change value of an integer
+<span class="nc" id="L452">			lastChildNumber++;</span>
+
+<span class="nc" id="L454">			localParentID = parentID + &quot;_&quot; + lastChildNumber;</span>
+<span class="nc" id="L455">			writeFoldingButtons(localParentID);</span>
+		}
+
+<span class="nc bnc" id="L458" title="All 2 branches missed.">		for (Iterator it = model.getActivatedHooks().iterator(); it.hasNext();) {</span>
+<span class="nc" id="L459">			PermanentNodeHook hook = (PermanentNodeHook) it.next();</span>
+<span class="nc" id="L460">			hook.saveHtml(fileout);</span>
+		}
+		
+<span class="nc" id="L463">		String link = model.getLink();</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">		if (link != null) {</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">			if (link.endsWith(&quot;.mm&quot;)) {</span>
+<span class="nc" id="L466">				link += &quot;.html&quot;;</span>
+			}
+<span class="nc" id="L468">			fileout.write(&quot;&lt;a href=\&quot;&quot; + HtmlTools.unicodeToHTMLUnicodeEntity(link, false)</span>
+<span class="nc" id="L469">					+ &quot;\&quot; target=\&quot;_blank\&quot;&gt;&lt;span class=l&gt;~&lt;/span&gt;&amp;nbsp;&quot;);</span>
+		}
+
+<span class="nc" id="L472">		String fontStyle = fontStyle(model);</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">		if (!fontStyle.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L474">			fileout.write(&quot;&lt;span style=\&quot;&quot; + fontStyle + &quot;\&quot;&gt;&quot;);</span>
+		}
+
+<span class="nc bnc" id="L477" title="All 2 branches missed.">		if (Resources.getInstance().getBoolProperty(&quot;export_icons_in_html&quot;)) {</span>
+<span class="nc" id="L478">			writeIcons(model);</span>
+		}
+
+<span class="nc" id="L481">		writeModelContent(model);</span>
+
+<span class="nc bnc" id="L483" title="All 2 branches missed.">		if (fontStyle != &quot;&quot;) {</span>
+<span class="nc" id="L484">			fileout.write(&quot;&lt;/span&gt;&quot;);</span>
+		}
+
+<span class="nc" id="L487">		fileout.write(el);</span>
+
+<span class="nc bnc" id="L489" title="All 2 branches missed.">		if (link != null) {</span>
+<span class="nc" id="L490">			fileout.write(&quot;&lt;/a&gt;&quot; + el);</span>
+		}
+<span class="nc bnc" id="L492" title="All 2 branches missed.">		if (heading) {</span>
+<span class="nc" id="L493">			fileout.write(&quot;&lt;/h&quot; + depth + &quot;&gt;&quot; + el);</span>
+		}
+
+		// Are the children to be treated as paragraphs?
+
+<span class="nc" id="L498">		boolean treatChildrenAsParagraph = false;</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">		for (ListIterator e = model.sortedChildrenUnfolded(); e.hasNext();) {</span>
+<span class="nc bnc" id="L500" title="All 2 branches missed.">			if (((MindMapNodeModel) e.next()).toString().length() &gt; 100) { // TODO:</span>
+																			// replace
+																			// heuristic
+																			// constant
+<span class="nc" id="L504">				treatChildrenAsParagraph = true;</span>
+<span class="nc" id="L505">				break;</span>
+			}
+		}
+
+		// Write the children
+
+		// Export based on headings
+
+<span class="nc" id="L513">		if (getProperty(&quot;html_export_folding&quot;).equals(</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">				&quot;html_export_based_on_headings&quot;)) {</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">			for (ListIterator e = model.sortedChildrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L516">				MindMapNodeModel child = (MindMapNodeModel) e.next();</span>
+<span class="nc" id="L517">				lastChildNumber = saveHTML(child, parentID, lastChildNumber,/*</span>
+																			 * isRoot
+																			 * =
+																			 */
+<span class="nc" id="L521">						false, treatChildrenAsParagraph, depth + 1);</span>
+			}
+<span class="nc" id="L523">			return lastChildNumber;</span>
+		}
+
+		// Export not based on headings
+
+<span class="nc bnc" id="L528" title="All 2 branches missed.">		if (model.hasChildren()) {</span>
+<span class="nc" id="L529">			if (getProperty(&quot;html_export_folding&quot;).equals(</span>
+<span class="nc bnc" id="L530" title="All 2 branches missed.">					&quot;html_export_based_on_headings&quot;)) {</span>
+<span class="nc bnc" id="L531" title="All 2 branches missed.">				for (ListIterator e = model.sortedChildrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L532">					MindMapNodeModel child = (MindMapNodeModel) e.next();</span>
+<span class="nc" id="L533">					lastChildNumber = saveHTML(child, parentID,</span>
+<span class="nc" id="L534">							lastChildNumber,/* isRoot= */false,</span>
+<span class="nc" id="L535">							treatChildrenAsParagraph, depth + 1);</span>
+				}
+<span class="nc bnc" id="L537" title="All 2 branches missed.">			} else if (createFolding) {</span>
+<span class="nc" id="L538">				fileout.write(&quot;&lt;ul id=\&quot;fold&quot;</span>
+<span class="nc" id="L539">						+ localParentID</span>
+<span class="nc" id="L540">						+ &quot;\&quot; style=\&quot;POSITION: relative; VISIBILITY: visible;\&quot;&gt;&quot;);</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">				if (treatChildrenAsParagraph) {</span>
+<span class="nc" id="L542">					fileout.write(&quot;&lt;li&gt;&quot;);</span>
+				}
+<span class="nc" id="L544">				int localLastChildNumber = 0;</span>
+<span class="nc bnc" id="L545" title="All 2 branches missed.">				for (ListIterator e = model.sortedChildrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L546">					MindMapNodeModel child = (MindMapNodeModel) e.next();</span>
+<span class="nc" id="L547">					localLastChildNumber = saveHTML(child, localParentID,</span>
+<span class="nc" id="L548">							localLastChildNumber,/* isRoot= */false,</span>
+<span class="nc" id="L549">							treatChildrenAsParagraph, depth + 1);</span>
+				}
+<span class="nc" id="L551">			} else {</span>
+<span class="nc" id="L552">				fileout.write(&quot;&lt;ul&gt;&quot;);</span>
+<span class="nc bnc" id="L553" title="All 2 branches missed.">				if (treatChildrenAsParagraph) {</span>
+<span class="nc" id="L554">					fileout.write(&quot;&lt;li&gt;&quot;);</span>
+				}
+<span class="nc bnc" id="L556" title="All 2 branches missed.">				for (ListIterator e = model.sortedChildrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L557">					MindMapNodeModel child = (MindMapNodeModel) e.next();</span>
+<span class="nc" id="L558">					lastChildNumber = saveHTML(child, parentID,</span>
+<span class="nc" id="L559">							lastChildNumber,/* isRoot= */false,</span>
+<span class="nc" id="L560">							treatChildrenAsParagraph, depth + 1);</span>
+				}
+			}
+<span class="nc bnc" id="L563" title="All 2 branches missed.">			if (treatChildrenAsParagraph) {</span>
+<span class="nc" id="L564">				fileout.write(&quot;&lt;/li&gt;&quot;);</span>
+			}
+<span class="nc" id="L566">			fileout.write(el);</span>
+<span class="nc" id="L567">			fileout.write(&quot;&lt;/ul&gt;&quot;);</span>
+		}
+
+		// End up the node
+
+<span class="nc bnc" id="L572" title="All 2 branches missed.">		if (!treatAsParagraph) {</span>
+<span class="nc" id="L573">			fileout.write(el + &quot;&lt;/li&gt;&quot; + el);</span>
+		}
+
+<span class="nc" id="L576">		return lastChildNumber;</span>
+	}
+
+	private String fontStyle(MindMapNodeModel model) throws IOException {
+<span class="nc" id="L580">		String fontStyle = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L582" title="All 2 branches missed.">		if (model.getColor() != null) {</span>
+<span class="nc" id="L583">			fontStyle += &quot;color: &quot; + Tools.colorToXml(model.getColor()) + &quot;;&quot;;</span>
+		}
+
+<span class="nc bnc" id="L586" title="All 4 branches missed.">		if (model.getFont() != null &amp;&amp; model.getFont().getSize() != 0) {</span>
+<span class="nc" id="L587">			int defaultFontSize = Integer</span>
+<span class="nc" id="L588">					.parseInt(getProperty(&quot;defaultfontsize&quot;));</span>
+<span class="nc" id="L589">			int procentSize = (int) (model.getFont().getSize() * 100 / defaultFontSize);</span>
+<span class="nc bnc" id="L590" title="All 2 branches missed.">			if (procentSize != 100) {</span>
+<span class="nc" id="L591">				fontStyle += &quot;font-size: &quot; + procentSize + &quot;%;&quot;;</span>
+			}
+		}
+
+<span class="nc bnc" id="L595" title="All 2 branches missed.">		if (model.getFont() != null) {</span>
+<span class="nc" id="L596">			String fontFamily = model.getFont().getFamily();</span>
+<span class="nc" id="L597">			fontStyle += &quot;font-family: &quot; + fontFamily + &quot;, sans-serif; &quot;;</span>
+		}
+
+<span class="nc bnc" id="L600" title="All 2 branches missed.">		if (model.isItalic()) {</span>
+<span class="nc" id="L601">			fontStyle += &quot;font-style: italic; &quot;;</span>
+		}
+
+<span class="nc bnc" id="L604" title="All 2 branches missed.">		if (model.isBold()) {</span>
+<span class="nc" id="L605">			fontStyle += &quot;font-weight: bold; &quot;;</span>
+		}
+
+		// ------------------------
+
+<span class="nc" id="L610">		return fontStyle;</span>
+	}
+
+	private void writeModelContent(MindMapNodeModel model) throws IOException {
+<span class="nc bnc" id="L614" title="All 2 branches missed.">		if (model.toString().matches(&quot; *&quot;)) {</span>
+<span class="nc" id="L615">			fileout.write(&quot;&amp;nbsp;&quot;);</span>
+<span class="nc" id="L616">		} else {</span>
+<span class="nc" id="L617">			String output = model.toString();</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">			if (HtmlTools.isHtmlNode(output)) {</span>
+<span class="nc" id="L619">				output = HtmlTools.extractHtmlBody(output);</span>
+<span class="nc" id="L620">				fileout.write(HtmlTools.unicodeToHTMLUnicodeEntity(output, false));</span>
+<span class="nc" id="L621">			} else {</span>
+<span class="nc" id="L622">				fileout.write(saveHTML_escapeUnicodeAndSpecialCharacters(model</span>
+<span class="nc" id="L623">						.toString()));</span>
+			}
+		}
+		// note output has to be investigated.
+		// if(model.getNoteText() != null){
+		// // there is a note. give it out:
+		// writeFoldingButtons(&quot;note_&quot;+Math.random());
+		// String output = model.getNoteText();
+		// output = HtmlTools.extractHtmlBody(output);
+		// fileout.write(HtmlTools.unicodeToHTMLUnicodeEntity(output));
+		// }
+<span class="nc" id="L634">	}</span>
+
+	private void writeIcons(MindMapNodeModel model) throws IOException {
+<span class="nc bnc" id="L637" title="All 2 branches missed.">		for (int i = 0; i &lt; model.getIcons().size(); ++i) {</span>
+<span class="nc" id="L638">			fileout.write(&quot;&lt;img src=\&quot;&quot;</span>
+<span class="nc" id="L639">					+ ((MindIcon) model.getIcons().get(i)).getIconFileName()</span>
+<span class="nc" id="L640">					+ &quot;\&quot; alt=\&quot;&quot;</span>
+<span class="nc" id="L641">					+ ((MindIcon) model.getIcons().get(i)).getDescription()</span>
+<span class="nc" id="L642">					+ &quot;\&quot;&gt;&quot;);</span>
+		}
+<span class="nc" id="L644">	}</span>
+
+	private void writeFoldingButtons(String localParentID) throws IOException {
+<span class="nc" id="L647">		fileout.write(&quot;&lt;span id=\&quot;show&quot; + localParentID</span>
+<span class="nc" id="L648">				+ &quot;\&quot; class=\&quot;foldclosed\&quot; onClick=\&quot;show_folder('&quot;</span>
+<span class="nc" id="L649">				+ localParentID + &quot;')\&quot; style=\&quot;POSITION: absolute\&quot;&gt;+&lt;/span&gt; &quot;</span>
+<span class="nc" id="L650">				+ &quot;&lt;span id=\&quot;hide&quot; + localParentID</span>
+<span class="nc" id="L651">				+ &quot;\&quot; class=\&quot;foldopened\&quot; onClick=\&quot;hide_folder('&quot;</span>
+<span class="nc" id="L652">				+ localParentID + &quot;')\&quot;&gt;-&lt;/span&gt;&quot;);</span>
+
+<span class="nc" id="L654">		fileout.write(&quot;\n&quot;);</span>
+<span class="nc" id="L655">	}</span>
+
+	private boolean isHeading(MindMapNodeModel model, int depth) {
+<span class="nc bnc" id="L658" title="All 6 branches missed.">		return basedOnHeadings &amp;&amp; model.hasChildren() &amp;&amp; depth &lt;= 6</span>
+<span class="nc bnc" id="L659" title="All 2 branches missed.">				&amp;&amp; !hasHtml(model);</span>
+	}
+
+	boolean hasHtml(MindMapNodeModel model) {
+<span class="nc" id="L663">		return model.getText().startsWith(&quot;&lt;html&gt;&quot;);</span>
+	}
+
+	private String getProperty(String key) {
+<span class="nc" id="L667">		return Resources.getInstance().getProperty(key);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

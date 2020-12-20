@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AssignAttributeDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.attributeactors</a> &gt; <span class="el_source">AssignAttributeDialog.java</span></div><h1>AssignAttributeDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 10.12.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.modes.mindmapmode.attributeactors;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+
+import javax.swing.AbstractListModel;
+import javax.swing.Box;
+import javax.swing.ButtonGroup;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
+
+import freemind.controller.MapModuleManager.MapModuleChangeObserver;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.Mode;
+import freemind.modes.attributes.Attribute;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.attributes.AttributeRegistryElement;
+import freemind.modes.attributes.NodeAttributeTableModel;
+import freemind.modes.mindmapmode.MindMapMode;
+import freemind.view.MapModule;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.NodeView;
+
+public class AssignAttributeDialog extends JDialog implements
+		AttributesListener, MapModuleChangeObserver {
+	private static class ClonedComboBoxModel extends AbstractListModel
+			implements ComboBoxModel {
+		private AbstractListModel sharedListModel;
+		private Object selectedItem;
+<span class="nc" id="L78">		private ListDataEvent ev = null;</span>
+
+		public ClonedComboBoxModel(ComboBoxModel sharedListModel) {
+<span class="nc" id="L81">			super();</span>
+<span class="nc" id="L82">			this.sharedListModel = (AbstractListModel) sharedListModel;</span>
+<span class="nc" id="L83">		}</span>
+
+		public void addListDataListener(ListDataListener l) {
+<span class="nc" id="L86">			super.addListDataListener(l);</span>
+<span class="nc" id="L87">			sharedListModel.addListDataListener(l);</span>
+<span class="nc" id="L88">		}</span>
+
+		public Object getElementAt(int index) {
+<span class="nc" id="L91">			return sharedListModel.getElementAt(index);</span>
+		}
+
+		public int getSize() {
+<span class="nc" id="L95">			return sharedListModel.getSize();</span>
+		}
+
+		public void removeListDataListener(ListDataListener l) {
+<span class="nc" id="L99">			super.removeListDataListener(l);</span>
+<span class="nc" id="L100">			sharedListModel.removeListDataListener(l);</span>
+<span class="nc" id="L101">		}</span>
+
+		public void setSelectedItem(Object anItem) {
+<span class="nc" id="L104">			selectedItem = anItem;</span>
+<span class="nc" id="L105">			fireContentsChanged(this, -1, -1);</span>
+<span class="nc" id="L106">		}</span>
+
+		private ListDataEvent getContentChangedEvent() {
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if (ev == null) {</span>
+<span class="nc" id="L110">				ev = new ListDataEvent(this, ListDataEvent.CONTENTS_CHANGED,</span>
+<span class="nc" id="L111">						-1, -1);</span>
+			}
+<span class="nc" id="L113">			return ev;</span>
+		}
+
+		public Object getSelectedItem() {
+<span class="nc" id="L117">			return selectedItem;</span>
+		}
+	}
+
+<span class="nc" id="L121">	private abstract class IteratingAction implements ActionListener {</span>
+		public void actionPerformed(ActionEvent e) {
+			try {
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				if (selectedBtn.getModel().isSelected()) {</span>
+<span class="nc" id="L125">					LinkedList selecteds = mapView.getSelecteds();</span>
+<span class="nc" id="L126">					ListIterator iterator = selecteds.listIterator();</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">					while (iterator.hasNext()) {</span>
+<span class="nc" id="L128">						NodeView selectedNodeView = (NodeView) iterator.next();</span>
+<span class="nc" id="L129">						performAction(selectedNodeView);</span>
+					}
+<span class="nc" id="L131">					return;</span>
+				}
+<span class="nc" id="L133">				final NodeView nodeView = mapView.getRoot();</span>
+<span class="nc" id="L134">				iterate(nodeView);</span>
+<span class="nc" id="L135">			} catch (NullPointerException ex) {</span>
+
+			}
+<span class="nc" id="L138">		}</span>
+
+		private void iterate(final NodeView nodeView) {
+<span class="nc" id="L141">			int n = nodeView.getComponentCount();</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">			if (nodeView.isVisible()) {</span>
+<span class="nc" id="L143">				performAction(nodeView);</span>
+			}
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			for (int i = 0; i &lt; n; i++) {</span>
+<span class="nc" id="L146">				Component component = nodeView.getComponent(i);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">				if (component instanceof NodeView) {</span>
+<span class="nc" id="L148">					iterate((NodeView) component);</span>
+				}
+			}
+<span class="nc" id="L151">		}</span>
+
+		private void performAction(NodeView selectedNodeView) {
+<span class="nc bnc" id="L154" title="All 4 branches missed.">			if (!selectedNodeView.isRoot() || !skipRootBtn.isSelected())</span>
+<span class="nc" id="L155">				performAction(selectedNodeView.getModel());</span>
+<span class="nc" id="L156">		}</span>
+
+		abstract protected void performAction(MindMapNode model);
+
+		protected void showEmptyStringErrorMessage() {
+<span class="nc" id="L161">			JOptionPane.showMessageDialog(</span>
+<span class="nc" id="L162">					AssignAttributeDialog.this,</span>
+<span class="nc" id="L163">					Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L164">							&quot;attributes_adding_empty_attribute_error&quot;),</span>
+<span class="nc" id="L165">					Resources.getInstance().getResourceString(&quot;error&quot;),</span>
+<span class="nc" id="L166">					JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L167">		}</span>
+	}
+
+<span class="nc" id="L170">	private class AddAction extends IteratingAction {</span>
+		private String name;
+		private String value;
+
+		protected void performAction(MindMapNode model) {
+<span class="nc" id="L175">			model.createAttributeTableModel();</span>
+<span class="nc" id="L176">			NodeAttributeTableModel attributes = model.getAttributes();</span>
+<span class="nc" id="L177">			attributes.getAttributeController().performInsertRow(attributes,</span>
+<span class="nc" id="L178">					attributes.getRowCount(), name, value);</span>
+<span class="nc" id="L179">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if (attributeNames.getSelectedItem() == null) {</span>
+<span class="nc" id="L183">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L184">				return;</span>
+			}
+
+<span class="nc" id="L187">			name = attributeNames.getSelectedItem().toString();</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			if (name.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L189">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L190">				return;</span>
+			}
+<span class="nc" id="L192">			Object valueSelectedItem = attributeValues.getSelectedItem();</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			value = valueSelectedItem != null ? valueSelectedItem.toString()</span>
+<span class="nc" id="L194">					: &quot;&quot;;</span>
+
+<span class="nc" id="L196">			super.actionPerformed(e);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			if (valueSelectedItem == null) {</span>
+<span class="nc" id="L198">				selectedAttributeChanged(name, attributeValues);</span>
+			}
+<span class="nc" id="L200">		}</span>
+
+	}
+
+<span class="nc" id="L204">	private class DeleteAttributeAction extends IteratingAction {</span>
+		private String name;
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L208">			final Object selectedItem = attributeNames.getSelectedItem();</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">			if (selectedItem == null) {</span>
+<span class="nc" id="L210">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L211">				return;</span>
+			}
+<span class="nc" id="L213">			name = selectedItem.toString();</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">			if (name.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L215">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L216">				return;</span>
+			}
+<span class="nc" id="L218">			super.actionPerformed(e);</span>
+<span class="nc" id="L219">		}</span>
+
+		protected void performAction(MindMapNode model) {
+<span class="nc" id="L222">			NodeAttributeTableModel attributes = model.getAttributes();</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">			for (int i = attributes.getRowCount() - 1; i &gt;= 0; i--) {</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">				if (attributes.getAttribute(i).getName().equals(name)) {</span>
+<span class="nc" id="L225">					attributes.getAttributeController().performRemoveRow(</span>
+<span class="nc" id="L226">							attributes, i);</span>
+				}
+			}
+<span class="nc" id="L229">		}</span>
+	}
+
+<span class="nc" id="L232">	private class DeleteValueAction extends IteratingAction {</span>
+		private String name;
+		private String value;
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L237" title="All 2 branches missed.">			if (attributeNames.getSelectedItem() == null) {</span>
+<span class="nc" id="L238">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L239">				return;</span>
+			}
+
+<span class="nc" id="L242">			name = attributeNames.getSelectedItem().toString();</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">			if (name.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L244">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L245">				return;</span>
+			}
+<span class="nc" id="L247">			Object valueSelectedItem = attributeValues.getSelectedItem();</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">			value = valueSelectedItem != null ? valueSelectedItem.toString()</span>
+<span class="nc" id="L249">					: &quot;&quot;;</span>
+
+<span class="nc" id="L251">			super.actionPerformed(e);</span>
+<span class="nc" id="L252">		}</span>
+
+		protected void performAction(MindMapNode model) {
+<span class="nc" id="L255">			NodeAttributeTableModel attributes = model.getAttributes();</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			for (int i = attributes.getRowCount() - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L257">				Attribute attribute = attributes.getAttribute(i);</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">				if (attribute.getName().equals(name)</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">						&amp;&amp; attribute.getValue().equals(value)) {</span>
+<span class="nc" id="L260">					attributes.getAttributeController().performRemoveRow(</span>
+<span class="nc" id="L261">							attributes, i);</span>
+				}
+			}
+<span class="nc" id="L264">		}</span>
+	}
+
+<span class="nc" id="L267">	private class ReplaceValueAction extends IteratingAction {</span>
+		private String name;
+		private String value;
+		private String replacingName;
+		private String replacingValue;
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (attributeNames.getSelectedItem() == null) {</span>
+<span class="nc" id="L275">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L276">				return;</span>
+			}
+<span class="nc bnc" id="L278" title="All 2 branches missed.">			if (replacingAttributeNames.getSelectedItem() == null) {</span>
+<span class="nc" id="L279">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L280">				return;</span>
+			}
+<span class="nc" id="L282">			name = attributeNames.getSelectedItem().toString();</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">			if (name.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L284">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L285">				return;</span>
+			}
+<span class="nc" id="L287">			replacingName = replacingAttributeNames.getSelectedItem()</span>
+<span class="nc" id="L288">					.toString();</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">			if (replacingName.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L290">				showEmptyStringErrorMessage();</span>
+<span class="nc" id="L291">				return;</span>
+			}
+<span class="nc" id="L293">			Object valueSelectedItem = attributeValues.getSelectedItem();</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">			value = valueSelectedItem != null ? valueSelectedItem.toString()</span>
+<span class="nc" id="L295">					: &quot;&quot;;</span>
+<span class="nc" id="L296">			Object replacingValueSelectedItem = replacingAttributeValues</span>
+<span class="nc" id="L297">					.getSelectedItem();</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">			replacingValue = replacingValueSelectedItem != null ? replacingValueSelectedItem</span>
+<span class="nc" id="L299">					.toString() : &quot;&quot;;</span>
+<span class="nc" id="L300">			super.actionPerformed(e);</span>
+<span class="nc" id="L301">		}</span>
+
+		protected void performAction(MindMapNode model) {
+<span class="nc" id="L304">			NodeAttributeTableModel attributes = model.getAttributes();</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			for (int i = attributes.getRowCount() - 1; i &gt;= 0; i--) {</span>
+<span class="nc" id="L306">				Attribute attribute = attributes.getAttribute(i);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">				if (attribute.getName().equals(name)</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">						&amp;&amp; attribute.getValue().equals(value)) {</span>
+<span class="nc" id="L309">					attributes.getAttributeController().performRemoveRow(</span>
+<span class="nc" id="L310">							attributes, i);</span>
+<span class="nc" id="L311">					attributes.insertRow(i, replacingName, replacingValue);</span>
+				}
+			}
+<span class="nc" id="L314">		}</span>
+	}
+
+<span class="nc" id="L317">	private static final Dimension maxButtonDimension = new Dimension(1000,</span>
+<span class="nc" id="L318">			1000);</span>
+
+	private MapView mapView;
+	private JComboBox attributeNames;
+	private JComboBox attributeValues;
+	private JComboBox replacingAttributeNames;
+	private JComboBox replacingAttributeValues;
+
+	private JRadioButton selectedBtn;
+
+	private JRadioButton visibleBtn;
+
+	private JCheckBox skipRootBtn;
+
+	public AssignAttributeDialog(MapView mapView) {
+<span class="nc" id="L333">		super(JOptionPane.getFrameForComponent(mapView), Tools</span>
+<span class="nc" id="L334">				.removeMnemonic(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L335">						&quot;attributes_assign_dialog&quot;)), false);</span>
+
+<span class="nc" id="L337">		final Border actionBorder = new MatteBorder(2, 2, 2, 2, Color.BLACK);</span>
+<span class="nc" id="L338">		final Border emptyBorder = new EmptyBorder(5, 5, 5, 5);</span>
+<span class="nc" id="L339">		final Border btnBorder = new EmptyBorder(2, 2, 2, 2);</span>
+
+<span class="nc" id="L341">		selectedBtn = new JRadioButton();</span>
+<span class="nc" id="L342">		Tools.setLabelAndMnemonic(selectedBtn, Resources.getInstance()</span>
+<span class="nc" id="L343">				.getResourceString(&quot;attributes_for_selected&quot;));</span>
+<span class="nc" id="L344">		selectedBtn.setSelected(true);</span>
+<span class="nc" id="L345">		visibleBtn = new JRadioButton();</span>
+<span class="nc" id="L346">		Tools.setLabelAndMnemonic(visibleBtn, Resources.getInstance()</span>
+<span class="nc" id="L347">				.getResourceString(&quot;attributes_for_visible&quot;));</span>
+<span class="nc" id="L348">		final ButtonGroup group = new ButtonGroup();</span>
+<span class="nc" id="L349">		group.add(selectedBtn);</span>
+<span class="nc" id="L350">		group.add(visibleBtn);</span>
+
+<span class="nc" id="L352">		skipRootBtn = new JCheckBox();</span>
+<span class="nc" id="L353">		Tools.setLabelAndMnemonic(skipRootBtn, Resources.getInstance()</span>
+<span class="nc" id="L354">				.getResourceString(&quot;attributes_skip_root&quot;));</span>
+<span class="nc" id="L355">		skipRootBtn.setSelected(true);</span>
+
+<span class="nc" id="L357">		final Box selectionBox = Box.createHorizontalBox();</span>
+<span class="nc" id="L358">		selectionBox.setBorder(emptyBorder);</span>
+<span class="nc" id="L359">		selectionBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L360">		selectionBox.add(selectedBtn);</span>
+<span class="nc" id="L361">		selectionBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L362">		selectionBox.add(visibleBtn);</span>
+<span class="nc" id="L363">		selectionBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L364">		selectionBox.add(skipRootBtn);</span>
+<span class="nc" id="L365">		selectionBox.add(Box.createHorizontalGlue());</span>
+
+<span class="nc" id="L367">		getContentPane().add(selectionBox, BorderLayout.NORTH);</span>
+
+<span class="nc" id="L369">		final JButton addBtn = new JButton();</span>
+<span class="nc" id="L370">		Tools.setLabelAndMnemonic(addBtn, Resources.getInstance()</span>
+<span class="nc" id="L371">				.getResourceString(&quot;filter_add&quot;));</span>
+<span class="nc" id="L372">		addBtn.addActionListener(new AddAction());</span>
+<span class="nc" id="L373">		addBtn.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L375">		JButton deleteAttributeBtn = new JButton();</span>
+<span class="nc" id="L376">		Tools.setLabelAndMnemonic(deleteAttributeBtn, Resources.getInstance()</span>
+<span class="nc" id="L377">				.getResourceString(&quot;attribute_delete&quot;));</span>
+<span class="nc" id="L378">		deleteAttributeBtn.addActionListener(new DeleteAttributeAction());</span>
+<span class="nc" id="L379">		deleteAttributeBtn.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L381">		JButton deleteAttributeValueBtn = new JButton();</span>
+<span class="nc" id="L382">		Tools.setLabelAndMnemonic(deleteAttributeValueBtn, Resources</span>
+<span class="nc" id="L383">				.getInstance().getResourceString(&quot;attribute_delete_value&quot;));</span>
+<span class="nc" id="L384">		deleteAttributeValueBtn.addActionListener(new DeleteValueAction());</span>
+<span class="nc" id="L385">		deleteAttributeValueBtn.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L387">		JButton replaceBtn = new JButton();</span>
+<span class="nc" id="L388">		Tools.setLabelAndMnemonic(replaceBtn, Resources.getInstance()</span>
+<span class="nc" id="L389">				.getResourceString(&quot;attribute_replace&quot;));</span>
+<span class="nc" id="L390">		replaceBtn.addActionListener(new ReplaceValueAction());</span>
+<span class="nc" id="L391">		replaceBtn.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L393">		Tools.addEscapeActionToDialog(this);</span>
+
+<span class="nc" id="L395">		final String pattern = &quot;XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&quot;;</span>
+<span class="nc" id="L396">		final JLabel patternLabel = new JLabel(pattern);</span>
+<span class="nc" id="L397">		final Dimension comboBoxMaximumSize = patternLabel.getPreferredSize();</span>
+<span class="nc" id="L398">		comboBoxMaximumSize.width += 4;</span>
+<span class="nc" id="L399">		comboBoxMaximumSize.height += 4;</span>
+<span class="nc" id="L400">		attributeNames = new JComboBox();</span>
+<span class="nc" id="L401">		attributeNames.setMaximumSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L402">		attributeNames.setPreferredSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L403">		attributeNames.addItemListener(new ItemListener() {</span>
+			public void itemStateChanged(ItemEvent e) {
+<span class="nc" id="L405">				selectedAttributeChanged(e.getItem(), attributeValues);</span>
+<span class="nc" id="L406">			}</span>
+		});
+<span class="nc" id="L408">		attributeValues = new JComboBox();</span>
+<span class="nc" id="L409">		attributeValues.setMaximumSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L410">		attributeValues.setPreferredSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L411">		replacingAttributeNames = new JComboBox();</span>
+<span class="nc" id="L412">		replacingAttributeNames.setMaximumSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L413">		replacingAttributeNames.setPreferredSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L414">		replacingAttributeNames.addItemListener(new ItemListener() {</span>
+			public void itemStateChanged(ItemEvent e) {
+<span class="nc" id="L416">				selectedAttributeChanged(e.getItem(), replacingAttributeValues);</span>
+<span class="nc" id="L417">			}</span>
+		});
+<span class="nc" id="L419">		replacingAttributeValues = new JComboBox();</span>
+<span class="nc" id="L420">		replacingAttributeValues.setMaximumSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L421">		replacingAttributeValues.setPreferredSize(comboBoxMaximumSize);</span>
+
+<span class="nc" id="L423">		final Box addDeleteBtnBox = Box.createVerticalBox();</span>
+<span class="nc" id="L424">		addDeleteBtnBox.setBorder(btnBorder);</span>
+<span class="nc" id="L425">		addDeleteBtnBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L426">		addDeleteBtnBox.add(addBtn);</span>
+<span class="nc" id="L427">		addDeleteBtnBox.add(deleteAttributeBtn);</span>
+<span class="nc" id="L428">		addDeleteBtnBox.add(deleteAttributeValueBtn);</span>
+<span class="nc" id="L429">		addDeleteBtnBox.add(Box.createVerticalGlue());</span>
+
+<span class="nc" id="L431">		final Box addDeleteBox = Box.createHorizontalBox();</span>
+<span class="nc" id="L432">		addDeleteBox.setBorder(actionBorder);</span>
+<span class="nc" id="L433">		addDeleteBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L434">		addDeleteBox.add(addDeleteBtnBox);</span>
+<span class="nc" id="L435">		addDeleteBox.add(Box.createHorizontalStrut(5));</span>
+<span class="nc" id="L436">		addDeleteBox.add(attributeNames);</span>
+<span class="nc" id="L437">		addDeleteBox.add(Box.createHorizontalStrut(5));</span>
+<span class="nc" id="L438">		addDeleteBox.add(attributeValues);</span>
+<span class="nc" id="L439">		addDeleteBox.add(Box.createHorizontalStrut(5));</span>
+
+<span class="nc" id="L441">		final Box outerReplaceBox = Box.createVerticalBox();</span>
+<span class="nc" id="L442">		outerReplaceBox.setBorder(actionBorder);</span>
+
+<span class="nc" id="L444">		final Box replaceBox = Box.createHorizontalBox();</span>
+<span class="nc" id="L445">		replaceBox.setBorder(btnBorder);</span>
+<span class="nc" id="L446">		replaceBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L447">		replaceBox.add(replaceBtn);</span>
+<span class="nc" id="L448">		replaceBox.add(Box.createHorizontalStrut(5));</span>
+<span class="nc" id="L449">		replaceBox.add(replacingAttributeNames);</span>
+<span class="nc" id="L450">		replaceBox.add(Box.createHorizontalStrut(5));</span>
+<span class="nc" id="L451">		replaceBox.add(replacingAttributeValues);</span>
+<span class="nc" id="L452">		replaceBox.add(Box.createHorizontalStrut(5));</span>
+
+<span class="nc" id="L454">		outerReplaceBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L455">		outerReplaceBox.add(replaceBox);</span>
+<span class="nc" id="L456">		outerReplaceBox.add(Box.createVerticalGlue());</span>
+
+<span class="nc" id="L458">		final Box actionBox = Box.createVerticalBox();</span>
+<span class="nc" id="L459">		actionBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L460">		actionBox.add(addDeleteBox);</span>
+<span class="nc" id="L461">		actionBox.add(Box.createVerticalStrut(5));</span>
+<span class="nc" id="L462">		actionBox.add(outerReplaceBox);</span>
+<span class="nc" id="L463">		actionBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L464">		getContentPane().add(actionBox, BorderLayout.CENTER);</span>
+
+<span class="nc" id="L466">		final JButton closeBtn = new JButton();</span>
+<span class="nc" id="L467">		Tools.setLabelAndMnemonic(closeBtn, Resources.getInstance()</span>
+<span class="nc" id="L468">				.getResourceString(&quot;close&quot;));</span>
+<span class="nc" id="L469">		closeBtn.addActionListener(new ActionListener() {</span>
+
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L472">				dispose();</span>
+<span class="nc" id="L473">			}</span>
+
+		});
+
+<span class="nc" id="L477">		final Box bottomBox = Box.createHorizontalBox();</span>
+<span class="nc" id="L478">		bottomBox.setBorder(emptyBorder);</span>
+<span class="nc" id="L479">		bottomBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L480">		bottomBox.add(closeBtn);</span>
+<span class="nc" id="L481">		bottomBox.add(Box.createHorizontalGlue());</span>
+
+<span class="nc" id="L483">		getContentPane().add(bottomBox, BorderLayout.SOUTH);</span>
+<span class="nc" id="L484">		pack();</span>
+<span class="nc" id="L485">		comboBoxMaximumSize.width = 1000;</span>
+<span class="nc" id="L486">		attributeNames.setMaximumSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L487">		attributeValues.setMaximumSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L488">		replacingAttributeNames.setMaximumSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L489">		replacingAttributeValues.setMaximumSize(comboBoxMaximumSize);</span>
+<span class="nc" id="L490">		mapChanged(mapView);</span>
+<span class="nc" id="L491">		mapView.getController().getMapModuleManager().addListener(this);</span>
+<span class="nc" id="L492">	}</span>
+
+	public void mapChanged(MapView currentMapView) {
+<span class="nc bnc" id="L495" title="All 2 branches missed.">		if (mapView != null) {</span>
+<span class="nc" id="L496">			mapView.getModel().getRegistry().getAttributes()</span>
+<span class="nc" id="L497">					.removeAttributesListener(this);</span>
+		}
+<span class="nc" id="L499">		mapView = currentMapView;</span>
+<span class="nc" id="L500">		MindMap map = currentMapView.getModel();</span>
+<span class="nc" id="L501">		AttributeRegistry attributes = map.getRegistry().getAttributes();</span>
+<span class="nc" id="L502">		attributes.addAttributesListener(this);</span>
+<span class="nc" id="L503">		attributesChanged();</span>
+<span class="nc" id="L504">	}</span>
+
+	private void selectedAttributeChanged(Object selectedAttributeName,
+			JComboBox values) {
+<span class="nc" id="L508">		AttributeRegistry attributes = mapView.getModel().getRegistry()</span>
+<span class="nc" id="L509">				.getAttributes();</span>
+		try {
+<span class="nc" id="L511">			AttributeRegistryElement element = attributes</span>
+<span class="nc" id="L512">					.getElement(selectedAttributeName.toString());</span>
+<span class="nc" id="L513">			ComboBoxModel selectedValues = element.getValues();</span>
+<span class="nc" id="L514">			values.setModel(new ClonedComboBoxModel(selectedValues));</span>
+			try {
+<span class="nc" id="L516">				Object firstValue = selectedValues.getElementAt(0);</span>
+<span class="nc" id="L517">				values.setSelectedItem(firstValue);</span>
+<span class="nc" id="L518">			} catch (ArrayIndexOutOfBoundsException ex) {</span>
+			}
+<span class="nc bnc" id="L520" title="All 2 branches missed.">			values.setEditable(!element.isRestricted());</span>
+<span class="nc" id="L521">		} catch (NoSuchElementException ex) {</span>
+<span class="nc bnc" id="L522" title="All 2 branches missed.">			values.setEditable(!selectedAttributeName.toString().equals(&quot;&quot;));</span>
+		}
+<span class="nc" id="L524">	}</span>
+
+	public void attributesChanged(ChangeEvent e) {
+<span class="nc" id="L527">		attributesChanged();</span>
+<span class="nc" id="L528">	}</span>
+
+	private void attributesChanged() {
+<span class="nc" id="L531">		AttributeRegistry attributes = mapView.getModel().getRegistry()</span>
+<span class="nc" id="L532">				.getAttributes();</span>
+<span class="nc" id="L533">		ComboBoxModel names = attributes.getComboBoxModel();</span>
+<span class="nc" id="L534">		attributeNames.setModel(new ClonedComboBoxModel(names));</span>
+<span class="nc bnc" id="L535" title="All 2 branches missed.">		attributeNames.setEditable(!attributes.isRestricted());</span>
+<span class="nc" id="L536">		replacingAttributeNames.setModel(new ClonedComboBoxModel(names));</span>
+<span class="nc bnc" id="L537" title="All 2 branches missed.">		replacingAttributeNames.setEditable(!attributes.isRestricted());</span>
+
+<span class="nc bnc" id="L539" title="All 2 branches missed.">		if (attributes.size() &gt; 0) {</span>
+<span class="nc" id="L540">			Object first = names.getElementAt(0);</span>
+<span class="nc" id="L541">			attributeNames.setSelectedItem(first);</span>
+<span class="nc" id="L542">			replacingAttributeNames.setSelectedItem(first);</span>
+<span class="nc" id="L543">			selectedAttributeChanged(attributeNames.getSelectedItem(),</span>
+<span class="nc" id="L544">					attributeValues);</span>
+<span class="nc" id="L545">			selectedAttributeChanged(replacingAttributeNames.getSelectedItem(),</span>
+<span class="nc" id="L546">					replacingAttributeValues);</span>
+<span class="nc" id="L547">		} else {</span>
+<span class="nc" id="L548">			attributeValues.setModel(new DefaultComboBoxModel());</span>
+<span class="nc" id="L549">			attributeValues.setEditable(false);</span>
+<span class="nc" id="L550">			replacingAttributeValues.setModel(new DefaultComboBoxModel());</span>
+<span class="nc" id="L551">			replacingAttributeValues.setEditable(false);</span>
+		}
+<span class="nc" id="L553">	}</span>
+
+	public boolean isMapModuleChangeAllowed(MapModule oldMapModule,
+			Mode oldMode, MapModule newMapModule, Mode newMode) {
+<span class="nc bnc" id="L557" title="All 4 branches missed.">		return !isVisible() || newMode instanceof MindMapMode;</span>
+	}
+
+	public void beforeMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+<span class="nc" id="L562">	}</span>
+
+	public void afterMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+<span class="nc bnc" id="L566" title="All 2 branches missed.">		if (newMapModule != null)</span>
+<span class="nc" id="L567">			mapChanged(newMapModule.getView());</span>
+<span class="nc" id="L568">	}</span>
+
+	public void numberOfOpenMapInformation(int number, int pIndex) {
+<span class="nc" id="L571">	}</span>
+
+	public void afterMapClose(MapModule pOldMapModule, Mode pOldMode) {
+<span class="nc" id="L574">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

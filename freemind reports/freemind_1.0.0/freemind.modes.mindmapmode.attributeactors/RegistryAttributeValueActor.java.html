@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>RegistryAttributeValueActor.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.attributeactors</a> &gt; <span class="el_source">RegistryAttributeValueActor.java</span></div><h1>RegistryAttributeValueActor.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 29.01.2006
+ * Created by Dimitri Polivaev
+ */
+package freemind.modes.mindmapmode.attributeactors;
+
+import freemind.controller.actions.generated.instance.RegistryAttributeValueElementaryAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.modes.attributes.AttributeRegistryElement;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.AbstractActorXml;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+public class RegistryAttributeValueActor extends AbstractActorXml {
+
+	public RegistryAttributeValueActor(MindMapController mindMapModeController) {
+<span class="nc" id="L36">		super(mindMapModeController);</span>
+<span class="nc" id="L37">	}</span>
+
+	public XmlAction createAction(String name, String value) {
+<span class="nc" id="L40">		RegistryAttributeValueElementaryAction action = new RegistryAttributeValueElementaryAction();</span>
+<span class="nc" id="L41">		action.setName(name);</span>
+<span class="nc" id="L42">		action.setValue(value);</span>
+<span class="nc" id="L43">		return action;</span>
+	}
+
+	public ActionPair createActionPair(String name, String value) {
+<span class="nc" id="L47">		ActionPair actionPair = new ActionPair(</span>
+<span class="nc" id="L48">				createAction(name, value),</span>
+<span class="nc" id="L49">				((MindMapModeAttributeController) getAttributeController()).unregistryAttributeValueActor</span>
+<span class="nc" id="L50">						.createAction(name, value));</span>
+<span class="nc" id="L51">		return actionPair;</span>
+	}
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (action instanceof RegistryAttributeValueElementaryAction) {</span>
+<span class="nc" id="L56">			RegistryAttributeValueElementaryAction registryAttributeValueAction = (RegistryAttributeValueElementaryAction) action;</span>
+<span class="nc" id="L57">			act(registryAttributeValueAction.getName(),</span>
+<span class="nc" id="L58">					registryAttributeValueAction.getValue());</span>
+		}
+
+<span class="nc" id="L61">	}</span>
+
+	private void act(String name, String value) {
+<span class="nc" id="L64">		AttributeRegistryElement elem = getAttributeRegistry().getElement(name);</span>
+<span class="nc" id="L65">		elem.addValue(value);</span>
+<span class="nc" id="L66">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L69">		return RegistryAttributeValueElementaryAction.class;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

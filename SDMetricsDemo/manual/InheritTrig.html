@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Inherited Attributes and Triggers</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ContextDefault.html">Prev</a> - <a href="OptionalID.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetaTrans.html">7 SDMetrics Metamodel and XMI Transformation Files</a> > <a href="TransFile.html">7.2 XMI Transformation Files</a> > <a href="TrigMisc.html">7.2.3 Tips on Writing XMI Transformations</a> > 7.2.3.4 Inherited Attributes and Triggers
+<hr>
+<h4><a name="InheritTrig"></a>7.2.3.4 Inherited Attributes and Triggers</h4>
+
+A metamodel element can inherit attributes from a parent metamodel
+element. When defining XMI transformations, the child metamodel
+element automatically inherits the triggers that are defined for the
+parent's attributes. Therefore, you do not need to define triggers for
+inherited attributes, but only for the additional attributes of a
+metamodel element.<p>
+
+If you define a trigger for an inherited attribute, all inherited
+triggers for that attribute are overridden, and only the newly defined
+trigger(s) for that attribute are used for the child element.<p>
+
+Special care needs to be taken if there are multiple
+<tt>xmitransformation</tt>s defined for the parent metamodel
+element. In that case, one <tt>xmitransformation</tt> is chosen
+arbitrarily to determine the inherited triggers for the child
+metamodel element. Therefore, you have to make sure that any of the
+possible <tt>xmitransformation</tt>s is suitable to provide the
+inherited triggers for the child. Otherwise, explicitly provide the
+proper definitions of all triggers for the child metamodel element.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ContextDefault.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="TrigMisc.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="OptionalID.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;7.2.3.3 ""Context" Attribute Defaults"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;7.2.3.5 "Optional XMI ID"</td></tr></table>
+
+</body>
+</html>

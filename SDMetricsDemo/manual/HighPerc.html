@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Highlighting Outliers</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="TableView.html">Prev</a> - <a href="BrowseMet.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="TableView.html">4.4 The View 'Metric Data Tables'</a> > 4.4.1 Highlighting Outliers
+<hr>
+<h3><a name="HighPerc"></a>4.4.1 Highlighting Outliers</h3>
+
+The table view supports highlighting of outliers based on
+one of two criteria: percentiles or distance from the mean.<p>
+
+<b>Percentiles</b><p>
+
+This option highlights values above or below a given percentile. For
+instance, you may choose to highlight, in each column, the metric
+values equal or above the 95th percentile for the respective
+metric. This highlights the top 5% metric values in each column.<p>
+
+You pick the percentile you wish to highlight from the top of the
+highlight dropdown list in the control panel. If you choose a
+percentile above the median (50th percentile), all values above that
+percentile are highlighted. If you choose a percentile below the
+median, the values below that percentile are highlighted.<p>
+
+SDMetrics calculates percentiles using the empirical
+distribution function with averages. The list of percentiles 
+is configurable, see <a href="Percentiles.html">Section&nbsp;4.16.2 "Percentiles"</a>.<p>
+
+<b>Distance from the mean</b><p>
+
+This option highlights metric values with a certain distance from the
+mean value of the metric. The distance is expressed in multiples of
+the metric's standard deviation. For example, you may choose to
+highlight metric values larger than the mean plus four times the
+standard deviation of the metric. Simply select the appropriate
+multiple from the highlight dropdown list.<p>
+
+"Distance from the mean" is meaningful for metrics defined on an
+interval or ratio scale. "Percentiles" are meaningful for all ordinal
+scale metrics.<p>
+
+To remove any highlighting from the table, choose the first entry
+"nothing" from the highlight dropdown list.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="TableView.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="TableView.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="BrowseMet.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.4 "The View 'Metric Data Tables'"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.5 "The View 'Histograms'"</td></tr></table>
+
+</body>
+</html>

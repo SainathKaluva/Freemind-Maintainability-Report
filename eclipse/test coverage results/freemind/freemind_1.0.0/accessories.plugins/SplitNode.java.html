@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>SplitNode.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">SplitNode.java</span></div><h1>SplitNode.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 19.04.2004
+ *
+ */
+package accessories.plugins;
+
+import java.awt.EventQueue;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.List;
+import java.util.ListIterator;
+
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Element;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLEditorKit;
+
+import freemind.main.FixedHTMLWriter;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+import freemind.view.mindmapview.MapView;
+
+/**
+ * @author Dimitri Polivaev
+ * 
+ */
+public class SplitNode extends MindMapNodeHookAdapter {
+
+	/**
+	 * 
+	 */
+	public SplitNode() {
+<span class="nc" id="L54">		super();</span>
+<span class="nc" id="L55">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.NodeHook#invoke(freemind.modes.MindMapNode,
+	 * java.util.List)
+	 */
+	public void invoke(MindMapNode node) {
+<span class="nc" id="L64">		super.invoke(node);</span>
+<span class="nc" id="L65">		final List list = getMindMapController().getSelecteds();</span>
+<span class="nc" id="L66">		final ListIterator listIterator = list.listIterator();</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		while (listIterator.hasNext()) {</span>
+<span class="nc" id="L68">			MindMapNode next = (MindMapNode) listIterator.next();</span>
+<span class="nc" id="L69">			splitNode(next);</span>
+		}
+<span class="nc" id="L71">	}</span>
+
+	private void splitNode(MindMapNode node) {
+<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (node.isRoot()) {</span>
+<span class="nc" id="L75">			return;</span>
+		}
+<span class="nc" id="L77">		String text = node.toString();</span>
+<span class="nc" id="L78">		String[] parts = splitNode(text);</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">		if (parts == null || parts.length == 1) {</span>
+<span class="nc" id="L80">			return;</span>
+		}
+<span class="nc" id="L82">		final MindMapController c = getMindMapController();</span>
+<span class="nc" id="L83">		int firstPartNumber = 0;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		while (parts[firstPartNumber] == null) {</span>
+<span class="nc" id="L85">			firstPartNumber++;</span>
+		}
+<span class="nc" id="L87">		c.setNodeText(node, parts[firstPartNumber]);</span>
+<span class="nc" id="L88">		MindMapNode parent = node.getParentNode();</span>
+<span class="nc" id="L89">		final int nodePosition = parent.getChildPosition(node) + 1;</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		for (int i = parts.length - 1; i &gt; firstPartNumber; i--) {</span>
+<span class="nc" id="L91">			final MindMapNode lowerNode = c.addNewNode(parent, nodePosition,</span>
+<span class="nc" id="L92">					node.isLeft());</span>
+<span class="nc" id="L93">			final String part = parts[i];</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (part == null) {</span>
+<span class="nc" id="L95">				continue;</span>
+			}
+<span class="nc" id="L97">			lowerNode.setColor(node.getColor());</span>
+<span class="nc" id="L98">			lowerNode.setFont(node.getFont());</span>
+<span class="nc" id="L99">			c.setNodeText(lowerNode, part);</span>
+<span class="nc" id="L100">			EventQueue.invokeLater(new Runnable() {</span>
+				public void run() {
+<span class="nc" id="L102">					final MapView mapView = c.getView();</span>
+<span class="nc" id="L103">					mapView.toggleSelected(mapView.getNodeView(lowerNode));</span>
+<span class="nc" id="L104">				}</span>
+			});
+		}
+<span class="nc" id="L107">	}</span>
+
+	private String[] splitNode(String text) {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (text.startsWith(&quot;&lt;html&gt;&quot;)) {</span>
+<span class="nc" id="L111">			String[] parts = null;</span>
+<span class="nc" id="L112">			HTMLEditorKit kit = new HTMLEditorKit();</span>
+<span class="nc" id="L113">			HTMLDocument doc = new HTMLDocument();</span>
+<span class="nc" id="L114">			StringReader buf = new StringReader(text);</span>
+			try {
+<span class="nc" id="L116">				kit.read(buf, doc, 0);</span>
+<span class="nc" id="L117">				Element parent = getParentElement(doc);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">				if (parent == null) {</span>
+<span class="nc" id="L119">					return null;</span>
+				}
+<span class="nc" id="L121">				final int elementCount = parent.getElementCount();</span>
+<span class="nc" id="L122">				int notEmptyElementCount = 0;</span>
+<span class="nc" id="L123">				parts = new String[elementCount];</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">				for (int i = 0; i &lt; elementCount; i++) {</span>
+<span class="nc" id="L125">					Element current = parent.getElement(i);</span>
+<span class="nc" id="L126">					final int start = current.getStartOffset();</span>
+<span class="nc" id="L127">					final int end = current.getEndOffset();</span>
+<span class="nc" id="L128">					final String paragraphText = doc</span>
+<span class="nc" id="L129">							.getText(start, end - start).trim();</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">					if (paragraphText.length() &gt; 0) {</span>
+<span class="nc" id="L131">						StringWriter out = new StringWriter();</span>
+<span class="nc" id="L132">						new FixedHTMLWriter(out, doc, start, end - start)</span>
+<span class="nc" id="L133">								.write();</span>
+<span class="nc" id="L134">						final String string = out.toString();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">						if (!string.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L136">							parts[i] = string;</span>
+<span class="nc" id="L137">							notEmptyElementCount++;</span>
+<span class="nc" id="L138">						} else {</span>
+<span class="nc" id="L139">							parts[i] = null;</span>
+						}
+					}
+				}
+<span class="nc bnc" id="L143" title="All 2 branches missed.">				if (notEmptyElementCount &lt;= 1) {</span>
+<span class="nc" id="L144">					return null;</span>
+				}
+<span class="nc" id="L146">			} catch (IOException e) {</span>
+<span class="nc" id="L147">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L148">			} catch (BadLocationException e) {</span>
+<span class="nc" id="L149">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+<span class="nc" id="L151">			return parts;</span>
+		}
+<span class="nc" id="L153">		return text.split(&quot;\n&quot;);</span>
+	}
+
+	private Element getParentElement(HTMLDocument doc) {
+<span class="nc" id="L157">		final Element htmlRoot = doc.getDefaultRootElement();</span>
+<span class="nc" id="L158">		Element parentCandidate = htmlRoot.getElement(htmlRoot</span>
+<span class="nc" id="L159">				.getElementCount() - 1);</span>
+		do {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (parentCandidate.getElementCount() &gt; 1) {</span>
+<span class="nc" id="L162">				return parentCandidate;</span>
+			}
+<span class="nc" id="L164">			parentCandidate = parentCandidate.getElement(0);</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">		} while (!(parentCandidate.isLeaf() || parentCandidate.getName()</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">				.equalsIgnoreCase(&quot;p-implied&quot;)));</span>
+<span class="nc" id="L167">		return null;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

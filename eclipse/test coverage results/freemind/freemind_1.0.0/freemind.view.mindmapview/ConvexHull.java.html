@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ConvexHull.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">ConvexHull.java</span></div><h1>ConvexHull.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+// ConvexHull.java (c) fc
+// 
+// Adapted from Sedgewick, Algorithms
+//
+package freemind.view.mindmapview;
+
+import java.awt.Point;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.Vector;
+
+<span class="nc" id="L32">public class ConvexHull {</span>
+
+	protected int ccw(Point p0, Point p1, Point p2) {
+		int dx1, dx2, dy1, dy2;
+<span class="nc" id="L36">		dx1 = p1.x - p0.x;</span>
+<span class="nc" id="L37">		dy1 = p1.y - p0.y;</span>
+<span class="nc" id="L38">		dx2 = p2.x - p0.x;</span>
+<span class="nc" id="L39">		dy2 = p2.y - p0.y;</span>
+<span class="nc" id="L40">		int comp = dx1 * dy2 - dy1 * dx2;</span>
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if (comp &gt; 0)</span>
+<span class="nc" id="L42">			return 1;</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		if (comp &lt; 0)</span>
+<span class="nc" id="L44">			return -1;</span>
+<span class="nc bnc" id="L45" title="All 4 branches missed.">		if ((dx1 * dx2 &lt; 0) || (dy1 * dy2 &lt; 0))</span>
+<span class="nc" id="L46">			return -1;</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">		if (dx1 * dx1 + dy1 * dy1 &gt;= dx2 * dx2 + dy2 * dy2)</span>
+<span class="nc" id="L48">			return 0;</span>
+<span class="nc" id="L49">		return 1;</span>
+	}
+
+	protected class thetaComparator implements Comparator {
+		Point p0;
+
+<span class="nc" id="L55">		public thetaComparator(Point p0) {</span>
+<span class="nc" id="L56">			this.p0 = new Point(p0);</span>
+<span class="nc" id="L57">		}</span>
+
+		/* the &lt; relation. */
+		public int compare(Object p1, Object p2) {
+<span class="nc" id="L61">			double comp = theta(p0, (Point) p1) - theta(p0, (Point) p2);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			if (((Point) p1).equals(p2))</span>
+<span class="nc" id="L63">				return 0;</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (comp &gt; 0)</span>
+<span class="nc" id="L65">				return 1;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			if (comp &lt; 0)</span>
+<span class="nc" id="L67">				return -1;</span>
+			// here, the points are collinear with p0 (i.e. p0,p1,p2 are on one
+			// line). So we reverse the compare relation to get that nearer
+			// points are greater.
+			// we take the point that is nearer to p0:
+			int dx1, dx2, dy1, dy2;
+<span class="nc" id="L73">			dx1 = ((Point) p1).x - ((Point) p0).x;</span>
+<span class="nc" id="L74">			dy1 = ((Point) p1).y - ((Point) p0).y;</span>
+<span class="nc" id="L75">			dx2 = ((Point) p2).x - ((Point) p0).x;</span>
+<span class="nc" id="L76">			dy2 = ((Point) p2).y - ((Point) p0).y;</span>
+<span class="nc" id="L77">			int comp2 = (dx1 * dx1 + dy1 * dy1) - (dx2 * dx2 + dy2 * dy2);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (comp2 &gt; 0)</span>
+<span class="nc" id="L79">				return -1;</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">			if (comp2 &lt; 0)</span>
+<span class="nc" id="L81">				return 1;</span>
+<span class="nc" id="L82">			return 0;</span>
+		}
+
+		double theta(Point p1, Point p2) {
+			int dx, dy, ax, ay;
+			double t;
+<span class="nc" id="L88">			dx = p2.x - p1.x;</span>
+<span class="nc" id="L89">			ax = Math.abs(dx);</span>
+<span class="nc" id="L90">			dy = p2.y - p1.y;</span>
+<span class="nc" id="L91">			ay = Math.abs(dy);</span>
+<span class="nc bnc" id="L92" title="All 4 branches missed.">			if ((dx == 0) &amp;&amp; (dy == 0))</span>
+<span class="nc" id="L93">				t = 0;</span>
+			else
+<span class="nc" id="L95">				t = ((double) dy) / ((double) (ax + ay));</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (dx &lt; 0)</span>
+<span class="nc" id="L97">				t = 2f - t;</span>
+			else {
+<span class="nc bnc" id="L99" title="All 2 branches missed.">				if (dy &lt; 0)</span>
+<span class="nc" id="L100">					t = 4f + t;</span>
+			}
+<span class="nc" id="L102">			return t * 90f;</span>
+		}
+	}
+
+	Vector doGraham(Vector p) {
+		int i, j, min, M;
+		Point t;
+<span class="nc" id="L109">		min = 0;</span>
+		// search for minimum:
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		for (i = 1; i &lt; p.size(); ++i) {</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			if (((Point) p.get(i)).y &lt; ((Point) p.get(min)).y)</span>
+<span class="nc" id="L113">				min = i;</span>
+		}
+		// continue along the values with same y component
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		for (i = 0; i &lt; p.size(); ++i) {</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			if ((((Point) p.get(i)).y == ((Point) p.get(min)).y)</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">					&amp;&amp; (((Point) p.get(i)).x &gt; ((Point) p.get(min)).x)) {</span>
+<span class="nc" id="L119">				min = i;</span>
+			}
+		}
+		// swap:
+<span class="nc" id="L123">		t = (Point) p.get(0);</span>
+<span class="nc" id="L124">		p.set(0, p.get(min));</span>
+<span class="nc" id="L125">		p.set(min, t);</span>
+<span class="nc" id="L126">		thetaComparator comp = new thetaComparator((Point) p.get(0));</span>
+<span class="nc" id="L127">		Collections.sort(p, comp);</span>
+<span class="nc" id="L128">		p.add(0, new Point((Point) p.get(p.size() - 1))); // the first is the</span>
+															// last.
+<span class="nc" id="L130">		M = 3;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		for (i = 4; i &lt; p.size(); ++i) {</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			while (ccw((Point) p.get(M), (Point) p.get(M - 1), (Point) p.get(i)) &gt;= 0) {</span>
+<span class="nc" id="L133">				M--;</span>
+			}
+<span class="nc" id="L135">			M++;</span>
+			// swap:
+<span class="nc" id="L137">			t = (Point) p.get(M);</span>
+<span class="nc" id="L138">			p.set(M, p.get(i));</span>
+<span class="nc" id="L139">			p.set(i, t);</span>
+		}
+<span class="nc" id="L141">		p.remove(0);</span>
+<span class="nc" id="L142">		p.setSize(M);</span>
+<span class="nc" id="L143">		return p;</span>
+	}
+
+	public Vector/* &lt;newPoint&gt; */calculateHull(LinkedList coordinates) {
+<span class="nc" id="L147">		Vector q = new Vector();</span>
+<span class="nc" id="L148">		int i = 0;</span>
+<span class="nc" id="L149">		ListIterator coordinates_it = coordinates.listIterator();</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		while (coordinates_it.hasNext()) {</span>
+<span class="nc" id="L151">			q.add(coordinates_it.next());</span>
+		}
+<span class="nc" id="L153">		Vector res = doGraham(q);</span>
+<span class="nc" id="L154">		return res;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

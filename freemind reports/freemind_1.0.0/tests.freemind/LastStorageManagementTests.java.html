@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>LastStorageManagementTests.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">LastStorageManagementTests.java</span></div><h1>LastStorageManagementTests.java</h1><pre class="source lang-java linenums">package tests.freemind;
+
+import java.util.List;
+
+import freemind.controller.LastStateStorageManagement;
+import freemind.controller.actions.generated.instance.MindmapLastStateStorage;
+
+<span class="fc" id="L8">public class LastStorageManagementTests extends FreeMindTestBase {</span>
+
+	private static final String INITIAL_XML = &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;&lt;mindmap_last_state_map_storage/&gt;&quot;;
+	private LastStateStorageManagement mMgm;
+
+	protected void setUp() throws Exception {
+<span class="fc" id="L14">		super.setUp();</span>
+<span class="nc" id="L15">		mMgm = new LastStateStorageManagement(INITIAL_XML);</span>
+<span class="nc" id="L16">	}</span>
+
+	public void testGetXml() {
+<span class="nc" id="L19">		assertEquals(INITIAL_XML, mMgm.getXml());</span>
+<span class="nc" id="L20">	}</span>
+
+	public void testChangeOrAdd() {
+<span class="nc bnc" id="L23" title="All 2 branches missed.">		for (int i = 0; i &lt; LastStateStorageManagement.LIST_AMOUNT_LIMIT + 1; ++i) {</span>
+<span class="nc" id="L24">			MindmapLastStateStorage test = new MindmapLastStateStorage();</span>
+<span class="nc" id="L25">			test.setRestorableName(&quot;&quot; + i);</span>
+<span class="nc" id="L26">			mMgm.changeOrAdd(test);</span>
+<span class="nc" id="L27">			assertEquals(test, mMgm.getStorage(&quot;&quot; + i));</span>
+<span class="nc" id="L28">			waitOneMilli();</span>
+		}
+		// the element at zero is the oldest and must have been removed.
+<span class="nc" id="L31">		assertNull(mMgm.getStorage(&quot;&quot; + 0));</span>
+<span class="nc" id="L32">	}</span>
+
+	public void testGetList() {
+<span class="nc bnc" id="L35" title="All 2 branches missed.">		for (int i = 0; i &lt; LastStateStorageManagement.LIST_AMOUNT_LIMIT; ++i) {</span>
+<span class="nc" id="L36">			MindmapLastStateStorage test = new MindmapLastStateStorage();</span>
+<span class="nc" id="L37">			test.setRestorableName(&quot;&quot; + i);</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">			if (i &lt;= 5) {</span>
+<span class="nc" id="L39">				test.setTabIndex(5 - i);</span>
+<span class="nc" id="L40">			} else {</span>
+<span class="nc" id="L41">				test.setTabIndex(-1);</span>
+			}
+<span class="nc" id="L43">			mMgm.changeOrAdd(test);</span>
+<span class="nc" id="L44">			assertEquals(test, mMgm.getStorage(&quot;&quot; + i));</span>
+<span class="nc" id="L45">			waitOneMilli();</span>
+		}
+<span class="nc" id="L47">		List list = mMgm.getLastOpenList();</span>
+<span class="nc" id="L48">		assertEquals(6, list.size());</span>
+<span class="nc" id="L49">		assertEquals(&quot;5&quot;,</span>
+<span class="nc" id="L50">				((MindmapLastStateStorage) list.get(0)).getRestorableName());</span>
+<span class="nc" id="L51">		assertEquals(&quot;4&quot;,</span>
+<span class="nc" id="L52">				((MindmapLastStateStorage) list.get(1)).getRestorableName());</span>
+<span class="nc" id="L53">	}</span>
+
+	public void testChangeOrAdd2() {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		for (int i = 0; i &lt; LastStateStorageManagement.LIST_AMOUNT_LIMIT; ++i) {</span>
+<span class="nc" id="L57">			MindmapLastStateStorage test = new MindmapLastStateStorage();</span>
+<span class="nc" id="L58">			test.setRestorableName(&quot;&quot; + i);</span>
+<span class="nc" id="L59">			mMgm.changeOrAdd(test);</span>
+<span class="nc" id="L60">			assertEquals(test, mMgm.getStorage(&quot;&quot; + i));</span>
+<span class="nc" id="L61">			waitOneMilli();</span>
+		}
+		// change the first:
+<span class="nc" id="L64">		MindmapLastStateStorage storageFirstElement = mMgm.getStorage(&quot;&quot; + 0);</span>
+<span class="nc" id="L65">		storageFirstElement.setY(2);</span>
+<span class="nc" id="L66">		mMgm.changeOrAdd(storageFirstElement);</span>
+<span class="nc" id="L67">		waitOneMilli();</span>
+<span class="nc" id="L68">		MindmapLastStateStorage test = new MindmapLastStateStorage();</span>
+<span class="nc" id="L69">		test.setRestorableName(&quot;&quot;</span>
+				+ LastStateStorageManagement.LIST_AMOUNT_LIMIT + 1);
+<span class="nc" id="L71">		mMgm.changeOrAdd(test);</span>
+<span class="nc" id="L72">		waitOneMilli();</span>
+		// the element at one is the oldest and must have been removed.
+<span class="nc" id="L74">		assertNotNull(mMgm.getStorage(&quot;&quot; + 0));</span>
+<span class="nc" id="L75">		assertNull(mMgm.getStorage(&quot;&quot; + 1));</span>
+<span class="nc" id="L76">	}</span>
+
+	private void waitOneMilli() {
+		try {
+<span class="nc" id="L80">			Thread.sleep(1);</span>
+<span class="nc" id="L81">		} catch (InterruptedException e) {</span>
+<span class="nc" id="L82">			freemind.main.Resources.getInstance().logException(e);</span>
+
+		}
+<span class="nc" id="L85">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

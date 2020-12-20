@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapNodeDropListener.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.listeners</a> &gt; <span class="el_source">MindMapNodeDropListener.java</span></div><h1>MindMapNodeDropListener.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.modes.mindmapmode.listeners;
+
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
+import java.util.List;
+import java.util.ListIterator;
+
+import javax.swing.JOptionPane;
+
+import freemind.controller.MindMapNodesSelection;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+import freemind.view.mindmapview.MainView;
+import freemind.view.mindmapview.NodeView;
+
+// import ublic class MindMapNodesSelection implements Transferable,
+// ClipboardOwner {
+// public static DataFlavor fileListFlavor = null;
+
+public class MindMapNodeDropListener implements DropTargetListener {
+
+	private final MindMapController mMindMapController;
+
+<span class="nc" id="L50">	public MindMapNodeDropListener(MindMapController controller) {</span>
+<span class="nc" id="L51">		mMindMapController = controller;</span>
+<span class="nc" id="L52">	}</span>
+
+	// See DropTargetListener for the meaning.
+	private boolean isDragAcceptable(DropTargetDragEvent ev) {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if (ev.isDataFlavorSupported(DataFlavor.stringFlavor)) {</span>
+<span class="nc" id="L57">			return true;</span>
+		}
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (ev.isDataFlavorSupported(MindMapNodesSelection.fileListFlavor)) {</span>
+<span class="nc" id="L60">			return true;</span>
+		}
+<span class="nc" id="L62">		return false;</span>
+	}
+
+	private boolean isDropAcceptable(DropTargetDropEvent event) {
+<span class="nc" id="L66">		MindMapNode node = ((MainView) event.getDropTargetContext()</span>
+<span class="nc" id="L67">				.getComponent()).getNodeView().getModel();</span>
+<span class="nc" id="L68">		MindMapNode selected = mMindMapController.getSelected();</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">		if (!node.isWriteable())</span>
+<span class="nc" id="L70">			return false;</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">		return ((node != selected) &amp;&amp; !node.isDescendantOf(selected));</span>
+		// I think (node!=selected) is a hack for windows
+	}
+
+	public void drop(DropTargetDropEvent dtde) {
+		try {
+<span class="nc" id="L77">			int dropAction = dtde.getDropAction();</span>
+<span class="nc" id="L78">			Transferable t = dtde.getTransferable();</span>
+
+<span class="nc" id="L80">			final MainView mainView = (MainView) dtde.getDropTargetContext()</span>
+<span class="nc" id="L81">					.getComponent();</span>
+<span class="nc" id="L82">			NodeView targetNodeView = mainView.getNodeView();</span>
+<span class="nc" id="L83">			MindMapNode targetNode = targetNodeView.getModel();</span>
+<span class="nc" id="L84">			MindMapNodeModel targetNodeModel = (MindMapNodeModel) targetNode;</span>
+
+			// Intra application DnD
+
+			// For some reason, getting sourceAction is only possible for local
+			// transfer. When I try to remove clause dtde.isLocalTransfer, I get
+			// an answer
+			// like &quot;no drop current&quot;. One hypothesis is that with nonlocal
+			// transfers, I
+			// have to accept drop action before I can get transfer data.
+			// However, this is
+			// not what I want in this particular situation. A part of the
+			// problem lies in
+			// the hackery of sending source action using data flavour too.
+<span class="nc bnc" id="L98" title="All 2 branches missed.">			if (dtde.isLocalTransfer()</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">					&amp;&amp; t.isDataFlavorSupported(MindMapNodesSelection.dropActionFlavor)) {</span>
+<span class="nc" id="L100">				String sourceAction = (String) t</span>
+<span class="nc" id="L101">						.getTransferData(MindMapNodesSelection.dropActionFlavor);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">				if (sourceAction.equals(&quot;LINK&quot;)) {</span>
+<span class="nc" id="L103">					dropAction = DnDConstants.ACTION_LINK;</span>
+				}
+<span class="nc bnc" id="L105" title="All 2 branches missed.">				if (sourceAction.equals(&quot;COPY&quot;)) {</span>
+<span class="nc" id="L106">					dropAction = DnDConstants.ACTION_COPY;</span>
+				}
+			}
+
+<span class="nc" id="L110">			mainView.setDraggedOver(NodeView.DRAGGED_OVER_NO);</span>
+<span class="nc" id="L111">			mainView.repaint();</span>
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			if (dtde.isLocalTransfer()</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">					&amp;&amp; (dropAction == DnDConstants.ACTION_MOVE)</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">					&amp;&amp; !isDropAcceptable(dtde)) {</span>
+<span class="nc" id="L116">				dtde.rejectDrop();</span>
+<span class="nc" id="L117">				return;</span>
+			}
+
+<span class="nc" id="L120">			dtde.acceptDrop(dtde.getDropAction());</span>
+
+<span class="nc bnc" id="L122" title="All 2 branches missed.">			if (!dtde.isLocalTransfer()) {</span>
+				// if
+				// (dtde.isDataFlavorSupported(MindMapNodesSelection.fileListFlavor))
+				// {
+				// System.err.println(&quot;filelist&quot;);
+<span class="nc" id="L127">				mMindMapController.paste(t, targetNode,</span>
+<span class="nc" id="L128">						mainView.dropAsSibling(dtde.getLocation().getX()),</span>
+<span class="nc" id="L129">						mainView.dropPosition(dtde.getLocation().getX()));</span>
+<span class="nc" id="L130">				dtde.dropComplete(true);</span>
+<span class="nc" id="L131">				return;</span>
+			}
+
+			// This all is specific to MindMap model. Needs rewrite to work for
+			// other modes.
+			// We ignore data transfer in dtde. We take selected nodes as drag
+			// sources.
+			// &lt;problem&gt;
+			// The behaviour is not so fine, when some of selected nodes is an
+			// ancestor of other selected nodes.
+			// Ideally, we would first unselect all nodes, which have an
+			// ancestor among selected nodes.
+			// I don't have time/lust to do this. This is just a minor problem.
+			// &lt;/problem&gt;
+
+			// By transferable object we only transfer source action. This will
+			// be a problem, when we want
+			// to implement extra application dnd or dnd between different Java
+			// Virtual Machines.
+
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			if (dropAction == DnDConstants.ACTION_LINK) {</span>
+				// ACTION_LINK means for us change the color, style and font.
+
+				// This is not very clean. This all should probably be
+				// implemented on the mindMapMapModel level. On the other
+				// hand, one would have to downcast to MindMapMapModel anyway.
+
+				// MindMapNode selectedNode =
+				// c.getView().getSelected().getModel();
+<span class="nc" id="L160">				MindMapMapModel mindMapMapModel = (MindMapMapModel) mMindMapController</span>
+<span class="nc" id="L161">						.getModel();</span>
+
+				// link feature continues here. fc, 01.11.2003:
+				// if there are more than 4 nodes, then ask the user:
+<span class="nc" id="L165">				int yesorno = JOptionPane.YES_OPTION;</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">				if (mMindMapController.getView().getSelecteds().size() &gt;= 5) {</span>
+<span class="nc" id="L167">					yesorno = JOptionPane</span>
+<span class="nc" id="L168">							.showConfirmDialog(</span>
+<span class="nc" id="L169">									mMindMapController.getFrame()</span>
+<span class="nc" id="L170">											.getContentPane(),</span>
+<span class="nc" id="L171">									mMindMapController</span>
+<span class="nc" id="L172">											.getText(&quot;lots_of_links_warning&quot;),</span>
+<span class="nc" id="L173">									Integer.toString(mMindMapController</span>
+<span class="nc" id="L174">											.getView().getSelecteds().size())</span>
+<span class="nc" id="L175">											+ &quot; links to the same node&quot;,</span>
+<span class="nc" id="L176">									JOptionPane.YES_NO_OPTION);</span>
+				}
+<span class="nc bnc" id="L178" title="All 2 branches missed.">				if (yesorno == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L179">					for (ListIterator it = mMindMapController.getView()</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">							.getSelecteds().listIterator(); it.hasNext();) {</span>
+<span class="nc" id="L181">						MindMapNodeModel selectedNodeModel = (MindMapNodeModel) ((NodeView) it</span>
+<span class="nc" id="L182">								.next()).getModel();</span>
+						// mindMapMapModel.setNodeColor(selectedNodeModel,targetNode.getColor());
+						// mindMapMapModel.setNodeFont(selectedNodeModel,targetNode.getFont());
+<span class="nc" id="L185">						mMindMapController.addLink(selectedNodeModel,</span>
+<span class="nc" id="L186">								targetNodeModel);</span>
+					}
+				}
+<span class="nc" id="L189">			} else {</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">				if (!targetNode.isWriteable()) {</span>
+<span class="nc" id="L191">					String message = mMindMapController</span>
+<span class="nc" id="L192">							.getText(&quot;node_is_write_protected&quot;);</span>
+<span class="nc" id="L193">					JOptionPane.showMessageDialog(mMindMapController.getFrame()</span>
+<span class="nc" id="L194">							.getContentPane(), message, &quot;Freemind&quot;,</span>
+<span class="nc" id="L195">							JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L196">					return;</span>
+				}
+<span class="nc" id="L198">				Transferable trans = null;</span>
+				// if move, verify, that the target is not a son of the sources.
+<span class="nc" id="L200">				List selecteds = mMindMapController.getSelecteds();</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">				if (DnDConstants.ACTION_MOVE == dropAction) {</span>
+<span class="nc" id="L202">					MindMapNode actualNode = targetNode;</span>
+					do {
+<span class="nc bnc" id="L204" title="All 2 branches missed.">						if (selecteds.contains(actualNode)) {</span>
+<span class="nc" id="L205">							String message = mMindMapController</span>
+<span class="nc" id="L206">									.getText(&quot;cannot_move_to_child&quot;);</span>
+<span class="nc" id="L207">							JOptionPane.showMessageDialog(mMindMapController</span>
+<span class="nc" id="L208">									.getFrame().getContentPane(), message,</span>
+<span class="nc" id="L209">									&quot;Freemind&quot;, JOptionPane.WARNING_MESSAGE);</span>
+<span class="nc" id="L210">							dtde.dropComplete(true);</span>
+<span class="nc" id="L211">							return;</span>
+						}
+<span class="nc bnc" id="L213" title="All 2 branches missed.">						actualNode = (actualNode.isRoot()) ? null : actualNode</span>
+<span class="nc" id="L214">								.getParentNode();</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">					} while (actualNode != null);</span>
+<span class="nc" id="L216">					trans = mMindMapController.cut();</span>
+<span class="nc" id="L217">				} else {</span>
+<span class="nc" id="L218">					trans = mMindMapController.copy();</span>
+				}
+
+<span class="nc" id="L221">				mMindMapController.getView().selectAsTheOnlyOneSelected(</span>
+<span class="nc" id="L222">						targetNodeView);</span>
+<span class="nc" id="L223">				boolean result = mMindMapController.paste(trans, targetNode,</span>
+<span class="nc" id="L224">						mainView.dropAsSibling(dtde.getLocation().getX()),</span>
+<span class="nc" id="L225">						mainView.dropPosition(dtde.getLocation().getX()));</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">				if (!result &amp;&amp; DnDConstants.ACTION_MOVE == dropAction) {</span>
+					// an error occured. how to react?
+
+				}
+			}
+<span class="nc" id="L231">		} catch (Exception e) {</span>
+<span class="nc" id="L232">			System.err.println(&quot;Drop exception:&quot; + e);</span>
+<span class="nc" id="L233">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L234">			dtde.dropComplete(false);</span>
+<span class="nc" id="L235">			return;</span>
+		}
+<span class="nc" id="L237">		dtde.dropComplete(true);</span>
+<span class="nc" id="L238">	}</span>
+
+	/**
+	 * The method is called when the cursor carrying the dragged item enteres
+	 * the area of the node. The name &quot;dragEnter&quot; seems to be confusing to me.
+	 * 
+	 * I think the difference between dragAcceptable and dropAcceptable is that
+	 * in dragAcceptable, you tell if the type of the thing being dragged is OK,
+	 * where in dropAcceptable, you tell if your really willing to accept the
+	 * item.
+	 */
+	public void dragEnter(DropTargetDragEvent dtde) {
+		// TODO: Accepting the action ACTION_MOVE is false, because we cannot
+		// know if the action is really ACTION_MOVE.
+<span class="nc bnc" id="L252" title="All 2 branches missed.">		if (isDragAcceptable(dtde)) {</span>
+<span class="nc" id="L253">			dtde.acceptDrag(DnDConstants.ACTION_MOVE);</span>
+<span class="nc" id="L254">		} else {</span>
+<span class="nc" id="L255">			dtde.rejectDrag();</span>
+		}
+<span class="nc" id="L257">	}</span>
+
+	public void dragOver(DropTargetDragEvent e) {
+<span class="nc" id="L260">		MainView draggedNode = (MainView) e.getDropTargetContext()</span>
+<span class="nc" id="L261">				.getComponent();</span>
+<span class="nc" id="L262">		int oldDraggedOver = draggedNode.getDraggedOver();</span>
+		// let the node decide, which dragged over type it is:
+<span class="nc" id="L264">		draggedNode.setDraggedOver(e.getLocation());</span>
+<span class="nc" id="L265">		int newDraggedOver = draggedNode.getDraggedOver();</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">		boolean repaint = newDraggedOver != oldDraggedOver;</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">		if (repaint) {</span>
+<span class="nc" id="L268">			draggedNode.repaint();</span>
+		}
+<span class="nc" id="L270">	}</span>
+
+	public void dragExit(DropTargetEvent e) {
+<span class="nc" id="L273">		MainView draggedNode = (MainView) e.getDropTargetContext()</span>
+<span class="nc" id="L274">				.getComponent();</span>
+<span class="nc" id="L275">		draggedNode.setDraggedOver(NodeView.DRAGGED_OVER_NO);</span>
+<span class="nc" id="L276">		draggedNode.repaint();</span>
+<span class="nc" id="L277">	}</span>
+
+	public void dragScroll(DropTargetDragEvent e) {
+<span class="nc" id="L280">	}</span>
+
+	public void dropActionChanged(DropTargetDragEvent e) {
+<span class="nc" id="L283">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

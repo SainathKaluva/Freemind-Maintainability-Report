@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>DontShowAgainDialogTests.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">DontShowAgainDialogTests.java</span></div><h1>DontShowAgainDialogTests.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2007  Christian Foltin, Dimitry Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 31.07.2007
+ */
+/*$Id: DontShowAgainDialogTests.java,v 1.1.2.1 2007/08/07 20:09:24 christianfoltin Exp $*/
+
+package tests.freemind;
+
+import javax.swing.JFrame;
+
+import freemind.common.OptionalDontShowMeAgainDialog;
+import freemind.common.TextTranslator;
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="fc" id="L35">public class DontShowAgainDialogTests extends FreeMindTestBase {</span>
+	public void testDialog() throws Exception {
+		int showResult;
+<span class="nc" id="L38">		JFrame frame = new JFrame();</span>
+<span class="nc" id="L39">		frame.setVisible(true);</span>
+<span class="nc" id="L40">		showResult = new OptionalDontShowMeAgainDialog(frame, frame, &quot;message&quot;,</span>
+<span class="nc" id="L41">				&quot;title&quot;, new TextTranslator() {</span>
+
+					public String getText(String pKey) {
+<span class="nc" id="L44">						return &quot;?&quot; + pKey + &quot;?&quot;;</span>
+					}
+<span class="nc" id="L46">				}, new OptionalDontShowMeAgainDialog.DontShowPropertyHandler() {</span>
+
+					public String getProperty() {
+<span class="nc" id="L49">						return &quot;&quot;;</span>
+					}
+
+					public void setProperty(String pValue) {
+<span class="nc" id="L53">						System.out.println(&quot;Property Result: '&quot; + pValue + &quot;'&quot;);</span>
+<span class="nc" id="L54">					}</span>
+<span class="nc" id="L55">				}, OptionalDontShowMeAgainDialog.ONLY_OK_SELECTION_IS_STORED)</span>
+<span class="nc" id="L56">				.show().getResult();</span>
+<span class="nc" id="L57">		System.out.println(showResult);</span>
+<span class="nc" id="L58">		showResult = new OptionalDontShowMeAgainDialog(frame, frame,</span>
+<span class="nc" id="L59">				&quot;message NO SHOW&quot;, &quot;title&quot;, new TextTranslator() {</span>
+
+					public String getText(String pKey) {
+<span class="nc" id="L62">						return &quot;?&quot; + pKey + &quot;?&quot;;</span>
+					}
+<span class="nc" id="L64">				}, new OptionalDontShowMeAgainDialog.DontShowPropertyHandler() {</span>
+
+					public String getProperty() {
+<span class="nc" id="L67">						return &quot;true&quot;;</span>
+					}
+
+					public void setProperty(String pValue) {
+<span class="nc" id="L71">						System.out.println(&quot;Property Result: '&quot; + pValue + &quot;'&quot;);</span>
+<span class="nc" id="L72">					}</span>
+<span class="nc" id="L73">				}, OptionalDontShowMeAgainDialog.ONLY_OK_SELECTION_IS_STORED)</span>
+<span class="nc" id="L74">				.show().getResult();</span>
+<span class="nc" id="L75">		System.out.println(showResult);</span>
+<span class="nc" id="L76">		showResult = new OptionalDontShowMeAgainDialog(frame, frame,</span>
+<span class="nc" id="L77">				&quot;message NO SHOW&quot;, &quot;title&quot;, new TextTranslator() {</span>
+
+					public String getText(String pKey) {
+<span class="nc" id="L80">						return &quot;?&quot; + pKey + &quot;?&quot;;</span>
+					}
+<span class="nc" id="L82">				}, new OptionalDontShowMeAgainDialog.DontShowPropertyHandler() {</span>
+
+					public String getProperty() {
+<span class="nc" id="L85">						return &quot;false&quot;;</span>
+					}
+
+					public void setProperty(String pValue) {
+<span class="nc" id="L89">						System.out.println(&quot;Property Result: '&quot; + pValue + &quot;'&quot;);</span>
+<span class="nc" id="L90">					}</span>
+<span class="nc" id="L91">				}, OptionalDontShowMeAgainDialog.ONLY_OK_SELECTION_IS_STORED)</span>
+<span class="nc" id="L92">				.show().getResult();</span>
+<span class="nc" id="L93">		showResult = new OptionalDontShowMeAgainDialog(</span>
+<span class="nc" id="L94">				frame,</span>
+<span class="nc" id="L95">				frame,</span>
+<span class="nc" id="L96">				&quot;message remind&quot;,</span>
+<span class="nc" id="L97">				&quot;title&quot;,</span>
+<span class="nc" id="L98">				new TextTranslator() {</span>
+
+					public String getText(String pKey) {
+<span class="nc" id="L101">						return &quot;?&quot; + pKey + &quot;?&quot;;</span>
+					}
+				},
+<span class="nc" id="L104">				new OptionalDontShowMeAgainDialog.DontShowPropertyHandler() {</span>
+
+					public String getProperty() {
+<span class="nc" id="L107">						return &quot;&quot;;</span>
+					}
+
+					public void setProperty(String pValue) {
+<span class="nc" id="L111">						System.out.println(&quot;Property Result: '&quot; + pValue + &quot;'&quot;);</span>
+<span class="nc" id="L112">					}</span>
+				},
+<span class="nc" id="L114">				OptionalDontShowMeAgainDialog.BOTH_OK_AND_CANCEL_OPTIONS_ARE_STORED)</span>
+<span class="nc" id="L115">				.show().getResult();</span>
+<span class="nc" id="L116">		System.out.println(showResult);</span>
+<span class="nc" id="L117">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

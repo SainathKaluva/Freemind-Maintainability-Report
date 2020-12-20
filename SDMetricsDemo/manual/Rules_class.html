@@ -1,0 +1,67 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Class Rules</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="LORules.html">Prev</a> - <a href="Rules_interface.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LORules.html">C: List of Design Rules</a> > C.1 Class Rules
+<hr>
+<h2><a name="Rules_class"></a>C.1 Class Rules</h2>
+<a name="Rules_class_Unnamed"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Unnamed</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Class has no name.<p> Give the class a descriptive name that reflects its purpose. Unnamed classes will cause problems during code generation. <ul><li>Suggested in [<a href="References.html#References_RVR04">RVR04</a>].</ul>
+</td></tr></table><hr><p>
+<a name="Rules_class_Unused"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Unused</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The class is not used anywhere.<p> The class has no child classes, dependencies, or associations, and it is not used as parameter or property type. You'll probably still need to model the clients of the class, or else consider deleting the class from the model.<p> Note: for models that were reverse-engineered from source code, this rule may falsely report many classes as "unused". This happens for classes that are only referenced in method implementations, e.g., via local variables. <ul><li>Suggested in [<a href="References.html#References_Rie96">Rie96</a>] (heuristic #3.7 eliminate irrelevant classes).</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_NotCapitalized"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NotCapitalized</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Naming">Naming</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 3-low</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Class names should start with a capital letter.<p> This naming convention is a recommended style guideline in the UML standards [<a href="References.html#References_OMG03">OMG03</a>], [<a href="References.html#References_OMG05">OMG05</a>]. 
+</td></tr></table><hr><p>
+<a name="Rules_class_GodClass"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>GodClass</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The class has more than 60 attributes and operations.<p> Also known as blob classes, large classes are likely maintenance bottlenecks, sources of unreliability, and indicate a lack of (object-oriented) architecture and architecture enforcement.<p> Consider refactoring the class to split it up into smaller classes. <ul> <li>Threshold of 60 cited in [<a href="References.html#References_BMM98">BMM98</a>]. <li>See also metrics <a href="Metrics_class.html#Metrics_class_NumOps">NumOps</a> and <a href="Metrics_class.html#Metrics_class_NumAttr">NumAttr</a> <li>Also known as "Large Class" code smell [<a href="References.html#References_Fow99">Fow99</a>]. <li>Value reported: number of operations and attributes. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_Keyword"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Keyword</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Naming">Naming</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: design</td></tr><tr><td colspan="2">Class name is a Java or C++ keyword. Using programming language keywords for class names will cause problems during code generation. Find another name for the class. Capitalizing the name will also help, see rule <a href="Rules_class.html#Rules_class_NotCapitalized">NotCapitalized</a>. <ul><li>Suggested in [<a href="References.html#References_RVR04">RVR04</a>].</ul>
+</td></tr></table><hr><p>
+<a name="Rules_class_MultipleInheritance"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>MultipleInheritance</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 3-low</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Use of multiple inheritance - class has more than one parent.<p> The use of multiple inheritance is controversial. Some OO programming languages do not support multiple inheritance. Review the class design to confirm that the use of multiple inheritance is justified. <ul><li>Suggested in [<a href="References.html#References_Rie96">Rie96</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_SpecLeafClass"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>SpecLeafClass</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Class is marked as leaf, but it has child classes.<p> Leaf classes cannot have any child classes. This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. 
+</td></tr></table><hr><p>
+<a name="Rules_class_NoSpec"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NoSpec</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Abstract class has no child classes.<p> Abstract classes cannot be instantiated. Without specializations that can be instantiated, the abstract class is useless. <ul><li>Suggested in [<a href="References.html#References_Rie96">Rie96</a>]. <li>Violations of this rule would be justified if the class is part of a framework or library, and is meant to be extended by users of the framework/library. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_CyclicInheritance"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>CyclicInheritance</b></td><td class="mthead" width="66%">Category: <a href="Inheritance.html#Glossary_Inheritance">Inheritance</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Class inherits from itself directly or indirectly.<p> The inheritance graph must be a tree, no cycles are allowed. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>You can view the inheritance graph in the graph structures dialog. <li>Value returned: number of classes in the cycle. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_ConcreteSuper"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>ConcreteSuper</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The abstract class has a parent class that is not abstract.<p> This is bad design. A child class should be substitutable for the parent class. Since the parent class can be instantiated, but not the child class, substitution is not possible anymore. <ul><li>Suggested in [<a href="References.html#References_Lan03">Lan03</a>]. <li>Value returned: name of the concrete parent class. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_DupOps"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DupOps</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Class has duplicate operations.<p> There are two or more operations with identical signatures (i.e., operation name and list of parameter types). Operation signatures must be unique within the class.  <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value reported: name of the duplicate operation. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_DupAttrNames"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DupAttrNames</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The class has two or more properties with identical names.<p> Attribute names must be unique within the class.  <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value reported: name of the duplicate attribute. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_AttrNameOvr"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>AttrNameOvr</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Naming">Naming</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The class defines a property of the same name as an inherited attribute.<p> During code generation, this may inadvertently hide the attribute of the parent class. Consider changing the name of the attribute in the child class. <ul><li>Suggested in [<a href="References.html#References_RVR04">RVR04</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_DescendentRef"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DescendentRef</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The class references a descendent class via associations, UML dependencies, attribute or parameter types.<p> This is poor design. A class <i>c</i> should be oblivious of its descendent classes. The reference to the descendent class and the inheritance links back to class <i>c</i> effectively form a dependency cycle between these classes.<p> Redesign this to eliminate the need for the reference to the descendent class. <ul><li>Suggested in [<a href="References.html#References_RVR04">RVR04</a>], [<a href="References.html#References_Rie96">Rie96</a>]. <li>Value reported: name of the referenced descendent class. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_class_DepCycle"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DepCycle</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The class has circular references.<p> Circular dependencies should be avoided. The classes participating in the cycle cannot be tested and reused independently. The more classes participate in the cycle, the worse the problem is, especially if the classes reside in different packages (see also rule <a href="Rules_package.html#Rules_package_DepCycle">DepCycle</a> for packages).<p> Consider revising the design to eliminate the cycle. <ul><li>See also: Dependency Inversion Principle [<a href="References.html#References_Mar03">Mar03</a>]. <li>You can view the class dependency graph and its cycles in the  Graph Structures View. <li>Value reported: number of classes in the cycle. </ul> 
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="LORules.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LORules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Rules_interface.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;C: "List of Design Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;C.2 "Interface Rules"</td></tr></table>
+
+</body>
+</html>

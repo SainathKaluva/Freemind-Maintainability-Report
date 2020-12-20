@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributeView.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview.attributeview</a> &gt; <span class="el_source">AttributeView.java</span></div><h1>AttributeView.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: AttributeView.java,v 1.1.6.10 2008/06/21 13:56:44 dpolivaev Exp $*/
+
+package freemind.view.mindmapview.attributeview;
+
+import java.awt.Color;
+import java.awt.EventQueue;
+
+import javax.swing.JScrollPane;
+import javax.swing.UIManager;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.JTableHeader;
+
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.attributes.AttributeTableLayoutModel;
+import freemind.modes.attributes.AttributeTableModel;
+import freemind.modes.attributes.NodeAttributeTableModel;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.view.mindmapview.MapView;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * This class represents a single Node of a MindMap (in analogy to
+ * TreeCellRenderer).
+ */
+public class AttributeView implements ChangeListener, TableModelListener {
+	private AttributeTable attributeTable;
+	private ReducedAttributeTableModelDecorator reducedAttributeTableModel;
+<span class="nc" id="L52">	private ExtendedAttributeTableModelDecorator extendedAttributeTableModel = null;</span>
+	private AttributeTableModelDecoratorAdapter currentAttributeTableModel;
+	private JScrollPane attributeViewScrollPane;
+	private NodeView nodeView;
+	private JTableHeader tableHeader;
+	static private AttributePopupMenu tablePopupMenu;
+<span class="nc" id="L58">	private static final Color HEADER_BACKGROUND = UIManager</span>
+<span class="nc" id="L59">			.getColor(&quot;TableHeader.background&quot;);</span>
+
+	// private static final Color HEADER_BACKGROUND = Color.BLUE.darker();
+
+	public AttributeView(NodeView nodeView) {
+<span class="nc" id="L64">		super();</span>
+<span class="nc" id="L65">		this.nodeView = nodeView;</span>
+<span class="nc" id="L66">		reducedAttributeTableModel = new ReducedAttributeTableModelDecorator(</span>
+<span class="nc" id="L67">				this);</span>
+<span class="nc" id="L68">		currentAttributeTableModel = reducedAttributeTableModel;</span>
+<span class="nc" id="L69">		setViewType(getAttributeRegistry().getAttributeViewType());</span>
+<span class="nc" id="L70">		addListeners();</span>
+<span class="nc" id="L71">	}</span>
+
+	AttributeRegistry getAttributeRegistry() {
+<span class="nc" id="L74">		return getNode().getMap().getRegistry().getAttributes();</span>
+	}
+
+	public NodeAttributeTableModel getAttributes() {
+<span class="nc" id="L78">		return getNode().getAttributes();</span>
+	}
+
+	public void syncronizeAttributeView() {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (attributeTable == null</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">				&amp;&amp; currentAttributeTableModel.areAttributesVisible()) {</span>
+<span class="nc" id="L84">			provideAttributeTable();</span>
+		}
+<span class="nc" id="L86">	}</span>
+
+	private void provideAttributeTable() {
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		if (attributeTable == null) {</span>
+<span class="nc" id="L90">			attributeTable = new AttributeTable(this);</span>
+<span class="nc" id="L91">			tableHeader = attributeTable.getTableHeader();</span>
+<span class="nc" id="L92">			tableHeader.setBackground(HEADER_BACKGROUND);</span>
+<span class="nc" id="L93">			addTableModelListeners();</span>
+<span class="nc" id="L94">			attributeViewScrollPane = new AttributeViewScrollPane(</span>
+<span class="nc" id="L95">					attributeTable);</span>
+<span class="nc" id="L96">			getNodeView().getContentPane().add(attributeViewScrollPane);</span>
+<span class="nc" id="L97">			getAttributes().removeTableModelListener(this);</span>
+<span class="nc" id="L98">			setViewType(getAttributeRegistry().getAttributeViewType());</span>
+		}
+<span class="nc" id="L100">	}</span>
+
+	private void addListeners() {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (getNodeView().getModel().getMap().isReadOnly())</span>
+<span class="nc" id="L104">			return;</span>
+<span class="nc" id="L105">		getAttributeRegistry().addChangeListener(this);</span>
+<span class="nc" id="L106">		addTableModelListeners();</span>
+<span class="nc" id="L107">	}</span>
+
+	private ModeController getModeController() {
+<span class="nc" id="L110">		return nodeView.getModel().getMap().getModeController();</span>
+	}
+
+	private void addTableModelListeners() {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if (getNodeView().getModel().getMap().isReadOnly())</span>
+<span class="nc" id="L115">			return;</span>
+<span class="nc" id="L116">		final ModeController modeController = getModeController();</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (attributeTable != null) {</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (tablePopupMenu == null) {</span>
+<span class="nc" id="L119">				tablePopupMenu = ((MindMapController) modeController)</span>
+<span class="nc" id="L120">						.getAttributeTablePopupMenu();</span>
+			}
+<span class="nc" id="L122">			getAttributes().getLayout().addColumnWidthChangeListener(</span>
+<span class="nc" id="L123">					attributeTable);</span>
+<span class="nc" id="L124">			attributeTable.addMouseListener(tablePopupMenu);</span>
+<span class="nc" id="L125">			tableHeader.addMouseListener(tablePopupMenu);</span>
+<span class="nc" id="L126">		} else {</span>
+<span class="nc" id="L127">			getAttributes().addTableModelListener(this);</span>
+		}
+<span class="nc" id="L129">	}</span>
+
+	private void removeListeners() {
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (getNodeView().getModel().getMap().isReadOnly())</span>
+<span class="nc" id="L133">			return;</span>
+<span class="nc" id="L134">		getAttributeRegistry().removeChangeListener(this);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (attributeTable != null) {</span>
+<span class="nc" id="L136">			getAttributes().getLayout().removeColumnWidthChangeListener(</span>
+<span class="nc" id="L137">					attributeTable);</span>
+<span class="nc" id="L138">			attributeTable.getParent().remove(attributeTable);</span>
+<span class="nc" id="L139">			attributeTable.getModel().removeTableModelListener(attributeTable);</span>
+<span class="nc" id="L140">			attributeTable.removeMouseListener(tablePopupMenu);</span>
+<span class="nc" id="L141">			tableHeader.removeMouseListener(tablePopupMenu);</span>
+<span class="nc" id="L142">			tablePopupMenu = null;</span>
+<span class="nc" id="L143">		} else {</span>
+<span class="nc" id="L144">			getAttributes().removeTableModelListener(this);</span>
+		}
+<span class="nc" id="L146">	}</span>
+
+	/**
+     */
+	public void update() {
+<span class="nc bnc" id="L151" title="All 4 branches missed.">		if (attributeTable != null &amp;&amp; attributeTable.isVisible()) {</span>
+<span class="nc" id="L152">			attributeTable.updateAttributeTable();</span>
+		}
+<span class="nc" id="L154">	}</span>
+
+	/**
+     */
+	public boolean areAttributesVisible() {
+<span class="nc" id="L159">		final String viewType = getViewType();</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		return viewType != AttributeTableLayoutModel.HIDE_ALL</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">				&amp;&amp; (currentAttributeTableModel.areAttributesVisible() || viewType != getAttributeRegistry()</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">						.getAttributeViewType());</span>
+	}
+
+	/**
+	 * @return Returns the extendedAttributeTableModel.
+	 */
+	private ExtendedAttributeTableModelDecorator getExtendedAttributeTableModel() {
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (extendedAttributeTableModel == null) {</span>
+<span class="nc" id="L170">			extendedAttributeTableModel = new ExtendedAttributeTableModelDecorator(</span>
+<span class="nc" id="L171">					this);</span>
+		}
+<span class="nc" id="L173">		return extendedAttributeTableModel;</span>
+	}
+
+	private void setViewType(String viewType) {
+<span class="nc" id="L177">		JTableHeader currentColumnHeaderView = null;</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">		if (viewType == AttributeTableLayoutModel.SHOW_ALL) {</span>
+<span class="nc" id="L179">			currentAttributeTableModel = getExtendedAttributeTableModel();</span>
+<span class="nc" id="L180">			currentColumnHeaderView = tableHeader;</span>
+<span class="nc" id="L181">		} else {</span>
+<span class="nc" id="L182">			currentAttributeTableModel = reducedAttributeTableModel;</span>
+		}
+<span class="nc bnc" id="L184" title="All 2 branches missed.">		if (attributeTable != null) {</span>
+<span class="nc" id="L185">			attributeTable.setModel(currentAttributeTableModel);</span>
+<span class="nc" id="L186">			attributeTable.setTableHeader(currentColumnHeaderView);</span>
+<span class="nc" id="L187">			attributeViewScrollPane</span>
+<span class="nc" id="L188">					.setColumnHeaderView(currentColumnHeaderView);</span>
+<span class="nc" id="L189">			attributeViewScrollPane.invalidate();</span>
+		}
+<span class="nc" id="L191">	}</span>
+
+	public AttributeTableModel getCurrentAttributeTableModel() {
+<span class="nc" id="L194">		return currentAttributeTableModel;</span>
+	}
+
+	/**
+     */
+	MindMapNode getNode() {
+<span class="nc" id="L200">		return getNodeView().getModel();</span>
+	}
+
+	public void stateChanged(ChangeEvent event) {
+<span class="nc" id="L204">		setViewType(getAttributeRegistry().getAttributeViewType());</span>
+<span class="nc" id="L205">		reducedAttributeTableModel.stateChanged(null);</span>
+<span class="nc" id="L206">		getNodeView().revalidate();</span>
+<span class="nc" id="L207">	}</span>
+
+	/**
+     */
+	public NodeView getNodeView() {
+<span class="nc" id="L212">		return nodeView;</span>
+	}
+
+	/**
+     */
+	public MapView getMapView() {
+<span class="nc" id="L218">		return getNodeView().getMap();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.swing.event.AncestorListener#ancestorRemoved(javax.swing.event.
+	 * AncestorEvent)
+	 */
+	public void viewRemoved() {
+<span class="nc" id="L229">		removeListeners();</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (reducedAttributeTableModel != null)</span>
+<span class="nc" id="L231">			reducedAttributeTableModel.viewRemoved();</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">		if (extendedAttributeTableModel != null)</span>
+<span class="nc" id="L233">			extendedAttributeTableModel.viewRemoved();</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		if (attributeTable != null)</span>
+<span class="nc" id="L235">			attributeTable.viewRemoved();</span>
+<span class="nc" id="L236">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.event.AncestorListener#ancestorMoved(javax.swing.event.
+	 * AncestorEvent)
+	 */
+	public void ancestorMoved(AncestorEvent event) {
+<span class="nc" id="L245">	}</span>
+
+	public void tableChanged(TableModelEvent e) {
+<span class="nc" id="L248">		MapView map = getNodeView().getMap();</span>
+<span class="nc" id="L249">		map.getModel().nodeChanged(getNode());</span>
+<span class="nc" id="L250">	}</span>
+
+	public String getViewType() {
+<span class="nc bnc" id="L253" title="All 2 branches missed.">		return currentAttributeTableModel == reducedAttributeTableModel ? getAttributeRegistry()</span>
+<span class="nc" id="L254">				.getAttributeViewType() : AttributeTableLayoutModel.SHOW_ALL;</span>
+	}
+
+	public void startEditing() {
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		if (getNode().getMap().isReadOnly()) {</span>
+<span class="nc" id="L259">			return;</span>
+		}
+<span class="nc" id="L261">		provideAttributeTable();</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">		if (currentAttributeTableModel == reducedAttributeTableModel) {</span>
+<span class="nc" id="L263">			getExtendedAttributeTableModel();</span>
+<span class="nc" id="L264">			setViewType(AttributeTableLayoutModel.SHOW_ALL);</span>
+		}
+<span class="nc" id="L266">		EventQueue.invokeLater(new Runnable() {</span>
+			public void run() {
+<span class="nc" id="L268">				startEditingTable();</span>
+<span class="nc" id="L269">			}</span>
+		});
+<span class="nc" id="L271">	}</span>
+
+	private void startEditingTable() {
+<span class="nc" id="L274">		attributeTable.requestFocus();</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">		if (currentAttributeTableModel.getRowCount() == 0) {</span>
+<span class="nc" id="L276">			attributeTable.insertRow(0);</span>
+<span class="nc" id="L277">		} else {</span>
+<span class="nc" id="L278">			attributeTable.changeSelection(0, 0, false, false);</span>
+		}
+<span class="nc" id="L280">	}</span>
+
+	boolean isPopupShown() {
+<span class="nc bnc" id="L283" title="All 4 branches missed.">		return attributeTable != null &amp;&amp; tablePopupMenu != null</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">				&amp;&amp; (tablePopupMenu.getTable() == attributeTable);</span>
+	}
+
+	public void stopEditing() {
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		if (attributeTable.isEditing()) {</span>
+<span class="nc" id="L289">			attributeTable.getCellEditor().stopCellEditing();</span>
+		}
+<span class="nc" id="L291">		final String registryAttributeViewType = getAttributeRegistry()</span>
+<span class="nc" id="L292">				.getAttributeViewType();</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">		if (registryAttributeViewType != getViewType()) {</span>
+<span class="nc" id="L294">			setViewType(registryAttributeViewType);</span>
+		}
+<span class="nc" id="L296">		getNodeView().requestFocus();</span>
+<span class="nc" id="L297">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

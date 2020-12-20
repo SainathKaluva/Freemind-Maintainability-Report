@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MapNodePositionHolder.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.map</a> &gt; <span class="el_source">MapNodePositionHolder.java</span></div><h1>MapNodePositionHolder.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2011 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package plugins.map;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.net.MalformedURLException;
+import java.util.HashMap;
+
+import javax.imageio.ImageIO;
+
+<span class="nc" id="L31">import org.openstreetmap.gui.jmapviewer.Coordinate;</span>
+
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.MindMapNode;
+import freemind.modes.common.plugins.MapNodePositionHolderBase;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * @date 27.10.2011
+ */
+public class MapNodePositionHolder extends MapNodePositionHolderBase {
+	/**
+	 * 
+	 */
+	private static final String MAP_LOCATION = &quot;map_location&quot;;
+	private Coordinate mPosition = new Coordinate(0, 0);
+	private Coordinate mMapCenter = new Coordinate(0, 0);
+	private String mTileSource = null;
+	private int mZoom = 1;
+	private static String sMapLocationGif;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.NodeHookAdapter#invoke(freemind.modes.MindMapNode)
+	 */
+<span class="nc" id="L62">	public void invoke(MindMapNode pNode) {</span>
+		super.invoke(pNode);
+		getRegistration().registerMapNode(this);
+	}
+
+<span class="nc" id="L67">	protected Registration getRegistration() {</span>
+		return (Registration) getPluginBaseClass();
+	}
+
+<span class="nc" id="L71">	public void showTooltip() {</span>
+		if (isTooltipDesired()) {
+			if (mTooltipLocation != null) {
+				/* We only need the tooltip on disk. */
+				File tooltipFile = getTooltipFile(false);
+				if (tooltipFile.exists()) {
+					addTooltip();
+				} else {
+					// something went wrong. Again.
+					createToolTip(false);
+				}
+			} else {
+				createToolTip(false);
+			}
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHookAdapter#shutdownMapHook()
+	 */
+<span class="nc" id="L93">	public void shutdownMapHook() {</span>
+		getRegistration().deregisterMapNode(this);
+		super.shutdownMapHook();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHookAdapter#save(freemind.main.XMLElement
+	 * )
+	 */
+	public void save(XMLElement xml) {
+		super.save(xml);
+		HashMap values = new HashMap();
+<span class="nc" id="L108">		values.put(XML_STORAGE_POS_LON, toString(mPosition.getLon()));</span>
+		values.put(XML_STORAGE_POS_LAT, toString(mPosition.getLat()));
+		values.put(XML_STORAGE_MAP_LON, toString(mMapCenter.getLon()));
+		values.put(XML_STORAGE_MAP_LAT, toString(mMapCenter.getLat()));
+		values.put(XML_STORAGE_ZOOM, toString(mZoom));
+		if (mTileSource != null) {
+			values.put(XML_STORAGE_TILE_SOURCE, mTileSource);
+		}
+		if (mTooltipLocation != null) {
+			values.put(XML_STORAGE_MAP_TOOLTIP_LOCATION, mTooltipLocation);
+		}
+		saveNameValuePairs(values, xml);
+	}
+
+	/**
+	 * @param pDouble
+	 * @return
+	 */
+<span class="nc" id="L126">	private String toString(double pDouble) {</span>
+		return &quot;&quot; + pDouble;
+	}
+
+	/**
+	 * @param pInt
+	 * @return
+	 */
+<span class="nc" id="L134">	private String toString(int pInt) {</span>
+		return &quot;&quot; + pInt;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHookAdapter#loadFrom(freemind.main.
+	 * XMLElement)
+	 */
+	public void loadFrom(XMLElement pChild) {
+		super.loadFrom(pChild);
+		HashMap values = loadNameValuePairs(pChild);
+<span class="nc" id="L147">		mPosition.setLat(fromString(values.get(XML_STORAGE_POS_LAT)));</span>
+		mPosition.setLon(fromString(values.get(XML_STORAGE_POS_LON)));
+		mMapCenter.setLat(fromString(values.get(XML_STORAGE_MAP_LAT)));
+		mMapCenter.setLon(fromString(values.get(XML_STORAGE_MAP_LON)));
+		mZoom = intFromString(values.get(XML_STORAGE_ZOOM));
+		// is done in super implementation
+		// // if no value stored, the get method returns null.
+		// mTooltipLocation = (String)
+		// values.get(XML_STORAGE_MAP_TOOLTIP_LOCATION);
+		mTileSource = (String) values.get(XML_STORAGE_TILE_SOURCE);
+	}
+
+	/**
+	 * @param pObject
+	 * @return
+	 */
+<span class="nc" id="L163">	private double fromString(Object pObject) {</span>
+		if (pObject == null) {
+			return 0.0;
+		}
+		try {
+			return Double.parseDouble((String) pObject);
+		} catch (Exception e) {
+			freemind.main.Resources.getInstance().logException(e);
+			return 0.0;
+		}
+	}
+
+	/**
+	 * @param pObject
+	 * @return
+	 */
+<span class="nc" id="L179">	private int intFromString(Object pObject) {</span>
+		if (pObject == null) {
+			return 1;
+		}
+		try {
+			return Integer.parseInt((String) pObject);
+		} catch (Exception e) {
+			freemind.main.Resources.getInstance().logException(e);
+			return 1;
+		}
+	}
+
+	/**
+	 * Set map position. Is undoable.
+	 * 
+	 * @param pTileSource
+	 * 
+	 */
+<span class="nc" id="L197">	public void changePosition(Coordinate pPosition, Coordinate pMapCenter,</span>
+			int pZoom, String pTileSource) {
+		getRegistration().changePosition(this, pPosition, pMapCenter, pZoom,
+				pTileSource);
+		// the changePosition recreates the tooltip...
+	}
+
+	public static interface MapNodePositionListener {
+		void registerMapNode(MapNodePositionHolder pMapNodePositionHolder);
+
+		void deregisterMapNode(MapNodePositionHolder pMapNodePositionHolder);
+	}
+
+<span class="nc" id="L210">	public Coordinate getPosition() {</span>
+		return mPosition;
+	}
+
+<span class="nc" id="L214">	public static MapNodePositionHolder getHook(MindMapNode node) {</span>
+		return (MapNodePositionHolder) getBaseHook(node);
+	}
+
+	/**
+	 * @param pTileSource
+	 */
+<span class="nc" id="L221">	public void setTileSource(String pTileSource) {</span>
+		mTileSource = pTileSource;
+	}
+
+	/**
+	 * @return
+	 */
+<span class="nc" id="L228">	public String getTileSource() {</span>
+		return mTileSource;
+	}
+
+<span class="nc" id="L232">	public void setPosition(Coordinate pPosition) {</span>
+		mPosition = pPosition;
+	}
+
+<span class="nc" id="L236">	public Coordinate getMapCenter() {</span>
+		return mMapCenter;
+	}
+
+<span class="nc" id="L240">	public void setMapCenter(Coordinate pMapCenter) {</span>
+		mMapCenter = pMapCenter;
+	}
+
+<span class="nc" id="L244">	public int getZoom() {</span>
+		return mZoom;
+	}
+
+<span class="nc" id="L248">	public void setZoom(int pZoom) {</span>
+		mZoom = pZoom;
+	}
+
+<span class="nc" id="L252">	public MindMapNode getNode() {</span>
+		return super.getNode();
+	}
+
+	/**
+	 */
+<span class="nc" id="L258">	public String getImageHtml() {</span>
+		String imageTag = getImageTag();
+		String imageHtml = &quot;&lt;html&gt;&lt;body&gt;&quot; + imageTag + &quot;&lt;/body&gt;&lt;/html&gt;&quot;;
+		logger.fine(&quot;Tooltip at &quot; + imageTag);
+		return imageHtml;
+	}
+
+<span class="nc" id="L265">	protected String getImageTag() {</span>
+		String imageTag = &quot;ERROR&quot;;
+		try {
+			imageTag = &quot;&lt;img src=\&quot;&quot; + Tools.fileToUrl(getTooltipFile(false))
+					+ &quot;\&quot;/&gt;&quot;;
+		} catch (MalformedURLException e) {
+			freemind.main.Resources.getInstance().logException(e);
+
+		}
+		return imageTag;
+	}
+
+<span class="nc" id="L277">	public File getTooltipFile(boolean pForce) {</span>
+		if (mTooltipFile != null) {
+			return mTooltipFile;
+		}
+		File mapFile = getMap().getFile();
+		boolean storeProperty = Resources.getInstance().getBoolProperty(
+				NODE_MAP_STORE_TOOLTIP)
+				|| pForce;
+		if (mapFile == null || !storeProperty) {
+			try {
+				if (mapFile == null) {
+					// Houston, we have a problem
+					logger.warning(&quot;Creating tooltip in .freemind directory, &quot;
+							+ &quot;as we don't know, where the map will be stored.&quot;);
+				}
+				mTooltipFile = File.createTempFile(&quot;node_map_tooltip_&quot;
+						+ getNodeId(), &quot;.png&quot;, new File(getController()
+						.getFrame().getFreemindDirectory()));
+				// not persistent.
+				if (!pForce) {
+					mTooltipFile.deleteOnExit();
+				}
+			} catch (IOException e) {
+				freemind.main.Resources.getInstance().logException(e);
+			}
+		} else {
+			String createdFileName = mapFile.getAbsolutePath() + &quot;_map_&quot;
+					+ getNodeId() + &quot;.png&quot;;
+			mTooltipFile = new File(createdFileName);
+			if (!pForce) {
+				// only store location, if not forced from outside.
+				mTooltipLocation = mTooltipFile.getName();
+			}
+		}
+		return mTooltipFile;
+	}
+
+	public boolean createToolTip(boolean pForce) {
+		boolean success = true;
+		// order tooltip to be created.
+		TileImage tileImage;
+<span class="nc" id="L318">		tileImage = getRegistration().getImageForTooltip(mPosition, mZoom,</span>
+				mTileSource);
+		if (!tileImage.hasErrors()) {
+			logger.fine(&quot;Creating tooltip for &quot; + getNode());
+			// save image to disk:
+			try {
+				File tooltipFile = getTooltipFile(pForce);
+				ImageIO.write(tileImage.getImage(), &quot;png&quot;, tooltipFile);
+				addTooltip();
+			} catch (IOException e) {
+				freemind.main.Resources.getInstance().logException(e);
+			}
+		} else {
+			tileImage = null;
+			logger.warning(&quot;Tooltip for node '&quot; + getNode()
+					+ &quot;' has errors on creation.&quot;);
+			success = false;
+		}
+		return success;
+	}
+
+<span class="nc" id="L339">	public String getNodeId() {</span>
+		return getMindMapController().getNodeID(getNode());
+	}
+
+	/**
+	 * @return
+	 */
+<span class="nc" id="L346">	private MindMapController getMindMapController() {</span>
+		return (MindMapController) getController();
+	}
+
+	/**
+	 * 
+	 */
+<span class="nc" id="L353">	public void recreateTooltip() {</span>
+		// remove file from disk.
+		getTooltipFile(false).delete();
+		mTooltipLocation = null;
+		showTooltip();
+	}
+
+	/**
+	 * @return This method returns true, when a parent of the corresponding node
+	 *         is folded.
+	 */
+<span class="nc" id="L364">	public boolean hasFoldedParents() {</span>
+		return getNode().hasFoldedParents();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHookAdapter#onViewCreatedHook(freemind
+	 * .view.mindmapview.NodeView)
+	 */
+<span class="nc" id="L375">	public void onViewCreatedHook(NodeView pNodeView) {</span>
+		super.onViewCreatedHook(pNodeView);
+		logger.fine(&quot;View created for &quot; + this);
+		getRegistration().fireNodeVisibilityChanged(true, this);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHookAdapter#onViewRemovedHook(freemind
+	 * .view.mindmapview.NodeView)
+	 */
+<span class="nc" id="L388">	public void onViewRemovedHook(NodeView pNodeView) {</span>
+		super.onViewRemovedHook(pNodeView);
+		logger.fine(&quot;Removed view for &quot; + this);
+		getRegistration().fireNodeVisibilityChanged(false, this);
+	}
+
+	public String toString() {
+<span class="nc" id="L395">		return &quot;MapNodePositionHolder [mPosition=&quot; + mPosition</span>
+				+ &quot;, mMapCenter=&quot; + mMapCenter + &quot;, mTileSource=&quot; + mTileSource
+				+ &quot;, mZoom=&quot; + mZoom + &quot;, getNode()=&quot; + getNode() + &quot;]&quot;;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHookAdapter#saveHtml(java.io.Writer)
+	 */
+	public void saveHtml(Writer pFileout) throws IOException {
+		super.saveHtml(pFileout);
+		if (sMapLocationGif == null) {
+			sMapLocationGif = getController().getFrame().getProperty(
+					MAP_LOCATION);
+		}
+<span class="nc" id="L412">		String link = FreeMindMapController.getLink(mTileSource, mPosition,</span>
+				mMapCenter, mZoom);
+		// to embed the original thumb nail: getImageTag() +
+		pFileout.append(&quot;&lt;a href=\&quot;&quot; + link + &quot;\&quot;&gt;&quot; + &quot;&lt;img src=\&quot;&quot;
+				+ sMapLocationGif + &quot;\&quot;/&gt;&lt;/a&gt;&quot;);
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

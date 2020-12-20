@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left">Prev - <a href="Intro.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+
+<h1>SDMetrics User Manual</h1>
+Version 2.32
+
+<h2>Table of Contents</h2>
+<a href="Intro.html">1&nbsp;Introduction</a><br>
+<a href="Install.html">2&nbsp;Installation</a><br>
+<a href="SysReq.html">2.1&nbsp;System Requirements</a><br>
+<a href="QuickInst.html">2.2&nbsp;Quick Installation and Start</a><br>
+<a href="InstProc.html">2.3&nbsp;Installing SDMetrics</a><br>
+<a href="InstUpdate.html">2.4&nbsp;Updating SDMetrics from an Older Version</a><br>
+<a href="Invoke.html">2.5&nbsp;Invoking SDMetrics</a><br>
+<a href="UnInst.html">2.6&nbsp;Uninstalling SDMetrics</a><br>
+<a href="GetStart.html">3&nbsp;Getting Started</a><br>
+<a href="MainWind.html">4&nbsp;The SDMetrics User Interface</a><br>
+<a href="Help.html">4.1&nbsp;Getting Help</a><br>
+<a href="ProjSettings.html">4.2&nbsp;Specifying Project Settings</a><br>
+<a href="ViewMetrics.html">4.3&nbsp;Calculating and Viewing Metric Data</a><br>
+<a href="TableView.html">4.4&nbsp;The View 'Metric Data Tables'</a><br>
+<a href="BrowseMet.html">4.5&nbsp;The View 'Histograms'</a><br>
+<a href="BrowseEl.html">4.6&nbsp;The View 'Kiviat Diagrams'</a><br>
+<a href="Rules.html">4.7&nbsp;The View 'Rule Checker'</a><br>
+<a href="DStatsView.html">4.8&nbsp;The View 'Descriptive Statistics'</a><br>
+<a href="CompDes.html">4.9&nbsp;The View 'Design Comparison'</a><br>
+<a href="RelMat.html">4.10&nbsp;The View 'Relation Matrices'</a><br>
+<a href="GraphStruct.html">4.11&nbsp;The View 'Graph Structures'</a><br>
+<a href="ModelDump.html">4.12&nbsp;The View 'Model'</a><br>
+<a href="MetCat.html">4.13&nbsp;The View 'Catalog'</a><br>
+<a href="LogView.html">4.14&nbsp;The View 'Log'</a><br>
+<a href="ExportData.html">4.15&nbsp;Exporting Data</a><br>
+<a href="Preferences.html">4.16&nbsp;Setting Preferences</a><br>
+<a href="CmdLine.html">5&nbsp;Running SDMetrics from the Command Line</a><br>
+<a href="DesignMsmt.html">6&nbsp;Design Measurement</a><br>
+<a href="Internal.html">6.1&nbsp;Design Metrics and System Quality</a><br>
+<a href="SProp.html">6.2&nbsp;Structural Design Properties</a><br>
+<a href="Techniques.html">6.3&nbsp;Data Analysis Techniques</a><br>
+<a href="MetaTrans.html">7&nbsp;SDMetrics Metamodel and XMI Transformation Files</a><br>
+<a href="MetaModel.html">7.1&nbsp;SDMetrics Metamodel</a><br>
+<a href="TransFile.html">7.2&nbsp;XMI Transformation Files</a><br>
+<a href="MetricDef.html">8&nbsp;Defining Custom Design Metrics and Rules</a><br>
+<a href="DefMetrics.html">8.1&nbsp;Definition of Metrics</a><br>
+<a href="DefSets.html">8.2&nbsp;Definition of Sets</a><br>
+<a href="DefRules.html">8.3&nbsp;Definition of Design Rules</a><br>
+<a href="DefRelMat.html">8.4&nbsp;Definition of Relation Matrices</a><br>
+<a href="ExpTerms.html">8.5&nbsp;Expression Terms</a><br>
+<a href="WriteDesc.html">8.6&nbsp;Writing Descriptions</a><br>
+<a href="Profiles.html">8.7&nbsp;Defining Metrics for Profiles</a><br>
+<a href="ExtendME.html">9&nbsp;Extending the Metrics and Rule Engine</a><br>
+<a href="MetProc.html">9.1&nbsp;Metric Procedures</a><br>
+<a href="SetProc.html">9.2&nbsp;Set Procedures</a><br>
+<a href="RuleProc.html">9.3&nbsp;Rule Procedures</a><br>
+<a href="CustBoolFunc.html">9.4&nbsp;Boolean Functions</a><br>
+<a href="CustScalarFunc.html">9.5&nbsp;Scalar Functions</a><br>
+<a href="CustSetFunc.html">9.6&nbsp;Set Functions</a><br>
+<a href="EngineExRemarks.html">9.7&nbsp;Metrics Engine Extension Guidelines</a><br>
+<a href="LOMeta.html">A:&nbsp;Metamodels</a><br>
+<a href="Meta1.html">A.1&nbsp;Metamodel for UML 1.3/1.4</a><br>
+<a href="Meta2.html">A.2&nbsp;Metamodel for UML 2.x</a><br>
+<a href="LOMetrics.html">B:&nbsp;List of Design Metrics</a><br>
+<a href="Metrics_class.html">B.1&nbsp;Class Metrics</a><br>
+<a href="Metrics_interface.html">B.2&nbsp;Interface Metrics</a><br>
+<a href="Metrics_package.html">B.3&nbsp;Package Metrics</a><br>
+<a href="Metrics_interaction.html">B.4&nbsp;Interaction Metrics</a><br>
+<a href="Metrics_usecase.html">B.5&nbsp;Usecase Metrics</a><br>
+<a href="Metrics_statemachine.html">B.6&nbsp;Statemachine Metrics</a><br>
+<a href="Metrics_activity.html">B.7&nbsp;Activity Metrics</a><br>
+<a href="Metrics_component.html">B.8&nbsp;Component Metrics</a><br>
+<a href="Metrics_node.html">B.9&nbsp;Node Metrics</a><br>
+<a href="Metrics_diagram.html">B.10&nbsp;Diagram Metrics</a><br>
+<a href="LORules.html">C:&nbsp;List of Design Rules</a><br>
+<a href="Rules_class.html">C.1&nbsp;Class Rules</a><br>
+<a href="Rules_interface.html">C.2&nbsp;Interface Rules</a><br>
+<a href="Rules_datatype.html">C.3&nbsp;Datatype Rules</a><br>
+<a href="Rules_property.html">C.4&nbsp;Property Rules</a><br>
+<a href="Rules_operation.html">C.5&nbsp;Operation Rules</a><br>
+<a href="Rules_parameter.html">C.6&nbsp;Parameter Rules</a><br>
+<a href="Rules_package.html">C.7&nbsp;Package Rules</a><br>
+<a href="Rules_association.html">C.8&nbsp;Association Rules</a><br>
+<a href="Rules_associationclass.html">C.9&nbsp;Associationclass Rules</a><br>
+<a href="Rules_generalization.html">C.10&nbsp;Generalization Rules</a><br>
+<a href="Rules_interfacerealization.html">C.11&nbsp;Interfacerealization Rules</a><br>
+<a href="Rules_dependency.html">C.12&nbsp;Dependency Rules</a><br>
+<a href="Rules_interaction.html">C.13&nbsp;Interaction Rules</a><br>
+<a href="Rules_actor.html">C.14&nbsp;Actor Rules</a><br>
+<a href="Rules_usecase.html">C.15&nbsp;Usecase Rules</a><br>
+<a href="Rules_statemachine.html">C.16&nbsp;Statemachine Rules</a><br>
+<a href="Rules_region.html">C.17&nbsp;Region Rules</a><br>
+<a href="Rules_state.html">C.18&nbsp;State Rules</a><br>
+<a href="Rules_activitygroup.html">C.19&nbsp;Activitygroup Rules</a><br>
+<a href="Rules_action.html">C.20&nbsp;Action Rules</a><br>
+<a href="Rules_controlnode.html">C.21&nbsp;Controlnode Rules</a><br>
+<a href="Rules_objectnode.html">C.22&nbsp;Objectnode Rules</a><br>
+<a href="Rules_pin.html">C.23&nbsp;Pin Rules</a><br>
+<a href="Rules_controlflow.html">C.24&nbsp;Controlflow Rules</a><br>
+<a href="Rules_objectflow.html">C.25&nbsp;Objectflow Rules</a><br>
+<a href="LOMatrices.html">D:&nbsp;List of Matrices</a><br>
+<a href="ProjFileFormats.html">E:&nbsp;Project File Format Definitions</a><br>
+<a href="Glossary.html">F:&nbsp;Glossary</a><br>
+<a href="References.html">G:&nbsp;References</a><br>
+
+<p class="legal">Oracle and Java are registered trademarks of Oracle 
+and/or its affiliates.
+Linux is a trademark of Linus Torvalds. UNIX is a registered trademark
+of X/Open Company Limited. Windows, Excel are registered trademarks of
+Microsoft, Inc. MOF, UML and XMI are either registered trademarks or
+trademarks of the Object Management Group, Inc. MagicDraw is a
+trademark or registered trademark of No Magic, Inc. XML is a trademark
+of the World-Wide Web Consortium. SDMetrics is a registered trademark
+of J&uuml;rgen W&uuml;st. All other product names and company names
+mentioned herein are the property of their respective owners.</p>
+
+<p class="legal">All rights reserved. No part of this manual may be
+reproduced, in any form or by any means, without permission in writing
+from the author.</p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left">Prev</td>
+<td width="20%" class="nav" align="center">Up</td>
+<td width="40%" class="nav" align="right"><a href="Intro.html">Next</a></td>
+</tr><tr><td class="nav" align="left"></td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;1 "Introduction"</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>SchemeController.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.schememode</a> &gt; <span class="el_source">SchemeController.java</span></div><h1>SchemeController.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes.schememode;
+
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.util.StringTokenizer;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+
+import freemind.controller.MenuBar;
+import freemind.controller.StructuredMenuHolder;
+import freemind.extensions.HookFactory;
+import freemind.modes.FreeMindFileDialog;
+import freemind.modes.MapAdapter;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.Mode;
+import freemind.modes.ModeController;
+import freemind.modes.common.actions.NewMapAction;
+import freemind.modes.viewmodes.ViewControllerAdapter;
+
+public class SchemeController extends ViewControllerAdapter {
+
+<span class="nc" id="L47">	Action newMap = new NewMapAction(this);</span>
+<span class="nc" id="L48">	Action open = new OpenAction(this);</span>
+<span class="nc" id="L49">	Action save = new SaveAction(this);</span>
+<span class="nc" id="L50">	Action saveAs = new SaveAsAction(this);</span>
+<span class="nc" id="L51">	Action evaluate = new EvaluateAction();</span>
+	// Action edit = new EditAction(this);
+<span class="nc" id="L53">	private JPopupMenu popupmenu = new SchemePopupMenu(this);</span>
+
+	public SchemeController(Mode mode) {
+<span class="nc" id="L56">		super(mode);</span>
+<span class="nc" id="L57">	}</span>
+
+	public MapAdapter newModel(ModeController modeController) {
+<span class="nc" id="L60">		return new SchemeMapModel(getFrame(), modeController);</span>
+	}
+
+	public MindMapNode newNode(Object userObject, MindMap map) {
+<span class="nc" id="L64">		return new SchemeNodeModel(getFrame(), map);</span>
+	}
+
+	// //private
+	// private MindMap getModel() {
+	// return (MindMap)getController().getModel();
+	// }
+
+	public boolean saveAs() {
+<span class="nc" id="L73">		FreeMindFileDialog chooser = getFileChooser();</span>
+<span class="nc" id="L74">		int returnVal = chooser.showSaveDialog(getView());</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (returnVal == JFileChooser.APPROVE_OPTION) {// ok pressed</span>
+<span class="nc" id="L76">			File f = chooser.getSelectedFile();</span>
+			// Force the extension to be .mm
+			// String ext = Tools.getExtension(f.getName());
+			// if(!ext.equals(freemind.main.FreeMindCommon.FREEMIND_FILE_EXTENSION_WITHOUT_DOT))
+			// {
+			// f = new
+			// File(f.getParent(),f.getName()+freemind.main.FreeMindCommon.FREEMIND_FILE_EXTENSION);
+			// }
+<span class="nc" id="L84">			save(f);</span>
+			// Update the name of the map
+<span class="nc" id="L86">			updateMapModuleName();</span>
+<span class="nc" id="L87">			return true;</span>
+		}
+<span class="nc" id="L89">		return false;</span>
+	}
+
+	public JPopupMenu getPopupMenu() {
+<span class="nc" id="L93">		return this.popupmenu;</span>
+	}
+
+	private class EvaluateAction extends AbstractAction {
+<span class="nc" id="L97">		EvaluateAction() {</span>
+<span class="nc" id="L98">			super(getController().getResourceString(&quot;scheme_evaluate&quot;));</span>
+<span class="nc" id="L99">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L102">			String rawCode = ((SchemeMapModel) getMap()).getCode().trim();</span>
+<span class="nc" id="L103">			System.out.println(rawCode);</span>
+<span class="nc" id="L104">			StringTokenizer code = new StringTokenizer(rawCode, &quot;,&quot;);</span>
+<span class="nc" id="L105">			String output = &quot;Output: \n&quot;;</span>
+			// while(code.hasMoreTokens()) {
+			// output = output + (SI.eval(code.nextToken()).toString())+&quot;\n&quot;;
+			// }
+<span class="nc" id="L109">			JOptionPane.showMessageDialog(getView(), output);</span>
+<span class="nc" id="L110">		}</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.ModeController#updateMenus(freemind.controller.
+	 * StructuredMenuHolder)
+	 */
+	public void updateMenus(StructuredMenuHolder holder) {
+<span class="nc" id="L120">		holder.addAction(newMap, MenuBar.FILE_MENU + &quot;open/new&quot;);</span>
+<span class="nc" id="L121">		holder.addAction(open, MenuBar.FILE_MENU + &quot;open/open&quot;);</span>
+<span class="nc" id="L122">		holder.addAction(save, MenuBar.FILE_MENU + &quot;open/save&quot;);</span>
+<span class="nc" id="L123">		holder.addAction(saveAs, MenuBar.FILE_MENU + &quot;open/saveAs&quot;);</span>
+
+		// JMenuItem editItem = holder.addAction(edit,
+		// MenuBar.EDIT_MENU+&quot;edit/editItem&quot;);
+		// editItem.setAccelerator(KeyStroke.getKeyStroke(getFrame().getAdjustableProperty(&quot;keystroke_edit&quot;)));
+		// JMenuItem addNewItem = holder.addAction(addNew,
+		// MenuBar.EDIT_MENU+&quot;edit/newItem&quot;);
+		// addNewItem.setAccelerator(KeyStroke.getKeyStroke(getFrame().getAdjustableProperty(&quot;keystroke_add&quot;)));
+		// JMenuItem removeItem = holder.addAction(remove,
+		// MenuBar.EDIT_MENU+&quot;edit/removeItem&quot;);
+		// removeItem.setAccelerator(KeyStroke.getKeyStroke(getFrame().getAdjustableProperty(&quot;keystroke_remove&quot;)));
+<span class="nc" id="L134">		holder.addAction(evaluate, MenuBar.EDIT_MENU + &quot;edit/evaluate&quot;);</span>
+<span class="nc" id="L135">		holder.addAction(toggleFolded, MenuBar.EDIT_MENU + &quot;edit/toggleFolded&quot;);</span>
+
+<span class="nc" id="L137">	}</span>
+
+	public HookFactory getHookFactory() {
+<span class="nc" id="L140">		throw new IllegalArgumentException(&quot;Not implemented yet.&quot;);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

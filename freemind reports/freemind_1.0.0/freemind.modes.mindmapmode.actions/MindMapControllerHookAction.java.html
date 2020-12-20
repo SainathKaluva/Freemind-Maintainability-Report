@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapControllerHookAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">MindMapControllerHookAction.java</span></div><h1>MindMapControllerHookAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2008 Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 10.01.2008
+ */
+/*$Id: MindMapControllerHookAction.java,v 1.1.2.1 2008/01/13 20:55:35 christianfoltin Exp $*/
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+
+import freemind.modes.mindmapmode.MindMapController;
+
+public class MindMapControllerHookAction extends AbstractAction implements
+		HookAction {
+	String mHookName;
+	MindMapController mindMapController;
+
+	public MindMapControllerHookAction(String hookName,
+			MindMapController mindMapController) {
+<span class="nc" id="L39">		super(hookName);</span>
+<span class="nc" id="L40">		this.mHookName = hookName;</span>
+<span class="nc" id="L41">		this.mindMapController = mindMapController;</span>
+<span class="nc" id="L42">	}</span>
+
+	public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L45">		mindMapController.createModeControllerHook(mHookName);</span>
+<span class="nc" id="L46">	}</span>
+
+	public String getHookName() {
+<span class="nc" id="L49">		return mHookName;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>RemoveMapToNodeAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.map</a> &gt; <span class="el_source">RemoveMapToNodeAction.java</span></div><h1>RemoveMapToNodeAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+*Copyright (C) 2000-2011 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+*
+*See COPYING for Details
+*
+*This program is free software; you can redistribute it and/or
+*modify it under the terms of the GNU General Public License
+*as published by the Free Software Foundation; either version 2
+*of the License, or (at your option) any later version.
+*
+*This program is distributed in the hope that it will be useful,
+*but WITHOUT ANY WARRANTY; without even the implied warranty of
+*MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*GNU General Public License for more details.
+*
+*You should have received a copy of the GNU General Public License
+*along with this program; if not, write to the Free Software
+*Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package plugins.map;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import freemind.modes.MindMapNode;
+import freemind.modes.common.plugins.MapNodePositionHolderBase;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+
+/**
+ * @author foltin
+ * @date 13.12.2011
+ */
+<span class="nc" id="L35">public class RemoveMapToNodeAction extends MindMapNodeHookAdapter {</span>
+	
+	static final String NODE_CONTEXT_PLUGIN_NAME = &quot;plugins/map/MapDialog_RemoveMapToNode.properties&quot;;
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.NodeHookAdapter#invoke(freemind.modes.MindMapNode)
+	 */
+	public void invoke(MindMapNode pNode) {
+<span class="nc" id="L43">		super.invoke(pNode);</span>
+<span class="nc" id="L44">		List selecteds = getMindMapController().getSelecteds();</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">		for (Iterator it = selecteds.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L46">			MindMapNode node = (MindMapNode) it.next();</span>
+<span class="nc" id="L47">			MapNodePositionHolderBase hook = MapNodePositionHolder.getHook(node);</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">			if(hook != null) {</span>
+<span class="nc" id="L49">				List nodeSelected = Arrays.asList(new MindMapNode[] { node });</span>
+				// double add = remove
+<span class="nc" id="L51">				getMindMapController().addHook(node, nodeSelected,</span>
+<span class="nc" id="L52">						MapNodePositionHolderBase.NODE_MAP_HOOK_NAME, null);</span>
+
+			}
+		}
+<span class="nc" id="L56">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

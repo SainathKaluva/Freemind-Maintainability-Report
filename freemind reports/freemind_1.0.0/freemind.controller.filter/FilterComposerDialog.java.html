@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FilterComposerDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter</a> &gt; <span class="el_source">FilterComposerDialog.java</span></div><h1>FilterComposerDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 05.05.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.controller.filter;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.ComboBoxModel;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileFilter;
+
+import freemind.common.NamedObject;
+import freemind.controller.Controller;
+import freemind.controller.filter.condition.Condition;
+import freemind.controller.filter.condition.ConditionNotSatisfiedDecorator;
+import freemind.controller.filter.condition.ConjunctConditions;
+import freemind.controller.filter.condition.DisjunctConditions;
+import freemind.controller.filter.util.ExtendedComboBoxModel;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.FreeMindFileDialog;
+import freemind.modes.MapRegistry;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMap;
+import freemind.modes.ModeController;
+import freemind.modes.attributes.AttributeRegistry;
+
+/**
+ * @author dimitri
+ * 
+ */
+public class FilterComposerDialog extends JDialog {
+<span class="nc" id="L79">	private static final Dimension maxButtonDimension = new Dimension(1000,</span>
+<span class="nc" id="L80">			1000);</span>
+
+	/**
+	 * @author dimitri 06.05.2005
+	 */
+	private class AddConditionAction extends AbstractAction {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+<span class="nc" id="L93">		AddConditionAction() {</span>
+<span class="nc" id="L94">			super();</span>
+<span class="nc" id="L95">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L96">					.getResourceString(&quot;filter_add&quot;));</span>
+<span class="nc" id="L97">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+			Condition newCond;
+			String value;
+			try {
+<span class="nc" id="L103">				value = getAttributeValue();</span>
+<span class="nc" id="L104">			} catch (NullPointerException ex) {</span>
+<span class="nc" id="L105">				return;</span>
+			}
+<span class="nc" id="L107">			NamedObject simpleCond = (NamedObject) simpleCondition</span>
+<span class="nc" id="L108">					.getSelectedItem();</span>
+<span class="nc" id="L109">			boolean ignoreCase = caseInsensitive.isSelected();</span>
+
+<span class="nc" id="L111">			Object selectedItem = attributes.getSelectedItem();</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			if (selectedItem instanceof NamedObject) {</span>
+<span class="nc" id="L113">				NamedObject attribute = (NamedObject) selectedItem;</span>
+<span class="nc" id="L114">				newCond = fc.getConditionFactory().createCondition(attribute,</span>
+<span class="nc" id="L115">						simpleCond, value, ignoreCase);</span>
+<span class="nc" id="L116">			} else {</span>
+<span class="nc" id="L117">				String attribute = selectedItem.toString();</span>
+<span class="nc" id="L118">				newCond = fc.getConditionFactory().createAttributeCondition(</span>
+<span class="nc" id="L119">						attribute, simpleCond, value, ignoreCase);</span>
+			}
+<span class="nc" id="L121">			DefaultComboBoxModel model = (DefaultComboBoxModel) conditionList</span>
+<span class="nc" id="L122">					.getModel();</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			if (newCond != null)</span>
+<span class="nc" id="L124">				model.addElement(newCond);</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (values.isEditable()) {</span>
+<span class="nc" id="L126">				Object item = values.getSelectedItem();</span>
+<span class="nc bnc" id="L127" title="All 4 branches missed.">				if (item != null &amp;&amp; !item.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L128">					values.removeItem(item);</span>
+<span class="nc" id="L129">					values.insertItemAt(item, 0);</span>
+<span class="nc" id="L130">					values.setSelectedIndex(0);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">					if (values.getItemCount() &gt;= 10)</span>
+<span class="nc" id="L132">						values.removeItemAt(9);</span>
+				}
+			}
+<span class="nc" id="L135">			validate();</span>
+<span class="nc" id="L136">		}</span>
+	}
+
+	private class DeleteConditionAction extends AbstractAction {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+<span class="nc" id="L147">		DeleteConditionAction() {</span>
+<span class="nc" id="L148">			super();</span>
+<span class="nc" id="L149">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L150">					.getResourceString(&quot;filter_delete&quot;));</span>
+<span class="nc" id="L151">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L154">			DefaultComboBoxModel model = (DefaultComboBoxModel) conditionList</span>
+<span class="nc" id="L155">					.getModel();</span>
+<span class="nc" id="L156">			final int minSelectionIndex = conditionList.getMinSelectionIndex();</span>
+			int selectedIndex;
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			while (0 &lt;= (selectedIndex = conditionList.getSelectedIndex())) {</span>
+<span class="nc" id="L159">				model.removeElementAt(selectedIndex);</span>
+			}
+<span class="nc" id="L161">			final int size = conditionList.getModel().getSize();</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">			if (size &gt; 0) {</span>
+<span class="nc" id="L163">				conditionList</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">						.setSelectedIndex(minSelectionIndex &lt; size ? minSelectionIndex</span>
+<span class="nc" id="L165">								: size - 1);</span>
+			}
+<span class="nc" id="L167">			validate();</span>
+<span class="nc" id="L168">		}</span>
+	}
+
+	private class CreateNotSatisfiedConditionAction extends AbstractAction {
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+<span class="nc" id="L179">		CreateNotSatisfiedConditionAction() {</span>
+<span class="nc" id="L180">			super();</span>
+<span class="nc" id="L181">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L182">					.getResourceString(&quot;filter_not&quot;));</span>
+<span class="nc" id="L183">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L186">			int min = conditionList.getMinSelectionIndex();</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (min &gt;= 0) {</span>
+<span class="nc" id="L188">				int max = conditionList.getMinSelectionIndex();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">				if (min == max) {</span>
+<span class="nc" id="L190">					Condition oldCond = (Condition) conditionList</span>
+<span class="nc" id="L191">							.getSelectedValue();</span>
+<span class="nc" id="L192">					Condition newCond = new ConditionNotSatisfiedDecorator(</span>
+<span class="nc" id="L193">							oldCond);</span>
+<span class="nc" id="L194">					DefaultComboBoxModel model = (DefaultComboBoxModel) conditionList</span>
+<span class="nc" id="L195">							.getModel();</span>
+<span class="nc" id="L196">					model.addElement(newCond);</span>
+<span class="nc" id="L197">					validate();</span>
+
+				}
+			}
+<span class="nc" id="L201">		}</span>
+	}
+
+	private class CreateConjunctConditionAction extends AbstractAction {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+<span class="nc" id="L213">		CreateConjunctConditionAction() {</span>
+<span class="nc" id="L214">			super();</span>
+<span class="nc" id="L215">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L216">					.getResourceString(&quot;filter_and&quot;));</span>
+<span class="nc" id="L217">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L220">			Object[] selectedValues = conditionList.getSelectedValues();</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			if (selectedValues.length &lt; 2)</span>
+<span class="nc" id="L222">				return;</span>
+<span class="nc" id="L223">			Condition newCond = new ConjunctConditions(selectedValues);</span>
+<span class="nc" id="L224">			DefaultComboBoxModel model = (DefaultComboBoxModel) conditionList</span>
+<span class="nc" id="L225">					.getModel();</span>
+<span class="nc" id="L226">			model.addElement(newCond);</span>
+<span class="nc" id="L227">			validate();</span>
+
+<span class="nc" id="L229">		}</span>
+	}
+
+	private class CreateDisjunctConditionAction extends AbstractAction {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+<span class="nc" id="L241">		CreateDisjunctConditionAction() {</span>
+<span class="nc" id="L242">			super();</span>
+<span class="nc" id="L243">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L244">					.getResourceString(&quot;filter_or&quot;));</span>
+<span class="nc" id="L245">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L248">			Object[] selectedValues = conditionList.getSelectedValues();</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (selectedValues.length &lt; 2)</span>
+<span class="nc" id="L250">				return;</span>
+<span class="nc" id="L251">			Condition newCond = new DisjunctConditions(selectedValues);</span>
+<span class="nc" id="L252">			DefaultComboBoxModel model = (DefaultComboBoxModel) conditionList</span>
+<span class="nc" id="L253">					.getModel();</span>
+<span class="nc" id="L254">			model.addElement(newCond);</span>
+<span class="nc" id="L255">			validate();</span>
+
+<span class="nc" id="L257">		}</span>
+	}
+
+<span class="nc" id="L260">	private class ConditionListSelectionListener implements</span>
+			ListSelectionListener, ListDataListener {
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * javax.swing.event.ListSelectionListener#valueChanged(javax.swing.
+		 * event.ListSelectionEvent)
+		 */
+		public void valueChanged(ListSelectionEvent e) {
+
+<span class="nc bnc" id="L272" title="All 2 branches missed.">			if (conditionList.getMinSelectionIndex() == -1) {</span>
+<span class="nc" id="L273">				btnNot.setEnabled(false);</span>
+<span class="nc" id="L274">				btnAnd.setEnabled(false);</span>
+<span class="nc" id="L275">				btnOr.setEnabled(false);</span>
+<span class="nc" id="L276">				btnDelete.setEnabled(false);</span>
+<span class="nc" id="L277">				return;</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">			} else if (conditionList.getMinSelectionIndex() == conditionList</span>
+<span class="nc" id="L279">					.getMaxSelectionIndex()) {</span>
+<span class="nc" id="L280">				btnNot.setEnabled(true);</span>
+<span class="nc" id="L281">				btnAnd.setEnabled(false);</span>
+<span class="nc" id="L282">				btnOr.setEnabled(false);</span>
+<span class="nc" id="L283">				btnDelete.setEnabled(true);</span>
+<span class="nc" id="L284">				return;</span>
+			} else {
+<span class="nc" id="L286">				btnNot.setEnabled(false);</span>
+<span class="nc" id="L287">				btnAnd.setEnabled(true);</span>
+<span class="nc" id="L288">				btnOr.setEnabled(true);</span>
+<span class="nc" id="L289">				btnDelete.setEnabled(true);</span>
+			}
+<span class="nc" id="L291">		}</span>
+
+		public void intervalAdded(ListDataEvent e) {
+<span class="nc" id="L294">			conditionList.setSelectedIndex(e.getIndex0());</span>
+<span class="nc" id="L295">		}</span>
+
+		public void intervalRemoved(ListDataEvent e) {
+<span class="nc" id="L298">		}</span>
+
+		public void contentsChanged(ListDataEvent e) {
+<span class="nc" id="L301">		}</span>
+
+	}
+
+<span class="nc" id="L305">	private class ConditionListMouseListener extends MouseAdapter {</span>
+
+		public void mouseClicked(MouseEvent e) {
+<span class="nc bnc" id="L308" title="All 2 branches missed.">			if (e.getClickCount() == 2) {</span>
+<span class="nc" id="L309">				EventQueue.invokeLater(new Runnable() {</span>
+					public void run() {
+<span class="nc bnc" id="L311" title="All 2 branches missed.">						if (selectCondition()) {</span>
+<span class="nc" id="L312">							dispose();</span>
+						}
+<span class="nc" id="L314">					}</span>
+				});
+			}
+<span class="nc" id="L317">		}</span>
+	}
+
+<span class="nc" id="L320">	private class CloseAction implements ActionListener {</span>
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L322">			Object source = e.getSource();</span>
+<span class="nc bnc" id="L323" title="All 4 branches missed.">			if (source == btnOK || source == btnApply)</span>
+<span class="nc" id="L324">				applyChanges();</span>
+<span class="nc bnc" id="L325" title="All 4 branches missed.">			if (source == btnOK || source == btnCancel)</span>
+<span class="nc" id="L326">				dispose();</span>
+			else
+<span class="nc" id="L328">				initInternalConditionModel();</span>
+<span class="nc" id="L329">		}</span>
+	}
+
+<span class="nc" id="L332">	static private class MindMapFilterFileFilter extends FileFilter {</span>
+<span class="nc" id="L333">		static FileFilter filter = new MindMapFilterFileFilter();</span>
+
+		public boolean accept(File f) {
+<span class="nc bnc" id="L336" title="All 2 branches missed.">			if (f.isDirectory())</span>
+<span class="nc" id="L337">				return true;</span>
+<span class="nc" id="L338">			String extension = Tools.getExtension(f.getName());</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			if (extension != null) {</span>
+<span class="nc" id="L340">				if (extension</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">						.equals(FilterController.FREEMIND_FILTER_EXTENSION_WITHOUT_DOT)) {</span>
+<span class="nc" id="L342">					return true;</span>
+				} else {
+<span class="nc" id="L344">					return false;</span>
+				}
+			}
+<span class="nc" id="L347">			return false;</span>
+		}
+
+		public String getDescription() {
+<span class="nc" id="L351">			return Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L352">					&quot;mindmaps_filter_desc&quot;);</span>
+		}
+	}
+
+	protected FreeMindFileDialog getFileChooser() {
+<span class="nc" id="L357">		final ModeController modeController = fc.getMap().getModeController();</span>
+<span class="nc" id="L358">		FreeMindFileDialog chooser = modeController</span>
+<span class="nc" id="L359">				.getFileChooser(MindMapFilterFileFilter.filter);</span>
+<span class="nc" id="L360">		return chooser;</span>
+	}
+
+<span class="nc" id="L363">	private class SaveAction implements ActionListener {</span>
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L365">			FreeMindFileDialog chooser = getFileChooser();</span>
+<span class="nc" id="L366">			chooser.setDialogTitle(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L367">					&quot;save_as&quot;));</span>
+<span class="nc" id="L368">			int returnVal = chooser.showSaveDialog(FilterComposerDialog.this);</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">			if (returnVal != JFileChooser.APPROVE_OPTION) {// not ok pressed</span>
+<span class="nc" id="L370">				return;</span>
+			}
+
+			// |= Pressed O.K.
+			try {
+<span class="nc" id="L375">				File f = chooser.getSelectedFile();</span>
+<span class="nc" id="L376">				String canonicalPath = f.getCanonicalPath();</span>
+<span class="nc" id="L377">				final String suffix = '.' + FilterController.FREEMIND_FILTER_EXTENSION_WITHOUT_DOT;</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">				if (!canonicalPath.endsWith(suffix)) {</span>
+<span class="nc" id="L379">					canonicalPath = canonicalPath + suffix;</span>
+				}
+<span class="nc" id="L381">				fc.saveConditions(internalConditionsModel, canonicalPath);</span>
+<span class="nc" id="L382">			} catch (Exception ex) {</span>
+<span class="nc" id="L383">				handleSavingException(ex);</span>
+			}
+<span class="nc" id="L385">		}</span>
+
+		private void handleSavingException(Exception ex) {
+			// TODO Auto-generated method stub
+
+<span class="nc" id="L390">		}</span>
+
+	}
+
+<span class="nc" id="L394">	private class LoadAction implements ActionListener {</span>
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L396">			FreeMindFileDialog chooser = getFileChooser();</span>
+<span class="nc" id="L397">			int returnVal = chooser.showOpenDialog(FilterComposerDialog.this);</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">			if (returnVal == JFileChooser.APPROVE_OPTION) {</span>
+				try {
+<span class="nc" id="L400">					File theFile = chooser.getSelectedFile();</span>
+<span class="nc" id="L401">					fc.loadConditions(internalConditionsModel,</span>
+<span class="nc" id="L402">							theFile.getCanonicalPath());</span>
+<span class="nc" id="L403">				} catch (Exception ex) {</span>
+<span class="nc" id="L404">					handleLoadingException(ex);</span>
+				}
+				{
+				}
+			}
+<span class="nc" id="L409">		}</span>
+
+		private void handleLoadingException(Exception ex) {
+			// TODO Auto-generated method stub
+
+<span class="nc" id="L414">		}</span>
+
+	}
+
+	private static final int NODE_POSITION = 0;
+<span class="nc" id="L419">	private static final int ICON_POSITION = 1;</span>
+
+<span class="nc" id="L421">	private class SimpleConditionChangeListener implements ItemListener {</span>
+		public void itemStateChanged(ItemEvent e) {
+<span class="nc bnc" id="L423" title="All 2 branches missed.">			if (e.getStateChange() == ItemEvent.SELECTED) {</span>
+<span class="nc" id="L424">				boolean considerValue = !simpleCondition.getSelectedItem()</span>
+<span class="nc bnc" id="L425" title="All 2 branches missed.">						.equals(&quot;filter_exist&quot;)</span>
+<span class="nc" id="L426">						&amp;&amp; !simpleCondition.getSelectedItem().equals(</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">								&quot;filter_does_not_exist&quot;);</span>
+<span class="nc" id="L428">				caseInsensitive.setEnabled(considerValue);</span>
+<span class="nc" id="L429">				values.setEnabled(considerValue);</span>
+			}
+<span class="nc" id="L431">		}</span>
+	}
+
+<span class="nc" id="L434">	private class SelectedAttributeChangeListener implements ItemListener {</span>
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * javax.swing.event.ListSelectionListener#valueChanged(javax.swing.
+		 * event.ListSelectionEvent)
+		 */
+		public void itemStateChanged(ItemEvent e) {
+<span class="nc bnc" id="L443" title="All 2 branches missed.">			if (e.getStateChange() == ItemEvent.SELECTED) {</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">				if (attributes.getSelectedIndex() == NODE_POSITION) {</span>
+<span class="nc" id="L445">					simpleCondition.setModel(simpleNodeConditionComboBoxModel);</span>
+<span class="nc" id="L446">					simpleCondition.setEnabled(true);</span>
+<span class="nc" id="L447">					values.setEditable(true);</span>
+<span class="nc" id="L448">					values.setEnabled(true);</span>
+<span class="nc" id="L449">					nodes.setExtensionList(null);</span>
+<span class="nc" id="L450">					values.setModel(nodes);</span>
+<span class="nc" id="L451">					caseInsensitive.setEnabled(true);</span>
+<span class="nc" id="L452">					return;</span>
+				}
+<span class="nc bnc" id="L454" title="All 2 branches missed.">				if (attributes.getSelectedIndex() == ICON_POSITION) {</span>
+<span class="nc" id="L455">					simpleCondition.setModel(simpleIconConditionComboBoxModel);</span>
+<span class="nc" id="L456">                    simpleCondition.setEnabled(true);</span>
+<span class="nc" id="L457">					values.setEditable(false);</span>
+<span class="nc" id="L458">					values.setEnabled(true);</span>
+<span class="nc" id="L459">					values.setModel(icons);</span>
+<span class="nc bnc" id="L460" title="All 2 branches missed.">					if (icons.getSize() &gt;= 1) {</span>
+<span class="nc" id="L461">						values.setSelectedIndex(0);</span>
+					}
+<span class="nc" id="L463">					caseInsensitive.setEnabled(false);</span>
+<span class="nc" id="L464">					return;</span>
+				}
+<span class="nc bnc" id="L466" title="All 2 branches missed.">				if (attributes.getSelectedIndex() &gt; NODE_POSITION) {</span>
+<span class="nc" id="L467">					final String attributeName = attributes.getSelectedItem()</span>
+<span class="nc" id="L468">							.toString();</span>
+<span class="nc" id="L469">					nodes.setExtensionList(registeredAttributes.getElement(</span>
+<span class="nc" id="L470">							attributeName).getValues());</span>
+<span class="nc" id="L471">					values.setModel(nodes);</span>
+<span class="nc bnc" id="L472" title="All 2 branches missed.">					if (values.getSelectedItem() != null) {</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">						if (nodes.getSize() &gt;= 1) {</span>
+<span class="nc" id="L474">							values.setSelectedIndex(0);</span>
+<span class="nc" id="L475">						} else {</span>
+<span class="nc" id="L476">							values.setSelectedItem(null);</span>
+						}
+					}
+<span class="nc bnc" id="L479" title="All 2 branches missed.">					if (simpleCondition.getModel() != simpleAttributeConditionComboBoxModel) {</span>
+<span class="nc" id="L480">						simpleCondition</span>
+<span class="nc" id="L481">								.setModel(simpleAttributeConditionComboBoxModel);</span>
+<span class="nc" id="L482">						simpleCondition.setSelectedIndex(0);</span>
+					}
+<span class="nc bnc" id="L484" title="All 2 branches missed.">					if (simpleCondition.getSelectedIndex() == 0) {</span>
+<span class="nc" id="L485">						caseInsensitive.setEnabled(false);</span>
+<span class="nc" id="L486">						values.setEnabled(false);</span>
+					}
+<span class="nc" id="L488">					values.setEditable(true);</span>
+<span class="nc" id="L489">					simpleCondition.setEnabled(true);</span>
+<span class="nc" id="L490">					return;</span>
+				}
+			}
+<span class="nc" id="L493">		}</span>
+	}
+
+	private Controller c;
+	private FilterController fc;
+	private JList conditionList;
+	private JComboBox simpleCondition;
+	private JComboBox values;
+	private JComboBox attributes;
+	private FilterToolbar ft;
+	private JButton btnAdd;
+	private JButton btnNot;
+	private JButton btnAnd;
+	private JButton btnOr;
+	private JButton btnDelete;
+	private JCheckBox caseInsensitive;
+	private ExtendedComboBoxModel icons;
+	private ExtendedComboBoxModel nodes;
+	private AttributeRegistry registeredAttributes;
+	private DefaultComboBoxModel simpleNodeConditionComboBoxModel;
+	private DefaultComboBoxModel simpleIconConditionComboBoxModel;
+	private DefaultComboBoxModel simpleAttributeConditionComboBoxModel;
+	private ExtendedComboBoxModel filteredAttributeComboBoxModel;
+	private DefaultComboBoxModel internalConditionsModel;
+	private ComboBoxModel externalConditionsModel;
+	private JButton btnOK;
+	private JButton btnApply;
+	private JButton btnCancel;
+	private JButton btnSave;
+	private JButton btnLoad;
+	private ConditionListSelectionListener conditionListListener;
+
+	public FilterComposerDialog(Controller c, final FilterToolbar ft) {
+<span class="nc" id="L526">		super(c.getJFrame(), c.getResourceString(&quot;filter_dialog&quot;));</span>
+<span class="nc" id="L527">		this.c = c;</span>
+<span class="nc" id="L528">		this.fc = c.getFilterController();</span>
+<span class="nc" id="L529">		this.ft = ft;</span>
+
+<span class="nc" id="L531">		final Box simpleConditionBox = Box.createHorizontalBox();</span>
+<span class="nc" id="L532">		simpleConditionBox.setBorder(new EmptyBorder(5, 0, 5, 0));</span>
+<span class="nc" id="L533">		getContentPane().add(simpleConditionBox, BorderLayout.NORTH);</span>
+
+<span class="nc" id="L535">		attributes = new JComboBox();</span>
+<span class="nc" id="L536">		filteredAttributeComboBoxModel = new ExtendedComboBoxModel(</span>
+<span class="nc" id="L537">				new NamedObject[] {</span>
+<span class="nc" id="L538">						Resources.getInstance().createTranslatedString(</span>
+<span class="nc" id="L539">								&quot;filter_node&quot;),</span>
+<span class="nc" id="L540">						Resources.getInstance().createTranslatedString(</span>
+<span class="nc" id="L541">								&quot;filter_icon&quot;) });</span>
+<span class="nc" id="L542">		MapRegistry registry = c.getModel().getRegistry();</span>
+<span class="nc" id="L543">		registeredAttributes = registry.getAttributes();</span>
+<span class="nc" id="L544">		filteredAttributeComboBoxModel.setExtensionList(registeredAttributes</span>
+<span class="nc" id="L545">				.getListBoxModel());</span>
+<span class="nc" id="L546">		attributes.setModel(filteredAttributeComboBoxModel);</span>
+<span class="nc" id="L547">		attributes.addItemListener(new SelectedAttributeChangeListener());</span>
+<span class="nc" id="L548">		simpleConditionBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L549">		simpleConditionBox.add(attributes);</span>
+<span class="nc" id="L550">		attributes.setRenderer(fc.getConditionRenderer());</span>
+
+<span class="nc" id="L552">		simpleNodeConditionComboBoxModel = new DefaultComboBoxModel(fc</span>
+<span class="nc" id="L553">				.getConditionFactory().getNodeConditionNames());</span>
+<span class="nc" id="L554">		simpleIconConditionComboBoxModel = new DefaultComboBoxModel(fc</span>
+<span class="nc" id="L555">				.getConditionFactory().getIconConditionNames());</span>
+
+<span class="nc" id="L557">		simpleCondition = new JComboBox();</span>
+<span class="nc" id="L558">		simpleCondition.setModel(simpleNodeConditionComboBoxModel);</span>
+<span class="nc" id="L559">		simpleCondition.addItemListener(new SimpleConditionChangeListener());</span>
+<span class="nc" id="L560">		simpleConditionBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L561">		simpleConditionBox.add(simpleCondition);</span>
+<span class="nc" id="L562">		simpleCondition.setRenderer(fc.getConditionRenderer());</span>
+
+<span class="nc" id="L564">		simpleAttributeConditionComboBoxModel = new DefaultComboBoxModel(fc</span>
+<span class="nc" id="L565">				.getConditionFactory().getAttributeConditionNames());</span>
+<span class="nc" id="L566">		values = new JComboBox();</span>
+<span class="nc" id="L567">		nodes = new ExtendedComboBoxModel();</span>
+<span class="nc" id="L568">		values.setModel(nodes);</span>
+<span class="nc" id="L569">		simpleConditionBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L570">		simpleConditionBox.add(values);</span>
+<span class="nc" id="L571">		values.setRenderer(fc.getConditionRenderer());</span>
+<span class="nc" id="L572">		values.setEditable(true);</span>
+
+<span class="nc" id="L574">		icons = new ExtendedComboBoxModel();</span>
+<span class="nc" id="L575">		icons.setExtensionList(registry.getIcons());</span>
+
+<span class="nc" id="L577">		caseInsensitive = new JCheckBox();</span>
+<span class="nc" id="L578">		simpleConditionBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L579">		simpleConditionBox.add(caseInsensitive);</span>
+<span class="nc" id="L580">		caseInsensitive.setText(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L581">				&quot;filter_ignore_case&quot;));</span>
+
+<span class="nc" id="L583">		final Box conditionButtonBox = Box.createVerticalBox();</span>
+<span class="nc" id="L584">		conditionButtonBox.setBorder(new EmptyBorder(0, 10, 0, 10));</span>
+<span class="nc" id="L585">		getContentPane().add(conditionButtonBox, BorderLayout.EAST);</span>
+
+<span class="nc" id="L587">		btnAdd = new JButton(new AddConditionAction());</span>
+<span class="nc" id="L588">		btnAdd.setMaximumSize(maxButtonDimension);</span>
+<span class="nc" id="L589">		conditionButtonBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L590">		conditionButtonBox.add(btnAdd);</span>
+
+<span class="nc" id="L592">		btnNot = new JButton(new CreateNotSatisfiedConditionAction());</span>
+<span class="nc" id="L593">		conditionButtonBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L594">		btnNot.setMaximumSize(maxButtonDimension);</span>
+<span class="nc" id="L595">		conditionButtonBox.add(btnNot);</span>
+<span class="nc" id="L596">		btnNot.setEnabled(false);</span>
+
+<span class="nc" id="L598">		btnAnd = new JButton(new CreateConjunctConditionAction());</span>
+<span class="nc" id="L599">		conditionButtonBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L600">		btnAnd.setMaximumSize(maxButtonDimension);</span>
+<span class="nc" id="L601">		conditionButtonBox.add(btnAnd);</span>
+<span class="nc" id="L602">		btnAnd.setEnabled(false);</span>
+
+<span class="nc" id="L604">		btnOr = new JButton(new CreateDisjunctConditionAction());</span>
+<span class="nc" id="L605">		conditionButtonBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L606">		btnOr.setMaximumSize(maxButtonDimension);</span>
+<span class="nc" id="L607">		conditionButtonBox.add(btnOr);</span>
+<span class="nc" id="L608">		btnOr.setEnabled(false);</span>
+
+<span class="nc" id="L610">		btnDelete = new JButton(new DeleteConditionAction());</span>
+<span class="nc" id="L611">		btnDelete.setEnabled(false);</span>
+<span class="nc" id="L612">		conditionButtonBox.add(Box.createVerticalGlue());</span>
+<span class="nc" id="L613">		btnDelete.setMaximumSize(maxButtonDimension);</span>
+<span class="nc" id="L614">		conditionButtonBox.add(btnDelete);</span>
+<span class="nc" id="L615">		conditionButtonBox.add(Box.createVerticalGlue());</span>
+
+<span class="nc" id="L617">		final Box controllerBox = Box.createHorizontalBox();</span>
+<span class="nc" id="L618">		controllerBox.setBorder(new EmptyBorder(5, 0, 5, 0));</span>
+<span class="nc" id="L619">		getContentPane().add(controllerBox, BorderLayout.SOUTH);</span>
+
+<span class="nc" id="L621">		CloseAction closeAction = new CloseAction();</span>
+
+<span class="nc" id="L623">		btnOK = new JButton();</span>
+<span class="nc" id="L624">		Tools.setLabelAndMnemonic(btnOK, Resources.getInstance()</span>
+<span class="nc" id="L625">				.getResourceString(&quot;ok&quot;));</span>
+<span class="nc" id="L626">		btnOK.addActionListener(closeAction);</span>
+<span class="nc" id="L627">		btnOK.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L629">		btnApply = new JButton();</span>
+<span class="nc" id="L630">		Tools.setLabelAndMnemonic(btnApply, Resources.getInstance()</span>
+<span class="nc" id="L631">				.getResourceString(&quot;apply&quot;));</span>
+<span class="nc" id="L632">		btnApply.addActionListener(closeAction);</span>
+<span class="nc" id="L633">		btnApply.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L635">		btnCancel = new JButton();</span>
+<span class="nc" id="L636">		Tools.setLabelAndMnemonic(btnCancel, Resources.getInstance()</span>
+<span class="nc" id="L637">				.getResourceString(&quot;cancel&quot;));</span>
+<span class="nc" id="L638">		btnCancel.addActionListener(closeAction);</span>
+<span class="nc" id="L639">		btnCancel.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L641">		controllerBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L642">		controllerBox.add(btnOK);</span>
+<span class="nc" id="L643">		controllerBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L644">		controllerBox.add(btnApply);</span>
+<span class="nc" id="L645">		controllerBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L646">		controllerBox.add(btnCancel);</span>
+<span class="nc" id="L647">		controllerBox.add(Box.createHorizontalGlue());</span>
+
+<span class="nc bnc" id="L649" title="All 2 branches missed.">		if (!c.getFrame().isApplet()) {</span>
+<span class="nc" id="L650">			ActionListener saveAction = new SaveAction();</span>
+<span class="nc" id="L651">			btnSave = new JButton();</span>
+<span class="nc" id="L652">			Tools.setLabelAndMnemonic(btnSave, Resources.getInstance()</span>
+<span class="nc" id="L653">					.getResourceString(&quot;save&quot;));</span>
+<span class="nc" id="L654">			btnSave.addActionListener(saveAction);</span>
+<span class="nc" id="L655">			btnSave.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L657">			ActionListener loadAction = new LoadAction();</span>
+<span class="nc" id="L658">			btnLoad = new JButton();</span>
+<span class="nc" id="L659">			Tools.setLabelAndMnemonic(btnLoad, Resources.getInstance()</span>
+<span class="nc" id="L660">					.getResourceString(&quot;load&quot;));</span>
+<span class="nc" id="L661">			btnLoad.addActionListener(loadAction);</span>
+<span class="nc" id="L662">			btnLoad.setMaximumSize(maxButtonDimension);</span>
+
+<span class="nc" id="L664">			controllerBox.add(btnSave);</span>
+<span class="nc" id="L665">			controllerBox.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L666">			controllerBox.add(btnLoad);</span>
+<span class="nc" id="L667">			controllerBox.add(Box.createHorizontalGlue());</span>
+		}
+<span class="nc" id="L669">		conditionList = new JList();</span>
+<span class="nc" id="L670">		conditionList</span>
+<span class="nc" id="L671">				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);</span>
+<span class="nc" id="L672">		conditionList.setCellRenderer(fc.getConditionRenderer());</span>
+<span class="nc" id="L673">		conditionList.setLayoutOrientation(JList.VERTICAL);</span>
+<span class="nc" id="L674">		conditionList.setAlignmentX(Component.LEFT_ALIGNMENT);</span>
+<span class="nc" id="L675">		conditionListListener = new ConditionListSelectionListener();</span>
+<span class="nc" id="L676">		conditionList.addListSelectionListener(conditionListListener);</span>
+
+<span class="nc" id="L678">		conditionList.addMouseListener(new ConditionListMouseListener());</span>
+
+<span class="nc" id="L680">		final JScrollPane conditionScrollPane = new JScrollPane(conditionList);</span>
+<span class="nc" id="L681">		JLabel conditionColumnHeader = new JLabel(Resources.getInstance()</span>
+<span class="nc" id="L682">				.getResourceString(&quot;filter_conditions&quot;));</span>
+<span class="nc" id="L683">		conditionColumnHeader.setHorizontalAlignment(JLabel.CENTER);</span>
+<span class="nc" id="L684">		conditionScrollPane.setColumnHeaderView(conditionColumnHeader);</span>
+<span class="nc" id="L685">		conditionScrollPane.setPreferredSize(new Dimension(500, 200));</span>
+<span class="nc" id="L686">		getContentPane().add(conditionScrollPane, BorderLayout.CENTER);</span>
+
+<span class="nc" id="L688">		Tools.addEscapeActionToDialog(this);</span>
+<span class="nc" id="L689">		pack();</span>
+<span class="nc" id="L690">	}</span>
+
+	private String getAttributeValue() {
+<span class="nc bnc" id="L693" title="All 2 branches missed.">		if (attributes.getSelectedIndex() == ICON_POSITION) {</span>
+<span class="nc" id="L694">			MindIcon mi = (MindIcon) values.getSelectedItem();</span>
+<span class="nc" id="L695">			return mi.getName();</span>
+		}
+<span class="nc" id="L697">		Object item = values.getSelectedItem();</span>
+<span class="nc bnc" id="L698" title="All 2 branches missed.">		return item != null ? item.toString() : &quot;&quot;;</span>
+	}
+
+	/**
+     */
+	void mapChanged(MindMap newMap) {
+<span class="nc bnc" id="L704" title="All 2 branches missed.">		if (newMap != null) {</span>
+<span class="nc" id="L705">			icons.setExtensionList(newMap.getRegistry().getIcons());</span>
+<span class="nc bnc" id="L706" title="All 4 branches missed.">			if (icons.getSize() &gt;= 1 &amp;&amp; values.getModel() == icons) {</span>
+<span class="nc" id="L707">				values.setSelectedIndex(0);</span>
+<span class="nc" id="L708">			} else {</span>
+<span class="nc" id="L709">				values.setSelectedIndex(-1);</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">				if (values.getModel() == icons) {</span>
+<span class="nc" id="L711">					values.setSelectedItem(null);</span>
+				}
+			}
+<span class="nc bnc" id="L714" title="All 2 branches missed.">			if (attributes.getSelectedIndex() &gt; 1)</span>
+<span class="nc" id="L715">				attributes.setSelectedIndex(0);</span>
+<span class="nc" id="L716">			registeredAttributes = newMap.getRegistry().getAttributes();</span>
+<span class="nc" id="L717">			filteredAttributeComboBoxModel</span>
+<span class="nc" id="L718">					.setExtensionList(registeredAttributes.getListBoxModel());</span>
+<span class="nc" id="L719">		} else {</span>
+<span class="nc" id="L720">			icons.setExtensionList(null);</span>
+<span class="nc" id="L721">			values.setSelectedIndex(-1);</span>
+<span class="nc" id="L722">			attributes.setSelectedIndex(0);</span>
+<span class="nc" id="L723">			filteredAttributeComboBoxModel.setExtensionList(null);</span>
+		}
+<span class="nc" id="L725">	}</span>
+
+	private boolean selectCondition() {
+<span class="nc" id="L728">		int min = conditionList.getMinSelectionIndex();</span>
+<span class="nc bnc" id="L729" title="All 2 branches missed.">		if (min &gt;= 0) {</span>
+<span class="nc" id="L730">			int max = conditionList.getMinSelectionIndex();</span>
+<span class="nc bnc" id="L731" title="All 2 branches missed.">			if (min == max) {</span>
+<span class="nc" id="L732">				applyChanges();</span>
+<span class="nc" id="L733">				return true;</span>
+			}
+		}
+<span class="nc" id="L736">		return false;</span>
+	}
+
+	/**
+     */
+	public void setSelectedItem(Object selectedItem) {
+<span class="nc" id="L742">		conditionList.setSelectedValue(selectedItem, true);</span>
+
+<span class="nc" id="L744">	}</span>
+
+	public void show() {
+<span class="nc" id="L747">		initInternalConditionModel();</span>
+<span class="nc" id="L748">		super.show();</span>
+<span class="nc" id="L749">	}</span>
+
+	private void initInternalConditionModel() {
+<span class="nc" id="L752">		externalConditionsModel = fc.getFilterConditionModel();</span>
+<span class="nc bnc" id="L753" title="All 2 branches missed.">		if (internalConditionsModel == null) {</span>
+<span class="nc" id="L754">			internalConditionsModel = new DefaultComboBoxModel();</span>
+<span class="nc" id="L755">			internalConditionsModel.addListDataListener(conditionListListener);</span>
+<span class="nc" id="L756">			conditionList.setModel(internalConditionsModel);</span>
+<span class="nc" id="L757">		} else {</span>
+<span class="nc" id="L758">			internalConditionsModel.removeAllElements();</span>
+		}
+<span class="nc" id="L760">		int index = -1;</span>
+<span class="nc bnc" id="L761" title="All 2 branches missed.">		for (int i = 2; i &lt; externalConditionsModel.getSize(); i++) {</span>
+<span class="nc" id="L762">			final Object element = externalConditionsModel.getElementAt(i);</span>
+<span class="nc" id="L763">			internalConditionsModel.addElement(element);</span>
+<span class="nc bnc" id="L764" title="All 2 branches missed.">			if (element == externalConditionsModel.getSelectedItem()) {</span>
+<span class="nc" id="L765">				index = i - 2;</span>
+			}
+		}
+<span class="nc bnc" id="L768" title="All 2 branches missed.">		if (index &gt;= 0) {</span>
+<span class="nc" id="L769">			conditionList.setSelectedIndex(index);</span>
+<span class="nc" id="L770">		} else {</span>
+<span class="nc" id="L771">			conditionList.clearSelection();</span>
+		}
+<span class="nc" id="L773">	}</span>
+
+	private void applyChanges() {
+<span class="nc" id="L776">		internalConditionsModel.setSelectedItem(conditionList</span>
+<span class="nc" id="L777">				.getSelectedValue());</span>
+<span class="nc" id="L778">		internalConditionsModel.removeListDataListener(conditionListListener);</span>
+<span class="nc" id="L779">		fc.setFilterConditionModel(internalConditionsModel);</span>
+<span class="nc" id="L780">		internalConditionsModel = null;</span>
+<span class="nc" id="L781">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

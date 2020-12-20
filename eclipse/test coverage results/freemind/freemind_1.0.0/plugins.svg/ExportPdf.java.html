@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExportPdf.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.svg</a> &gt; <span class="el_source">ExportPdf.java</span></div><h1>ExportPdf.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 01.11.2004
+ */
+
+
+package plugins.svg;
+
+import java.awt.print.PageFormat;
+import java.awt.print.Paper;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.JOptionPane;
+
+<span class="nc" id="L38">import org.apache.batik.svggen.SVGGraphics2D;</span>
+import org.apache.batik.transcoder.TranscoderInput;
+import org.apache.batik.transcoder.TranscoderOutput;
+import org.apache.batik.transcoder.TranscodingHints.Key;
+import org.apache.fop.svg.PDFTranscoder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import freemind.controller.Controller;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.view.mindmapview.MapView;
+
+/**
+ * @author foltin
+ * 
+ */
+public class ExportPdf extends ExportVectorGraphic {
+	ExportPdfPapers papers = new ExportPdfPapers();
+
+<span class="nc" id="L58">	public void startupMapHook() {</span>
+		super.startupMapHook();
+		boolean nodeExport = Tools.safeEquals(&quot;node&quot;,
+				getResourceString(&quot;export_type&quot;));
+		HashMap transcodingHints = null;
+		List selecteds = getController().getSelecteds();
+		Vector documentsToOpen = new Vector();
+		while (!selecteds.isEmpty()) {
+			MindMapNode selectedNode = (MindMapNode) selecteds.remove(0);
+			String nameExtension = null;
+			if (nodeExport) {
+				nameExtension = &quot; &quot;
+						+ selectedNode.getShortText(getController());
+			}
+			File chosenFile = chooseFile(&quot;pdf&quot;,
+					getResourceString(&quot;export_pdf_text&quot;), nameExtension);
+			if (chosenFile == null) {
+				return;
+			}
+			if (transcodingHints == null) {
+				transcodingHints = choosePaper();
+			}
+			if (transcodingHints == null) {
+				return;
+			}
+			getController().getFrame().setWaitingCursor(true);
+			try {
+				exportAsPdf(nodeExport, selectedNode, chosenFile,
+						transcodingHints);
+				documentsToOpen.add(chosenFile);
+			} catch (Exception e) {
+				freemind.main.Resources.getInstance().logException(e);
+				JOptionPane.showMessageDialog(getController().getFrame()
+						.getContentPane(), e.getLocalizedMessage(), null,
+						JOptionPane.ERROR_MESSAGE);
+			}
+			getController().getFrame().setWaitingCursor(false);
+			if (!nodeExport) {
+				selecteds.clear();
+			}
+		}
+		try {
+			for (Iterator it = documentsToOpen.iterator(); it.hasNext();) {
+				File fileToOpen = (File) it.next();
+				getController().getFrame().openDocument(
+						Tools.fileToUrl(fileToOpen));
+			}
+		} catch (Exception e) {
+			freemind.main.Resources.getInstance().logException(e);
+		}
+	}
+
+	/**
+	 * @return a map PDFTranscoder-&gt;value.
+	 */
+	public HashMap choosePaper() {
+		HashMap retValue = new HashMap();
+		// user dialog
+		String[] paperNames = papers.getPaperNames();
+		Controller controller = this.getController().getController();
+		ExportPdfDialog dialog = new ExportPdfDialog(getController().getFrame()
+				.getJFrame(), paperNames, controller);
+		dialog.setVisible(true);
+
+		// canceled?
+		if (!dialog.getResult()) {
+			return null;
+		}
+
+		// get user input for format
+		int orientation = dialog.getOrientation();
+		String format = dialog.getFormat();
+		logger.info(&quot;Paper format=&quot; + format);
+
+		// set page format
+		PageFormat pageFormat = new PageFormat();
+		pageFormat.setOrientation(orientation);
+		Paper paper = papers.determinePaper(format);
+		if (paper != null) {
+			pageFormat.setPaper(paper);
+
+			if (pageFormat.getOrientation() == PageFormat.PORTRAIT) {
+				logger.info(&quot;Orientation: Portrait&quot;);
+				// portrait
+<span class="nc" id="L142">				retValue.put(PDFTranscoder.KEY_HEIGHT, new Float(pageFormat</span>
+						.getPaper().getHeight()));
+				retValue.put(PDFTranscoder.KEY_WIDTH, new Float(pageFormat
+						.getPaper().getWidth()));
+			} else {
+				logger.info(&quot;Orientation: Landscape&quot;);
+				// landscape
+				retValue.put(PDFTranscoder.KEY_HEIGHT, new Float(pageFormat
+						.getPaper().getWidth()));
+				retValue.put(PDFTranscoder.KEY_WIDTH, new Float(pageFormat
+						.getPaper().getHeight()));
+			}
+		} else {
+			logger.severe(&quot;Paper == null&quot;);
+		}
+		return retValue;
+	}
+
+	/** For compatibility with groovy export scripts. */
+<span class="nc" id="L161">	public boolean exportAsPdf(boolean nodeExport, MindMapNode selectedNode,</span>
+			File chosenFile) throws Exception {
+		return exportAsPdf(nodeExport, selectedNode, chosenFile, null);
+	}
+
+	public boolean exportAsPdf(boolean nodeExport, MindMapNode selectedNode,
+			File chosenFile, HashMap pTranscoderHints) throws Exception {
+		MapView view = getController().getView();
+		if (view == null)
+			return false;
+
+<span class="nc" id="L172">		SVGGraphics2D g2d;</span>
+		if (nodeExport) {
+			g2d = fillSVGGraphics2D(view, selectedNode);
+		} else {
+			g2d = fillSVGGraphics2D(view);
+		}
+
+		PDFTranscoder pdfTranscoder = new PDFTranscoder();
+		/*
+		 * according to
+		 * https://sourceforge.net/tracker/?func=detail&amp;atid=107118&amp;
+		 * aid=1921334&amp;group_id=7118
+		 * 
+		 * Submitted By: Frank Spangenberg (f_spangenberg) Summary: Large mind
+		 * maps produce invalid PDF
+		 */
+		pdfTranscoder.addTranscodingHint(PDFTranscoder.KEY_MAX_HEIGHT,
+				new Float(19200));
+		pdfTranscoder.addTranscodingHint(PDFTranscoder.KEY_MAX_WIDTH,
+				new Float(19200));
+		if (pTranscoderHints != null) {
+			for (Iterator it = pTranscoderHints.keySet().iterator(); it
+					.hasNext();) {
+				Key key = (Key) it.next();
+				pdfTranscoder
+						.addTranscodingHint(key, pTranscoderHints.get(key));
+			}
+		}
+		/* end patch */
+		Document doc = g2d.getDOMFactory();
+		Element rootE = doc.getDocumentElement();
+		g2d.getRoot(rootE);
+		TranscoderInput input = new TranscoderInput(doc);
+		final FileOutputStream ostream = new FileOutputStream(chosenFile);
+		final BufferedOutputStream bufStream = new BufferedOutputStream(ostream);
+		TranscoderOutput output = new TranscoderOutput(bufStream);
+		// save the image
+		pdfTranscoder.transcode(input, output);
+		// flush and close the stream then exit
+		ostream.flush();
+		ostream.close();
+		return true;
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

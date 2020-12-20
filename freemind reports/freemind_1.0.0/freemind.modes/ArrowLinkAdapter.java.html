@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ArrowLinkAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">ArrowLinkAdapter.java</span></div><h1>ArrowLinkAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: ArrowLinkAdapter.java,v 1.4.18.5.12.1 2007/05/06 21:12:19 christianfoltin Exp $*/
+
+package freemind.modes;
+
+import java.awt.Point;
+
+import freemind.main.FreeMindMain;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+
+public abstract class ArrowLinkAdapter extends LinkAdapter implements
+		MindMapArrowLink {
+
+	/** the zero is the start point of the line; */
+	protected Point startInclination;
+	/** the zero is the end point of the line; */
+	protected Point endInclination;
+	protected String startArrow;
+	protected String endArrow;
+	protected boolean showControlPointsFlag;
+
+	public ArrowLinkAdapter(MindMapNode source, MindMapNode target,
+			FreeMindMain frame) {
+<span class="nc" id="L42">		super(source, target, frame);</span>
+<span class="nc" id="L43">		startArrow = &quot;None&quot;;</span>
+<span class="nc" id="L44">		endArrow = &quot;Default&quot;;</span>
+<span class="nc" id="L45">	}</span>
+
+	public Point getStartInclination() {
+<span class="nc bnc" id="L48" title="All 2 branches missed.">		if (startInclination == null)</span>
+<span class="nc" id="L49">			return null;</span>
+<span class="nc" id="L50">		return new Point(startInclination);</span>
+	}
+
+	public Point getEndInclination() {
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if (endInclination == null)</span>
+<span class="nc" id="L55">			return null;</span>
+<span class="nc" id="L56">		return new Point(endInclination);</span>
+	}
+
+	public String getStartArrow() {
+<span class="nc" id="L60">		return startArrow;</span>
+	}
+
+	public String getEndArrow() {
+<span class="nc" id="L64">		return endArrow;</span>
+	}
+
+	public void setStartInclination(Point startInclination) {
+<span class="nc" id="L68">		this.startInclination = startInclination;</span>
+<span class="nc" id="L69">	}</span>
+
+	public void setEndInclination(Point endInclination) {
+<span class="nc" id="L72">		this.endInclination = endInclination;</span>
+<span class="nc" id="L73">	}</span>
+
+	public void setStartArrow(String startArrow) {
+<span class="nc bnc" id="L76" title="All 4 branches missed.">		if (startArrow == null || startArrow.toUpperCase().equals(&quot;NONE&quot;)) {</span>
+<span class="nc" id="L77">			this.startArrow = &quot;None&quot;;</span>
+<span class="nc" id="L78">			return;</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		} else if (startArrow.toUpperCase().equals(&quot;DEFAULT&quot;)) {</span>
+<span class="nc" id="L80">			this.startArrow = &quot;Default&quot;;</span>
+<span class="nc" id="L81">			return;</span>
+		}
+		// dont change:
+<span class="nc" id="L84">		System.err.println(&quot;Cannot set the start arrow type to &quot; + startArrow);</span>
+<span class="nc" id="L85">	}</span>
+
+	public void setEndArrow(String endArrow) {
+<span class="nc bnc" id="L88" title="All 4 branches missed.">		if (endArrow == null || endArrow.toUpperCase().equals(&quot;NONE&quot;)) {</span>
+<span class="nc" id="L89">			this.endArrow = &quot;None&quot;;</span>
+<span class="nc" id="L90">			return;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		} else if (endArrow.toUpperCase().equals(&quot;DEFAULT&quot;)) {</span>
+<span class="nc" id="L92">			this.endArrow = &quot;Default&quot;;</span>
+<span class="nc" id="L93">			return;</span>
+		}
+		// dont change:
+<span class="nc" id="L96">		System.err.println(&quot;Cannot set the end arrow type to &quot; + endArrow);</span>
+<span class="nc" id="L97">	}</span>
+
+	public Object clone() {
+<span class="nc" id="L100">		ArrowLinkAdapter arrowLink = (ArrowLinkAdapter) super.clone();</span>
+		// now replace the points:
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		arrowLink.startInclination = (startInclination == null) ? null</span>
+<span class="nc" id="L103">				: new Point(startInclination.x, startInclination.y);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		arrowLink.endInclination = (endInclination == null) ? null : new Point(</span>
+<span class="nc" id="L105">				endInclination.x, endInclination.y);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		arrowLink.startArrow = (startArrow == null) ? null : new String(</span>
+<span class="nc" id="L107">				startArrow);</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		arrowLink.endArrow = (endArrow == null) ? null : new String(endArrow);</span>
+<span class="nc" id="L109">		return arrowLink;</span>
+	}
+
+	public void showControlPoints(boolean bShowControlPointsFlag) {
+<span class="nc" id="L113">		showControlPointsFlag = bShowControlPointsFlag;</span>
+<span class="nc" id="L114">	}</span>
+
+	public boolean getShowControlPointsFlag() {
+<span class="nc" id="L117">		return showControlPointsFlag;</span>
+	}
+
+	public XMLElement save() {
+<span class="nc" id="L121">		XMLElement arrowLink = new XMLElement();</span>
+<span class="nc" id="L122">		arrowLink.setName(&quot;arrowlink&quot;);</span>
+
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (style != null) {</span>
+<span class="nc" id="L125">			arrowLink.setAttribute(&quot;STYLE&quot;, style);</span>
+		}
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (getUniqueId() != null) {</span>
+<span class="nc" id="L128">			arrowLink.setAttribute(&quot;ID&quot;, getUniqueId());</span>
+		}
+<span class="nc bnc" id="L130" title="All 2 branches missed.">		if (color != null) {</span>
+<span class="nc" id="L131">			arrowLink.setAttribute(&quot;COLOR&quot;, Tools.colorToXml(color));</span>
+		}
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (getDestinationLabel() != null) {</span>
+<span class="nc" id="L134">			arrowLink.setAttribute(&quot;DESTINATION&quot;, getDestinationLabel());</span>
+		}
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (getReferenceText() != null) {</span>
+<span class="nc" id="L137">			arrowLink.setAttribute(&quot;REFERENCETEXT&quot;, getReferenceText());</span>
+		}
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (getStartInclination() != null) {</span>
+<span class="nc" id="L140">			arrowLink.setAttribute(&quot;STARTINCLINATION&quot;,</span>
+<span class="nc" id="L141">					Tools.PointToXml(getStartInclination()));</span>
+		}
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		if (getEndInclination() != null) {</span>
+<span class="nc" id="L144">			arrowLink.setAttribute(&quot;ENDINCLINATION&quot;,</span>
+<span class="nc" id="L145">					Tools.PointToXml(getEndInclination()));</span>
+		}
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (getStartArrow() != null)</span>
+<span class="nc" id="L148">			arrowLink.setAttribute(&quot;STARTARROW&quot;, (getStartArrow()));</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (getEndArrow() != null)</span>
+<span class="nc" id="L150">			arrowLink.setAttribute(&quot;ENDARROW&quot;, (getEndArrow()));</span>
+<span class="nc" id="L151">		return arrowLink;</span>
+	}
+	
+	public ArrowLinkTarget createArrowLinkTarget(MindMapLinkRegistry pRegistry) {
+<span class="nc" id="L155">		ArrowLinkTarget linkTarget = new ArrowLinkTarget(source, target, frame);</span>
+<span class="nc" id="L156">		linkTarget.setSourceLabel(pRegistry.getLabel(source));</span>
+<span class="nc" id="L157">		copy(linkTarget);</span>
+<span class="nc" id="L158">		return linkTarget;</span>
+	}
+
+	protected void copy(ArrowLinkAdapter linkTarget) {
+<span class="nc" id="L162">		linkTarget.setUniqueId(getUniqueId());</span>
+<span class="nc" id="L163">		linkTarget.setColor(getColor());</span>
+<span class="nc" id="L164">		linkTarget.setDestinationLabel(getDestinationLabel());</span>
+<span class="nc" id="L165">		linkTarget.setEndArrow(getEndArrow());</span>
+<span class="nc" id="L166">		linkTarget.setEndInclination(getEndInclination());</span>
+<span class="nc" id="L167">		linkTarget.setReferenceText(getReferenceText());</span>
+<span class="nc" id="L168">		linkTarget.setStartArrow(getStartArrow());</span>
+<span class="nc" id="L169">		linkTarget.setStartInclination(getStartInclination());</span>
+<span class="nc" id="L170">		linkTarget.setStyle(getStyle());</span>
+<span class="nc" id="L171">		linkTarget.setTarget(getTarget());</span>
+<span class="nc" id="L172">		linkTarget.setWidth(getWidth());</span>
+<span class="nc" id="L173">		linkTarget.setSource(getSource());</span>
+<span class="nc" id="L174">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

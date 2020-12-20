@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>IconProperty.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.common</a> &gt; <span class="el_source">IconProperty.java</span></div><h1>IconProperty.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 25.02.2006
+ */
+/*$Id: IconProperty.java,v 1.1.2.1.2.4 2007/08/05 22:15:21 dpolivaev Exp $*/
+package freemind.common;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Iterator;
+import java.util.Vector;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+
+import freemind.main.FreeMindMain;
+import freemind.modes.MindIcon;
+import freemind.modes.common.dialogs.IconSelectionPopupDialog;
+
+public class IconProperty extends PropertyBean implements PropertyControl,
+		ActionListener {
+	String description;
+
+	String label;
+
+	JButton mButton;
+
+	private final FreeMindMain mFreeMindMain;
+
+	/**
+	 * Of IconInformation s.
+	 */
+	private final Vector mIcons;
+
+<span class="nc" id="L54">	private MindIcon mActualIcon = null;</span>
+
+	public IconProperty(String description, String label, FreeMindMain frame,
+			Vector icons) {
+<span class="nc" id="L58">		super();</span>
+<span class="nc" id="L59">		this.description = description;</span>
+<span class="nc" id="L60">		this.label = label;</span>
+<span class="nc" id="L61">		this.mFreeMindMain = frame;</span>
+<span class="nc" id="L62">		this.mIcons = icons;</span>
+<span class="nc" id="L63">		mButton = new JButton();</span>
+<span class="nc" id="L64">		mButton.addActionListener(this);</span>
+<span class="nc" id="L65">	}</span>
+
+	public String getDescription() {
+<span class="nc" id="L68">		return description;</span>
+	}
+
+	public String getLabel() {
+<span class="nc" id="L72">		return label;</span>
+	}
+
+	public void setValue(String value) {
+<span class="nc bnc" id="L76" title="All 2 branches missed.">		for (Iterator iter = mIcons.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L77">			MindIcon icon = (MindIcon) iter.next();</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (icon.getName().equals(value)) {</span>
+<span class="nc" id="L79">				mActualIcon = icon;</span>
+<span class="nc" id="L80">				setIcon(mActualIcon);</span>
+			}
+		}
+<span class="nc" id="L83">	}</span>
+
+	private void setIcon(MindIcon actualIcon) {
+<span class="nc" id="L86">		mButton.setIcon(actualIcon.getIcon());</span>
+<span class="nc" id="L87">		mButton.setToolTipText(actualIcon.getDescription());</span>
+<span class="nc" id="L88">	}</span>
+
+	public String getValue() {
+<span class="nc" id="L91">		return mActualIcon.getName();</span>
+	}
+
+	public void layout(DefaultFormBuilder builder, TextTranslator pTranslator) {
+<span class="nc" id="L95">		JLabel label = builder.append(pTranslator.getText(getLabel()), mButton);</span>
+<span class="nc" id="L96">		label.setToolTipText(pTranslator.getText(getDescription()));</span>
+<span class="nc" id="L97">	}</span>
+
+	public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L100">		Vector icons = new Vector();</span>
+<span class="nc" id="L101">		Vector descriptions = new Vector();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		for (Iterator iter = mIcons.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L103">			MindIcon icon = (MindIcon) iter.next();</span>
+<span class="nc" id="L104">			icons.add(icon);</span>
+<span class="nc" id="L105">			descriptions.add(icon.getDescription());</span>
+		}
+<span class="nc" id="L107">		IconSelectionPopupDialog dialog = new IconSelectionPopupDialog(</span>
+<span class="nc" id="L108">				mFreeMindMain.getJFrame(), icons, mFreeMindMain);</span>
+<span class="nc" id="L109">		dialog.setLocationRelativeTo(mFreeMindMain.getJFrame());</span>
+<span class="nc" id="L110">		dialog.setModal(true);</span>
+<span class="nc" id="L111">		dialog.setVisible(true);</span>
+<span class="nc" id="L112">		int result = dialog.getResult();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (result &gt;= 0) {</span>
+<span class="nc" id="L114">			MindIcon icon = (MindIcon) mIcons.get(result);</span>
+<span class="nc" id="L115">			setValue(icon.getName());</span>
+<span class="nc" id="L116">			firePropertyChangeEvent();</span>
+		}
+<span class="nc" id="L118">	}</span>
+
+	public void setEnabled(boolean pEnabled) {
+<span class="nc" id="L121">		mButton.setEnabled(pEnabled);</span>
+<span class="nc" id="L122">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

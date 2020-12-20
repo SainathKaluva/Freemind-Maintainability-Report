@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Conception of a New Metric Procedure</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="MetProc.html">Prev</a> - <a href="MetProcImpl.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="ExtendME.html">9 Extending the Metrics and Rule Engine</a> > <a href="MetProc.html">9.1 Metric Procedures</a> > 9.1.1 Conception of a New Metric Procedure
+<hr>
+<h3><a name="MetProcScenario"></a>9.1.1 Conception of a New Metric Procedure</h3>
+
+Assume we wish to calculate a "lack of cohesion" style metric similar to LCOM
+proposed by Chidamber and Kemerer in [CK94]. These metrics count pairs of elements
+that have or have not something in common, for instance, the number of pairs of methods in a 
+class that use no common attributes, or, with regards to applicability to UML
+designs, the number of pairs of operations of a class that do not
+have at least one parameter type in common. In the latter case, just obtaining
+the set of parameter types of an operation is easy enough:
+
+<pre>
+&lt;set name="ParaTypeSet" domain="operation"&gt;
+&lt;description>The set of parameter types of an operation.&lt;/description&gt;
+&lt;projection relation="context" target="parameter" element="parametertype" /&gt;
+&lt;/set&gt;
+</pre>
+
+What we would need then is a metric that takes each pair of operations of a class, 
+and counts those pairs that have a parameter type in common. None of the 
+existing metric procedures in SDMetrics accomplish this, but if we had such a 
+procedure, the definition of the metric could look something like this:
+
+<pre>
+&lt;metric name="LCOM_Parametertypes" domain="class"&gt;
+&lt;description&gt;Lack of cohesion in operations based on operation 
+   parameter types.&lt;/description&gt;
+&lt;pairwise relation="context" target="operation" 
+   paircondition="size(_first.ParaTypeSet * _second.ParaTypeSet)=0" /&gt;
+&lt;/metric&gt;
+</pre>
+
+The idea is that the metric obtains the set of operations of a class (as we would
+in a standard projection), and then evaluate the "paircondition" expression for each
+operation pair. The variables "_first" and "_second" in the pair condition refer to 
+the first and second operation of the pair. The given expression evaluates to true if 
+the intersection of the parameter types of the operations at hand is empty.<p>
+
+To make the procedure more flexible, we could have it support a few more attributes:
+<ul>
+<li>Users should be able to specify the set to operate on as they are used to from
+the "projection" procedure (<a href="Projection.html">Section&nbsp;8.1.1 "Projection"</a>), using either the "relation" or "relset" 
+attribute, and the standard filter attributes "target", "element", etc.
+<li>The procedure should provide an option to not only yield pairs of elements
+of a set, but tuples. For pairs, only one combination of elements <tt>A</tt> and <tt>B</tt>
+will be reported as either <tt>{A,B}</tt> or <tt>{B,A}</tt>, the order of elements
+carrying no semantics. For tuples, both combinations 
+<tt>(A,B)</tt> and <tt>(B,A)</tt> will be reported, distinguishing the order of elements.
+We therefore define an optional attribute "tuples" that takes values "true" or "false" to
+indicate if we want to access pairs (value "false", also the default) or tuples (value "true").
+<li>The procedure should optionally report the combination of an element with itself.
+We therefore define an optional attribute "withself" that takes values "true" or "false".
+When set to "true",
+the procedure additionally reports one combination <tt>{A,A}</tt> for each model element.
+<li>In addition to just counting the number of pairs/tuples that satisfy the pair condition, 
+the procedure should support the "sum" and "stat" attributes as we know them from the 
+"projection" and "subelements" procedure (see <a href="SumExpression.html">Section&nbsp;8.1.1.7 "Attributes "sum" and "stat""</a>). 
+When "sum" is set, the specified expression 
+will be evaluated for each reported pair, and the metric will report the sum of all values
+(or the maximum/minimum value when attribute "stat" is set accordingly).
+<li>The "paircondition" attribute should be optional. If not set, all reported combinations
+will be processed.
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="MetProc.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="MetProc.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="MetProcImpl.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;9.1 "Metric Procedures"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;9.1.2 "Implementation of the Metric Procedure"</td></tr></table>
+
+</body>
+</html>

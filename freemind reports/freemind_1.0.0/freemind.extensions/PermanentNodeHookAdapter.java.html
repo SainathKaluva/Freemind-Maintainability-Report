@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>PermanentNodeHookAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.extensions</a> &gt; <span class="el_source">PermanentNodeHookAdapter.java</span></div><h1>PermanentNodeHookAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 06.03.2004
+ *
+ * To change the template for this generated file go to
+ * Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+package freemind.extensions;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import freemind.main.XMLElement;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * 
+ *         To change the template for this generated type comment go to
+ *         Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+public class PermanentNodeHookAdapter extends NodeHookAdapter implements
+		PermanentNodeHook {
+
+	// Logging:
+	// private static java.util.logging.Logger logger;
+
+	/**
+	 */
+	public PermanentNodeHookAdapter() {
+<span class="nc" id="L54">		super();</span>
+		// if(logger == null)
+		// logger =
+		// ((ControllerAdapter)getController()).getFrame().getLogger(this.getClass().getName());
+<span class="nc" id="L58">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.NodeHook#shutdownMapHook()
+	 */
+	public void shutdownMapHook() {
+<span class="nc" id="L66">		logger.finest(&quot;shutdownMapHook&quot;);</span>
+<span class="nc" id="L67">		setNode(null);</span>
+<span class="nc" id="L68">		setMap(null);</span>
+<span class="nc" id="L69">		super.shutdownMapHook();</span>
+<span class="nc" id="L70">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.NodeHook#onUpdateNodeHook()
+	 */
+	public void onUpdateNodeHook() {
+<span class="nc" id="L78">		logger.finest(&quot;onUpdateNodeHook&quot;);</span>
+<span class="nc" id="L79">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.NodeHook#onUpdateChildrenHook()
+	 */
+	public void onUpdateChildrenHook(MindMapNode updatedNode) {
+<span class="nc" id="L87">		logger.finest(&quot;onUpdateChildrenHook&quot;);</span>
+<span class="nc" id="L88">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.NodeHook#onAddChild(freemind.modes.MindMapNode)
+	 */
+	public void onAddChild(MindMapNode newChildNode) {
+<span class="nc" id="L96">		logger.finest(&quot;onAddChild&quot;);</span>
+<span class="nc" id="L97">	}</span>
+
+	public void onNewChild(MindMapNode newChildNode) {
+<span class="nc" id="L100">		logger.finest(&quot;onNewChild&quot;);</span>
+<span class="nc" id="L101">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#onRemoveChild(freemind.modes.
+	 * MindMapNode)
+	 */
+	public void onRemoveChild(MindMapNode oldChildNode) {
+<span class="nc" id="L110">		logger.finest(&quot;onRemoveChild&quot;);</span>
+<span class="nc" id="L111">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#save(freemind.main.XMLElement)
+	 */
+	public void save(XMLElement xml) {
+<span class="nc" id="L119">		String saveName = getName();</span>
+		// saveName=saveName.replace(File.separatorChar, '/');
+<span class="nc" id="L121">		xml.setAttribute(&quot;name&quot;, saveName);</span>
+<span class="nc" id="L122">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.PermanentNodeHook#loadFrom(freemind.main.XMLElement)
+	 */
+	public void loadFrom(XMLElement child) {
+<span class="nc" id="L131">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.NodeHook#onSelectHook()
+	 */
+	public void onFocusNode(NodeView nodeView) {
+<span class="nc" id="L139">		logger.finest(&quot;onSelectHook&quot;);</span>
+
+<span class="nc" id="L141">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#onDeselectHook()
+	 */
+	public void onLostFocusNode(NodeView nodeView) {
+<span class="nc" id="L149">		logger.finest(&quot;onDeselectHook&quot;);</span>
+<span class="nc" id="L150">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHook#onAddChildren(freemind.modes.
+	 * MindMapNode)
+	 */
+	public void onAddChildren(MindMapNode addedChild) {
+<span class="nc" id="L159">		logger.finest(&quot;onAddChildren&quot;);</span>
+<span class="nc" id="L160">	}</span>
+
+	public static final String PARAMETERS = &quot;Parameters&quot;;
+
+	/**
+	 */
+	protected HashMap loadNameValuePairs(XMLElement xml) {
+<span class="nc" id="L167">		HashMap result = new HashMap();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if(xml.getChildren().isEmpty()) {</span>
+<span class="nc" id="L169">			return result;</span>
+		}
+<span class="nc" id="L171">		XMLElement child = (XMLElement) xml.getChildren().get(0);</span>
+<span class="nc bnc" id="L172" title="All 4 branches missed.">		if (child != null &amp;&amp; PARAMETERS.equals(child.getName())) {</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">			for (Iterator i = child.enumerateAttributeNames(); i.hasNext();) {</span>
+<span class="nc" id="L174">				String name = (String) i.next();</span>
+<span class="nc" id="L175">				result.put(name, child.getStringAttribute(name));</span>
+			}
+		}
+<span class="nc" id="L178">		return result;</span>
+	}
+
+	/**
+	 */
+	protected void saveNameValuePairs(HashMap nameValuePairs, XMLElement xml) {
+<span class="nc" id="L184">		XMLElement child = new XMLElement();</span>
+<span class="nc" id="L185">		child.setName(PARAMETERS);</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		for (Iterator i = nameValuePairs.keySet().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L187">			String key = (String) i.next();</span>
+<span class="nc" id="L188">			Object value = nameValuePairs.get(key);</span>
+<span class="nc" id="L189">			child.setAttribute(key, value);</span>
+		}
+<span class="nc" id="L191">		xml.addChild(child);</span>
+
+<span class="nc" id="L193">	}</span>
+
+	public void onRemoveChildren(MindMapNode oldChildNode, MindMapNode oldDad) {
+<span class="nc" id="L196">		logger.finest(&quot;onRemoveChildren&quot;);</span>
+<span class="nc" id="L197">	}</span>
+
+	public void onViewCreatedHook(NodeView nodeView) {
+<span class="nc" id="L200">	}</span>
+
+	public void onViewRemovedHook(NodeView nodeView) {
+<span class="nc" id="L203">	}</span>
+
+	/**
+     */
+	protected void setToolTip(String key, String value) {
+<span class="nc" id="L208">		setToolTip(getNode(), key, value);</span>
+<span class="nc" id="L209">	}</span>
+
+	protected void setToolTip(MindMapNode node, String key, String value) {
+<span class="nc" id="L212">		getController().setToolTip(node, key, value);</span>
+<span class="nc" id="L213">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#executeTransaction(freemind.modes.mindmapmode.actions.xml.ActionPair)
+	 */
+	protected void executeTransaction(final ActionPair pair)
+			throws InterruptedException, InvocationTargetException {
+<span class="nc" id="L220">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#registerFilter()
+	 */
+	public void registerFilter() {
+<span class="nc" id="L226">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#deregisterFilter()
+	 */
+	public void deregisterFilter() {
+<span class="nc" id="L232">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#filterAction(freemind.modes.mindmapmode.actions.xml.ActionPair)
+	 */
+	public ActionPair filterAction(ActionPair pPair) {
+<span class="nc" id="L238">		return null;</span>
+	}
+
+	public void processUnfinishedLinks() {
+<span class="nc" id="L242">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#saveHtml(java.io.Writer)
+	 */
+	public void saveHtml(Writer pFileout) throws IOException {
+<span class="nc" id="L248">	}</span>
+
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

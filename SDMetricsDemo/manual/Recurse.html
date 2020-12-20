@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Attribute "recurse"</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="SumExpression.html">Prev</a> - <a href="AttrNesting.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > <a href="Projection.html">8.1.1 Projection</a> > 8.1.1.8 Attribute "recurse"
+<hr>
+<h4><a name="Recurse"></a>8.1.1.8 Attribute "recurse"</h4>
+
+With the "recurse" attribute, you can define metrics that take the
+transitive closure of relations or sets into account. The recurse
+attribute takes the values "true" or "false" (default).<p>
+
+Setting the value of "recurse" to true changes the meaning of a metric
+<i>m</i> for elements of type <i>t</i> as follows: in addition to
+processing the projection attributes as usual, apply metric <i>m</i>
+to all "compatible" elements in the projection, and add the result to 
+the return value of the metric. An element is "compatible" if its type is <i>t</i>,
+or if its type is a subtype or supertype of <i>t</i> and metric
+<i>m</i> is defined for the type.<p>
+
+<pre>
+&lt;metric name="NumCls_tc" domain="package"&gt; 
+  &lt;description&gt;The number of classes in a package, 
+  its subpackages, and so on.&lt;/description&gt;
+  &lt;projection relation="context" target="class" recurse="true"/&gt;
+&lt;/metric&gt;
+</pre>
+
+Without the "recurse" attribute being set to true, the above metric
+would just count the number of classes in a package. With recurse set
+to true, metric NumCls_tc is in addition recursively applied to all
+subpackages that are in the context of a package, and the values added
+up. As result, you not only obtain the number of classes in the
+package, but also in its subpackages, sub-subpackages, and so on. In
+Figure&nbsp;35, the metric NumCls_tc yields the following values:<p>
+
+<table><tr><th>Package</th><th>NumCls_tc</th></tr>
+<tr><td>package1</td><td>6</td></tr>
+<tr><td>package1.1</td><td>3</td></tr>
+<tr><td>package1.1.1</td><td>1</td></tr>
+<tr><td>package1.2</td><td>1</td></tr>
+</table><p>
+<b>Table 4:&nbsp;Example package metrics</b><p>
+
+As another example, the number of descendents of a class can be defined
+as follows:
+
+<pre>
+&lt;metric name="NumDesc" domain="class"&gt;
+  &lt;description&gt;The number of descendents of a class.&lt;/description&gt;
+  &lt;projection relation="genparent" target="generalization" 
+              element="genchild" eltype="class" recurse="true"/&gt; 
+&lt;/metric&gt;
+</pre>
+
+Without the "recurse" attribute, this metric would count the number of
+children of a class. With "recurse" being set to true, the metric
+NumDesc is recursively evaluated for each child class, and added to
+the total.<p>
+
+Care must be taken when the "recurse" attribute is combined with the
+filter attributes (target, targetcondition, eltype, element,
+condition, scope). The filter attributes are NOT evaluated for the
+selection of elements on which to apply the metric recursively. The
+metric is always recursively applied to all elements in the unfiltered
+projection that are compatible with the element for which the
+metric is calculated. Consider this example:
+
+<pre>
+&lt;metric name="NumDesc_SameScope" domain="class"&gt;
+  &lt;projection relation="genparent" target="generalization" 
+              element="genchild" eltype="class"
+              scope="same" recurse="true"/&gt; 
+&lt;/metric&gt;
+</pre>
+
+This will not work. While only child classes in the same scope are
+counted, the metric is recursively applied to all child classes
+(regardless of their scope), and the number of their "same scope
+descendents" is added to the total. To define the intended metric, you
+would first define the set (see <a href="DefSetExp.html">Section&nbsp;8.5.3 "Set Expressions"</a>) of descendents of the
+class, and then define a projection to filter the classes with the
+desired scope in that set.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="SumExpression.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Projection.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="AttrNesting.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.1.7 "Attributes "sum" and "stat""</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.1.1.9 "Attribute "nesting""</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>UndoAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">UndoAction.java</span></div><h1>UndoAction.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 20.09.2004
+ */
+/*$Id: UndoAction.java,v 1.1.2.2.2.4 2006/11/26 10:20:44 dpolivaev Exp $*/
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.util.Iterator;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+
+import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Tools;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.AbstractXmlAction;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+public class UndoAction extends AbstractXmlAction {
+
+	private MindMapController controller;
+	private boolean isUndoAction;
+<span class="nc" id="L46">	protected Vector actionPairList = new Vector();</span>
+<span class="nc" id="L47">	private long timeOfLastAdd = 0;</span>
+<span class="nc" id="L48">	private boolean actionFrameStarted = false;</span>
+	private static final long TIME_TO_BEGIN_NEW_ACTION = 100;
+	protected static Logger logger;
+
+	public UndoAction(MindMapController controller) {
+<span class="nc" id="L53">		this(controller, controller.getText(&quot;undo&quot;), new ImageIcon(</span>
+<span class="nc" id="L54">				controller.getResource(&quot;images/undo.png&quot;)), controller);</span>
+<span class="nc" id="L55">		this.controller = controller;</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L57">			logger = controller.getFrame()</span>
+<span class="nc" id="L58">					.getLogger(this.getClass().toString());</span>
+		}
+<span class="nc" id="L60">	}</span>
+
+	protected UndoAction(MindMapController adapter, String text, Icon icon,
+			MindMapController mode) {
+<span class="nc" id="L64">		super(text, icon, mode);</span>
+<span class="nc" id="L65">		this.controller = adapter;</span>
+<span class="nc" id="L66">		setEnabled(false);</span>
+<span class="nc" id="L67">		isUndoAction = false;</span>
+<span class="nc" id="L68">	}</span>
+
+	/**
+     */
+	public boolean isUndoAction() {
+<span class="nc" id="L73">		return isUndoAction;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.actions.AbstractXmlAction#xmlActionPerformed(java
+	 * .awt.event.ActionEvent)
+	 */
+	protected void xmlActionPerformed(ActionEvent arg0) {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (actionPairList.size() &gt; 0) {</span>
+<span class="nc" id="L85">			ActionPair pair = (ActionPair) actionPairList.get(0);</span>
+<span class="nc" id="L86">			informUndoPartner(pair);</span>
+<span class="nc" id="L87">			actionPairList.remove(0);</span>
+<span class="nc" id="L88">			undoDoAction(pair);</span>
+		}
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (actionPairList.size() == 0) {</span>
+			// disable undo
+<span class="nc" id="L92">			this.setEnabled(false);</span>
+		}
+<span class="nc" id="L94">	}</span>
+
+	/**
+     */
+	protected void informUndoPartner(ActionPair pair) {
+<span class="nc" id="L99">		this.controller.redo.add(pair.reverse());</span>
+<span class="nc" id="L100">		this.controller.redo.setEnabled(true);</span>
+<span class="nc" id="L101">	}</span>
+
+	protected void undoDoAction(ActionPair pair) {
+<span class="nc" id="L104">		logger.info(&quot;Undo, doing: &quot; + Tools.printXmlAction(pair.getUndoAction()));</span>
+<span class="nc" id="L105">		logger.info(&quot;Redo, would: &quot; + Tools.printXmlAction(pair.getDoAction()));</span>
+<span class="nc" id="L106">		isUndoAction = true;</span>
+<span class="nc" id="L107">		this.controller.doTransaction(&quot;Undo&quot;,</span>
+<span class="nc" id="L108">				new ActionPair(pair.getUndoAction(), pair.getDoAction()));</span>
+<span class="nc" id="L109">		isUndoAction = false;</span>
+<span class="nc" id="L110">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.swing.Action#setEnabled(boolean)
+	 */
+	public void setEnabled(boolean arg0) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (arg0)</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			super.setEnabled(actionPairList.size() != 0);</span>
+		else
+<span class="nc" id="L121">			super.setEnabled(false);</span>
+<span class="nc" id="L122">	}</span>
+
+	public void add(ActionPair pair) {
+<span class="nc" id="L125">		XmlAction dcDo = Tools.deepCopy(pair.getDoAction());</span>
+<span class="nc" id="L126">		XmlAction dcUndo = Tools.deepCopy(pair.getUndoAction());</span>
+<span class="nc" id="L127">		long currentTime = System.currentTimeMillis();</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if ((actionPairList.size() &gt; 0)</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">				&amp;&amp; (actionFrameStarted || currentTime - timeOfLastAdd &lt; TIME_TO_BEGIN_NEW_ACTION)) {</span>
+			// the actions are gathered in one compound action.
+<span class="nc" id="L131">			ActionPair firstPair = (ActionPair) actionPairList.get(0);</span>
+			CompoundAction action;
+			CompoundAction remedia;
+<span class="nc bnc" id="L134" title="All 2 branches missed.">			if (!(firstPair.getDoAction() instanceof CompoundAction)</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">					|| !(firstPair.getUndoAction() instanceof CompoundAction)) {</span>
+<span class="nc" id="L136">				action = new CompoundAction();</span>
+<span class="nc" id="L137">				action.addChoice(firstPair.getDoAction());</span>
+<span class="nc" id="L138">				remedia = new CompoundAction();</span>
+<span class="nc" id="L139">				remedia.addChoice(firstPair.getUndoAction());</span>
+<span class="nc" id="L140">				actionPairList.remove(0);</span>
+<span class="nc" id="L141">				actionPairList.add(0, new ActionPair(action, remedia));</span>
+<span class="nc" id="L142">				firstPair = (ActionPair) actionPairList.get(0);</span>
+<span class="nc" id="L143">			} else {</span>
+<span class="nc" id="L144">				action = (CompoundAction) firstPair.getDoAction();</span>
+<span class="nc" id="L145">				remedia = (CompoundAction) firstPair.getUndoAction();</span>
+			}
+<span class="nc" id="L147">			action.addChoice(dcDo);</span>
+<span class="nc" id="L148">			remedia.addAtChoice(0, dcUndo);</span>
+<span class="nc" id="L149">		} else {</span>
+<span class="nc" id="L150">			ActionPair storagePair = new ActionPair(dcDo, dcUndo);</span>
+<span class="nc" id="L151">			actionPairList.add(0, storagePair);</span>
+			// and cut vector, if bigger than given size:
+<span class="nc" id="L153">			int maxEntries = 100;</span>
+			try {
+<span class="nc" id="L155">				maxEntries = new Integer(controller.getFrame().getProperty(</span>
+<span class="nc" id="L156">						&quot;undo_levels&quot;)).intValue();</span>
+<span class="nc" id="L157">			} catch (NumberFormatException e) {</span>
+<span class="nc" id="L158">				freemind.main.Resources.getInstance().logException(e);</span>
+			}
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			while (actionPairList.size() &gt; maxEntries) {</span>
+<span class="nc" id="L161">				actionPairList.remove(actionPairList.size() - 1); // remove</span>
+																	// last elt
+			}
+		}
+<span class="nc" id="L165">		startActionFrame();</span>
+<span class="nc" id="L166">		timeOfLastAdd = currentTime;</span>
+<span class="nc" id="L167">	}</span>
+
+	private void startActionFrame() {
+<span class="nc bnc" id="L170" title="All 4 branches missed.">		if (actionFrameStarted == false &amp;&amp; EventQueue.isDispatchThread()) {</span>
+<span class="nc" id="L171">			actionFrameStarted = true;</span>
+<span class="nc" id="L172">			EventQueue.invokeLater(new Runnable() {</span>
+				public void run() {
+<span class="nc" id="L174">					actionFrameStarted = false;</span>
+<span class="nc" id="L175">				}</span>
+			});
+		}
+<span class="nc" id="L178">	}</span>
+
+	public void clear() {
+<span class="nc" id="L181">		actionPairList.clear();</span>
+<span class="nc" id="L182">	}</span>
+
+	public void print() {
+<span class="nc" id="L185">		logger.info(&quot;Undo list:&quot;);</span>
+<span class="nc" id="L186">		int j = 0;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		for (Iterator i = actionPairList.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L188">			ActionPair pair = (ActionPair) i.next();</span>
+<span class="nc" id="L189">			logger.info(&quot;line &quot; + (j++) + &quot; = &quot;</span>
+<span class="nc" id="L190">					+ Tools.printXmlAction(pair.getDoAction()));</span>
+		}
+<span class="nc" id="L192">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

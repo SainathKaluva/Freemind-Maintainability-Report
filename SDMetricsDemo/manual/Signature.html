@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Signature</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Nesting.html">Prev</a> - <a href="ConnComp.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > 8.1.5 Signature
+<hr>
+<h3><a name="Signature"></a>8.1.5 Signature</h3>
+
+The <tt>signature</tt> procedure creates signature strings such
+as the name and parameter list of an operation.
+
+<pre>
+&lt;metric name="Signature" domain="operation" &gt;
+  &lt;description>The signature of an operation.&lt;/description&gt;
+  &lt;signature set="OPParameters" element="parametertype" /&gt;
+&lt;/metric&gt;
+</pre>
+
+The elements that constitute the parameter list are
+specified by attribute <tt>set</tt>. Each element in the set can be subjected 
+to the usual filters (target, element, eltype, condition, targetcondition, scope).
+In the above example, set OPParameters is defined to be the set of
+parameters of the operation, and we include the type of each parameter in the
+signature instead of the parameter itself.<p>
+
+The result is a string that contains the name of the operation, and
+the IDs of the types of the parameters in the order the parameters are
+defined in the XMI source file, for example 'getBalance(xmi4893,xmi238011)'.
+With these strings you can build, for instance, signature sets of the operations
+of a class and define metrics dealing with method overriding.<p>
+
+To obtain more human readable signature strings, you can further define the 
+presentation of the elements on the signature list. The following definition
+generates signature strings such as 'getBalance[account:int; time:TimeStamp]':
+
+<pre>
+&lt;metric name="Signature2" domain="operation" &gt;
+  &lt;description>Operation signature with brackets and parameter 
+     names/types in the clear.&lt;/description&gt;
+  &lt;signature prologue="name+'['" set="OPParameters" 
+     value="name+':'+parametertype.name" separator="'; '" epilogue="']'" /&gt;
+&lt;/metric&gt;
+</pre>
+
+The attributes to control the presentation are:  
+<ul>
+<li><tt>prologue</tt>: defines the prologue of the signature string, and
+usually includes the name of the element and some version of an 
+opening parenthesis. The expression is evaluated for the owner of the
+signature list. The default value is <tt>name+'('</tt>.
+<li><tt>value</tt>: defines the presentation of the elements on the 
+signature list. The expression is evaluated for each list element.
+By default, this is the XMI ID of the element.
+<li><tt>separator</tt>: defines how the elements on the signature list
+are separated. The default value is a single comma.
+<li><tt>epilogue</tt>: defines the closing of the signature string, usually
+some version of a closing parenthesis. The expression is again evaluated
+for the owner of the signature list. The default value is <tt>')'</tt>.
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Nesting.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ConnComp.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.4 "Nesting"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.1.6 "Connected Components"</td></tr></table>
+
+</body>
+</html>

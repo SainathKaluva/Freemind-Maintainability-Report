@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MapSharingWizardView.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.jabber.view</a> &gt; <span class="el_source">MapSharingWizardView.java</span></div><h1>MapSharingWizardView.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+*Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+*
+*See COPYING for Details
+*
+*This program is free software; you can redistribute it and/or
+*modify it under the terms of the GNU General Public License
+*as published by the Free Software Foundation; either version 2
+*of the License, or (at your option) any later version.
+*
+*This program is distributed in the hope that it will be useful,
+*but WITHOUT ANY WARRANTY; without even the implied warranty of
+*MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*GNU General Public License for more details.
+*
+*You should have received a copy of the GNU General Public License
+*along with this program; if not, write to the Free Software
+*Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+/*
+ * Created on Mar 10, 2004
+ *
+ * To change the template for this generated file go to
+ * Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+package plugins.collaboration.jabber.view;
+
+//TODO: Which deprecated API is used here? Fix this.
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.MouseListener;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JRadioButton;
+import javax.swing.JTextField;
+import javax.swing.SpringLayout;
+
+/**
+ * @author RReppel
+ * 
+ * To change the template for this generated type comment go to
+ * Window&amp;gt;Preferences&amp;gt;Java&amp;gt;Code Generation&amp;gt;Code and Comments
+ */
+public class MapSharingWizardView extends JFrame {
+    private static final int INFO_MESSAGE_HEIGHT = 20;
+
+    private static final int INFO_MESSAGE_WIDTH = 120;
+
+<span class="nc" id="L55">    private static final Color BACKGROUNDCOLOR = Color.lightGray;</span>
+
+    private static final int WIDTH = 400;
+
+    private static final int HEIGHT = 180;
+
+    private static final int BUTTON_WIDTH = 60;
+
+    private static final int BUTTON_HEIGHT = 20;
+
+    private static final int LABEL_WIDTH = 80;
+
+    private static final int LABEL_HEIGHT = 20;
+
+    private static final int TEXTFIELD_CHARACTERS = 25;
+
+    private static final int TEXTFIELD_HEIGHT = 20;
+
+<span class="nc" id="L73">    private static final int COMMANDPANEL_HEIGHT = 40;</span>
+
+    //TODO: Hack alert ... For some reason, this whole gaggle here needs to be
+    // global, otherwise display doesn't update correctly.
+
+    //Common UI components:
+    //TODO: Update resource files.
+<span class="nc" id="L80">    JButton closeBtn = new JButton(&quot;Close&quot;);</span>
+
+<span class="nc" id="L82">    JButton nextBtn = new JButton(&quot;Next&quot;);</span>
+
+<span class="nc" id="L84">    JButton backBtn = new JButton(&quot;Back&quot;);</span>
+
+<span class="nc" id="L86">    JPanel wizardButtonPanel = new JPanel(new SpringLayout()); //A panel</span>
+                                                               // showing
+                                                               // &quot;Close&quot; &quot;Back&quot;
+                                                               // and
+                                                               // (optionally)
+                                                               // &quot;Next&quot;
+                                                               // buttons.
+
+<span class="nc" id="L94">    JPanel closeButtonPanel = new JPanel(new SpringLayout()); //A panel showing</span>
+                                                              // just the
+                                                              // &quot;Close&quot; button.
+
+    //ShareMapSelection GUI UI Components:
+    //TODO: Update resource files.
+<span class="nc" id="L100">    JRadioButton shareMap = new JRadioButton(</span>
+<span class="nc" id="L101">            &quot;Share this map with another user.&quot;);</span>
+
+<span class="nc" id="L103">    JRadioButton waitForMapSharing = new JRadioButton(</span>
+<span class="nc" id="L104">            &quot;Wait for another user to share a map.&quot;);</span>
+
+<span class="nc" id="L106">    JPanel shareMapSelectionPanel = new JPanel();</span>
+
+    //ConnectToJabberServer GUI UI Components:
+    //TODO: Update resource files
+<span class="nc" id="L110">    JTextField serverName = new JTextField(&quot;amessage.de&quot;, TEXTFIELD_CHARACTERS);</span>
+
+<span class="nc" id="L112">    JTextField userName = new JTextField(&quot;&quot;, TEXTFIELD_CHARACTERS);</span>
+
+<span class="nc" id="L114">    JPasswordField password = new JPasswordField(&quot;&quot;, TEXTFIELD_CHARACTERS);</span>
+
+<span class="nc" id="L116">    JPanel connectToServerPanel = new JPanel(new BorderLayout());</span>
+
+    //SelectUser GUI UI Components:
+<span class="nc" id="L119">    JLabel mapShareUserNameLbl = new JLabel(&quot;Username:&quot;);</span>
+
+<span class="nc" id="L121">    JTextField mapShareUserName = new JTextField(&quot;@amessage.de&quot;, TEXTFIELD_CHARACTERS);</span>
+
+<span class="nc" id="L123">    JPanel selectUserPanel = new JPanel(new BorderLayout());</span>
+
+    //MapShareRequestAcceptDecline GUI UI Components:
+    //TODO: Update resource files.
+<span class="nc" id="L127">    JButton acceptBtn = new JButton(&quot;Accept&quot;);</span>
+
+<span class="nc" id="L129">    JButton declineBtn = new JButton(&quot;Decline&quot;);</span>
+
+    //NotificationMessage GUI UI Components:
+<span class="nc" id="L132">    JPanel notificationMessagePanel = new JPanel(new BorderLayout());</span>
+
+<span class="nc" id="L134">    JPanel notificationMessageDisplayPanel = new JPanel();</span>
+
+<span class="nc" id="L136">    JLabel notificationMessage = new JLabel();</span>
+
+    //AcceptDeclineMessage GUI UI Components:
+<span class="nc" id="L139">    JPanel acceptDeclineMessagePanel = new JPanel(new BorderLayout());</span>
+
+<span class="nc" id="L141">    JLabel acceptDeclineMessage = new JLabel();</span>
+
+    //TODO: Update resource file.
+<span class="nc" id="L144">    JPanel acceptDeclineMessageDisplayPanel = new JPanel();</span>
+
+<span class="nc" id="L146">    JPanel buttonPanel = new JPanel(new SpringLayout()); //A panel showing just</span>
+                                                         // the &quot;Close&quot; button.
+
+<span class="nc" id="L149">    public MapSharingWizardView() {</span>
+<span class="nc" id="L150">        setSize(WIDTH, HEIGHT);</span>
+<span class="nc" id="L151">        setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L152">    }</span>
+
+    public void addCloseButtonMouseListener(
+            MouseListener closeButtonMouseListener) {
+<span class="nc" id="L156">        closeBtn.addMouseListener(closeButtonMouseListener);</span>
+<span class="nc" id="L157">    }</span>
+
+    public void addNextButtonMouseListener(MouseListener nextButtonMouseListener) {
+<span class="nc" id="L160">        nextBtn.addMouseListener(nextButtonMouseListener);</span>
+<span class="nc" id="L161">    }</span>
+
+    public void addBackButtonMouseListener(MouseListener backButtonMouseListener) {
+<span class="nc" id="L164">        backBtn.addMouseListener(backButtonMouseListener);</span>
+<span class="nc" id="L165">    }</span>
+
+    public void addAcceptButtonMouseListener(
+            MouseListener acceptButtonMouseListener) {
+<span class="nc" id="L169">        acceptBtn.addMouseListener(acceptButtonMouseListener);</span>
+<span class="nc" id="L170">    }</span>
+
+    public void addDeclineButtonMouseListener(
+            MouseListener declineButtonMouseListener) {
+<span class="nc" id="L174">        declineBtn.addMouseListener(declineButtonMouseListener);</span>
+<span class="nc" id="L175">    }</span>
+
+    /**
+     * This is the GUI where the user chooses between sharing her/his map or
+     * waiting for another user to share a map. It's the first screen of the
+     * wizard.
+     *  
+     */
+    private void buildShareMapSelectionGui() {
+<span class="nc" id="L184">        JPanel shareMapEditPanel = new JPanel();</span>
+<span class="nc" id="L185">        ButtonGroup group = new ButtonGroup();</span>
+
+        //Window title:
+        //TODO: Update resource file.
+<span class="nc" id="L189">        setTitle(&quot;Share Map&quot;);</span>
+<span class="nc" id="L190">        shareMapSelectionPanel.setSize(WIDTH, HEIGHT);</span>
+<span class="nc" id="L191">        shareMapSelectionPanel.setBackground(BACKGROUNDCOLOR);</span>
+
+        //Main edit panel:
+<span class="nc" id="L194">        SpringLayout layout = new SpringLayout();</span>
+<span class="nc" id="L195">        shareMapEditPanel.setLayout(layout);</span>
+<span class="nc" id="L196">        shareMapEditPanel.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L197">        shareMapEditPanel.setSize(WIDTH, HEIGHT - COMMANDPANEL_HEIGHT);</span>
+
+        //Radio buttons:
+<span class="nc" id="L200">        shareMap.setSelected(true);</span>
+<span class="nc" id="L201">        shareMap.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L202">        waitForMapSharing.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L203">        group.add(waitForMapSharing);</span>
+<span class="nc" id="L204">        group.add(shareMap);</span>
+<span class="nc" id="L205">        shareMapEditPanel.add(waitForMapSharing);</span>
+<span class="nc" id="L206">        shareMapEditPanel.add(shareMap);</span>
+
+<span class="nc" id="L208">        SpringUtilities.makeCompactGrid(shareMapEditPanel, //parent</span>
+<span class="nc" id="L209">                2, 1, //rows, cols</span>
+<span class="nc" id="L210">                15, 15, //initX, initY</span>
+<span class="nc" id="L211">                10, 10); //xPad, yPad</span>
+
+<span class="nc" id="L213">        shareMapSelectionPanel.add(shareMapEditPanel, BorderLayout.NORTH);</span>
+
+<span class="nc" id="L215">        addWizardButtons(shareMapSelectionPanel, true);</span>
+<span class="nc" id="L216">        this.getContentPane().add(shareMapSelectionPanel);</span>
+
+<span class="nc" id="L218">    }</span>
+
+    /**
+     * This builds the user interface which prompts the user for the Jabber
+     * server name, a username and a password.
+     */
+    private void buildConnectToServerGui() {
+<span class="nc" id="L225">        JLabel userNameLbl = new JLabel(&quot;Username:&quot;);</span>
+<span class="nc" id="L226">        JLabel passwordLbl = new JLabel(&quot;Password:&quot;);</span>
+<span class="nc" id="L227">        JLabel serverNameLbl = new JLabel(&quot;Server Name:&quot;);</span>
+<span class="nc" id="L228">        JPanel connectToServerEditPanel = new JPanel();</span>
+
+        //Window title:
+        //TODO: Update resource file.
+<span class="nc" id="L232">        setTitle(&quot;Connect To Jabber Instant Messaging Server&quot;);</span>
+
+        //Main edit panel:
+<span class="nc" id="L235">        SpringLayout layout = new SpringLayout();</span>
+<span class="nc" id="L236">        connectToServerEditPanel.setLayout(layout);</span>
+
+<span class="nc" id="L238">        serverNameLbl.setSize(LABEL_WIDTH, LABEL_HEIGHT);</span>
+<span class="nc" id="L239">        userNameLbl.setSize(LABEL_WIDTH, LABEL_HEIGHT);</span>
+<span class="nc" id="L240">        passwordLbl.setSize(LABEL_WIDTH, LABEL_HEIGHT);</span>
+<span class="nc" id="L241">        serverName.setSize(TEXTFIELD_CHARACTERS, TEXTFIELD_HEIGHT);</span>
+<span class="nc" id="L242">        userName.setSize(TEXTFIELD_CHARACTERS, TEXTFIELD_HEIGHT);</span>
+<span class="nc" id="L243">        password.setSize(TEXTFIELD_CHARACTERS, TEXTFIELD_HEIGHT);</span>
+
+<span class="nc" id="L245">        connectToServerEditPanel.setBackground(BACKGROUNDCOLOR);</span>
+
+<span class="nc" id="L247">        connectToServerEditPanel.setSize(WIDTH, HEIGHT - COMMANDPANEL_HEIGHT);</span>
+<span class="nc" id="L248">        connectToServerEditPanel.add(serverNameLbl);</span>
+<span class="nc" id="L249">        connectToServerEditPanel.add(serverName);</span>
+<span class="nc" id="L250">        connectToServerEditPanel.add(userNameLbl);</span>
+<span class="nc" id="L251">        connectToServerEditPanel.add(userName);</span>
+<span class="nc" id="L252">        connectToServerEditPanel.add(passwordLbl);</span>
+<span class="nc" id="L253">        connectToServerEditPanel.add(password);</span>
+
+<span class="nc" id="L255">        SpringUtilities.makeCompactGrid(connectToServerEditPanel, //parent</span>
+<span class="nc" id="L256">                3, 2, //rows, cols</span>
+<span class="nc" id="L257">                15, 15, //initX, initY</span>
+<span class="nc" id="L258">                10, 10); //xPad, yPad</span>
+
+<span class="nc" id="L260">        connectToServerPanel.add(connectToServerEditPanel, BorderLayout.NORTH);</span>
+
+<span class="nc" id="L262">        addWizardButtons(connectToServerPanel, false);</span>
+<span class="nc" id="L263">        this.getContentPane().add(connectToServerPanel);</span>
+<span class="nc" id="L264">    }</span>
+
+    /**
+     * Builds the interface which prompts a user to select somebody to share a
+     * map with.
+     *  
+     */
+    private void buildSelectUserGui() {
+<span class="nc" id="L272">        JPanel selectUserEditPanel = new JPanel();</span>
+
+        //Window title:
+        //TODO: Update resource file.
+<span class="nc" id="L276">        setTitle(&quot;Select User (example: user@jabber.org)&quot;);</span>
+<span class="nc" id="L277">        selectUserPanel.setBackground(BACKGROUNDCOLOR);</span>
+
+        //Main edit panel:
+<span class="nc" id="L280">        SpringLayout layout = new SpringLayout();</span>
+<span class="nc" id="L281">        selectUserEditPanel.setLayout(layout);</span>
+
+<span class="nc" id="L283">        mapShareUserNameLbl.setSize(LABEL_WIDTH, LABEL_HEIGHT);</span>
+<span class="nc" id="L284">        mapShareUserName.setSize(TEXTFIELD_CHARACTERS, TEXTFIELD_HEIGHT);</span>
+
+<span class="nc" id="L286">        selectUserEditPanel.setBackground(BACKGROUNDCOLOR);</span>
+
+<span class="nc" id="L288">        selectUserEditPanel.setSize(WIDTH, HEIGHT - COMMANDPANEL_HEIGHT);</span>
+<span class="nc" id="L289">        selectUserEditPanel.add(mapShareUserNameLbl);</span>
+<span class="nc" id="L290">        selectUserEditPanel.add(mapShareUserName);</span>
+
+<span class="nc" id="L292">        SpringUtilities.makeCompactGrid(selectUserEditPanel, //parent</span>
+<span class="nc" id="L293">                1, 2, //rows, cols</span>
+<span class="nc" id="L294">                15, 15, //initX, initY</span>
+<span class="nc" id="L295">                10, 10); //xPad, yPad</span>
+
+<span class="nc" id="L297">        selectUserPanel.add(selectUserEditPanel, BorderLayout.NORTH);</span>
+
+<span class="nc" id="L299">        addWizardButtons(selectUserPanel, true);</span>
+
+<span class="nc" id="L301">        this.getContentPane().add(selectUserPanel);</span>
+<span class="nc" id="L302">    }</span>
+
+    /**
+     * Builds the interface which informs the user that a decision to accept map
+     * sharing is pending.
+     *  
+     */
+    private void buildNotificationMessageGui(String title, String message) {
+        //AwaitingMapSharing GUI UI Components:
+        //TODO: Update resource file.
+
+        //Window title:
+<span class="nc" id="L314">        setTitle(title);</span>
+<span class="nc" id="L315">        notificationMessagePanel.setBackground(BACKGROUNDCOLOR);</span>
+
+        //Main edit panel:
+<span class="nc" id="L318">        notificationMessageDisplayPanel.setSize(WIDTH, HEIGHT</span>
+                - COMMANDPANEL_HEIGHT);
+<span class="nc" id="L320">        notificationMessageDisplayPanel.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L321">        SpringLayout layout = new SpringLayout();</span>
+<span class="nc" id="L322">        notificationMessageDisplayPanel.setLayout(layout);</span>
+
+<span class="nc" id="L324">        notificationMessageDisplayPanel.remove(notificationMessage);</span>
+<span class="nc" id="L325">        notificationMessage.setSize(INFO_MESSAGE_WIDTH, INFO_MESSAGE_HEIGHT);</span>
+<span class="nc" id="L326">        notificationMessage.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L327">        notificationMessage.setText(message);</span>
+<span class="nc" id="L328">        notificationMessageDisplayPanel.add(notificationMessage);</span>
+
+<span class="nc" id="L330">        SpringUtilities.makeCompactGrid(notificationMessageDisplayPanel, //parent</span>
+<span class="nc" id="L331">                1, 1, //rows, cols</span>
+<span class="nc" id="L332">                50, 50, //initX, initY</span>
+<span class="nc" id="L333">                10, 10); //xPad, yPad</span>
+
+<span class="nc" id="L335">        notificationMessagePanel.add(notificationMessageDisplayPanel,</span>
+<span class="nc" id="L336">                BorderLayout.NORTH);</span>
+
+<span class="nc" id="L338">        addCloseButton(notificationMessagePanel);</span>
+<span class="nc" id="L339">        this.getContentPane().add(notificationMessagePanel);</span>
+<span class="nc" id="L340">    }</span>
+
+    private void buildMapShareAcceptDeclineGui(String message) {
+
+<span class="nc" id="L344">        acceptDeclineMessage.setText(message);</span>
+
+        //Window title:
+<span class="nc" id="L347">        setTitle(&quot;Map Sharing Request&quot;);</span>
+<span class="nc" id="L348">        acceptDeclineMessagePanel.setBackground(BACKGROUNDCOLOR);</span>
+
+        //Main edit panel:
+<span class="nc" id="L351">        acceptDeclineMessageDisplayPanel.setSize(WIDTH, HEIGHT</span>
+                - COMMANDPANEL_HEIGHT);
+<span class="nc" id="L353">        acceptDeclineMessageDisplayPanel.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L354">        SpringLayout layout = new SpringLayout();</span>
+<span class="nc" id="L355">        acceptDeclineMessageDisplayPanel.setLayout(layout);</span>
+
+<span class="nc" id="L357">        acceptDeclineMessage.setSize(INFO_MESSAGE_WIDTH, INFO_MESSAGE_HEIGHT);</span>
+<span class="nc" id="L358">        acceptDeclineMessage.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L359">        acceptDeclineMessageDisplayPanel.add(acceptDeclineMessage);</span>
+
+<span class="nc" id="L361">        SpringUtilities.makeCompactGrid(acceptDeclineMessageDisplayPanel, //parent</span>
+<span class="nc" id="L362">                1, 1, //rows, cols</span>
+<span class="nc" id="L363">                50, 50, //initX, initY</span>
+<span class="nc" id="L364">                10, 10); //xPad, yPad</span>
+
+<span class="nc" id="L366">        acceptDeclineMessagePanel.add(acceptDeclineMessageDisplayPanel,</span>
+<span class="nc" id="L367">                BorderLayout.NORTH);</span>
+
+<span class="nc" id="L369">        addAcceptDeclineButtons(acceptDeclineMessagePanel);</span>
+<span class="nc" id="L370">        this.getContentPane().add(acceptDeclineMessagePanel);</span>
+<span class="nc" id="L371">    }</span>
+
+    /**
+     * Adds the &quot;Close&quot;, &quot;Back&quot; and &quot;Next&quot; buttons.
+     * 
+     * @param panel
+     * @param showBackButtion
+     */
+    private void addWizardButtons(JPanel panel, boolean showBackButton) {
+<span class="nc" id="L380">        wizardButtonPanel.setSize(WIDTH, COMMANDPANEL_HEIGHT);</span>
+<span class="nc" id="L381">        wizardButtonPanel.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L382">        wizardButtonPanel.add(closeBtn);</span>
+<span class="nc" id="L383">        wizardButtonPanel.add(backBtn);</span>
+<span class="nc" id="L384">        backBtn.setVisible(showBackButton);</span>
+<span class="nc" id="L385">        wizardButtonPanel.add(nextBtn);</span>
+<span class="nc" id="L386">        SpringUtilities.makeCompactGrid(wizardButtonPanel, //parent</span>
+<span class="nc" id="L387">                1, 3, //rows, cols</span>
+<span class="nc" id="L388">                80, 15, //initX, initY</span>
+<span class="nc" id="L389">                30, 10); //xPad, yPad</span>
+<span class="nc" id="L390">        panel.add(wizardButtonPanel, BorderLayout.SOUTH);</span>
+<span class="nc" id="L391">    }</span>
+
+    /**
+     * Adds the &quot;Close&quot;, &quot;Back&quot; and &quot;Next&quot; buttons.
+     * 
+     * @param panel
+     */
+    private void addCloseButton(JPanel panel) {
+<span class="nc" id="L399">        closeButtonPanel = new JPanel(new SpringLayout()); //A panel showing</span>
+                                                           // just the &quot;Close&quot;
+                                                           // button.
+<span class="nc" id="L402">        closeButtonPanel.setSize(WIDTH, COMMANDPANEL_HEIGHT);</span>
+<span class="nc" id="L403">        closeButtonPanel.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L404">        closeButtonPanel.add(closeBtn);</span>
+<span class="nc" id="L405">        SpringUtilities.makeCompactGrid(closeButtonPanel, //parent</span>
+<span class="nc" id="L406">                1, 1, //rows, cols</span>
+<span class="nc" id="L407">                80 + closeBtn.getWidth() + 30, 15, //initX, initY</span>
+<span class="nc" id="L408">                30, 10); //xPad, yPad</span>
+<span class="nc" id="L409">        panel.add(closeButtonPanel, BorderLayout.SOUTH);</span>
+<span class="nc" id="L410">    }</span>
+
+    /**
+     * Adds the &quot;Accept&quot; and &quot;Decline&quot; buttons.
+     * 
+     * @param panel
+     */
+    private void addAcceptDeclineButtons(JPanel panel) {
+<span class="nc" id="L418">        buttonPanel.setBackground(BACKGROUNDCOLOR);</span>
+<span class="nc" id="L419">        buttonPanel.add(acceptBtn);</span>
+<span class="nc" id="L420">        buttonPanel.add(declineBtn);</span>
+<span class="nc" id="L421">        SpringUtilities.makeCompactGrid(buttonPanel, //parent</span>
+<span class="nc" id="L422">                1, 2, //rows, cols</span>
+<span class="nc" id="L423">                80 + closeBtn.getWidth() + 30, 15, //initX, initY</span>
+<span class="nc" id="L424">                30, 10); //xPad, yPad</span>
+<span class="nc" id="L425">        panel.add(buttonPanel, BorderLayout.SOUTH);</span>
+<span class="nc" id="L426">    }</span>
+
+    /**
+     * Removes any previous user interfaces shown on the wizard's content pane
+     *  
+     */
+    private void removeUIs() {
+<span class="nc" id="L433">        this.getContentPane().remove(shareMapSelectionPanel);</span>
+<span class="nc" id="L434">        this.getContentPane().remove(connectToServerPanel);</span>
+<span class="nc" id="L435">        this.getContentPane().remove(selectUserPanel);</span>
+<span class="nc" id="L436">        this.getContentPane().remove(notificationMessagePanel);</span>
+<span class="nc" id="L437">        this.getContentPane().remove(acceptDeclineMessagePanel);</span>
+
+<span class="nc" id="L439">        shareMapSelectionPanel = new JPanel();</span>
+<span class="nc" id="L440">        connectToServerPanel = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L441">        selectUserPanel = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L442">        notificationMessagePanel = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L443">        notificationMessage = new JLabel();</span>
+<span class="nc" id="L444">        notificationMessageDisplayPanel = new JPanel();</span>
+<span class="nc" id="L445">        acceptDeclineMessagePanel = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L446">        acceptDeclineMessage = new JLabel();</span>
+<span class="nc" id="L447">        acceptDeclineMessageDisplayPanel = new JPanel();</span>
+
+<span class="nc" id="L449">        wizardButtonPanel = new JPanel(new SpringLayout()); //A panel showing</span>
+                                                            // &quot;Close&quot; &quot;Back&quot;
+                                                            // and (optionally)
+                                                            // &quot;Next&quot; buttons.
+<span class="nc" id="L453">        buttonPanel = new JPanel(new SpringLayout()); //A panel showing just</span>
+                                                      // the &quot;Close&quot; button.
+
+<span class="nc" id="L456">    }</span>
+
+    public void showMapSharingSelectionDialog() {
+        //Start with giving the user a choice between sharing his/her own map
+        // or waiting
+        //for another user to share a map:
+        //TODO: &quot;RemoveUIs&quot;, etc. should be in &quot;BuildShareMapSelectionGui&quot;.
+<span class="nc" id="L463">        removeUIs();</span>
+<span class="nc" id="L464">        buildShareMapSelectionGui();</span>
+<span class="nc" id="L465">        show();</span>
+<span class="nc" id="L466">        this.repaint();</span>
+<span class="nc" id="L467">    }</span>
+
+    public void showConnectToServerDialog() {
+<span class="nc" id="L470">        removeUIs();</span>
+<span class="nc" id="L471">        buildConnectToServerGui();</span>
+<span class="nc" id="L472">        show();</span>
+<span class="nc" id="L473">        this.repaint();</span>
+<span class="nc" id="L474">    }</span>
+
+    public void showSelectUserDialog() {
+<span class="nc" id="L477">        removeUIs();</span>
+<span class="nc" id="L478">        buildSelectUserGui();</span>
+<span class="nc" id="L479">        show();</span>
+<span class="nc" id="L480">        this.repaint();</span>
+<span class="nc" id="L481">    }</span>
+
+    public void showAwaitMapSharingMessage() {
+<span class="nc" id="L484">        removeUIs();</span>
+        //TODO: Update resource files.
+<span class="nc" id="L486">        buildNotificationMessageGui(&quot;Share Map&quot;,</span>
+<span class="nc" id="L487">                &quot;Waiting for user to accept invitation to share map...&quot;);</span>
+<span class="nc" id="L488">        show();</span>
+<span class="nc" id="L489">        this.repaint();</span>
+<span class="nc" id="L490">    }</span>
+
+    public void showSharingAcceptedMessage(String userName) {
+        //TODO: Update resource files.
+<span class="nc" id="L494">        String message = &quot;You are now sharing the current map with &quot; + userName</span>
+<span class="nc" id="L495">                + &quot;.&quot;;</span>
+<span class="nc" id="L496">        removeUIs();</span>
+        //TODO: Update resource files.
+<span class="nc" id="L498">        hide();</span>
+<span class="nc" id="L499">        buildNotificationMessageGui(&quot;Sharing Map&quot;, message);</span>
+<span class="nc" id="L500">        show();</span>
+<span class="nc" id="L501">        this.repaint();</span>
+<span class="nc" id="L502">    }</span>
+
+    public void showSharingDeclinedMessage(String userName) {
+        //TODO: Update resource files.
+<span class="nc" id="L506">        String message = userName</span>
+<span class="nc" id="L507">                + &quot; has declined your invitation to share a map.&quot;;</span>
+<span class="nc" id="L508">        removeUIs();</span>
+        //TODO: Update resource files.
+<span class="nc" id="L510">        buildNotificationMessageGui(&quot;Declined Sharing Map&quot;, message);</span>
+<span class="nc" id="L511">        show();</span>
+<span class="nc" id="L512">        this.repaint();</span>
+<span class="nc" id="L513">    }</span>
+
+    public void showSharingStoppedMessage(String userName) {
+        //TODO: Update resource files.
+<span class="nc" id="L517">        String message = userName + &quot; has stopped map sharing.&quot;;</span>
+<span class="nc" id="L518">        removeUIs();</span>
+        //TODO: Update resource files.
+<span class="nc" id="L520">        buildNotificationMessageGui(&quot;Stopped Sharing Map&quot;, message);</span>
+<span class="nc" id="L521">        show();</span>
+<span class="nc" id="L522">        this.repaint();</span>
+<span class="nc" id="L523">    }</span>
+
+    public void showMapShareAcceptDeclineMessage(String userName) {
+        //TODO: Update resource files.
+<span class="nc" id="L527">        String message = userName + &quot; wants to share a map with you.&quot;;</span>
+<span class="nc" id="L528">        removeUIs();</span>
+        //TODO: Update resource files.
+<span class="nc" id="L530">        buildMapShareAcceptDeclineGui(message);</span>
+<span class="nc" id="L531">        show();</span>
+<span class="nc" id="L532">        this.repaint();</span>
+<span class="nc" id="L533">    }</span>
+
+    // Properties:
+
+    /**
+     * True if the user has chosen to share his own map with another user.
+     * 
+     * @return
+     */
+    public boolean isShareMapSelected() {
+<span class="nc" id="L543">        return shareMap.isSelected();</span>
+    }
+
+    /**
+     * True if the user has chosen to wait for another user to share a map.
+     * 
+     * @return
+     */
+    public boolean isWaitForMapSharingSelected() {
+<span class="nc" id="L552">        return waitForMapSharing.isSelected();</span>
+    }
+
+    /**
+     * The name of the Jabber server to which to connect.
+     * 
+     * @return
+     */
+    public String getServername() {
+<span class="nc" id="L561">        return serverName.getText();</span>
+    }
+
+    /**
+     * The name with which the user with which the user should connect to the
+     * Jabber server.
+     * 
+     * @return
+     */
+    public String getUsername() {
+<span class="nc" id="L571">        return userName.getText();</span>
+    }
+
+    /**
+     * The password for connecting to the Jabber server.
+     * 
+     * @return
+     */
+    public String getPassword() {
+<span class="nc" id="L580">        return password.getText();</span>
+    }
+
+    /**
+     * The user name of the use with whom to share a map, e.g.
+     * &quot;johnsmith@chat.jabbermind.com&quot;.
+     * 
+     * @return
+     */
+    public String getMapShareUserName() {
+<span class="nc" id="L590">        return mapShareUserName.getText();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

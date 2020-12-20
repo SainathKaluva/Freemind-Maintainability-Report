@@ -1,0 +1,2118 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>Controller.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller</a> &gt; <span class="el_source">Controller.java</span></div><h1>Controller.java</h1><pre class="source lang-java linenums"><span class="pc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: Controller.java,v 1.40.14.21.2.64 2010/02/22 21:18:53 christianfoltin Exp $*/
+
+package freemind.controller;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.HeadlessException;
+import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
+import java.awt.RenderingHints;
+import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.Paper;
+import java.awt.print.PrinterJob;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import freemind.common.BooleanProperty;
+import freemind.controller.MapModuleManager.MapModuleChangeObserver;
+import freemind.controller.actions.generated.instance.MindmapLastStateStorage;
+import freemind.controller.filter.FilterController;
+import freemind.controller.printpreview.PreviewDialog;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindCommon;
+import freemind.main.FreeMindMain;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindMap;
+import freemind.modes.Mode;
+import freemind.modes.ModeController;
+import freemind.modes.ModesCreator;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.attributes.AttributeTableLayoutModel;
+import freemind.modes.browsemode.BrowseMode;
+import freemind.modes.mindmapmode.attributeactors.AttributeManagerDialog;
+import freemind.preferences.FreemindPropertyListener;
+import freemind.preferences.layout.OptionPanel;
+import freemind.preferences.layout.OptionPanel.OptionPanelFeedback;
+import freemind.view.MapModule;
+import freemind.view.mindmapview.MapView;
+
+/**
+ * Provides the methods to edit/change a Node. Forwards all messages to
+ * MapModel(editing) or MapView(navigation).
+ */
+public class Controller implements MapModuleChangeObserver {
+
+	/**
+	 * 
+	 */
+	private static final String PAGE_FORMAT_PROPERTY = &quot;page_format&quot;;
+<span class="fc" id="L121">	private HashSet mMapTitleChangeListenerSet = new HashSet();</span>
+<span class="fc" id="L122">	private HashSet mZoomListenerSet = new HashSet();</span>
+<span class="fc" id="L123">	private HashSet mMapTitleContributorSet = new HashSet();</span>
+	/**
+	 * Converts from a local link to the real file URL of the documentation map.
+	 * (Used to change this behaviour under MacOSX).
+	 */
+	private static Logger logger;
+	/** Used for MAC!!! */
+	public static LocalLinkConverter localDocumentationLinkConverter;
+<span class="fc" id="L131">	private static JColorChooser colorChooser = new JColorChooser();</span>
+	private LastOpenedList lastOpened;// A list of the pathnames of all the maps
+										// that were opened in the last time
+	private MapModuleManager mapModuleManager;// new MapModuleManager();
+	/** The current mode */
+	private Mode mMode;
+	private FreeMindMain frame;
+	private MainToolBar toolbar;
+	private JToolBar filterToolbar;
+	private JPanel northToolbarPanel;
+	private NodeMouseMotionListener nodeMouseMotionListener;
+	private NodeMotionListener nodeMotionListener;
+	private NodeKeyListener nodeKeyListener;
+	private NodeDragListener nodeDragListener;
+	private NodeDropListener nodeDropListener;
+	private MapMouseMotionListener mapMouseMotionListener;
+	private MapMouseWheelListener mapMouseWheelListener;
+<span class="fc" id="L148">	private ModesCreator mModescreator = new ModesCreator(this);</span>
+<span class="fc" id="L149">	private PageFormat pageFormat = null;</span>
+<span class="fc" id="L150">	private PrinterJob printerJob = null;</span>
+<span class="fc" id="L151">	private Icon bswatch = new BackgroundSwatch();// needed for BackgroundAction</span>
+<span class="fc" id="L152">	private boolean antialiasEdges = false;</span>
+<span class="fc" id="L153">	private boolean antialiasAll = false;</span>
+<span class="fc" id="L154">	private Map fontMap = new HashMap();</span>
+
+	private FilterController mFilterController;
+
+<span class="fc" id="L158">	boolean isPrintingAllowed = true;</span>
+<span class="fc" id="L159">	boolean menubarVisible = true;</span>
+<span class="fc" id="L160">	boolean toolbarVisible = true;</span>
+<span class="fc" id="L161">	boolean leftToolbarVisible = true;</span>
+
+	public CloseAction close;
+	public Action print;
+	public Action printDirect;
+	public Action printPreview;
+	public Action page;
+	public Action quit;
+
+<span class="fc" id="L170">	public Action showAllAttributes = new ShowAllAttributesAction();</span>
+<span class="fc" id="L171">	public Action showSelectedAttributes = new ShowSelectedAttributesAction();</span>
+<span class="fc" id="L172">	public Action hideAllAttributes = new HideAllAttributesAction();</span>
+
+	public OptionAntialiasAction optionAntialiasAction;
+	public Action optionHTMLExportFoldingAction;
+	public Action optionSelectionMechanismAction;
+
+	public Action about;
+	public Action faq;
+	public Action keyDocumentation;
+	public Action webDocu;
+	public Action documentation;
+	public Action license;
+	public Action showFilterToolbarAction;
+	public Action showAttributeManagerAction;
+	public Action navigationPreviousMap;
+	public Action navigationNextMap;
+	public Action navigationMoveMapLeftAction;
+	public Action navigationMoveMapRightAction;
+
+	public Action moveToRoot;
+	public Action toggleMenubar;
+	public Action toggleToolbar;
+	public Action toggleLeftToolbar;
+
+	public Action zoomIn;
+	public Action zoomOut;
+
+	public Action showSelectionAsRectangle;
+	public PropertyAction propertyAction;
+	public OpenURLAction freemindUrl;
+
+<span class="fc" id="L203">	private static final float[] zoomValues = { 25 / 100f, 50 / 100f,</span>
+<span class="fc" id="L204">			75 / 100f, 100 / 100f, 150 / 100f, 200 / 100f, 300 / 100f,</span>
+<span class="fc" id="L205">			400 / 100f };</span>
+
+<span class="fc" id="L207">	private static Vector propertyChangeListeners = new Vector();</span>
+
+<span class="fc" id="L209">	private AttributeManagerDialog attributeDialog = null;</span>
+	private Vector mTabbedPaneMapModules;
+	private JTabbedPane mTabbedPane;
+<span class="fc" id="L212">	private boolean mTabbedPaneSelectionUpdate = true;</span>
+
+	//
+	// Constructors
+	//
+<span class="fc" id="L217">	public Controller(FreeMindMain frame) {</span>
+<span class="fc" id="L218">		this.frame = frame;</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">		if (logger == null) {</span>
+<span class="fc" id="L220">			logger = frame.getLogger(this.getClass().getName());</span>
+		}
+<span class="fc" id="L222">	}</span>
+
+	public void init() {
+<span class="nc" id="L225">		initialization();</span>
+
+<span class="nc" id="L227">		nodeMouseMotionListener = new NodeMouseMotionListener(this);</span>
+<span class="nc" id="L228">		nodeMotionListener = new NodeMotionListener(this);</span>
+<span class="nc" id="L229">		nodeKeyListener = new NodeKeyListener(this);</span>
+<span class="nc" id="L230">		nodeDragListener = new NodeDragListener(this);</span>
+<span class="nc" id="L231">		nodeDropListener = new NodeDropListener(this);</span>
+
+<span class="nc" id="L233">		mapMouseMotionListener = new MapMouseMotionListener(this);</span>
+<span class="nc" id="L234">		mapMouseWheelListener = new MapMouseWheelListener(this);</span>
+
+<span class="nc" id="L236">		close = new CloseAction(this);</span>
+
+<span class="nc" id="L238">		print = new PrintAction(this, true);</span>
+<span class="nc" id="L239">		printDirect = new PrintAction(this, false);</span>
+<span class="nc" id="L240">		printPreview = new PrintPreviewAction(this);</span>
+<span class="nc" id="L241">		page = new PageAction(this);</span>
+<span class="nc" id="L242">		quit = new QuitAction(this);</span>
+<span class="nc" id="L243">		about = new AboutAction(this);</span>
+<span class="nc" id="L244">		freemindUrl = new OpenURLAction(this, getResourceString(&quot;FreeMind&quot;),</span>
+<span class="nc" id="L245">				getProperty(&quot;webFreeMindLocation&quot;));</span>
+<span class="nc" id="L246">		faq = new OpenURLAction(this, getResourceString(&quot;FAQ&quot;),</span>
+<span class="nc" id="L247">				getProperty(&quot;webFAQLocation&quot;));</span>
+<span class="nc" id="L248">		keyDocumentation = new KeyDocumentationAction(this);</span>
+<span class="nc" id="L249">		webDocu = new OpenURLAction(this, getResourceString(&quot;webDocu&quot;),</span>
+<span class="nc" id="L250">				getProperty(&quot;webDocuLocation&quot;));</span>
+<span class="nc" id="L251">		documentation = new DocumentationAction(this);</span>
+<span class="nc" id="L252">		license = new LicenseAction(this);</span>
+<span class="nc" id="L253">		navigationPreviousMap = new NavigationPreviousMapAction(this);</span>
+<span class="nc" id="L254">		navigationNextMap = new NavigationNextMapAction(this);</span>
+<span class="nc" id="L255">		navigationMoveMapLeftAction = new NavigationMoveMapLeftAction(this);</span>
+<span class="nc" id="L256">		navigationMoveMapRightAction = new NavigationMoveMapRightAction(this);</span>
+<span class="nc" id="L257">		showFilterToolbarAction = new ShowFilterToolbarAction(this);</span>
+<span class="nc" id="L258">		showAttributeManagerAction = new ShowAttributeDialogAction(this);</span>
+<span class="nc" id="L259">		toggleMenubar = new ToggleMenubarAction(this);</span>
+<span class="nc" id="L260">		toggleToolbar = new ToggleToolbarAction(this);</span>
+<span class="nc" id="L261">		toggleLeftToolbar = new ToggleLeftToolbarAction(this);</span>
+<span class="nc" id="L262">		optionAntialiasAction = new OptionAntialiasAction(this);</span>
+<span class="nc" id="L263">		optionHTMLExportFoldingAction = new OptionHTMLExportFoldingAction(this);</span>
+<span class="nc" id="L264">		optionSelectionMechanismAction = new OptionSelectionMechanismAction(</span>
+<span class="nc" id="L265">				this);</span>
+
+<span class="nc" id="L267">		zoomIn = new ZoomInAction(this);</span>
+<span class="nc" id="L268">		zoomOut = new ZoomOutAction(this);</span>
+<span class="nc" id="L269">		propertyAction = new PropertyAction(this);</span>
+
+<span class="nc" id="L271">		showSelectionAsRectangle = new ShowSelectionAsRectangleAction(this);</span>
+
+<span class="nc" id="L273">		moveToRoot = new MoveToRootAction(this);</span>
+
+		// Create the ToolBar
+<span class="nc" id="L276">		northToolbarPanel = new JPanel(new BorderLayout());</span>
+<span class="nc" id="L277">		toolbar = new MainToolBar(this);</span>
+<span class="nc" id="L278">		mFilterController = new FilterController(this);</span>
+<span class="nc" id="L279">		filterToolbar = mFilterController.getFilterToolbar();</span>
+<span class="nc" id="L280">		getFrame().getContentPane().add(northToolbarPanel, BorderLayout.NORTH);</span>
+<span class="nc" id="L281">		northToolbarPanel.add(toolbar, BorderLayout.NORTH);</span>
+<span class="nc" id="L282">		northToolbarPanel.add(filterToolbar, BorderLayout.SOUTH);</span>
+
+<span class="nc" id="L284">		setAllActions(false);</span>
+
+<span class="nc" id="L286">	}</span>
+
+	/**
+	 * Does basic initializations of this class. Normally, init is called, but
+	 * if you don't need the actions, call this method instead.
+	 */
+	public void initialization() {
+		/**
+		 * Arranges the keyboard focus especially after opening FreeMind.
+		 * */
+<span class="fc" id="L296">		KeyboardFocusManager focusManager = KeyboardFocusManager</span>
+<span class="fc" id="L297">				.getCurrentKeyboardFocusManager();</span>
+<span class="fc" id="L298">		focusManager.addPropertyChangeListener(new PropertyChangeListener() {</span>
+			public void propertyChange(PropertyChangeEvent e) {
+<span class="nc" id="L300">				String prop = e.getPropertyName();</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">				if (&quot;focusOwner&quot;.equals(prop)) {</span>
+<span class="nc" id="L302">					Component comp = (Component) e.getNewValue();</span>
+<span class="nc" id="L303">					logger.fine(&quot;Focus change for &quot; + comp);</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">					if (comp instanceof FreeMindMain) {</span>
+<span class="nc" id="L305">						obtainFocusForSelected();</span>
+					}
+				}
+<span class="nc" id="L308">			}</span>
+		});
+
+<span class="fc" id="L311">		localDocumentationLinkConverter = new DefaultLocalLinkConverter();</span>
+
+<span class="fc" id="L313">		lastOpened = new LastOpenedList(this, getProperty(&quot;lastOpened&quot;));</span>
+<span class="fc" id="L314">		mapModuleManager = new MapModuleManager(this);</span>
+<span class="fc" id="L315">		mapModuleManager.addListener(this);</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">		if (!Tools.isAvailableFontFamily(getProperty(&quot;defaultfont&quot;))) {</span>
+<span class="nc" id="L317">			logger.warning(&quot;Warning: the font you have set as standard - &quot;</span>
+<span class="nc" id="L318">					+ getProperty(&quot;defaultfont&quot;) + &quot; - is not available.&quot;);</span>
+<span class="nc" id="L319">			frame.setProperty(&quot;defaultfont&quot;, &quot;SansSerif&quot;);</span>
+		}
+<span class="nc" id="L321">	}</span>
+
+	//
+	// get/set methods
+	//
+<span class="fc" id="L326">	public static final String JAVA_VERSION = System</span>
+<span class="fc" id="L327">			.getProperty(&quot;java.version&quot;);</span>
+
+	public String getProperty(String property) {
+<span class="fc" id="L330">		return frame.getProperty(property);</span>
+	}
+
+	public int getIntProperty(String property, int defaultValue) {
+<span class="nc" id="L334">		return frame.getIntProperty(property, defaultValue);</span>
+	}
+
+	public void setProperty(String property, String value) {
+<span class="nc" id="L338">		String oldValue = getProperty(property);</span>
+<span class="nc" id="L339">		getFrame().setProperty(property, value);</span>
+<span class="nc" id="L340">		firePropertyChanged(property, value, oldValue);</span>
+<span class="nc" id="L341">	}</span>
+
+	private void firePropertyChanged(String property, String value,
+			String oldValue) {
+<span class="nc bnc" id="L345" title="All 4 branches missed.">		if (oldValue == null || !oldValue.equals(value)) {</span>
+<span class="nc" id="L346">			for (Iterator i = Controller.getPropertyChangeListeners()</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">					.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L348">				FreemindPropertyListener listener = (FreemindPropertyListener) i</span>
+<span class="nc" id="L349">						.next();</span>
+<span class="nc" id="L350">				listener.propertyChanged(property, value, oldValue);</span>
+			}
+		}
+<span class="nc" id="L353">	}</span>
+
+	public FreeMindMain getFrame() {
+<span class="fc" id="L356">		return frame;</span>
+	}
+
+	public JFrame getJFrame() {
+<span class="nc" id="L360">		FreeMindMain f = getFrame();</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">		if (f instanceof JFrame)</span>
+<span class="nc" id="L362">			return (JFrame) f;</span>
+<span class="nc" id="L363">		return null;</span>
+	}
+
+	public URL getResource(String resource) {
+<span class="nc" id="L367">		return getFrame().getResource(resource);</span>
+	}
+
+	public String getResourceString(String resource) {
+<span class="nc" id="L371">		return frame.getResourceString(resource);</span>
+	}
+
+	/**
+	 * @return the current modeController, or null, if FreeMind is just starting
+	 *         and there is no modeController present.
+	 */
+	public ModeController getModeController() {
+<span class="nc bnc" id="L379" title="All 2 branches missed.">		if (getMapModule() != null) {</span>
+<span class="nc" id="L380">			return getMapModule().getModeController();</span>
+		}
+<span class="nc bnc" id="L382" title="All 2 branches missed.">		if (getMode() != null) {</span>
+			// no map present: we take the default:
+<span class="nc" id="L384">			return getMode().getDefaultModeController();</span>
+		}
+<span class="nc" id="L386">		return null;</span>
+	}
+
+	/** Returns the current model */
+	public MindMap getModel() {
+<span class="nc bnc" id="L391" title="All 2 branches missed.">		if (getMapModule() != null) {</span>
+<span class="nc" id="L392">			return getMapModule().getModel();</span>
+		}
+<span class="nc" id="L394">		return null;</span>
+	}
+
+	public MapView getView() {
+<span class="nc bnc" id="L398" title="All 2 branches missed.">		if (getMapModule() != null) {</span>
+<span class="nc" id="L399">			return getMapModule().getView();</span>
+		} else {
+			// System.err.println(&quot;[Freemind-Developer-Internal-Warning (do not write a bug report, please)]: Tried to get view without being able to get map module.&quot;);
+<span class="nc" id="L402">			return null;</span>
+		}
+	}
+
+	Set getModes() {
+<span class="nc" id="L407">		return mModescreator.getAllModes();</span>
+	}
+
+	public Mode getMode() {
+<span class="nc" id="L411">		return mMode;</span>
+	}
+
+	public String[] getZooms() {
+<span class="nc" id="L415">		String[] zooms = new String[zoomValues.length];</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">		for (int i = 0; i &lt; zoomValues.length; i++) {</span>
+<span class="nc" id="L417">			float val = zoomValues[i];</span>
+<span class="nc" id="L418">			zooms[i] = (int) (val * 100f) + &quot;%&quot;;</span>
+		}
+<span class="nc" id="L420">		return zooms;</span>
+	}
+
+	public MapModuleManager getMapModuleManager() {
+<span class="nc" id="L424">		return mapModuleManager;</span>
+	}
+
+	public LastOpenedList getLastOpenedList() {
+<span class="nc" id="L428">		return lastOpened;</span>
+	}
+
+	//
+
+	public MapModule getMapModule() {
+<span class="nc" id="L434">		return getMapModuleManager().getMapModule();</span>
+	}
+
+	private JToolBar getToolBar() {
+<span class="nc" id="L438">		return toolbar;</span>
+	}
+
+	//
+
+	public Font getFontThroughMap(Font font) {
+<span class="nc bnc" id="L444" title="All 2 branches missed.">		if (!fontMap.containsKey(font.toString())) {</span>
+<span class="nc" id="L445">			fontMap.put(font.toString(), font);</span>
+		}
+<span class="nc" id="L447">		return (Font) fontMap.get(font.toString());</span>
+	}
+
+	//
+
+	public void setAntialiasEdges(boolean antialiasEdges) {
+<span class="nc" id="L453">		this.antialiasEdges = antialiasEdges;</span>
+<span class="nc" id="L454">	}</span>
+
+	public void setAntialiasAll(boolean antialiasAll) {
+<span class="nc" id="L457">		this.antialiasAll = antialiasAll;</span>
+<span class="nc" id="L458">	}</span>
+
+	private boolean getAntialiasEdges() {
+<span class="nc" id="L461">		return antialiasEdges;</span>
+	}
+
+	private boolean getAntialiasAll() {
+<span class="nc" id="L465">		return antialiasAll;</span>
+	}
+
+	public Font getDefaultFont() {
+		// Maybe implement handling for cases when the font is not
+		// available on this system.
+
+<span class="nc" id="L472">		int fontSize = getDefaultFontSize();</span>
+<span class="nc" id="L473">		int fontStyle = getDefaultFontStyle();</span>
+<span class="nc" id="L474">		String fontFamily = getDefaultFontFamilyName();</span>
+
+<span class="nc" id="L476">		return getFontThroughMap(new Font(fontFamily, fontStyle, fontSize));</span>
+	}
+
+	/**
+     */
+	public String getDefaultFontFamilyName() {
+<span class="nc" id="L482">		String fontFamily = getProperty(&quot;defaultfont&quot;);</span>
+<span class="nc" id="L483">		return fontFamily;</span>
+	}
+
+	/**
+     */
+	public int getDefaultFontStyle() {
+<span class="nc" id="L489">		int fontStyle = frame.getIntProperty(&quot;defaultfontstyle&quot;, 0);</span>
+<span class="nc" id="L490">		return fontStyle;</span>
+	}
+
+	/**
+     */
+	public int getDefaultFontSize() {
+<span class="nc" id="L496">		int fontSize = frame.getIntProperty(&quot;defaultfontsize&quot;, 12);</span>
+<span class="nc" id="L497">		return fontSize;</span>
+	}
+
+	/** Static JColorChooser to have the recent colors feature. */
+	static public JColorChooser getCommonJColorChooser() {
+<span class="nc" id="L502">		return colorChooser;</span>
+	}
+
+	public static Color showCommonJColorChooserDialog(Component component,
+			String title, Color initialColor) throws HeadlessException {
+
+<span class="nc" id="L508">		final JColorChooser pane = getCommonJColorChooser();</span>
+<span class="nc" id="L509">		pane.setColor(initialColor);</span>
+
+<span class="nc" id="L511">		ColorTracker ok = new ColorTracker(pane);</span>
+<span class="nc" id="L512">		JDialog dialog = JColorChooser.createDialog(component, title, true,</span>
+<span class="nc" id="L513">				pane, ok, null);</span>
+<span class="nc" id="L514">		dialog.addWindowListener(new Closer());</span>
+<span class="nc" id="L515">		dialog.addComponentListener(new DisposeOnClose());</span>
+
+<span class="nc" id="L517">		dialog.show(); // blocks until user brings dialog down...</span>
+
+<span class="nc" id="L519">		return ok.getColor();</span>
+	}
+
+	private static class ColorTracker implements ActionListener, Serializable {
+		JColorChooser chooser;
+		Color color;
+
+<span class="nc" id="L526">		public ColorTracker(JColorChooser c) {</span>
+<span class="nc" id="L527">			chooser = c;</span>
+<span class="nc" id="L528">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L531">			color = chooser.getColor();</span>
+<span class="nc" id="L532">		}</span>
+
+		public Color getColor() {
+<span class="nc" id="L535">			return color;</span>
+		}
+	}
+
+<span class="nc" id="L539">	static class Closer extends WindowAdapter implements Serializable {</span>
+		public void windowClosing(WindowEvent e) {
+<span class="nc" id="L541">			Window w = e.getWindow();</span>
+<span class="nc" id="L542">			w.hide();</span>
+<span class="nc" id="L543">		}</span>
+	}
+
+<span class="nc" id="L546">	static class DisposeOnClose extends ComponentAdapter implements</span>
+			Serializable {
+		public void componentHidden(ComponentEvent e) {
+<span class="nc" id="L549">			Window w = (Window) e.getComponent();</span>
+<span class="nc" id="L550">			w.dispose();</span>
+<span class="nc" id="L551">		}</span>
+	}
+
+	public boolean isMapModuleChangeAllowed(MapModule oldMapModule,
+			Mode oldMode, MapModule newMapModule, Mode newMode) {
+<span class="nc" id="L556">		return true;</span>
+	}
+
+	public void afterMapClose(MapModule pOldMapModule, Mode pOldMode) {
+<span class="nc" id="L560">	}</span>
+
+	public void beforeMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+		ModeController oldModeController;
+<span class="nc" id="L565">		this.mMode = newMode;</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">		if (oldMapModule != null) {</span>
+			// shut down screens of old view + frame
+<span class="nc" id="L568">			oldModeController = oldMapModule.getModeController();</span>
+<span class="nc" id="L569">			oldModeController.setVisible(false);</span>
+<span class="nc" id="L570">			oldModeController.shutdownController();</span>
+<span class="nc" id="L571">		} else {</span>
+<span class="nc bnc" id="L572" title="All 2 branches missed.">			if (oldMode != null) {</span>
+<span class="nc" id="L573">				oldModeController = oldMode.getDefaultModeController();</span>
+<span class="nc" id="L574">			} else {</span>
+<span class="nc" id="L575">				return;</span>
+			}
+		}
+<span class="nc bnc" id="L578" title="All 2 branches missed.">		if (oldModeController.getModeToolBar() != null) {</span>
+<span class="nc" id="L579">			toolbar.remove(oldModeController.getModeToolBar());</span>
+<span class="nc" id="L580">			toolbar.activate(true);</span>
+			// northToolbarPanel.remove(oldModeController.getModeToolBar());
+			// northToolbarPanel.add(toolbar, BorderLayout.NORTH);
+		}
+		/* other toolbars are to be removed too. */
+<span class="nc bnc" id="L585" title="All 2 branches missed.">		if (oldModeController.getLeftToolBar() != null) {</span>
+<span class="nc" id="L586">			getFrame().getContentPane().remove(</span>
+<span class="nc" id="L587">					oldModeController.getLeftToolBar());</span>
+		}
+<span class="nc" id="L589">	}</span>
+
+	public void afterMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+		ModeController newModeController;
+<span class="nc bnc" id="L594" title="All 2 branches missed.">		if (newMapModule != null) {</span>
+<span class="nc" id="L595">			getFrame().setView(newMapModule.getView());</span>
+<span class="nc" id="L596">			setAllActions(true);</span>
+<span class="nc bnc" id="L597" title="All 2 branches missed.">			if ((getView().getSelected() == null)) {</span>
+				// moveToRoot();
+<span class="nc" id="L599">				getView().selectAsTheOnlyOneSelected(getView().getRoot());</span>
+			}
+<span class="nc" id="L601">			lastOpened.mapOpened(newMapModule);</span>
+<span class="nc" id="L602">			changeZoomValueProperty(newMapModule.getView().getZoom());</span>
+			// ((MainToolBar) getToolbar()).setZoomComboBox(zoomValue);
+			// old
+			// obtainFocusForSelected();
+<span class="nc" id="L606">			newModeController = newMapModule.getModeController();</span>
+<span class="nc" id="L607">			newModeController.startupController();</span>
+<span class="nc" id="L608">			newModeController.setVisible(true);</span>
+			// old
+			// obtainFocusForSelected();
+<span class="nc" id="L611">		} else {</span>
+<span class="nc" id="L612">			newModeController = newMode.getDefaultModeController();</span>
+<span class="nc" id="L613">			getFrame().setView(null);</span>
+<span class="nc" id="L614">			setAllActions(false);</span>
+		}
+<span class="nc" id="L616">		setTitle();</span>
+<span class="nc" id="L617">		JToolBar newToolBar = newModeController.getModeToolBar();</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">		if (newToolBar != null) {</span>
+<span class="nc" id="L619">			toolbar.activate(false);</span>
+<span class="nc" id="L620">			toolbar.add(newToolBar, 0);</span>
+			// northToolbarPanel.remove(toolbar);
+			// northToolbarPanel.add(newToolBar, BorderLayout.NORTH);
+<span class="nc" id="L623">			newToolBar.repaint();</span>
+		}
+		/* new left toolbar. */
+<span class="nc" id="L626">		Component newLeftToolBar = newModeController.getLeftToolBar();</span>
+<span class="nc bnc" id="L627" title="All 2 branches missed.">		if (newLeftToolBar != null) {</span>
+<span class="nc" id="L628">			getFrame().getContentPane().add(newLeftToolBar, BorderLayout.WEST);</span>
+<span class="nc bnc" id="L629" title="All 2 branches missed.">			if (leftToolbarVisible) {</span>
+<span class="nc" id="L630">				newLeftToolBar.setVisible(true);</span>
+<span class="nc" id="L631">				newLeftToolBar.repaint();</span>
+<span class="nc" id="L632">			} else {</span>
+<span class="nc" id="L633">				newLeftToolBar.setVisible(false);</span>
+			}
+		}
+<span class="nc" id="L636">		toolbar.validate();</span>
+<span class="nc" id="L637">		toolbar.repaint();</span>
+<span class="nc" id="L638">		MenuBar menuBar = getFrame().getFreeMindMenuBar();</span>
+<span class="nc" id="L639">		menuBar.updateMenus(newModeController);</span>
+<span class="nc" id="L640">		menuBar.revalidate();</span>
+<span class="nc" id="L641">		menuBar.repaint();</span>
+		// new
+<span class="nc" id="L643">		obtainFocusForSelected();</span>
+<span class="nc" id="L644">	}</span>
+
+	protected void changeZoomValueProperty(final float zoomValue) {
+<span class="nc bnc" id="L647" title="All 2 branches missed.">		for (Iterator it = mZoomListenerSet.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L648">			ZoomListener listener = (ZoomListener) it.next();</span>
+<span class="nc" id="L649">			listener.setZoom(zoomValue);</span>
+		}
+<span class="nc" id="L651">	}</span>
+
+	public void numberOfOpenMapInformation(int number, int pIndex) {
+<span class="nc bnc" id="L654" title="All 2 branches missed.">		navigationPreviousMap.setEnabled(number &gt; 0);</span>
+<span class="nc bnc" id="L655" title="All 2 branches missed.">		navigationNextMap.setEnabled(number &gt; 0);</span>
+<span class="nc" id="L656">		logger.info(&quot;number &quot; + number + &quot;, pIndex &quot; + pIndex);</span>
+<span class="nc bnc" id="L657" title="All 4 branches missed.">		navigationMoveMapLeftAction.setEnabled(number &gt; 1 &amp;&amp; pIndex &gt; 0);</span>
+<span class="nc bnc" id="L658" title="All 2 branches missed.">		navigationMoveMapRightAction.setEnabled(number &gt; 1</span>
+<span class="nc bnc" id="L659" title="All 2 branches missed.">				&amp;&amp; pIndex &lt; number - 1);</span>
+<span class="nc" id="L660">	}</span>
+
+	/**
+	 * Creates a new mode (controller), activates the toolbars, title and
+	 * deactivates all actions. Does nothing, if the mode is identical to the
+	 * current mode.
+	 * 
+	 * @return false if the change was not successful.
+	 */
+	public boolean createNewMode(String mode) {
+<span class="nc bnc" id="L670" title="All 4 branches missed.">		if (getMode() != null &amp;&amp; mode.equals(getMode().toString())) {</span>
+<span class="nc" id="L671">			return true;</span>
+		}
+
+		// Check if the mode is available and create ModeController.
+<span class="nc" id="L675">		Mode newMode = mModescreator.getMode(mode);</span>
+<span class="nc bnc" id="L676" title="All 2 branches missed.">		if (newMode == null) {</span>
+<span class="nc" id="L677">			errorMessage(getResourceString(&quot;mode_na&quot;) + &quot;: &quot; + mode);</span>
+<span class="nc" id="L678">			return false;</span>
+		}
+
+		// change the map module to get changed toolbars etc.:
+<span class="nc" id="L682">		getMapModuleManager().setMapModule(null, newMode);</span>
+
+<span class="nc" id="L684">		setTitle();</span>
+<span class="nc" id="L685">		getMode().activate();</span>
+
+<span class="nc" id="L687">		Object[] messageArguments = { getMode().toLocalizedString() };</span>
+<span class="nc" id="L688">		MessageFormat formatter = new MessageFormat(</span>
+<span class="nc" id="L689">				getResourceString(&quot;mode_status&quot;));</span>
+<span class="nc" id="L690">		getFrame().out(formatter.format(messageArguments));</span>
+
+<span class="nc" id="L692">		return true;</span>
+	}
+
+	public void setMenubarVisible(boolean visible) {
+<span class="nc" id="L696">		menubarVisible = visible;</span>
+<span class="nc" id="L697">		getFrame().getFreeMindMenuBar().setVisible(menubarVisible);</span>
+<span class="nc" id="L698">	}</span>
+
+	public void setToolbarVisible(boolean visible) {
+<span class="nc" id="L701">		toolbarVisible = visible;</span>
+<span class="nc" id="L702">		toolbar.setVisible(toolbarVisible);</span>
+<span class="nc" id="L703">	}</span>
+
+	/**
+	 * @return Returns the main toolbar.
+	 */
+	public JToolBar getToolbar() {
+<span class="nc" id="L709">		return toolbar;</span>
+	}
+
+	public void setLeftToolbarVisible(boolean visible) {
+<span class="nc" id="L713">		leftToolbarVisible = visible;</span>
+<span class="nc bnc" id="L714" title="All 2 branches missed.">		if (getMode() == null) {</span>
+<span class="nc" id="L715">			return;</span>
+		}
+<span class="nc" id="L717">		final Component leftToolBar = getModeController().getLeftToolBar();</span>
+<span class="nc bnc" id="L718" title="All 2 branches missed.">		if (leftToolBar != null) {</span>
+<span class="nc" id="L719">			leftToolBar.setVisible(leftToolbarVisible);</span>
+<span class="nc" id="L720">			((JComponent) leftToolBar.getParent()).revalidate();</span>
+		}
+<span class="nc" id="L722">	}</span>
+
+	public NodeKeyListener getNodeKeyListener() {
+<span class="nc" id="L725">		return nodeKeyListener;</span>
+	}
+
+	public NodeMouseMotionListener getNodeMouseMotionListener() {
+<span class="nc" id="L729">		return nodeMouseMotionListener;</span>
+	}
+
+	public NodeMotionListener getNodeMotionListener() {
+<span class="nc" id="L733">		return nodeMotionListener;</span>
+	}
+
+	public MapMouseMotionListener getMapMouseMotionListener() {
+<span class="nc" id="L737">		return mapMouseMotionListener;</span>
+	}
+
+	public MapMouseWheelListener getMapMouseWheelListener() {
+<span class="nc" id="L741">		return mapMouseWheelListener;</span>
+	}
+
+	public NodeDragListener getNodeDragListener() {
+<span class="nc" id="L745">		return nodeDragListener;</span>
+	}
+
+	public NodeDropListener getNodeDropListener() {
+<span class="nc" id="L749">		return nodeDropListener;</span>
+	}
+
+	public void setFrame(FreeMindMain frame) {
+<span class="nc" id="L753">		this.frame = frame;</span>
+<span class="nc" id="L754">	}</span>
+
+	/**
+	 * I don't understand how this works now (it's called twice etc.) but it
+	 * _works_ now. So let it alone or fix it to be understandable, if you have
+	 * the time ;-)
+	 */
+	void moveToRoot() {
+<span class="nc bnc" id="L762" title="All 2 branches missed.">		if (getMapModule() != null) {</span>
+<span class="nc" id="L763">			getView().moveToRoot();</span>
+		}
+<span class="nc" id="L765">	}</span>
+
+	/**
+	 * Closes the actual map.
+	 * 
+	 * @param force
+	 *            true= without save.
+	 */
+	public void close(boolean force) {
+<span class="nc" id="L774">		getMapModuleManager().close(force, null);</span>
+<span class="nc" id="L775">	}</span>
+
+	// (PN) %%%
+	// public void select( NodeView node) {
+	// getView().select(node,false);
+	// getView().setSiblingMaxLevel(node.getModel().getNodeLevel()); // this
+	// level is default
+	// }
+	//
+	// void selectBranch( NodeView node, boolean extend ) {
+	// getView().selectBranch(node,extend);
+	// }
+	//
+	// boolean isSelected( NodeView node ) {
+	// return getView().isSelected(node);
+	// }
+	//
+	// void centerNode() {
+	// getView().centerNode(getView().getSelected());
+	// }
+	//
+	// private MindMapNode getSelected() {
+	// return getView().getSelected().getModel();
+	// }
+
+	public void informationMessage(Object message) {
+		JOptionPane
+<span class="nc" id="L802">				.showMessageDialog(getFrame().getContentPane(),</span>
+<span class="nc" id="L803">						message.toString(), &quot;FreeMind&quot;,</span>
+<span class="nc" id="L804">						JOptionPane.INFORMATION_MESSAGE);</span>
+<span class="nc" id="L805">	}</span>
+
+	public void informationMessage(Object message, JComponent component) {
+<span class="nc" id="L808">		JOptionPane.showMessageDialog(component, message.toString(),</span>
+<span class="nc" id="L809">				&quot;FreeMind&quot;, JOptionPane.INFORMATION_MESSAGE);</span>
+<span class="nc" id="L810">	}</span>
+
+	public void errorMessage(Object message) {
+<span class="nc" id="L813">		String myMessage = &quot;&quot;;</span>
+
+<span class="nc bnc" id="L815" title="All 2 branches missed.">		if (message != null) {</span>
+<span class="nc" id="L816">			myMessage = message.toString();</span>
+<span class="nc" id="L817">		} else {</span>
+<span class="nc" id="L818">			myMessage = getResourceString(&quot;undefined_error&quot;);</span>
+<span class="nc bnc" id="L819" title="All 2 branches missed.">			if (myMessage == null) {</span>
+<span class="nc" id="L820">				myMessage = &quot;Undefined error&quot;;</span>
+			}
+		}
+<span class="nc" id="L823">		JOptionPane.showMessageDialog(getFrame().getContentPane(), myMessage,</span>
+<span class="nc" id="L824">				&quot;FreeMind&quot;, JOptionPane.ERROR_MESSAGE);</span>
+
+<span class="nc" id="L826">	}</span>
+
+	public void errorMessage(Object message, JComponent component) {
+<span class="nc" id="L829">		JOptionPane.showMessageDialog(component, message.toString(),</span>
+<span class="nc" id="L830">				&quot;FreeMind&quot;, JOptionPane.ERROR_MESSAGE);</span>
+<span class="nc" id="L831">	}</span>
+
+	public void obtainFocusForSelected() {
+		// logger.finest(&quot;obtainFocusForSelected&quot;);
+<span class="nc bnc" id="L835" title="All 2 branches missed.">		if (getView() != null) { // is null if the last map was closed.</span>
+<span class="nc" id="L836">			logger.fine(&quot;Requesting Focus for &quot; + getView() + &quot; in model &quot;</span>
+<span class="nc" id="L837">					+ getView().getModel());</span>
+<span class="nc" id="L838">			getView().requestFocusInWindow();</span>
+<span class="nc" id="L839">		} else {</span>
+			// fc, 6.1.2004: bug fix, that open and quit are not working if no
+			// map is present.
+			// to avoid this, the menu bar gets the focus, and everything seems
+			// to be all right!!
+			// but I cannot avoid thinking of this change to be a bad hack ....
+<span class="nc" id="L845">			logger.info(&quot;No view present. No focus!&quot;);</span>
+<span class="nc" id="L846">			getFrame().getFreeMindMenuBar().requestFocus();</span>
+		}
+<span class="nc" id="L848">	}</span>
+
+	//
+	// Map Navigation
+	//
+
+	//
+	// other
+	//
+
+	public void setZoom(float zoom) {
+<span class="nc" id="L859">		getView().setZoom(zoom);</span>
+<span class="nc" id="L860">		changeZoomValueProperty(zoom);</span>
+		// ((MainToolBar) toolbar).setZoomComboBox(zoom);
+		// show text in status bar:
+<span class="nc" id="L863">		Object[] messageArguments = { String.valueOf(zoom * 100f) };</span>
+<span class="nc" id="L864">		String stringResult = Resources.getInstance().format(</span>
+<span class="nc" id="L865">				&quot;user_defined_zoom_status_bar&quot;, messageArguments);</span>
+<span class="nc" id="L866">		getFrame().out(stringResult);</span>
+<span class="nc" id="L867">	}</span>
+
+	// ////////////
+	// Private methods. Internal implementation
+	// //////////
+
+	//
+	// Node editing
+	//
+	// (PN)
+	// private void getFocus() {
+	// getView().getSelected().requestFocus();
+	// }
+
+	//
+	// Multiple Views management
+	//
+
+	/**
+	 * Set the Frame title with mode and file if exist
+	 */
+	public void setTitle() {
+<span class="nc" id="L889">		Object[] messageArguments = { getMode().toLocalizedString() };</span>
+<span class="nc" id="L890">		MessageFormat formatter = new MessageFormat(</span>
+<span class="nc" id="L891">				getResourceString(&quot;mode_title&quot;));</span>
+<span class="nc" id="L892">		String title = formatter.format(messageArguments);</span>
+<span class="nc" id="L893">		String rawTitle = &quot;&quot;;</span>
+<span class="nc" id="L894">		MindMap model = null;</span>
+<span class="nc" id="L895">		MapModule mapModule = getMapModule();</span>
+<span class="nc bnc" id="L896" title="All 2 branches missed.">		if (mapModule != null) {</span>
+<span class="nc" id="L897">			model = mapModule.getModel();</span>
+<span class="nc" id="L898">			rawTitle = mapModule.toString();</span>
+<span class="nc" id="L899">			title = rawTitle</span>
+<span class="nc bnc" id="L900" title="All 2 branches missed.">					+ (model.isSaved() ? &quot;&quot; : &quot;*&quot;)</span>
+<span class="nc" id="L901">					+ &quot; - &quot;</span>
+<span class="nc" id="L902">					+ title</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">					+ (model.isReadOnly() ? &quot; (&quot;</span>
+<span class="nc" id="L904">							+ getResourceString(&quot;read_only&quot;) + &quot;)&quot; : &quot;&quot;);</span>
+<span class="nc" id="L905">			File file = model.getFile();</span>
+<span class="nc bnc" id="L906" title="All 2 branches missed.">			if (file != null) {</span>
+<span class="nc" id="L907">				title += &quot; &quot; + file.getAbsolutePath();</span>
+			}
+<span class="nc" id="L909">			for (Iterator iterator = mMapTitleContributorSet.iterator(); iterator</span>
+<span class="nc bnc" id="L910" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L911">				MapModuleManager.MapTitleContributor contributor = (MapModuleManager.MapTitleContributor) iterator</span>
+<span class="nc" id="L912">						.next();</span>
+<span class="nc" id="L913">				title = contributor.getMapTitle(title, mapModule, model);</span>
+			}
+
+		}
+<span class="nc" id="L917">		getFrame().setTitle(title);</span>
+<span class="nc" id="L918">		for (Iterator iterator = mMapTitleChangeListenerSet.iterator(); iterator</span>
+<span class="nc bnc" id="L919" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L920">			MapModuleManager.MapTitleChangeListener listener = (MapModuleManager.MapTitleChangeListener) iterator</span>
+<span class="nc" id="L921">					.next();</span>
+<span class="nc" id="L922">			listener.setMapTitle(rawTitle, mapModule, model);</span>
+		}
+<span class="nc" id="L924">	}</span>
+
+	public void registerMapTitleChangeListener(
+			MapModuleManager.MapTitleChangeListener pMapTitleChangeListener) {
+<span class="nc" id="L928">		mMapTitleChangeListenerSet.add(pMapTitleChangeListener);</span>
+<span class="nc" id="L929">	}</span>
+
+	public void deregisterMapTitleChangeListener(
+			MapModuleManager.MapTitleChangeListener pMapTitleChangeListener) {
+<span class="nc" id="L933">		mMapTitleChangeListenerSet.remove(pMapTitleChangeListener);</span>
+<span class="nc" id="L934">	}</span>
+
+	public void registerZoomListener(ZoomListener pZoomListener) {
+<span class="nc" id="L937">		mZoomListenerSet.add(pZoomListener);</span>
+<span class="nc" id="L938">	}</span>
+
+	public void deregisterZoomListener(ZoomListener pZoomListener) {
+<span class="nc" id="L941">		mZoomListenerSet.remove(pZoomListener);</span>
+<span class="nc" id="L942">	}</span>
+
+	public void registerMapTitleContributor(
+			MapModuleManager.MapTitleContributor pMapTitleContributor) {
+<span class="nc" id="L946">		mMapTitleContributorSet.add(pMapTitleContributor);</span>
+<span class="nc" id="L947">	}</span>
+
+	public void deregisterMapTitleContributor(
+			MapModuleManager.MapTitleContributor pMapTitleContributor) {
+<span class="nc" id="L951">		mMapTitleContributorSet.remove(pMapTitleContributor);</span>
+<span class="nc" id="L952">	}</span>
+
+	//
+	// Actions management
+	//
+
+	/**
+	 * Manage the availabilty of all Actions dependend of whether there is a map
+	 * or not
+	 */
+	public void setAllActions(boolean enabled) {
+<span class="nc bnc" id="L963" title="All 4 branches missed.">		print.setEnabled(enabled &amp;&amp; isPrintingAllowed);</span>
+<span class="nc bnc" id="L964" title="All 4 branches missed.">		printDirect.setEnabled(enabled &amp;&amp; isPrintingAllowed);</span>
+<span class="nc bnc" id="L965" title="All 4 branches missed.">		printPreview.setEnabled(enabled &amp;&amp; isPrintingAllowed);</span>
+<span class="nc bnc" id="L966" title="All 4 branches missed.">		page.setEnabled(enabled &amp;&amp; isPrintingAllowed);</span>
+<span class="nc" id="L967">		close.setEnabled(enabled);</span>
+<span class="nc" id="L968">		moveToRoot.setEnabled(enabled);</span>
+<span class="nc" id="L969">		showAllAttributes.setEnabled(enabled);</span>
+<span class="nc" id="L970">		showSelectedAttributes.setEnabled(enabled);</span>
+<span class="nc" id="L971">		hideAllAttributes.setEnabled(enabled);</span>
+<span class="nc" id="L972">		showAttributeManagerAction.setEnabled(enabled);</span>
+<span class="nc" id="L973">		((MainToolBar) getToolBar()).setAllActions(enabled);</span>
+<span class="nc" id="L974">		showSelectionAsRectangle.setEnabled(enabled);</span>
+<span class="nc" id="L975">	}</span>
+
+	//
+	// program/map control
+	//
+
+	private void quit() {
+<span class="nc bnc" id="L982" title="All 2 branches missed.">		String currentMapRestorable = (getModel() != null) ? getModel()</span>
+<span class="nc" id="L983">				.getRestorable() : null;</span>
+		// collect all maps:
+<span class="nc" id="L985">		Vector restorables = new Vector();</span>
+		// move to first map in the window.
+<span class="nc" id="L987">		List mapModuleVector = getMapModuleManager().getMapModuleVector();</span>
+<span class="nc bnc" id="L988" title="All 2 branches missed.">		if (mapModuleVector.size() &gt; 0) {</span>
+<span class="nc" id="L989">			String displayName = ((MapModule) mapModuleVector.get(0))</span>
+<span class="nc" id="L990">					.getDisplayName();</span>
+<span class="nc" id="L991">			getMapModuleManager().changeToMapModule(displayName);</span>
+		}
+<span class="nc bnc" id="L993" title="All 2 branches missed.">		while (mapModuleVector.size() &gt; 0) {</span>
+<span class="nc bnc" id="L994" title="All 2 branches missed.">			if (getMapModule() != null) {</span>
+<span class="nc" id="L995">				StringBuffer restorableBuffer = new StringBuffer();</span>
+<span class="nc" id="L996">				boolean closingNotCancelled = getMapModuleManager().close(</span>
+<span class="nc" id="L997">						false, restorableBuffer);</span>
+<span class="nc bnc" id="L998" title="All 2 branches missed.">				if (!closingNotCancelled) {</span>
+<span class="nc" id="L999">					return;</span>
+				}
+<span class="nc bnc" id="L1001" title="All 2 branches missed.">				if (restorableBuffer.length() != 0) {</span>
+<span class="nc" id="L1002">					String restorableString = restorableBuffer.toString();</span>
+<span class="nc" id="L1003">					logger.info(&quot;Closed the map &quot; + restorableString);</span>
+<span class="nc" id="L1004">					restorables.add(restorableString);</span>
+				}
+<span class="nc" id="L1006">			} else {</span>
+				// map module without view open.
+				// FIXME: This seems to be a bad hack. correct me!
+<span class="nc" id="L1009">				getMapModuleManager().nextMapModule();</span>
+			}
+		}
+		// store last tab session:
+<span class="nc" id="L1013">		int index = 0;</span>
+<span class="nc" id="L1014">		String lastStateMapXml = getProperty(FreeMindCommon.MINDMAP_LAST_STATE_MAP_STORAGE);</span>
+<span class="nc" id="L1015">		LastStateStorageManagement management = new LastStateStorageManagement(</span>
+<span class="nc" id="L1016">				lastStateMapXml);</span>
+<span class="nc" id="L1017">		management.setLastFocussedTab(-1);</span>
+<span class="nc" id="L1018">		management.clearTabIndices();</span>
+<span class="nc bnc" id="L1019" title="All 2 branches missed.">		for (Iterator it = restorables.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L1020">			String restorable = (String) it.next();</span>
+<span class="nc" id="L1021">			MindmapLastStateStorage storage = management.getStorage(restorable);</span>
+<span class="nc bnc" id="L1022" title="All 2 branches missed.">			if (storage != null) {</span>
+<span class="nc" id="L1023">				storage.setTabIndex(index);</span>
+			}
+<span class="nc bnc" id="L1025" title="All 2 branches missed.">			if (Tools.safeEquals(restorable, currentMapRestorable)) {</span>
+<span class="nc" id="L1026">				management.setLastFocussedTab(index);</span>
+			}
+<span class="nc" id="L1028">			index++;</span>
+		}
+<span class="nc" id="L1030">		setProperty(FreeMindCommon.MINDMAP_LAST_STATE_MAP_STORAGE,</span>
+<span class="nc" id="L1031">				management.getXml());</span>
+
+<span class="nc" id="L1033">		String lastOpenedString = lastOpened.save();</span>
+<span class="nc" id="L1034">		setProperty(&quot;lastOpened&quot;, lastOpenedString);</span>
+<span class="nc" id="L1035">		getFrame().setProperty(FreeMindCommon.ON_START_IF_NOT_SPECIFIED,</span>
+<span class="nc bnc" id="L1036" title="All 2 branches missed.">				currentMapRestorable != null ? currentMapRestorable : &quot;&quot;);</span>
+		// getFrame().setProperty(&quot;menubarVisible&quot;,menubarVisible ? &quot;true&quot; :
+		// &quot;false&quot;);
+		// ^ Not allowed in application because of problems with not working key
+		// shortcuts
+<span class="nc bnc" id="L1041" title="All 2 branches missed.">		setProperty(&quot;toolbarVisible&quot;, toolbarVisible ? &quot;true&quot; : &quot;false&quot;);</span>
+<span class="nc bnc" id="L1042" title="All 2 branches missed.">		setProperty(&quot;leftToolbarVisible&quot;, leftToolbarVisible ? &quot;true&quot; : &quot;false&quot;);</span>
+<span class="nc bnc" id="L1043" title="All 2 branches missed.">		setProperty(&quot;antialiasEdges&quot;, antialiasEdges ? &quot;true&quot; : &quot;false&quot;);</span>
+<span class="nc bnc" id="L1044" title="All 2 branches missed.">		setProperty(&quot;antialiasAll&quot;, antialiasAll ? &quot;true&quot; : &quot;false&quot;);</span>
+<span class="nc bnc" id="L1045" title="All 2 branches missed.">		if (!getFrame().isApplet()) {</span>
+<span class="nc" id="L1046">			final int winState = getFrame().getWinState();</span>
+<span class="nc bnc" id="L1047" title="All 2 branches missed.">			if (JFrame.MAXIMIZED_BOTH != (winState &amp; JFrame.MAXIMIZED_BOTH)) {</span>
+<span class="nc" id="L1048">				setProperty(&quot;appwindow_x&quot;, String.valueOf(getFrame().getWinX()));</span>
+<span class="nc" id="L1049">				setProperty(&quot;appwindow_y&quot;, String.valueOf(getFrame().getWinY()));</span>
+<span class="nc" id="L1050">				setProperty(&quot;appwindow_width&quot;,</span>
+<span class="nc" id="L1051">						String.valueOf(getFrame().getWinWidth()));</span>
+<span class="nc" id="L1052">				setProperty(&quot;appwindow_height&quot;,</span>
+<span class="nc" id="L1053">						String.valueOf(getFrame().getWinHeight()));</span>
+			}
+<span class="nc" id="L1055">			setProperty(&quot;appwindow_state&quot;, String.valueOf(winState));</span>
+		}
+		// Stop edit server!
+<span class="nc" id="L1058">		getFrame().saveProperties(true);</span>
+		// save to properties
+<span class="nc" id="L1060">		System.exit(0);</span>
+<span class="nc" id="L1061">	}</span>
+
+	private boolean acquirePrinterJobAndPageFormat() {
+<span class="nc bnc" id="L1064" title="All 2 branches missed.">		if (printerJob == null) {</span>
+			try {
+<span class="nc" id="L1066">				printerJob = PrinterJob.getPrinterJob();</span>
+<span class="nc" id="L1067">			} catch (SecurityException ex) {</span>
+<span class="nc" id="L1068">				isPrintingAllowed = false;</span>
+<span class="nc" id="L1069">				return false;</span>
+			}
+		}
+<span class="nc bnc" id="L1072" title="All 2 branches missed.">		if (pageFormat == null) {</span>
+<span class="nc" id="L1073">			pageFormat = printerJob.defaultPage();</span>
+		}
+<span class="nc bnc" id="L1075" title="All 2 branches missed.">		if (Tools.safeEquals(getProperty(&quot;page_orientation&quot;), &quot;landscape&quot;)) {</span>
+<span class="nc" id="L1076">			pageFormat.setOrientation(PageFormat.LANDSCAPE);</span>
+<span class="nc" id="L1077">		} else if (Tools</span>
+<span class="nc bnc" id="L1078" title="All 2 branches missed.">				.safeEquals(getProperty(&quot;page_orientation&quot;), &quot;portrait&quot;)) {</span>
+<span class="nc" id="L1079">			pageFormat.setOrientation(PageFormat.PORTRAIT);</span>
+<span class="nc" id="L1080">		} else if (Tools.safeEquals(getProperty(&quot;page_orientation&quot;),</span>
+<span class="nc bnc" id="L1081" title="All 2 branches missed.">				&quot;reverse_landscape&quot;)) {</span>
+<span class="nc" id="L1082">			pageFormat.setOrientation(PageFormat.REVERSE_LANDSCAPE);</span>
+		}
+<span class="nc" id="L1084">		String pageFormatProperty = getProperty(PAGE_FORMAT_PROPERTY);</span>
+<span class="nc bnc" id="L1085" title="All 2 branches missed.">		if (!pageFormatProperty.isEmpty()) {</span>
+<span class="nc" id="L1086">			logger.info(&quot;Page format (stored): &quot; + pageFormatProperty);</span>
+<span class="nc" id="L1087">			final Paper storedPaper = new Paper();</span>
+<span class="nc" id="L1088">			Tools.setPageFormatFromString(storedPaper, pageFormatProperty);</span>
+<span class="nc" id="L1089">			pageFormat.setPaper(storedPaper);</span>
+		}
+<span class="nc" id="L1091">		return true;</span>
+	}
+
+	// ////////////
+	// Inner Classes
+	// //////////
+
+	/**
+	 * Manages the history of visited maps. Maybe explicitly closed maps should
+	 * be removed from History too?
+	 */
+
+	//
+	// program/map control
+	//
+
+	private class QuitAction extends AbstractAction {
+<span class="nc" id="L1108">		QuitAction(Controller controller) {</span>
+<span class="nc" id="L1109">			super(controller.getResourceString(&quot;quit&quot;));</span>
+<span class="nc" id="L1110">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1113">			quit();</span>
+<span class="nc" id="L1114">		}</span>
+	}
+
+	/** This closes only the current map */
+	public static class CloseAction extends AbstractAction {
+		private final Controller controller;
+
+<span class="nc" id="L1121">		CloseAction(Controller controller) {</span>
+<span class="nc" id="L1122">			Tools.setLabelAndMnemonic(this,</span>
+<span class="nc" id="L1123">					controller.getResourceString(&quot;close&quot;));</span>
+<span class="nc" id="L1124">			this.controller = controller;</span>
+<span class="nc" id="L1125">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1128">			controller.close(false);</span>
+<span class="nc" id="L1129">		}</span>
+	}
+
+	private class PrintAction extends AbstractAction {
+		Controller controller;
+		boolean isDlg;
+
+<span class="nc" id="L1136">		PrintAction(Controller controller, boolean isDlg) {</span>
+<span class="nc bnc" id="L1137" title="All 2 branches missed.">			super(isDlg ? controller.getResourceString(&quot;print_dialog&quot;)</span>
+<span class="nc" id="L1138">					: controller.getResourceString(&quot;print&quot;), new ImageIcon(</span>
+<span class="nc" id="L1139">					getResource(&quot;images/fileprint.png&quot;)));</span>
+<span class="nc" id="L1140">			this.controller = controller;</span>
+<span class="nc" id="L1141">			setEnabled(false);</span>
+<span class="nc" id="L1142">			this.isDlg = isDlg;</span>
+<span class="nc" id="L1143">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L1146" title="All 2 branches missed.">			if (!acquirePrinterJobAndPageFormat()) {</span>
+<span class="nc" id="L1147">				return;</span>
+			}
+
+<span class="nc" id="L1150">			printerJob.setPrintable(getView(), pageFormat);</span>
+
+<span class="nc bnc" id="L1152" title="All 4 branches missed.">			if (!isDlg || printerJob.printDialog()) {</span>
+				try {
+<span class="nc" id="L1154">					frame.setWaitingCursor(true);</span>
+<span class="nc" id="L1155">					printerJob.print();</span>
+<span class="nc" id="L1156">					storePageFormat();</span>
+<span class="nc" id="L1157">				} catch (Exception ex) {</span>
+<span class="nc" id="L1158">					freemind.main.Resources.getInstance().logException(ex);</span>
+<span class="nc" id="L1159">				} finally {</span>
+<span class="nc" id="L1160">					frame.setWaitingCursor(false);</span>
+<span class="nc" id="L1161">				}</span>
+			}
+<span class="nc" id="L1163">		}</span>
+	}
+
+	private class PrintPreviewAction extends AbstractAction {
+		Controller controller;
+
+<span class="nc" id="L1169">		PrintPreviewAction(Controller controller) {</span>
+<span class="nc" id="L1170">			super(controller.getResourceString(&quot;print_preview&quot;));</span>
+<span class="nc" id="L1171">			this.controller = controller;</span>
+<span class="nc" id="L1172">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L1175" title="All 2 branches missed.">			if (!acquirePrinterJobAndPageFormat()) {</span>
+<span class="nc" id="L1176">				return;</span>
+			}
+<span class="nc" id="L1178">			PreviewDialog previewDialog = new PreviewDialog(</span>
+<span class="nc" id="L1179">					controller.getResourceString(&quot;print_preview_title&quot;),</span>
+<span class="nc" id="L1180">					getView());</span>
+<span class="nc" id="L1181">			previewDialog.pack();</span>
+<span class="nc" id="L1182">			previewDialog.setLocationRelativeTo(JOptionPane</span>
+<span class="nc" id="L1183">					.getFrameForComponent(getView()));</span>
+<span class="nc" id="L1184">			previewDialog.setVisible(true);</span>
+<span class="nc" id="L1185">		}</span>
+	}
+
+	private class PageAction extends AbstractAction {
+		Controller controller;
+
+<span class="nc" id="L1191">		PageAction(Controller controller) {</span>
+<span class="nc" id="L1192">			super(controller.getResourceString(&quot;page&quot;));</span>
+<span class="nc" id="L1193">			this.controller = controller;</span>
+<span class="nc" id="L1194">			setEnabled(false);</span>
+<span class="nc" id="L1195">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L1198" title="All 2 branches missed.">			if (!acquirePrinterJobAndPageFormat()) {</span>
+<span class="nc" id="L1199">				return;</span>
+			}
+
+			// Ask about custom printing settings
+<span class="nc" id="L1203">			final JDialog dialog = new JDialog((JFrame) getFrame(),</span>
+<span class="nc" id="L1204">					getResourceString(&quot;printing_settings&quot;), /* modal= */true);</span>
+<span class="nc" id="L1205">			final JCheckBox fitToPage = new JCheckBox(</span>
+<span class="nc" id="L1206">					getResourceString(&quot;fit_to_page&quot;), Resources.getInstance()</span>
+<span class="nc" id="L1207">							.getBoolProperty(&quot;fit_to_page&quot;));</span>
+<span class="nc" id="L1208">			final JLabel userZoomL = new JLabel(getResourceString(&quot;user_zoom&quot;));</span>
+<span class="nc" id="L1209">			final JTextField userZoom = new JTextField(</span>
+<span class="nc" id="L1210">					getProperty(&quot;user_zoom&quot;), 3);</span>
+<span class="nc bnc" id="L1211" title="All 2 branches missed.">			userZoom.setEditable(!fitToPage.isSelected());</span>
+<span class="nc" id="L1212">			final JButton okButton = new JButton();</span>
+<span class="nc" id="L1213">			Tools.setLabelAndMnemonic(okButton, getResourceString(&quot;ok&quot;));</span>
+<span class="nc" id="L1214">			final Tools.IntHolder eventSource = new Tools.IntHolder();</span>
+<span class="nc" id="L1215">			JPanel panel = new JPanel();</span>
+
+<span class="nc" id="L1217">			GridBagLayout gridbag = new GridBagLayout();</span>
+<span class="nc" id="L1218">			GridBagConstraints c = new GridBagConstraints();</span>
+
+<span class="nc" id="L1220">			eventSource.setValue(0);</span>
+<span class="nc" id="L1221">			okButton.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1223">					eventSource.setValue(1);</span>
+<span class="nc" id="L1224">					dialog.dispose();</span>
+<span class="nc" id="L1225">				}</span>
+			});
+<span class="nc" id="L1227">			fitToPage.addItemListener(new ItemListener() {</span>
+				public void itemStateChanged(ItemEvent e) {
+<span class="nc bnc" id="L1229" title="All 2 branches missed.">					userZoom.setEditable(e.getStateChange() == ItemEvent.DESELECTED);</span>
+<span class="nc" id="L1230">				}</span>
+			});
+
+			// c.weightx = 0.5;
+<span class="nc" id="L1234">			c.gridx = 0;</span>
+<span class="nc" id="L1235">			c.gridy = 0;</span>
+<span class="nc" id="L1236">			c.gridwidth = 2;</span>
+<span class="nc" id="L1237">			gridbag.setConstraints(fitToPage, c);</span>
+<span class="nc" id="L1238">			panel.add(fitToPage);</span>
+<span class="nc" id="L1239">			c.gridy = 1;</span>
+<span class="nc" id="L1240">			c.gridwidth = 1;</span>
+<span class="nc" id="L1241">			gridbag.setConstraints(userZoomL, c);</span>
+<span class="nc" id="L1242">			panel.add(userZoomL);</span>
+<span class="nc" id="L1243">			c.gridx = 1;</span>
+<span class="nc" id="L1244">			c.gridwidth = 1;</span>
+<span class="nc" id="L1245">			gridbag.setConstraints(userZoom, c);</span>
+<span class="nc" id="L1246">			panel.add(userZoom);</span>
+<span class="nc" id="L1247">			c.gridy = 2;</span>
+<span class="nc" id="L1248">			c.gridx = 0;</span>
+<span class="nc" id="L1249">			c.gridwidth = 3;</span>
+<span class="nc" id="L1250">			c.insets = new Insets(10, 0, 0, 0);</span>
+<span class="nc" id="L1251">			gridbag.setConstraints(okButton, c);</span>
+<span class="nc" id="L1252">			panel.add(okButton);</span>
+<span class="nc" id="L1253">			panel.setLayout(gridbag);</span>
+<span class="nc" id="L1254">			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);</span>
+<span class="nc" id="L1255">			dialog.setContentPane(panel);</span>
+<span class="nc" id="L1256">			dialog.setLocationRelativeTo((JFrame) getFrame());</span>
+<span class="nc" id="L1257">			dialog.getRootPane().setDefaultButton(okButton);</span>
+<span class="nc" id="L1258">			dialog.pack(); // calculate the size</span>
+<span class="nc" id="L1259">			dialog.setVisible(true);</span>
+
+<span class="nc bnc" id="L1261" title="All 2 branches missed.">			if (eventSource.getValue() == 1) {</span>
+<span class="nc" id="L1262">				setProperty(&quot;user_zoom&quot;, userZoom.getText());</span>
+<span class="nc bnc" id="L1263" title="All 2 branches missed.">				setProperty(&quot;fit_to_page&quot;, fitToPage.isSelected() ? &quot;true&quot;</span>
+<span class="nc" id="L1264">						: &quot;false&quot;);</span>
+<span class="nc" id="L1265">			} else</span>
+<span class="nc" id="L1266">				return;</span>
+
+			// Ask user for page format (e.g., portrait/landscape)
+<span class="nc" id="L1269">			pageFormat = printerJob.pageDialog(pageFormat);</span>
+<span class="nc" id="L1270">			storePageFormat();</span>
+<span class="nc" id="L1271">		}</span>
+	}
+
+	public interface LocalLinkConverter {
+		/**
+		 * @throws MalformedURLException
+		 *             if the conversion didn't work
+		 */
+		URL convertLocalLink(String link) throws MalformedURLException;
+	}
+
+<span class="fc" id="L1282">	private class DefaultLocalLinkConverter implements LocalLinkConverter {</span>
+
+		public URL convertLocalLink(String map) throws MalformedURLException {
+			/* new handling for relative urls. fc, 29.10.2003. */
+<span class="nc" id="L1286">			String applicationPath = frame.getFreemindBaseDir();</span>
+			// remove &quot;.&quot; and make url
+<span class="nc" id="L1288">			return Tools</span>
+<span class="nc" id="L1289">					.fileToUrl(new File(applicationPath + map.substring(1)));</span>
+			/* end: new handling for relative urls. fc, 29.10.2003. */
+		}
+	}
+
+	//
+	// Help
+	//
+
+	private class DocumentationAction extends AbstractAction {
+		Controller controller;
+
+<span class="nc" id="L1301">		DocumentationAction(Controller controller) {</span>
+<span class="nc" id="L1302">			super(controller.getResourceString(&quot;documentation&quot;));</span>
+<span class="nc" id="L1303">			this.controller = controller;</span>
+<span class="nc" id="L1304">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+			try {
+<span class="nc" id="L1308">				String map = controller.getFrame().getResourceString(</span>
+<span class="nc" id="L1309">						&quot;browsemode_initial_map&quot;);</span>
+				// if the current language does not provide its own translation,
+				// POSTFIX_TRANSLATE_ME is appended:
+<span class="nc" id="L1312">				map = Tools.removeTranslateComment(map);</span>
+<span class="nc" id="L1313">				URL url = null;</span>
+<span class="nc bnc" id="L1314" title="All 4 branches missed.">				if (map != null &amp;&amp; map.startsWith(&quot;.&quot;)) {</span>
+<span class="nc" id="L1315">					url = localDocumentationLinkConverter.convertLocalLink(map);</span>
+<span class="nc" id="L1316">				} else {</span>
+<span class="nc" id="L1317">					url = Tools.fileToUrl(new File(map));</span>
+				}
+<span class="nc" id="L1319">				final URL endUrl = url;</span>
+				// invokeLater is necessary, as the mode changing removes
+				// all
+				// menus (inclusive this action!).
+<span class="nc" id="L1323">				SwingUtilities.invokeLater(new Runnable() {</span>
+					public void run() {
+						try {
+<span class="nc" id="L1326">							createNewMode(BrowseMode.MODENAME);</span>
+<span class="nc" id="L1327">							controller.getModeController().load(endUrl);</span>
+<span class="nc" id="L1328">						} catch (Exception e1) {</span>
+<span class="nc" id="L1329">							freemind.main.Resources.getInstance().logException(</span>
+<span class="nc" id="L1330">									e1);</span>
+						}
+<span class="nc" id="L1332">					}</span>
+				});
+<span class="nc" id="L1334">			} catch (MalformedURLException e1) {</span>
+				// TODO Auto-generated catch block
+<span class="nc" id="L1336">				freemind.main.Resources.getInstance().logException(e1);</span>
+			}
+<span class="nc" id="L1338">		}</span>
+	}
+
+	private class KeyDocumentationAction extends AbstractAction {
+		Controller controller;
+
+<span class="nc" id="L1344">		KeyDocumentationAction(Controller controller) {</span>
+<span class="nc" id="L1345">			super(controller.getResourceString(&quot;KeyDoc&quot;));</span>
+<span class="nc" id="L1346">			this.controller = controller;</span>
+<span class="nc" id="L1347">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1350">			String urlText = controller.getFrame().getResourceString(</span>
+<span class="nc" id="L1351">					&quot;pdfKeyDocLocation&quot;);</span>
+			// if the current language does not provide its own translation,
+			// POSTFIX_TRANSLATE_ME is appended:
+<span class="nc" id="L1354">			urlText = Tools.removeTranslateComment(urlText);</span>
+			try {
+<span class="nc" id="L1356">				URL url = null;</span>
+<span class="nc bnc" id="L1357" title="All 4 branches missed.">				if (urlText != null &amp;&amp; urlText.startsWith(&quot;.&quot;)) {</span>
+<span class="nc" id="L1358">					url = localDocumentationLinkConverter</span>
+<span class="nc" id="L1359">							.convertLocalLink(urlText);</span>
+<span class="nc" id="L1360">				} else {</span>
+<span class="nc" id="L1361">					url = Tools.fileToUrl(new File(urlText));</span>
+				}
+<span class="nc" id="L1363">				logger.info(&quot;Opening key docs under &quot; + url);</span>
+<span class="nc" id="L1364">				controller.getFrame().openDocument(url);</span>
+<span class="nc" id="L1365">			} catch (Exception e2) {</span>
+<span class="nc" id="L1366">				freemind.main.Resources.getInstance().logException(e2);</span>
+<span class="nc" id="L1367">				return;</span>
+			}
+<span class="nc" id="L1369">		}</span>
+	}
+
+	private class AboutAction extends AbstractAction {
+		Controller controller;
+
+<span class="nc" id="L1375">		AboutAction(Controller controller) {</span>
+<span class="nc" id="L1376">			super(controller.getResourceString(&quot;about&quot;));</span>
+<span class="nc" id="L1377">			this.controller = controller;</span>
+<span class="nc" id="L1378">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1381">			JOptionPane.showMessageDialog(getView(),</span>
+<span class="nc" id="L1382">					controller.getResourceString(&quot;about_text&quot;)</span>
+<span class="nc" id="L1383">							+ getFrame().getFreemindVersion(),</span>
+<span class="nc" id="L1384">					controller.getResourceString(&quot;about&quot;),</span>
+<span class="nc" id="L1385">					JOptionPane.INFORMATION_MESSAGE);</span>
+<span class="nc" id="L1386">		}</span>
+	}
+
+	private class LicenseAction extends AbstractAction {
+		Controller controller;
+
+<span class="nc" id="L1392">		LicenseAction(Controller controller) {</span>
+<span class="nc" id="L1393">			super(controller.getResourceString(&quot;license&quot;));</span>
+<span class="nc" id="L1394">			this.controller = controller;</span>
+<span class="nc" id="L1395">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1398">			JOptionPane.showMessageDialog(getView(),</span>
+<span class="nc" id="L1399">					controller.getResourceString(&quot;license_text&quot;),</span>
+<span class="nc" id="L1400">					controller.getResourceString(&quot;license&quot;),</span>
+<span class="nc" id="L1401">					JOptionPane.INFORMATION_MESSAGE);</span>
+<span class="nc" id="L1402">		}</span>
+	}
+
+	//
+	// Map navigation
+	//
+
+	private class NavigationPreviousMapAction extends AbstractAction {
+<span class="nc" id="L1410">		NavigationPreviousMapAction(Controller controller) {</span>
+<span class="nc" id="L1411">			super(controller.getResourceString(&quot;previous_map&quot;), new ImageIcon(</span>
+<span class="nc" id="L1412">					getResource(&quot;images/1leftarrow.png&quot;)));</span>
+<span class="nc" id="L1413">			setEnabled(false);</span>
+<span class="nc" id="L1414">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc" id="L1417">			mapModuleManager.previousMapModule();</span>
+<span class="nc" id="L1418">		}</span>
+	}
+
+	private class ShowAttributeDialogAction extends AbstractAction {
+		private Controller c;
+
+<span class="nc" id="L1424">		ShowAttributeDialogAction(Controller c) {</span>
+<span class="nc" id="L1425">			super(c.getResourceString(&quot;attributes_dialog&quot;), new ImageIcon(</span>
+<span class="nc" id="L1426">					getResource(&quot;images/showAttributes.gif&quot;)));</span>
+<span class="nc" id="L1427">			this.c = c;</span>
+<span class="nc" id="L1428">		}</span>
+
+		private AttributeManagerDialog getAttributeDialog() {
+<span class="nc bnc" id="L1431" title="All 2 branches missed.">			if (attributeDialog == null) {</span>
+<span class="nc" id="L1432">				attributeDialog = new AttributeManagerDialog(c);</span>
+			}
+<span class="nc" id="L1434">			return attributeDialog;</span>
+		}
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L1438" title="All 2 branches missed.">			if (getAttributeDialog().isVisible() == false</span>
+<span class="nc bnc" id="L1439" title="All 2 branches missed.">					&amp;&amp; getMapModule() != null) {</span>
+<span class="nc" id="L1440">				getAttributeDialog().pack();</span>
+<span class="nc" id="L1441">				getAttributeDialog().show();</span>
+			}
+<span class="nc" id="L1443">		}</span>
+	}
+
+	private class ShowFilterToolbarAction extends AbstractAction {
+<span class="nc" id="L1447">		ShowFilterToolbarAction(Controller controller) {</span>
+<span class="nc" id="L1448">			super(getResourceString(&quot;filter_toolbar&quot;), new ImageIcon(</span>
+<span class="nc" id="L1449">					getResource(&quot;images/filter.gif&quot;)));</span>
+<span class="nc" id="L1450">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc bnc" id="L1453" title="All 2 branches missed.">			if (!getFilterController().isVisible()) {</span>
+<span class="nc" id="L1454">				getFilterController().showFilterToolbar(true);</span>
+<span class="nc" id="L1455">			} else {</span>
+<span class="nc" id="L1456">				getFilterController().showFilterToolbar(false);</span>
+			}
+<span class="nc" id="L1458">		}</span>
+	}
+
+	private class NavigationNextMapAction extends AbstractAction {
+<span class="nc" id="L1462">		NavigationNextMapAction(Controller controller) {</span>
+<span class="nc" id="L1463">			super(controller.getResourceString(&quot;next_map&quot;), new ImageIcon(</span>
+<span class="nc" id="L1464">					getResource(&quot;images/1rightarrow.png&quot;)));</span>
+<span class="nc" id="L1465">			setEnabled(false);</span>
+<span class="nc" id="L1466">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc" id="L1469">			mapModuleManager.nextMapModule();</span>
+<span class="nc" id="L1470">		}</span>
+	}
+
+	private class NavigationMoveMapLeftAction extends AbstractAction {
+<span class="nc" id="L1474">		NavigationMoveMapLeftAction(Controller controller) {</span>
+<span class="nc" id="L1475">			super(controller.getResourceString(&quot;move_map_left&quot;), new ImageIcon(</span>
+<span class="nc" id="L1476">					getResource(&quot;images/draw-arrow-back.png&quot;)));</span>
+<span class="nc" id="L1477">			setEnabled(false);</span>
+<span class="nc" id="L1478">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc bnc" id="L1481" title="All 2 branches missed.">			if (mTabbedPane != null) {</span>
+<span class="nc" id="L1482">				int selectedIndex = mTabbedPane.getSelectedIndex();</span>
+<span class="nc bnc" id="L1483" title="All 2 branches missed.">				int previousIndex = (selectedIndex &gt; 0) ? (selectedIndex - 1)</span>
+<span class="nc" id="L1484">						: (mTabbedPane.getTabCount() - 1);</span>
+<span class="nc" id="L1485">				moveTab(selectedIndex, previousIndex);</span>
+			}
+<span class="nc" id="L1487">		}</span>
+	}
+
+	private class NavigationMoveMapRightAction extends AbstractAction {
+<span class="nc" id="L1491">		NavigationMoveMapRightAction(Controller controller) {</span>
+<span class="nc" id="L1492">			super(controller.getResourceString(&quot;move_map_right&quot;),</span>
+<span class="nc" id="L1493">					new ImageIcon(getResource(&quot;images/draw-arrow-forward.png&quot;)));</span>
+<span class="nc" id="L1494">			setEnabled(false);</span>
+<span class="nc" id="L1495">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc bnc" id="L1498" title="All 2 branches missed.">			if (mTabbedPane != null) {</span>
+<span class="nc" id="L1499">				int selectedIndex = mTabbedPane.getSelectedIndex();</span>
+<span class="nc bnc" id="L1500" title="All 2 branches missed.">				int previousIndex = (selectedIndex &gt;= mTabbedPane.getTabCount() - 1) ? 0</span>
+<span class="nc" id="L1501">						: (selectedIndex + 1);</span>
+<span class="nc" id="L1502">				moveTab(selectedIndex, previousIndex);</span>
+			}
+<span class="nc" id="L1504">		}</span>
+	}
+
+	public void moveTab(int src, int dst) {
+		// snippet taken from
+		// http://www.exampledepot.com/egs/javax.swing/tabbed_TpMove.html
+		// Get all the properties
+<span class="nc" id="L1511">		Component comp = mTabbedPane.getComponentAt(src);</span>
+<span class="nc" id="L1512">		String label = mTabbedPane.getTitleAt(src);</span>
+<span class="nc" id="L1513">		Icon icon = mTabbedPane.getIconAt(src);</span>
+<span class="nc" id="L1514">		Icon iconDis = mTabbedPane.getDisabledIconAt(src);</span>
+<span class="nc" id="L1515">		String tooltip = mTabbedPane.getToolTipTextAt(src);</span>
+<span class="nc" id="L1516">		boolean enabled = mTabbedPane.isEnabledAt(src);</span>
+<span class="nc" id="L1517">		int keycode = mTabbedPane.getMnemonicAt(src);</span>
+<span class="nc" id="L1518">		int mnemonicLoc = mTabbedPane.getDisplayedMnemonicIndexAt(src);</span>
+<span class="nc" id="L1519">		Color fg = mTabbedPane.getForegroundAt(src);</span>
+<span class="nc" id="L1520">		Color bg = mTabbedPane.getBackgroundAt(src);</span>
+
+<span class="nc" id="L1522">		mTabbedPaneSelectionUpdate = false;</span>
+		// Remove the tab
+<span class="nc" id="L1524">		mTabbedPane.remove(src);</span>
+		// Add a new tab
+<span class="nc" id="L1526">		mTabbedPane.insertTab(label, icon, comp, tooltip, dst);</span>
+<span class="nc" id="L1527">		Tools.swapVectorPositions(mTabbedPaneMapModules, src, dst);</span>
+<span class="nc" id="L1528">		getMapModuleManager().swapModules(src, dst);</span>
+<span class="nc" id="L1529">		mTabbedPane.setSelectedIndex(dst);</span>
+<span class="nc" id="L1530">		mTabbedPaneSelectionUpdate = true;</span>
+
+		// Restore all properties
+<span class="nc" id="L1533">		mTabbedPane.setDisabledIconAt(dst, iconDis);</span>
+<span class="nc" id="L1534">		mTabbedPane.setEnabledAt(dst, enabled);</span>
+<span class="nc" id="L1535">		mTabbedPane.setMnemonicAt(dst, keycode);</span>
+<span class="nc" id="L1536">		mTabbedPane.setDisplayedMnemonicIndexAt(dst, mnemonicLoc);</span>
+<span class="nc" id="L1537">		mTabbedPane.setForegroundAt(dst, fg);</span>
+<span class="nc" id="L1538">		mTabbedPane.setBackgroundAt(dst, bg);</span>
+<span class="nc" id="L1539">	}</span>
+
+	//
+	// Node navigation
+	//
+
+	private class MoveToRootAction extends AbstractAction {
+<span class="nc" id="L1546">		MoveToRootAction(Controller controller) {</span>
+<span class="nc" id="L1547">			super(controller.getResourceString(&quot;move_to_root&quot;));</span>
+<span class="nc" id="L1548">			setEnabled(false);</span>
+<span class="nc" id="L1549">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc" id="L1552">			moveToRoot();</span>
+<span class="nc" id="L1553">		}</span>
+	}
+
+	private class ToggleMenubarAction extends AbstractAction implements
+			MenuItemSelectedListener {
+<span class="nc" id="L1558">		ToggleMenubarAction(Controller controller) {</span>
+<span class="nc" id="L1559">			super(controller.getResourceString(&quot;toggle_menubar&quot;));</span>
+<span class="nc" id="L1560">			setEnabled(true);</span>
+<span class="nc" id="L1561">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc bnc" id="L1564" title="All 2 branches missed.">			menubarVisible = !menubarVisible;</span>
+<span class="nc" id="L1565">			setMenubarVisible(menubarVisible);</span>
+<span class="nc" id="L1566">		}</span>
+
+		public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+<span class="nc" id="L1569">			return menubarVisible;</span>
+		}
+	}
+
+	private class ToggleToolbarAction extends AbstractAction implements
+			MenuItemSelectedListener {
+<span class="nc" id="L1575">		ToggleToolbarAction(Controller controller) {</span>
+<span class="nc" id="L1576">			super(controller.getResourceString(&quot;toggle_toolbar&quot;));</span>
+<span class="nc" id="L1577">			setEnabled(true);</span>
+<span class="nc" id="L1578">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc bnc" id="L1581" title="All 2 branches missed.">			toolbarVisible = !toolbarVisible;</span>
+<span class="nc" id="L1582">			setToolbarVisible(toolbarVisible);</span>
+<span class="nc" id="L1583">		}</span>
+
+		public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+<span class="nc" id="L1586">			logger.info(&quot;ToggleToolbar was asked for selectedness.&quot;);</span>
+<span class="nc" id="L1587">			return toolbarVisible;</span>
+		}
+	}
+
+	private class ToggleLeftToolbarAction extends AbstractAction implements
+			MenuItemSelectedListener {
+<span class="nc" id="L1593">		ToggleLeftToolbarAction(Controller controller) {</span>
+<span class="nc" id="L1594">			super(controller.getResourceString(&quot;toggle_left_toolbar&quot;));</span>
+<span class="nc" id="L1595">			setEnabled(true);</span>
+<span class="nc" id="L1596">		}</span>
+
+		public void actionPerformed(ActionEvent event) {
+<span class="nc bnc" id="L1599" title="All 2 branches missed.">			leftToolbarVisible = !leftToolbarVisible;</span>
+<span class="nc" id="L1600">			setLeftToolbarVisible(leftToolbarVisible);</span>
+<span class="nc" id="L1601">		}</span>
+
+		public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+<span class="nc" id="L1604">			return leftToolbarVisible;</span>
+		}
+	}
+
+	protected class ZoomInAction extends AbstractAction {
+<span class="nc" id="L1609">		public ZoomInAction(Controller controller) {</span>
+<span class="nc" id="L1610">			super(controller.getResourceString(&quot;zoom_in&quot;));</span>
+<span class="nc" id="L1611">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+			// logger.info(&quot;ZoomInAction actionPerformed&quot;);
+<span class="nc" id="L1615">			float currentZoom = getView().getZoom();</span>
+<span class="nc bnc" id="L1616" title="All 2 branches missed.">			for (int i = 0; i &lt; zoomValues.length; i++) {</span>
+<span class="nc" id="L1617">				float val = zoomValues[i];</span>
+<span class="nc bnc" id="L1618" title="All 2 branches missed.">				if (val &gt; currentZoom) {</span>
+<span class="nc" id="L1619">					setZoom(val);</span>
+<span class="nc" id="L1620">					return;</span>
+				}
+			}
+<span class="nc" id="L1623">			setZoom(zoomValues[zoomValues.length - 1]);</span>
+<span class="nc" id="L1624">		}</span>
+	}
+
+	protected class ZoomOutAction extends AbstractAction {
+<span class="nc" id="L1628">		public ZoomOutAction(Controller controller) {</span>
+<span class="nc" id="L1629">			super(controller.getResourceString(&quot;zoom_out&quot;));</span>
+<span class="nc" id="L1630">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1633">			float currentZoom = getView().getZoom();</span>
+<span class="nc" id="L1634">			float lastZoom = zoomValues[0];</span>
+<span class="nc bnc" id="L1635" title="All 2 branches missed.">			for (int i = 0; i &lt; zoomValues.length; i++) {</span>
+<span class="nc" id="L1636">				float val = zoomValues[i];</span>
+<span class="nc bnc" id="L1637" title="All 2 branches missed.">				if (val &gt;= currentZoom) {</span>
+<span class="nc" id="L1638">					setZoom(lastZoom);</span>
+<span class="nc" id="L1639">					return;</span>
+				}
+<span class="nc" id="L1641">				lastZoom = val;</span>
+			}
+<span class="nc" id="L1643">			setZoom(lastZoom);</span>
+<span class="nc" id="L1644">		}</span>
+	}
+
+	protected class ShowSelectionAsRectangleAction extends AbstractAction
+			implements MenuItemSelectedListener {
+<span class="nc" id="L1649">		public ShowSelectionAsRectangleAction(Controller controller) {</span>
+<span class="nc" id="L1650">			super(controller.getResourceString(&quot;selection_as_rectangle&quot;));</span>
+<span class="nc" id="L1651">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+			// logger.info(&quot;ShowSelectionAsRectangleAction action Performed&quot;);
+<span class="nc" id="L1655">			toggleSelectionAsRectangle();</span>
+<span class="nc" id="L1656">		}</span>
+
+		public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+<span class="nc" id="L1659">			return isSelectionAsRectangle();</span>
+		}
+	}
+
+	private class ShowAllAttributesAction extends AbstractAction {
+<span class="fc" id="L1664">		public ShowAllAttributesAction() {</span>
+<span class="fc" id="L1665">			super(Resources.getInstance().getResourceString(</span>
+<span class="fc" id="L1666">					&quot;attributes_show_all&quot;));</span>
+<span class="fc" id="L1667">		};</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1670">			final MindMap map = getMap();</span>
+<span class="nc" id="L1671">			setAttributeViewType(map);</span>
+<span class="nc" id="L1672">		}</span>
+
+		public void setAttributeViewType(final MindMap map) {
+<span class="nc" id="L1675">			final AttributeRegistry attributes = map.getRegistry()</span>
+<span class="nc" id="L1676">					.getAttributes();</span>
+<span class="nc bnc" id="L1677" title="All 2 branches missed.">			if (attributes.getAttributeViewType() != AttributeTableLayoutModel.SHOW_ALL) {</span>
+<span class="nc" id="L1678">				attributes</span>
+<span class="nc" id="L1679">						.setAttributeViewType(AttributeTableLayoutModel.SHOW_ALL);</span>
+			}
+<span class="nc" id="L1681">		}</span>
+	}
+
+	private class HideAllAttributesAction extends AbstractAction {
+<span class="fc" id="L1685">		public HideAllAttributesAction() {</span>
+<span class="fc" id="L1686">			super(Resources.getInstance().getResourceString(</span>
+<span class="fc" id="L1687">					&quot;attributes_hide_all&quot;));</span>
+<span class="fc" id="L1688">		};</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1691">			final MindMap map = getMap();</span>
+<span class="nc" id="L1692">			setAttributeViewType(map);</span>
+<span class="nc" id="L1693">		}</span>
+
+		public void setAttributeViewType(final MindMap map) {
+<span class="nc" id="L1696">			final AttributeRegistry attributes = map.getRegistry()</span>
+<span class="nc" id="L1697">					.getAttributes();</span>
+<span class="nc bnc" id="L1698" title="All 2 branches missed.">			if (attributes.getAttributeViewType() != AttributeTableLayoutModel.HIDE_ALL) {</span>
+<span class="nc" id="L1699">				attributes</span>
+<span class="nc" id="L1700">						.setAttributeViewType(AttributeTableLayoutModel.HIDE_ALL);</span>
+			}
+<span class="nc" id="L1702">		}</span>
+	}
+
+	private class ShowSelectedAttributesAction extends AbstractAction {
+<span class="fc" id="L1706">		public ShowSelectedAttributesAction() {</span>
+<span class="fc" id="L1707">			super(Resources.getInstance().getResourceString(</span>
+<span class="fc" id="L1708">					&quot;attributes_show_selected&quot;));</span>
+<span class="fc" id="L1709">		};</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1712">			MindMap map = getMap();</span>
+<span class="nc" id="L1713">			setAttributeViewType(map);</span>
+<span class="nc" id="L1714">		}</span>
+
+		void setAttributeViewType(MindMap map) {
+<span class="nc" id="L1717">			final AttributeRegistry attributes = map.getRegistry()</span>
+<span class="nc" id="L1718">					.getAttributes();</span>
+<span class="nc bnc" id="L1719" title="All 2 branches missed.">			if (attributes.getAttributeViewType() != AttributeTableLayoutModel.SHOW_SELECTED) {</span>
+<span class="nc" id="L1720">				attributes</span>
+<span class="nc" id="L1721">						.setAttributeViewType(AttributeTableLayoutModel.SHOW_SELECTED);</span>
+			}
+<span class="nc" id="L1723">		}</span>
+	}
+
+	//
+	// Preferences
+	//
+
+	public static Collection getPropertyChangeListeners() {
+<span class="nc" id="L1731">		return Collections.unmodifiableCollection(propertyChangeListeners);</span>
+	}
+
+	public void toggleSelectionAsRectangle() {
+<span class="nc bnc" id="L1735" title="All 2 branches missed.">		if (isSelectionAsRectangle()) {</span>
+<span class="nc" id="L1736">			setProperty(FreeMind.RESOURCE_DRAW_RECTANGLE_FOR_SELECTION,</span>
+<span class="nc" id="L1737">					BooleanProperty.FALSE_VALUE);</span>
+<span class="nc" id="L1738">		} else {</span>
+<span class="nc" id="L1739">			setProperty(FreeMind.RESOURCE_DRAW_RECTANGLE_FOR_SELECTION,</span>
+<span class="nc" id="L1740">					BooleanProperty.TRUE_VALUE);</span>
+		}
+<span class="nc" id="L1742">	}</span>
+
+	private boolean isSelectionAsRectangle() {
+<span class="nc" id="L1745">		return getProperty(FreeMind.RESOURCE_DRAW_RECTANGLE_FOR_SELECTION)</span>
+<span class="nc" id="L1746">				.equalsIgnoreCase(BooleanProperty.TRUE_VALUE);</span>
+	}
+
+	/**
+     */
+	public MindMap getMap() {
+<span class="nc" id="L1752">		return getMapModule().getModel();</span>
+	}
+
+	public static void addPropertyChangeListener(
+			FreemindPropertyListener listener) {
+<span class="nc" id="L1757">		Controller.propertyChangeListeners.add(listener);</span>
+<span class="nc" id="L1758">	}</span>
+
+	/**
+	 * @param listener
+	 *            The new listener. All currently available properties are sent
+	 *            to the listener after registration. Here, the oldValue
+	 *            parameter is set to null.
+	 */
+	public static void addPropertyChangeListenerAndPropagate(
+			FreemindPropertyListener listener) {
+<span class="nc" id="L1768">		Controller.addPropertyChangeListener(listener);</span>
+<span class="nc" id="L1769">		Properties properties = Resources.getInstance().getProperties();</span>
+<span class="nc bnc" id="L1770" title="All 2 branches missed.">		for (Iterator it = properties.keySet().iterator(); it.hasNext();) {</span>
+<span class="nc" id="L1771">			String key = (String) it.next();</span>
+<span class="nc" id="L1772">			listener.propertyChanged(key, properties.getProperty(key), null);</span>
+		}
+<span class="nc" id="L1774">	}</span>
+
+	public static void removePropertyChangeListener(
+			FreemindPropertyListener listener) {
+<span class="nc" id="L1778">		Controller.propertyChangeListeners.remove(listener);</span>
+<span class="nc" id="L1779">	}</span>
+
+	/**
+	 * @author foltin
+	 * 
+	 */
+	public class PropertyAction extends AbstractAction {
+
+		private final Controller controller;
+
+		/**
+		 *
+		 */
+<span class="nc" id="L1792">		public PropertyAction(Controller controller) {</span>
+<span class="nc" id="L1793">			super(controller.getResourceString(&quot;property_dialog&quot;));</span>
+<span class="nc" id="L1794">			this.controller = controller;</span>
+<span class="nc" id="L1795">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L1798">			JDialog dialog = new JDialog(getFrame().getJFrame(), true /* modal */);</span>
+<span class="nc" id="L1799">			dialog.setResizable(true);</span>
+<span class="nc" id="L1800">			dialog.setUndecorated(false);</span>
+<span class="nc" id="L1801">			final OptionPanel options = new OptionPanel((FreeMind) getFrame(),</span>
+<span class="nc" id="L1802">					dialog, new OptionPanelFeedback() {</span>
+
+						public void writeProperties(Properties props) {
+<span class="nc" id="L1805">							Vector sortedKeys = new Vector();</span>
+<span class="nc" id="L1806">							sortedKeys.addAll(props.keySet());</span>
+<span class="nc" id="L1807">							Collections.sort(sortedKeys);</span>
+<span class="nc" id="L1808">							boolean propertiesChanged = false;</span>
+<span class="nc" id="L1809">							for (Iterator i = sortedKeys.iterator(); i</span>
+<span class="nc bnc" id="L1810" title="All 2 branches missed.">									.hasNext();) {</span>
+<span class="nc" id="L1811">								String key = (String) i.next();</span>
+								// save only changed keys:
+<span class="nc" id="L1813">								String newProperty = props.getProperty(key);</span>
+<span class="nc bnc" id="L1814" title="All 2 branches missed.">								propertiesChanged = propertiesChanged</span>
+<span class="nc" id="L1815">										|| !newProperty.equals(controller</span>
+<span class="nc bnc" id="L1816" title="All 2 branches missed.">												.getProperty(key));</span>
+<span class="nc" id="L1817">								controller.setProperty(key, newProperty);</span>
+							}
+
+<span class="nc bnc" id="L1820" title="All 2 branches missed.">							if (propertiesChanged) {</span>
+								JOptionPane
+<span class="nc" id="L1822">										.showMessageDialog(</span>
+<span class="nc" id="L1823">												null,</span>
+<span class="nc" id="L1824">												getResourceString(&quot;option_changes_may_require_restart&quot;));</span>
+<span class="nc" id="L1825">								controller.getFrame().saveProperties(false);</span>
+							}
+<span class="nc" id="L1827">						}</span>
+					});
+<span class="nc" id="L1829">			options.buildPanel();</span>
+<span class="nc" id="L1830">			options.setProperties();</span>
+<span class="nc" id="L1831">			dialog.setTitle(&quot;Freemind Properties&quot;);</span>
+<span class="nc" id="L1832">			dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);</span>
+<span class="nc" id="L1833">			dialog.addWindowListener(new WindowAdapter() {</span>
+				public void windowClosing(WindowEvent event) {
+<span class="nc" id="L1835">					options.closeWindow();</span>
+<span class="nc" id="L1836">				}</span>
+			});
+<span class="nc" id="L1838">			Action action = new AbstractAction() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L1841">					options.closeWindow();</span>
+<span class="nc" id="L1842">				}</span>
+			};
+<span class="nc" id="L1844">			Tools.addEscapeActionToDialog(dialog, action);</span>
+<span class="nc" id="L1845">			dialog.setVisible(true);</span>
+
+<span class="nc" id="L1847">		}</span>
+
+	}
+
+<span class="fc" id="L1851">	private class BackgroundSwatch extends ColorSwatch {</span>
+		Color getColor() {
+<span class="nc" id="L1853">			return getView().getBackground();</span>
+		}
+	}
+
+	public class OptionAntialiasAction extends AbstractAction implements
+			FreemindPropertyListener {
+<span class="nc" id="L1859">		OptionAntialiasAction(Controller controller) {</span>
+<span class="nc" id="L1860">			Controller.addPropertyChangeListener(this);</span>
+<span class="nc" id="L1861">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1864">			String command = e.getActionCommand();</span>
+<span class="nc" id="L1865">			changeAntialias(command);</span>
+<span class="nc" id="L1866">		}</span>
+
+		/**
+	     */
+		public void changeAntialias(String command) {
+<span class="nc bnc" id="L1871" title="All 2 branches missed.">			if (command == null) {</span>
+<span class="nc" id="L1872">				return;</span>
+			}
+<span class="nc bnc" id="L1874" title="All 2 branches missed.">			if (command.equals(&quot;antialias_none&quot;)) {</span>
+<span class="nc" id="L1875">				setAntialiasEdges(false);</span>
+<span class="nc" id="L1876">				setAntialiasAll(false);</span>
+			}
+<span class="nc bnc" id="L1878" title="All 2 branches missed.">			if (command.equals(&quot;antialias_edges&quot;)) {</span>
+<span class="nc" id="L1879">				setAntialiasEdges(true);</span>
+<span class="nc" id="L1880">				setAntialiasAll(false);</span>
+			}
+<span class="nc bnc" id="L1882" title="All 2 branches missed.">			if (command.equals(&quot;antialias_all&quot;)) {</span>
+<span class="nc" id="L1883">				setAntialiasEdges(true);</span>
+<span class="nc" id="L1884">				setAntialiasAll(true);</span>
+			}
+<span class="nc bnc" id="L1886" title="All 2 branches missed.">			if (getView() != null)</span>
+<span class="nc" id="L1887">				getView().repaint();</span>
+<span class="nc" id="L1888">		}</span>
+
+		public void propertyChanged(String propertyName, String newValue,
+				String oldValue) {
+<span class="nc bnc" id="L1892" title="All 2 branches missed.">			if (propertyName.equals(FreeMindCommon.RESOURCE_ANTIALIAS)) {</span>
+<span class="nc" id="L1893">				changeAntialias(newValue);</span>
+			}
+<span class="nc" id="L1895">		}</span>
+	}
+
+	private class OptionHTMLExportFoldingAction extends AbstractAction {
+<span class="nc" id="L1899">		OptionHTMLExportFoldingAction(Controller controller) {</span>
+<span class="nc" id="L1900">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1903">			setProperty(&quot;html_export_folding&quot;, e.getActionCommand());</span>
+<span class="nc" id="L1904">		}</span>
+	}
+
+	// switch auto properties for selection mechanism fc, 7.12.2003.
+	private class OptionSelectionMechanismAction extends AbstractAction
+			implements FreemindPropertyListener {
+		Controller c;
+
+<span class="nc" id="L1912">		OptionSelectionMechanismAction(Controller controller) {</span>
+<span class="nc" id="L1913">			c = controller;</span>
+<span class="nc" id="L1914">			Controller.addPropertyChangeListener(this);</span>
+<span class="nc" id="L1915">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L1918">			String command = e.getActionCommand();</span>
+<span class="nc" id="L1919">			changeSelection(command);</span>
+<span class="nc" id="L1920">		}</span>
+
+		/**
+         */
+		private void changeSelection(String command) {
+<span class="nc" id="L1925">			setProperty(&quot;selection_method&quot;, command);</span>
+			// and update the selection method in the NodeMouseMotionListener
+<span class="nc" id="L1927">			c.getNodeMouseMotionListener().updateSelectionMethod();</span>
+<span class="nc" id="L1928">			String statusBarString = c.getResourceString(command);</span>
+<span class="nc bnc" id="L1929" title="All 2 branches missed.">			if (statusBarString != null) // should not happen</span>
+<span class="nc" id="L1930">				c.getFrame().out(statusBarString);</span>
+<span class="nc" id="L1931">		}</span>
+
+		public void propertyChanged(String propertyName, String newValue,
+				String oldValue) {
+<span class="nc bnc" id="L1935" title="All 2 branches missed.">			if (propertyName.equals(FreeMind.RESOURCES_SELECTION_METHOD)) {</span>
+<span class="nc" id="L1936">				changeSelection(newValue);</span>
+			}
+<span class="nc" id="L1938">		}</span>
+	}
+
+	// open faq url from freeminds page:
+	private class OpenURLAction extends AbstractAction {
+		Controller c;
+		private final String url;
+
+<span class="nc" id="L1946">		OpenURLAction(Controller controller, String description, String url) {</span>
+<span class="nc" id="L1947">			super(description, new ImageIcon(</span>
+<span class="nc" id="L1948">					controller.getResource(&quot;images/Link.png&quot;)));</span>
+<span class="nc" id="L1949">			c = controller;</span>
+<span class="nc" id="L1950">			this.url = url;</span>
+<span class="nc" id="L1951">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+			try {
+<span class="nc" id="L1955">				c.getFrame().openDocument(new URL(url));</span>
+<span class="nc" id="L1956">			} catch (MalformedURLException ex) {</span>
+<span class="nc" id="L1957">				c.errorMessage(c.getResourceString(&quot;url_error&quot;) + &quot;\n&quot; + ex);</span>
+<span class="nc" id="L1958">			} catch (Exception ex) {</span>
+<span class="nc" id="L1959">				c.errorMessage(ex);</span>
+			}
+<span class="nc" id="L1961">		}</span>
+	}
+
+	public FilterController getFilterController() {
+<span class="nc" id="L1965">		return mFilterController;</span>
+	}
+
+	public PageFormat getPageFormat() {
+<span class="nc" id="L1969">		return pageFormat;</span>
+	}
+
+	public void setAttributeViewType(MindMap map, String value) {
+<span class="nc bnc" id="L1973" title="All 2 branches missed.">		if (value.equals(AttributeTableLayoutModel.SHOW_SELECTED)) {</span>
+<span class="nc" id="L1974">			((ShowSelectedAttributesAction) showSelectedAttributes)</span>
+<span class="nc" id="L1975">					.setAttributeViewType(map);</span>
+<span class="nc bnc" id="L1976" title="All 2 branches missed.">		} else if (value.equals(AttributeTableLayoutModel.HIDE_ALL)) {</span>
+<span class="nc" id="L1977">			((HideAllAttributesAction) hideAllAttributes)</span>
+<span class="nc" id="L1978">					.setAttributeViewType(map);</span>
+<span class="nc bnc" id="L1979" title="All 2 branches missed.">		} else if (value.equals(AttributeTableLayoutModel.SHOW_ALL)) {</span>
+<span class="nc" id="L1980">			((ShowAllAttributesAction) showAllAttributes)</span>
+<span class="nc" id="L1981">					.setAttributeViewType(map);</span>
+		}
+<span class="nc" id="L1983">	}</span>
+
+	public Object setEdgesRenderingHint(Graphics2D g) {
+<span class="nc" id="L1986">		Object renderingHint = g</span>
+<span class="nc" id="L1987">				.getRenderingHint(RenderingHints.KEY_ANTIALIASING);</span>
+<span class="nc" id="L1988">		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,</span>
+<span class="nc bnc" id="L1989" title="All 2 branches missed.">				(getAntialiasEdges()) ? RenderingHints.VALUE_ANTIALIAS_ON</span>
+<span class="nc" id="L1990">						: RenderingHints.VALUE_ANTIALIAS_OFF);</span>
+<span class="nc" id="L1991">		return renderingHint;</span>
+	}
+
+	public void setTextRenderingHint(Graphics2D g) {
+<span class="nc" id="L1995">		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,</span>
+<span class="nc bnc" id="L1996" title="All 2 branches missed.">				(getAntialiasAll()) ? RenderingHints.VALUE_TEXT_ANTIALIAS_ON</span>
+<span class="nc" id="L1997">						: RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);</span>
+<span class="nc" id="L1998">		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,</span>
+<span class="nc bnc" id="L1999" title="All 2 branches missed.">				(getAntialiasAll()) ? RenderingHints.VALUE_ANTIALIAS_ON</span>
+<span class="nc" id="L2000">						: RenderingHints.VALUE_ANTIALIAS_OFF);</span>
+<span class="nc" id="L2001">	}</span>
+
+	public void addTabbedPane(JTabbedPane pTabbedPane) {
+<span class="nc" id="L2004">		mTabbedPane = pTabbedPane;</span>
+<span class="nc" id="L2005">		mTabbedPaneMapModules = new Vector();</span>
+<span class="nc" id="L2006">		mTabbedPane.addChangeListener(new ChangeListener() {</span>
+
+			public synchronized void stateChanged(ChangeEvent pE) {
+<span class="nc" id="L2009">				tabSelectionChanged();</span>
+<span class="nc" id="L2010">			}</span>
+
+		});
+<span class="nc" id="L2013">		getMapModuleManager().addListener(new MapModuleChangeObserver() {</span>
+
+			public void afterMapModuleChange(MapModule pOldMapModule,
+					Mode pOldMode, MapModule pNewMapModule, Mode pNewMode) {
+<span class="nc" id="L2017">				int selectedIndex = mTabbedPane.getSelectedIndex();</span>
+<span class="nc bnc" id="L2018" title="All 2 branches missed.">				if (pNewMapModule == null) {</span>
+<span class="nc" id="L2019">					return;</span>
+				}
+				// search, if already present:
+<span class="nc bnc" id="L2022" title="All 2 branches missed.">				for (int i = 0; i &lt; mTabbedPaneMapModules.size(); ++i) {</span>
+<span class="nc bnc" id="L2023" title="All 2 branches missed.">					if (mTabbedPaneMapModules.get(i) == pNewMapModule) {</span>
+<span class="nc bnc" id="L2024" title="All 2 branches missed.">						if (selectedIndex != i) {</span>
+<span class="nc" id="L2025">							mTabbedPane.setSelectedIndex(i);</span>
+						}
+<span class="nc" id="L2027">						return;</span>
+					}
+				}
+				// create new tab:
+<span class="nc" id="L2031">				mTabbedPaneMapModules.add(pNewMapModule);</span>
+<span class="nc" id="L2032">				mTabbedPane.addTab(pNewMapModule.toString(), new JPanel());</span>
+<span class="nc" id="L2033">				mTabbedPane.setSelectedIndex(mTabbedPane.getTabCount() - 1);</span>
+<span class="nc" id="L2034">			}</span>
+
+			public void beforeMapModuleChange(MapModule pOldMapModule,
+					Mode pOldMode, MapModule pNewMapModule, Mode pNewMode) {
+<span class="nc" id="L2038">			}</span>
+
+			public boolean isMapModuleChangeAllowed(MapModule pOldMapModule,
+					Mode pOldMode, MapModule pNewMapModule, Mode pNewMode) {
+<span class="nc" id="L2042">				return true;</span>
+			}
+
+			public void numberOfOpenMapInformation(int pNumber, int pIndex) {
+<span class="nc" id="L2046">			}</span>
+
+			public void afterMapClose(MapModule pOldMapModule, Mode pOldMode) {
+<span class="nc bnc" id="L2049" title="All 2 branches missed.">				for (int i = 0; i &lt; mTabbedPaneMapModules.size(); ++i) {</span>
+<span class="nc bnc" id="L2050" title="All 2 branches missed.">					if (mTabbedPaneMapModules.get(i) == pOldMapModule) {</span>
+<span class="nc" id="L2051">						logger.fine(&quot;Remove tab:&quot; + i + &quot; with title:&quot;</span>
+<span class="nc" id="L2052">								+ mTabbedPane.getTitleAt(i));</span>
+<span class="nc" id="L2053">						mTabbedPaneSelectionUpdate = false;</span>
+<span class="nc" id="L2054">						mTabbedPane.removeTabAt(i);</span>
+<span class="nc" id="L2055">						mTabbedPaneMapModules.remove(i);</span>
+<span class="nc" id="L2056">						mTabbedPaneSelectionUpdate = true;</span>
+<span class="nc" id="L2057">						tabSelectionChanged();</span>
+<span class="nc" id="L2058">						return;</span>
+					}
+				}
+<span class="nc" id="L2061">			}</span>
+		});
+<span class="nc" id="L2063">		registerMapTitleChangeListener(new MapModuleManager.MapTitleChangeListener() {</span>
+
+			public void setMapTitle(String pNewMapTitle, MapModule pMapModule,
+					MindMap pModel) {
+<span class="nc bnc" id="L2067" title="All 2 branches missed.">				for (int i = 0; i &lt; mTabbedPaneMapModules.size(); ++i) {</span>
+<span class="nc bnc" id="L2068" title="All 2 branches missed.">					if (mTabbedPaneMapModules.get(i) == pMapModule) {</span>
+<span class="nc" id="L2069">						mTabbedPane.setTitleAt(i,</span>
+<span class="nc bnc" id="L2070" title="All 2 branches missed.">								pNewMapTitle + ((pModel.isSaved()) ? &quot;&quot; : &quot;*&quot;));</span>
+					}
+				}
+<span class="nc" id="L2073">			}</span>
+		});
+
+<span class="nc" id="L2076">	}</span>
+
+	private void tabSelectionChanged() {
+<span class="nc bnc" id="L2079" title="All 2 branches missed.">		if (!mTabbedPaneSelectionUpdate)</span>
+<span class="nc" id="L2080">			return;</span>
+<span class="nc" id="L2081">		int selectedIndex = mTabbedPane.getSelectedIndex();</span>
+		// display nothing on the other tabs:
+<span class="nc bnc" id="L2083" title="All 2 branches missed.">		for (int j = 0; j &lt; mTabbedPane.getTabCount(); j++) {</span>
+<span class="nc bnc" id="L2084" title="All 2 branches missed.">			if (j != selectedIndex)</span>
+<span class="nc" id="L2085">				mTabbedPane.setComponentAt(j, new JPanel());</span>
+		}
+<span class="nc bnc" id="L2087" title="All 2 branches missed.">		if (selectedIndex &lt; 0) {</span>
+			// nothing selected. probably, the last map was closed
+<span class="nc" id="L2089">			return;</span>
+		}
+<span class="nc" id="L2091">		MapModule module = (MapModule) mTabbedPaneMapModules.get(selectedIndex);</span>
+<span class="nc" id="L2092">		logger.fine(&quot;Selected index of tab is now: &quot; + selectedIndex</span>
+<span class="nc" id="L2093">				+ &quot; with title:&quot; + module.toString());</span>
+<span class="nc bnc" id="L2094" title="All 2 branches missed.">		if (module != getMapModule()) {</span>
+			// we have to change the active map actively:
+<span class="nc" id="L2096">			getMapModuleManager().changeToMapModule(module.toString());</span>
+		}
+		// mScrollPane could be set invisible by JTabbedPane
+<span class="nc" id="L2099">		frame.getScrollPane().setVisible(true);</span>
+<span class="nc" id="L2100">		mTabbedPane.setComponentAt(selectedIndex, frame.getContentComponent());</span>
+		// double call, due to mac strangeness.
+<span class="nc" id="L2102">		obtainFocusForSelected();</span>
+<span class="nc" id="L2103">	}</span>
+
+	protected void storePageFormat() {
+<span class="nc bnc" id="L2106" title="All 2 branches missed.">		if (pageFormat.getOrientation() == PageFormat.LANDSCAPE) {</span>
+<span class="nc" id="L2107">			setProperty(&quot;page_orientation&quot;, &quot;landscape&quot;);</span>
+<span class="nc bnc" id="L2108" title="All 2 branches missed.">		} else if (pageFormat.getOrientation() == PageFormat.PORTRAIT) {</span>
+<span class="nc" id="L2109">			setProperty(&quot;page_orientation&quot;, &quot;portrait&quot;);</span>
+<span class="nc bnc" id="L2110" title="All 2 branches missed.">		} else if (pageFormat.getOrientation() == PageFormat.REVERSE_LANDSCAPE) {</span>
+<span class="nc" id="L2111">			setProperty(&quot;page_orientation&quot;, &quot;reverse_landscape&quot;);</span>
+		}
+<span class="nc" id="L2113">		setProperty(PAGE_FORMAT_PROPERTY,</span>
+<span class="nc" id="L2114">				Tools.getPageFormatAsString(pageFormat.getPaper()));</span>
+<span class="nc" id="L2115">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

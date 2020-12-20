@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MapModule.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view</a> &gt; <span class="el_source">MapModule.java</span></div><h1>MapModule.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.view;
+
+import freemind.modes.MindMap;
+import freemind.modes.Mode;
+import freemind.modes.ModeController;
+import freemind.view.mindmapview.MapView;
+
+/**
+ * This class is the key to one Model/View bundle which represents one map.
+ */
+public class MapModule {
+	private String name;
+	private MindMap model;
+	private MapView view;
+	private Mode mode;
+	private ModeController modeController;
+	/** Contains an extension if a map with same file name is already opened. */
+	private String displayName;
+<span class="nc" id="L39">	private static int unnamedMapsNumber = 1;// used to give unique names to</span>
+												// maps
+
+<span class="nc" id="L42">	public MapModule(MindMap model, MapView view, Mode mode,</span>
+			ModeController modeController) {
+<span class="nc" id="L44">		this.model = model;</span>
+<span class="nc" id="L45">		this.view = view;</span>
+<span class="nc" id="L46">		this.mode = mode;</span>
+<span class="nc" id="L47">		this.modeController = modeController;</span>
+<span class="nc" id="L48">		modeController.setView(view);</span>
+<span class="nc" id="L49">	}</span>
+
+	/**
+	 * Returns the String that is used to identify this map. Important: If the
+	 * String is changed, other component (ie Controller) must be notified.
+	 */
+	public String toString() {
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if (name == null) {</span>
+<span class="nc" id="L57">			rename();</span>
+		}
+<span class="nc" id="L59">		return name;</span>
+	}
+
+	public void rename() {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (getModel().toString() != null) {</span>
+<span class="nc" id="L64">			name = getModel().toString();</span>
+<span class="nc" id="L65">		} else {</span>
+<span class="nc" id="L66">			name = mode.getController().getFrame().getResourceString(&quot;mindmap&quot;)</span>
+<span class="nc" id="L67">					+ unnamedMapsNumber++;</span>
+		}
+<span class="nc" id="L69">	}</span>
+
+	public MindMap getModel() {
+<span class="nc" id="L72">		return model;</span>
+	}
+
+	public MapView getView() {
+<span class="nc" id="L76">		return view;</span>
+	}
+
+	public Mode getMode() {
+<span class="nc" id="L80">		return mode;</span>
+	}
+
+	public void setName(String name) {
+<span class="nc" id="L84">		this.name = name;</span>
+<span class="nc" id="L85">	}</span>
+
+	public ModeController getModeController() {
+<span class="nc" id="L88">		return modeController;</span>
+	}
+
+	public String getName() {
+<span class="nc" id="L92">		return name;</span>
+	}
+
+	public String getDisplayName() {
+<span class="nc" id="L96">		return displayName;</span>
+	}
+
+	public void setDisplayName(String pDisplayName) {
+<span class="nc" id="L100">		displayName = pDisplayName;</span>
+<span class="nc" id="L101">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapLinkRegistry.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">MindMapLinkRegistry.java</span></div><h1>MindMapLinkRegistry.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: MindMapLinkRegistry.java,v 1.6.18.1.16.4 2008/12/09 21:09:43 christianfoltin Exp $*/
+
+package freemind.modes;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.ListIterator;
+import java.util.Vector;
+
+import freemind.main.Tools;
+
+/**
+ * Interface for the registry, which manages the ids of nodes and the existing
+ * links in a map. Thus, this interface is bound to a map model, because other
+ * maps have a different registry.
+ */
+public class MindMapLinkRegistry {
+	/**
+	 * All elements put into this sort of vectors are put into the
+	 * SourceToLinks, too. This structure is kept synchronous to the IDToLinks
+	 * structure, but reversed.
+	 * 
+	 * @author foltin
+	 * @date 23.01.2012
+	 */
+<span class="nc" id="L45">	private class SynchronousVector extends Vector {</span>
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.util.Vector#add(java.lang.Object)
+		 */
+		public synchronized boolean add(Object pE) {
+<span class="nc" id="L52">			boolean add = super.add(pE);</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">			if (pE instanceof MindMapLink) {</span>
+<span class="nc" id="L54">				MindMapLink link = (MindMapLink) pE;</span>
+<span class="nc" id="L55">				MindMapNode source = link.getSource();</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">				if (!mSourceToLinks.containsKey(source)) {</span>
+<span class="nc" id="L57">					mSourceToLinks.put(source, new Vector());</span>
+				}
+<span class="nc" id="L59">				((Vector) mSourceToLinks.get(source)).add(pE);</span>
+			}
+<span class="nc" id="L61">			return add;</span>
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see java.util.Vector#removeElementAt(int)
+		 */
+		public synchronized void removeElementAt(int pIndex) {
+<span class="nc" id="L70">			MindMapLink link = (MindMapLink) get(pIndex);</span>
+<span class="nc" id="L71">			MindMapNode source = link.getSource();</span>
+<span class="nc" id="L72">			Vector vector = (Vector) mSourceToLinks.get(source);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">			if (vector != null) {</span>
+<span class="nc" id="L74">				vector.remove(link);</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">				if (vector.isEmpty()) {</span>
+<span class="nc" id="L76">					mSourceToLinks.remove(source);</span>
+				}
+			}
+<span class="nc" id="L79">			super.removeElementAt(pIndex);</span>
+<span class="nc" id="L80">		}</span>
+
+	}
+
+	/** source -&gt; vector of links with same source */
+<span class="nc" id="L85">	protected HashMap mSourceToLinks = new HashMap();</span>
+
+	// //////////////////////////////////////////////////////////////////////////////////////
+	// // Attributes /////
+	// //////////////////////////////////////////////////////////////////////////////////////
+
+	/** MindMapNode = Target -&gt; ID. */
+	protected HashMap mTargetToId;
+	/** MindMapNode-&gt; ID. */
+	protected HashMap mIdToTarget;
+	/** id -&gt; vector of links whose TargetToID.get(target) == id. */
+	protected HashMap mIdToLinks;
+	/** id -&gt; link */
+	protected HashMap mIdToLink;
+	/** id */
+	protected HashSet mLocallyLinkedIds;
+
+<span class="nc" id="L102">	protected static java.util.logging.Logger logger = null;</span>
+
+	// //////////////////////////////////////////////////////////////////////////////////////
+	// // Methods /////
+	// //////////////////////////////////////////////////////////////////////////////////////
+<span class="nc" id="L107">	public MindMapLinkRegistry(/* MindMap map */) {</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L109">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L110">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L112">		mTargetToId = new HashMap();</span>
+<span class="nc" id="L113">		mIdToTarget = new HashMap();</span>
+<span class="nc" id="L114">		mIdToLinks = new HashMap();</span>
+<span class="nc" id="L115">		mIdToLink = new HashMap();</span>
+<span class="nc" id="L116">		mLocallyLinkedIds = new HashSet();</span>
+<span class="nc" id="L117">	}</span>
+
+	/**
+	 * This can be used, if the id has to be known, before a node can be
+	 * labeled.
+	 */
+	public String generateUniqueID(String proposedID) {
+<span class="nc" id="L124">		return Tools.generateID(proposedID, mIdToLinks, &quot;ID_&quot;);</span>
+	}
+
+	/**
+	 * This can be used, if the id has to be known, before a link can be labled.
+	 */
+	public String generateUniqueLinkId(String proposedID) {
+<span class="nc" id="L131">		return Tools.generateID(proposedID, mIdToLink, &quot;Arrow_ID_&quot;);</span>
+	}
+
+	public String registerLinkTarget(MindMapNode pTarget) {
+<span class="nc" id="L135">		return _registerLinkTarget(pTarget);</span>
+
+	}
+
+	/**
+	 * The second variant of the main method. The difference is that here an ID
+	 * is proposed, but has not to be taken, though.
+	 */
+	public String registerLinkTarget(MindMapNode pTarget, String pProposedID) {
+<span class="nc" id="L144">		return _registerLinkTarget(pTarget, pProposedID);</span>
+	}
+
+	/**
+	 * The main method. Registeres a node with a new (or an existing) node-id.
+	 */
+	public String _registerLinkTarget(MindMapNode target) {
+<span class="nc" id="L151">		return _registerLinkTarget(target, null);</span>
+	}
+
+	public String _registerLinkTarget(MindMapNode target, String proposedID) {
+		// id already exists?
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (mTargetToId.containsKey(target)) {</span>
+<span class="nc" id="L157">			String id = (String) mTargetToId.get(target);</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">			if (id != null)</span>
+<span class="nc" id="L159">				return id;</span>
+			// blank state.
+			// is equal to no state.
+		}
+		// generate new id:
+<span class="nc" id="L164">		String newId = generateUniqueID(proposedID);</span>
+<span class="nc" id="L165">		mTargetToId.put(target, newId);</span>
+<span class="nc" id="L166">		mIdToTarget.put(newId, target);</span>
+
+		// logger.fine(&quot;Register target node:&quot;+target+&quot;, with ID=&quot;+newID);
+		/*
+		 * This is to allocate the link target in the IDToLinks map!.
+		 */
+<span class="nc" id="L172">		getAssignedLinksVector(newId);</span>
+<span class="nc" id="L173">		return newId;</span>
+	}
+
+	/**
+	 * @param node
+	 * @return null, if not registered.
+	 */
+	public String getState(MindMapNode node) {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (mTargetToId.containsKey(node))</span>
+<span class="nc" id="L182">			return (String) mTargetToId.get(node);</span>
+<span class="nc" id="L183">		return null;</span>
+	}
+
+	/**
+	 * Reverses the getLabel method: searches for a node with the id given as
+	 * the argument.
+	 */
+	public MindMapNode getTargetForId(String ID) {
+<span class="nc" id="L191">		final Object target = mIdToTarget.get(ID);</span>
+<span class="nc" id="L192">		return (MindMapNode) target;</span>
+	}
+
+	/** @return a Vector of {@link MindMapLink}s */
+	private Vector getAssignedLinksVector(String newId) {
+<span class="nc" id="L197">		String id = newId;</span>
+		// look, if target is already present:
+		Vector vec;
+<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (mIdToLinks.containsKey(id)) {</span>
+<span class="nc" id="L201">			vec = (Vector) mIdToLinks.get(id);</span>
+<span class="nc" id="L202">		} else {</span>
+<span class="nc" id="L203">			vec = new SynchronousVector();</span>
+<span class="nc" id="L204">			mIdToLinks.put(id, vec);</span>
+		}
+
+		// Dimitry : logger is a performance killer here
+		// //logger.fine(&quot;getAssignedLinksVector &quot;+vec);
+<span class="nc" id="L209">		return vec;</span>
+	}
+
+	/** If there are still targets registered, they are removed, too. */
+	public void deregisterLinkTarget(MindMapNode target)
+			throws java.lang.IllegalArgumentException {
+		// deregister all links :
+<span class="nc" id="L216">		Vector links = getAllLinks(target);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		for (int i = links.size() - 1; i &gt;= 0; --i) {</span>
+<span class="nc" id="L218">			MindMapLink link = (MindMapLink) links.get(i);</span>
+<span class="nc" id="L219">			deregisterLink(link);</span>
+		}
+		// and process my sons:
+<span class="nc bnc" id="L222" title="All 2 branches missed.">		for (ListIterator e = target.childrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L223">			MindMapNode child = (MindMapNode) e.next();</span>
+<span class="nc" id="L224">			deregisterLinkTarget(child);</span>
+		}
+<span class="nc" id="L226">		String id = getState(target);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if (id != null) {</span>
+			// logger.fine(&quot;Deregister target node:&quot;+target);
+<span class="nc" id="L229">			mTargetToId.remove(target);</span>
+<span class="nc" id="L230">			mIdToTarget.remove(id);</span>
+<span class="nc" id="L231">			mIdToLinks.remove(id);</span>
+		}
+<span class="nc" id="L233">	}</span>
+
+	/**
+	 * Method to keep track of the sources associated to a target node. This
+	 * method also sets the new id to the target. Moreover, it is not required
+	 * that the target node is already registered. This will be done on the fly.
+	 */
+	public void registerLink(MindMapLink link)
+			throws java.lang.IllegalArgumentException {
+<span class="nc bnc" id="L242" title="All 4 branches missed.">		if ((link.getSource() == null) || (link.getTarget() == null)</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">				|| (link.getDestinationLabel() == null))</span>
+<span class="nc" id="L244">			throw new java.lang.IllegalArgumentException(</span>
+<span class="nc" id="L245">					&quot;Illegal link specification.&quot; + link);</span>
+<span class="nc" id="L246">		MindMapNode source = link.getSource();</span>
+<span class="nc" id="L247">		MindMapNode target = link.getTarget();</span>
+<span class="nc" id="L248">		logger.fine(&quot;Register link (&quot; + link + &quot;) from source node:&quot; + source</span>
+<span class="nc" id="L249">				+ &quot; to target &quot; + target);</span>
+<span class="nc" id="L250">		String id = _registerLinkTarget(target);</span>
+<span class="nc" id="L251">		Vector vec = getAssignedLinksVector(id);</span>
+		// already present?
+<span class="nc bnc" id="L253" title="All 2 branches missed.">		for (int i = 0; i &lt; vec.size(); ++i) {</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			if (vec.get(i) == link)</span>
+<span class="nc" id="L255">				return;</span>
+		}
+<span class="nc" id="L257">		vec.add(link);</span>
+<span class="nc" id="L258">		String uniqueId = link.getUniqueId();</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">		if (uniqueId == null) {</span>
+<span class="nc" id="L260">			((LinkAdapter) link).setUniqueId(generateUniqueLinkId(uniqueId));</span>
+<span class="nc" id="L261">			uniqueId = link.getUniqueId();</span>
+		}
+<span class="nc bnc" id="L263" title="All 2 branches missed.">		if (mIdToLink.containsKey(uniqueId)) {</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">			if (mIdToLink.get(uniqueId) != link) {</span>
+<span class="nc" id="L265">				logger.warning(&quot;link with duplicated unique id found:&quot; + link);</span>
+				// new id:
+<span class="nc" id="L267">				((LinkAdapter) link)</span>
+<span class="nc" id="L268">						.setUniqueId(generateUniqueLinkId(uniqueId));</span>
+			}
+		}
+<span class="nc" id="L271">		mIdToLink.put(link.getUniqueId(), link);</span>
+<span class="nc" id="L272">	}</span>
+
+	public void deregisterLink(MindMapLink link) {
+<span class="nc" id="L275">		MindMapNode target = link.getTarget();</span>
+<span class="nc" id="L276">		String id = _registerLinkTarget(target);</span>
+<span class="nc" id="L277">		Vector vec = getAssignedLinksVector(id);</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">		for (int i = vec.size() - 1; i &gt;= 0; --i) {</span>
+			// logger.fine(&quot;Test for equal node:&quot;+source+&quot; to vector(i) &quot; +
+			// vec.get(i));
+<span class="nc bnc" id="L281" title="All 2 branches missed.">			if (vec.get(i) == link) {</span>
+<span class="nc" id="L282">				vec.removeElementAt(i);</span>
+<span class="nc" id="L283">				logger.info(&quot;Deregister link  (&quot; + link + &quot;) from source node:&quot;</span>
+<span class="nc" id="L284">						+ link.getSource() + &quot; to target &quot; + target);</span>
+			}
+		}
+<span class="nc" id="L287">		mIdToLink.remove(link.getUniqueId());</span>
+<span class="nc" id="L288">	}</span>
+
+	/**
+	 * Reverses the getUniqueID method: searches for a link with the id given as
+	 * the argument.
+	 */
+	public MindMapLink getLinkForId(String pId) {
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (mIdToLink.containsKey(pId)) {</span>
+<span class="nc" id="L296">			return (MindMapLink) mIdToLink.get(pId);</span>
+		}
+<span class="nc" id="L298">		return null;</span>
+	}
+
+	/**
+	 * @return Returns a Vector of {@link MindMapNode}s that point to the given
+	 *         target node.
+	 */
+	public Vector /* of MindMapNode s */getAllSources(MindMapNode target) {
+		Vector returnValue;
+<span class="nc" id="L307">		returnValue = new Vector();</span>
+<span class="nc" id="L308">		String id = getState(target);</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">		if (id != null) {</span>
+<span class="nc" id="L310">			Vector vec = getAssignedLinksVector(id);</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">			for (int i = 0; i &lt; vec.size(); ++i) {</span>
+<span class="nc" id="L312">				returnValue.add(((MindMapLink) vec.get(i)).getSource());</span>
+			}
+		}
+<span class="nc" id="L315">		return returnValue;</span>
+	}
+
+	/** @return returns all links from or to this node. */
+	public Vector /* of MindMapLink s */getAllLinks(MindMapNode node) {
+<span class="nc" id="L320">		Vector returnValue = new Vector();</span>
+<span class="nc" id="L321">		returnValue.addAll(getAllLinksIntoMe(node));</span>
+<span class="nc" id="L322">		returnValue.addAll(getAllLinksFromMe(node));</span>
+		// Dimitry : logger is a performance killer here
+		// //logger.fine(&quot;All links  (&quot;+returnValue+&quot;) from  node:&quot;+node);
+<span class="nc" id="L325">		return returnValue;</span>
+	}
+
+	/** @return returns all links to this node as {@link MindMapLink} vector. */
+	public Vector getAllLinksIntoMe(MindMapNode target) {
+<span class="nc" id="L330">		Vector returnValue = new Vector();</span>
+<span class="nc" id="L331">		String id = getState(target);</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">		if (id != null) {</span>
+<span class="nc" id="L333">			Vector vec = getAssignedLinksVector(id);</span>
+			/* &quot;clone&quot; */
+<span class="nc" id="L335">			returnValue.addAll(vec);</span>
+		}
+<span class="nc" id="L337">		return returnValue;</span>
+	}
+
+	/** @return returns all links from this node as {@link MindMapLink} vector. */
+	public Vector getAllLinksFromMe(MindMapNode source) {
+<span class="nc" id="L342">		Vector returnValue = new Vector();</span>
+<span class="nc" id="L343">		Collection vec = (Collection) mSourceToLinks.get(source);</span>
+<span class="nc bnc" id="L344" title="All 2 branches missed.">		if (vec != null) {</span>
+<span class="nc" id="L345">			returnValue.addAll(vec);</span>
+		}
+<span class="nc" id="L347">		return returnValue;</span>
+	}
+
+	public String getLabel(MindMapNode target) {
+<span class="nc" id="L351">		return getState(target);</span>
+	}
+
+	public void registerLocalHyperlinkId(String pTargetId) {
+<span class="nc" id="L355">		mLocallyLinkedIds.add(pTargetId);</span>
+<span class="nc" id="L356">	}</span>
+
+	public boolean isTargetOfLocalHyperlinks(String pTargetId) {
+<span class="nc" id="L359">		return mLocallyLinkedIds.contains(pTargetId);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

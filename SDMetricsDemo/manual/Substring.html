@@ -1,0 +1,104 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Substring</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="SubElements.html">Prev</a> - <a href="DefSets.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > 8.1.9 Substring
+<hr>
+<h3><a name="Substring"></a>8.1.9 Substring</h3>
+
+UML tools sometimes mangle various bits of tool-specific information into
+a single string in the XMI file. For example, the coordinates of an element 
+in a diagram could be specified as follows:
+
+<ul>
+<li><tt>...&lt;geometry&gt;206, 320, 69, 13&lt;/geometry&gt;...</tt>, or
+<li><tt>... location="Left=620;Top=743;Right=732;Bottom=783" ...</tt>
+</ul>
+
+The <tt>substring</tt> procedure extract parts of such strings.
+Substring extraction is based on separator strings. In its simplest form,
+the source string is a comma-separated list of values such as 
+"206, 320, 69, 13". The following definition extracts the third value, "69",
+from the list:
+
+<pre>
+&lt;metric name="width_string" domain="diagramelement"&gt;
+  &lt;substring source="geometry" separator="','" position="2"/&gt;
+&lt;/metric&gt;
+</pre>
+
+Attribute <tt>source</tt> specifies a metric expression that yields the string we want to dissect.
+Attribute <tt>separator</tt> specifies the separator string, which can be of any length. This will
+usually be just a string constant, so it needs to be enclosed in single quotes (see <a href="Constants.html">Section&nbsp;8.5.1.1 "Constants"</a>).
+In our example, the separator is a single comma, which will split the string "206, 320, 69, 13" into
+four parts: "206", "320", "69", and "13". Leading or trailing whitespaces are automatically trimmed 
+from each substring.<p>
+
+With the <tt>position</tt> parameter, we tell SDMetrics which substring we want; the first 
+substring is at position 0, position 2 yields the third value, "69". With negative positions 
+-1, -2, etc. we can access the last substring, last but one substring, and so on, without having to
+know how many substrings there are. The default value for attribute <tt>position</tt>
+is -1 (return the last substring).<p>
+ 
+Often we do not want to use the substring as is, but process it further, e.g., retrieve its numerical
+value. We can do this directly with the optional attribute <tt>result</tt>. The following metric
+extracts the first value of a comma-separated list and converts it to a number:
+
+<pre>
+&lt;metric name="left" domain="diagramelement"&gt;
+  &lt;substring source="geometry" separator="','" position="0" <b>result="parsenumber(_value)"</b>/&gt;
+&lt;/metric&gt;
+</pre>
+
+Attribute <tt>result</tt> specifies a metric expression, variable <tt>_value</tt> contains the value
+of the substring we extracted.<p>
+
+In a source string such as "Left=620 ; Top=743 ; Right=732 ;", the beginning and end of
+the interesting substrings are delimited by different separators. The optional argument
+<tt>endseparator</tt> deals with this situation:
+
+<pre>
+&lt;metric name="top" domain="diagramelement"&gt;
+  &lt;substring source="location" separator="'Top='" <b>endseparator="';'"</b> 
+    result="parsenumber(_value)"/&gt;
+&lt;/metric&gt;
+</pre>
+
+The separator 'Top=' cuts up the source string into two substrings: "Left=620 ;" and
+"743 ; Right=732 ;". Of these, we use the second (last) substring, because the <tt>position</tt>
+argument is missing. The attribute <tt>endseparator="';'"</tt> instructs SDMetrics to cut off the 
+substring at the first semicolon. After automatic trimming of whitespace, this leaves us with the
+string "743", which then gets converted to the number 743.<p> 
+
+The "substring" procedure has the following attributes:
+<ul>
+<li><tt>source</tt> (required): Metric expression that yields the source string.
+<li><tt>separator</tt> (required): Metric expression that yields the separator string.
+<li><tt>position</tt> (optional): Metric expression that yields the index of the substring to use. 
+Uses the last substring when omitted.
+<li><tt>endseparator</tt> (optional): Metric expression that yields a separator string to further 
+delimit the substring to the right. Uses the entire substring when omitted.
+<li><tt>limit</tt> (optional): The maximum number of substrings returned. The last substring
+contains the remainder of the source string, even if there are further occurences of the separator
+string. When omitted, the number of substrings is determined by the number of occurences
+of the separator string. 
+<li><tt>result</tt> (optional): A metric expression to be applied to the
+resulting substring. The variable "_value" contains the value of the substring.
+When omitted, the substring itself is returned.
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="SubElements.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="DefSets.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.8 "Subelements"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.2 "Definition of Sets"</td></tr></table>
+
+</body>
+</html>

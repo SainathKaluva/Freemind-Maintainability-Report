@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>HookAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.extensions</a> &gt; <span class="el_source">HookAdapter.java</span></div><h1>HookAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 29.02.2004
+ *
+ */
+package freemind.extensions;
+
+import java.net.URL;
+import java.util.Properties;
+
+import freemind.modes.ModeController;
+
+/**
+ * Implments MindMapHook as an Adapter class. Implementation is straight
+ * forward.
+ * 
+ * @author foltin
+ * 
+ */
+public class HookAdapter implements MindMapHook {
+
+	private String name;
+	private Properties properties;
+	private ModeController controller;
+
+	// Logging:
+	protected java.util.logging.Logger logger;
+	/**
+	 * Stores the plugin base class as declared by the
+	 * plugin_registration/isBaseClass attribute.
+	 */
+	private PluginBaseClassSearcher baseClass;
+
+	/**
+	 */
+<span class="nc" id="L54">	public HookAdapter() {</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (logger == null)</span>
+<span class="nc" id="L56">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L57">					this.getClass().getName());</span>
+<span class="nc" id="L58">		baseClass = null;</span>
+<span class="nc" id="L59">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.NodeHook#getName()
+	 */
+	public String getName() {
+<span class="nc" id="L67">		return this.name;</span>
+	}
+
+	public void setName(String name) {
+<span class="nc" id="L71">		this.name = name;</span>
+<span class="nc" id="L72">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.NodeHook#startupMapHook(java.lang.String)
+	 */
+	public void startupMapHook() {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L82">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.modes.NodeHook#shutdownMapHook()
+	 */
+	public void shutdownMapHook() {
+<span class="nc" id="L90">		controller = null;</span>
+<span class="nc" id="L91">	}</span>
+
+	/**
+	 */
+	protected ModeController getController() {
+<span class="nc" id="L96">		return controller;</span>
+	}
+
+	/**
+	 */
+	protected Properties getProperties() {
+<span class="nc" id="L102">		return properties;</span>
+	}
+
+	/**
+	 */
+	public void setProperties(Properties properties) {
+<span class="nc" id="L108">		this.properties = properties;</span>
+<span class="nc" id="L109">	}</span>
+
+	/**
+	 */
+	public void setController(ModeController controller) {
+<span class="nc" id="L114">		this.controller = controller;</span>
+<span class="nc" id="L115">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.MindMapHook#getResourceString(java.lang.String)
+	 */
+	public String getResourceString(String property) {
+<span class="nc" id="L123">		String result = properties.getProperty(property);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (result == null) {</span>
+<span class="nc" id="L125">			result = getController().getText(property);</span>
+		}
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (result == null) {</span>
+<span class="nc" id="L128">			logger.warning(&quot;The following property was not found:&quot; + property);</span>
+		}
+<span class="nc" id="L130">		return result;</span>
+	}
+
+	public URL getResource(String resourceName) {
+<span class="nc" id="L134">		return this.getClass().getClassLoader().getResource(resourceName);</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.MindMapHook#getPluginBaseClass()
+	 */
+	public Object getPluginBaseClass() {
+<span class="nc" id="L143">		return baseClass.getPluginBaseObject();</span>
+	}
+
+	public void setPluginBaseClass(PluginBaseClassSearcher baseClass) {
+<span class="nc" id="L147">		this.baseClass = baseClass;</span>
+<span class="nc" id="L148">	}</span>
+
+	/**
+	 * After tree node change, the focus must be obtained as it is invalid.
+	 */
+	protected void obtainFocusForSelected() {
+		// Focus fix
+<span class="nc" id="L155">		getController().getController().obtainFocusForSelected();</span>
+<span class="nc" id="L156">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

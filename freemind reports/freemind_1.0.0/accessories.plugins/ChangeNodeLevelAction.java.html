@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ChangeNodeLevelAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">ChangeNodeLevelAction.java</span></div><h1>ChangeNodeLevelAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 by Christian Foltin
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+/*
+ * Created on 19.02.2006
+ *
+ */
+
+package accessories.plugins;
+
+import java.awt.datatransfer.Transferable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
+
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+
+/**
+ * @author foltin
+ */
+public class ChangeNodeLevelAction extends MindMapNodeHookAdapter {
+
+	/**
+	 *
+	 */
+	public ChangeNodeLevelAction() {
+<span class="nc" id="L47">		super();</span>
+<span class="nc" id="L48">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.NodeHook#invoke(freemind.modes.MindMapNode,
+	 * java.util.List)
+	 */
+	public void invoke(MindMapNode rootNode) {
+		// we dont need node.
+		MindMapNode selectedNode;
+		List selectedNodes;
+		{
+<span class="nc" id="L61">			MindMapNode focussed = getMindMapController().getSelected();</span>
+<span class="nc" id="L62">			List selecteds = getMindMapController().getSelecteds();</span>
+<span class="nc" id="L63">			selectedNode = focussed;</span>
+<span class="nc" id="L64">			selectedNodes = selecteds;</span>
+		}
+
+		// bug fix: sort to make independent by user's selection:
+<span class="nc" id="L68">		getMindMapController().sortNodesByDepth(selectedNodes);</span>
+
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (selectedNode.isRoot()) {</span>
+<span class="nc" id="L71">			getMindMapController().getController().errorMessage(</span>
+<span class="nc" id="L72">					getResourceString(&quot;cannot_add_parent_to_root&quot;));</span>
+<span class="nc" id="L73">			return;</span>
+		}
+
+<span class="nc" id="L76">		boolean upwards = Tools.safeEquals(&quot;left&quot;,</span>
+<span class="nc" id="L77">				getResourceString(&quot;action_type&quot;)) != selectedNode.isLeft();</span>
+		// Make sure the selected nodes all have the same parent
+		// (this restriction is to simplify the action, and could
+		// possibly be removed in the future, when we have undo)
+		// Also make sure that none of the selected nodes are the root node
+<span class="nc" id="L82">		MindMapNode selectedParent = selectedNode.getParentNode();</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		for (Iterator it = selectedNodes.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L84">			MindMapNode node = (MindMapNode) it.next();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">			if (node.getParentNode() != selectedParent) {</span>
+<span class="nc" id="L86">				getMindMapController().getController().errorMessage(</span>
+<span class="nc" id="L87">						getResourceString(&quot;cannot_add_parent_diff_parents&quot;));</span>
+<span class="nc" id="L88">				return;</span>
+			}
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (node == rootNode) {</span>
+<span class="nc" id="L91">				getMindMapController().getController().errorMessage(</span>
+<span class="nc" id="L92">						getResourceString(&quot;cannot_add_parent_to_root&quot;));</span>
+<span class="nc" id="L93">				return;</span>
+			}
+		}
+
+		// collect node ids:
+<span class="nc" id="L98">		String selectedNodeId = selectedNode.getObjectId(getController());</span>
+		// WORKAROUND: Make target of local hyperlinks for the case, that ids
+		// are not stored persistently.
+<span class="nc" id="L101">		getMap().getLinkRegistry().registerLocalHyperlinkId(selectedNodeId);</span>
+<span class="nc" id="L102">		Vector selectedNodesId = new Vector();</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		for (Iterator iter = selectedNodes.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L104">			MindMapNode node = (MindMapNode) iter.next();</span>
+<span class="nc" id="L105">			String nodeId = node.getObjectId(getController());</span>
+			// WORKAROUND: Make target of local hyperlinks for the case, that
+			// ids are not stored persistently.
+<span class="nc" id="L108">			getMap().getLinkRegistry().registerLocalHyperlinkId(nodeId);</span>
+<span class="nc" id="L109">			selectedNodesId.add(nodeId);</span>
+		}
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (upwards) {</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			if (selectedParent.isRoot()) {</span>
+				// change side of the items:
+<span class="nc" id="L115">				boolean isLeft = selectedNode.isLeft();</span>
+<span class="nc" id="L116">				Transferable copy = getMindMapController().cut(selectedNodes);</span>
+<span class="nc" id="L117">				getMindMapController().paste(copy, selectedParent, false,</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">						!isLeft);</span>
+<span class="nc" id="L119">				select(selectedNodeId, selectedNodesId);</span>
+<span class="nc" id="L120">				return;</span>
+			}
+			// determine child pos of parent
+<span class="nc" id="L123">			MindMapNode grandParent = selectedParent.getParentNode();</span>
+<span class="nc" id="L124">			int parentPosition = grandParent.getChildPosition(selectedParent);</span>
+<span class="nc" id="L125">			boolean isLeft = selectedParent.isLeft();</span>
+<span class="nc" id="L126">			Transferable copy = getMindMapController().cut(selectedNodes);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (parentPosition == grandParent.getChildCount() - 1) {</span>
+<span class="nc" id="L128">				getMindMapController().paste(copy, grandParent, false, isLeft);</span>
+<span class="nc" id="L129">			} else {</span>
+<span class="nc" id="L130">				getMindMapController().paste(</span>
+<span class="nc" id="L131">						copy,</span>
+<span class="nc" id="L132">						(MindMapNode) grandParent</span>
+<span class="nc" id="L133">								.getChildAt(parentPosition + 1), true, isLeft);</span>
+			}
+<span class="nc" id="L135">			select(selectedNodeId, selectedNodesId);</span>
+
+<span class="nc" id="L137">		} else {</span>
+<span class="nc" id="L138">			int ownPosition = selectedParent.getChildPosition(selectedNode);</span>
+			// find node above the own nodes:
+<span class="nc" id="L140">			MindMapNode directSibling = null;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">			for (int i = ownPosition - 1; i &gt;= 0; --i) {</span>
+<span class="nc" id="L142">				MindMapNode sibling = (MindMapNode) selectedParent</span>
+<span class="nc" id="L143">						.getChildAt(i);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">				if ((!selectedNodes.contains(sibling))</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">						&amp;&amp; selectedNode.isLeft() == sibling.isLeft()) {</span>
+<span class="nc" id="L146">					directSibling = sibling;</span>
+<span class="nc" id="L147">					break;</span>
+				}
+			}
+<span class="nc bnc" id="L150" title="All 2 branches missed.">			if (directSibling == null) {</span>
+				// start searching for a sibling after the selected block:
+<span class="nc bnc" id="L152" title="All 2 branches missed.">				for (int i = ownPosition + 1; i &lt; selectedParent</span>
+<span class="nc" id="L153">						.getChildCount(); ++i) {</span>
+<span class="nc" id="L154">					MindMapNode sibling = (MindMapNode) selectedParent</span>
+<span class="nc" id="L155">							.getChildAt(i);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">					if ((!selectedNodes.contains(sibling))</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">							&amp;&amp; selectedNode.isLeft() == sibling.isLeft()) {</span>
+<span class="nc" id="L158">						directSibling = sibling;</span>
+<span class="nc" id="L159">						break;</span>
+					}
+				}
+			}
+<span class="nc bnc" id="L163" title="All 4 branches missed.">			if (directSibling != null &amp;&amp; directSibling.isWriteable()) {</span>
+				// sibling on the same side found:
+<span class="nc" id="L165">				Transferable copy = getMindMapController().cut(selectedNodes);</span>
+<span class="nc" id="L166">				getMindMapController().paste(copy, directSibling, false,</span>
+<span class="nc" id="L167">						directSibling.isLeft());</span>
+<span class="nc" id="L168">				select(selectedNodeId, selectedNodesId);</span>
+			}
+		}
+<span class="nc" id="L171">		obtainFocusForSelected();</span>
+<span class="nc" id="L172">	}</span>
+
+	private void select(String selectedNodeId, List selectedNodesIds) {
+		// get new nodes by object id:
+<span class="nc" id="L176">		MindMapNode newInstanceOfSelectedNode = getMindMapController()</span>
+<span class="nc" id="L177">				.getNodeFromID(selectedNodeId);</span>
+<span class="nc" id="L178">		List newSelecteds = new LinkedList();</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		for (Iterator iter = selectedNodesIds.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L180">			String nodeId = (String) iter.next();</span>
+<span class="nc" id="L181">			newSelecteds.add(getMindMapController().getNodeFromID(nodeId));</span>
+		}
+<span class="nc" id="L183">		getMindMapController().select(newInstanceOfSelectedNode, newSelecteds);</span>
+<span class="nc" id="L184">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

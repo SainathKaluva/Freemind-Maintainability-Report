@@ -1,0 +1,1140 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>JDayChooser.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.time</a> &gt; <span class="el_source">JDayChooser.java</span></div><h1>JDayChooser.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*</span>
+ *  JDayChooser.java  - A bean for choosing a day
+ *  Copyright (C) 2004 Kai Toedter
+ *  kai@toedter.com
+ *  www.toedter.com
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package accessories.plugins.time;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
+import java.text.DateFormatSymbols;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Locale;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.UIManager;
+
+import freemind.main.Tools;
+
+/**
+ * JDayChooser is a bean for choosing a day.
+ * 
+ * @author Kai Toedter
+ * @version $LastChangedRevision: 104 $
+ * @version $LastChangedDate: 2006-06-04 15:20:45 +0200 (So, 04 Jun 2006) $
+ */
+public class JDayChooser extends JPanel implements ActionListener, KeyListener,
+		FocusListener {
+	public static final String DAY_PROPERTY = &quot;day&quot;;
+
+	private static final long serialVersionUID = 5876398337018781820L;
+
+	protected JButton[] days;
+
+	protected JButton[] weeks;
+
+	protected JButton selectedDay;
+
+	protected JPanel weekPanel;
+
+	protected JPanel dayPanel;
+
+	protected int day;
+
+	protected Color oldDayBackgroundColor;
+
+	protected Color selectedColor;
+
+	protected Color sundayForeground;
+
+	protected Color weekdayForeground;
+
+	protected Color decorationBackgroundColor;
+
+	protected String[] dayNames;
+
+	protected Calendar calendar;
+
+	protected Calendar today;
+
+	protected Locale locale;
+
+	protected boolean initialized;
+
+	protected boolean weekOfYearVisible;
+
+<span class="nc" id="L96">	protected boolean decorationBackgroundVisible = true;</span>
+
+	protected boolean decorationBordersVisible;
+
+	protected boolean dayBordersVisible;
+
+	private boolean alwaysFireDayProperty;
+
+	protected Date minSelectableDate;
+
+	protected Date maxSelectableDate;
+
+	protected Date defaultMinSelectableDate;
+
+	protected Date defaultMaxSelectableDate;
+
+	protected int maxDayCharacters;
+
+<span class="nc" id="L114">	protected JMonthChooser monthChooser = null;</span>
+<span class="nc" id="L115">	protected JYearChooser yearChooser = null;</span>
+
+	public void setMonthChooser(JMonthChooser monthChooser) {
+<span class="nc" id="L118">		this.monthChooser = monthChooser;</span>
+<span class="nc" id="L119">	}</span>
+
+	public void setYearChooser(JYearChooser yearChooser) {
+<span class="nc" id="L122">		this.yearChooser = yearChooser;</span>
+<span class="nc" id="L123">	}</span>
+
+	/**
+	 * Default JDayChooser constructor.
+	 */
+	public JDayChooser() {
+<span class="nc" id="L129">		this(false);</span>
+<span class="nc" id="L130">	}</span>
+
+	/**
+	 * JDayChooser constructor.
+	 * 
+	 * @param weekOfYearVisible
+	 *            true, if the weeks of a year shall be shown
+	 */
+<span class="nc" id="L138">	public JDayChooser(boolean weekOfYearVisible) {</span>
+<span class="nc" id="L139">		setName(&quot;JDayChooser&quot;);</span>
+<span class="nc" id="L140">		setBackground(Color.blue);</span>
+<span class="nc" id="L141">		this.weekOfYearVisible = weekOfYearVisible;</span>
+<span class="nc" id="L142">		locale = Locale.getDefault();</span>
+<span class="nc" id="L143">		days = new JButton[49];</span>
+<span class="nc" id="L144">		selectedDay = null;</span>
+<span class="nc" id="L145">		calendar = Calendar.getInstance(locale);</span>
+<span class="nc" id="L146">		today = (Calendar) calendar.clone();</span>
+
+<span class="nc" id="L148">		setLayout(new BorderLayout());</span>
+
+<span class="nc" id="L150">		dayPanel = new JPanel();</span>
+<span class="nc" id="L151">		dayPanel.setLayout(new GridLayout(7, 7));</span>
+
+<span class="nc" id="L153">		sundayForeground = new Color(164, 0, 0);</span>
+<span class="nc" id="L154">		weekdayForeground = new Color(0, 90, 164);</span>
+
+		// decorationBackgroundColor = new Color(194, 211, 252);
+		// decorationBackgroundColor = new Color(206, 219, 246);
+<span class="nc" id="L158">		decorationBackgroundColor = new Color(210, 228, 238);</span>
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		for (int y = 0; y &lt; 7; y++) {</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			for (int x = 0; x &lt; 7; x++) {</span>
+<span class="nc" id="L162">				int index = x + (7 * y);</span>
+
+<span class="nc bnc" id="L164" title="All 2 branches missed.">				if (y == 0) {</span>
+					// Create a button that doesn't react on clicks or focus
+					// changes.
+					// Thanks to Thomas Schaefer for the focus hint :)
+<span class="nc" id="L168">					days[index] = new DecoratorButton();</span>
+<span class="nc" id="L169">				} else {</span>
+<span class="nc" id="L170">					days[index] = new JButton(&quot;x&quot;) {</span>
+						private static final long serialVersionUID = -7433645992591669725L;
+
+						public void paint(Graphics g) {
+<span class="nc bnc" id="L174" title="All 4 branches missed.">							if (Tools.isWindows()||Tools.isMacOsX()) {</span>
+								// this is a hack to get the background painted
+								// when using Windows Look &amp; Feel
+<span class="nc bnc" id="L177" title="All 2 branches missed.">								if (selectedDay == this) {</span>
+<span class="nc" id="L178">									g.setColor(selectedColor);</span>
+<span class="nc" id="L179">									g.fillRect(0, 0, getWidth(), getHeight());</span>
+								}
+							}
+<span class="nc" id="L182">							super.paint(g);</span>
+<span class="nc" id="L183">						}</span>
+
+					};
+<span class="nc" id="L186">					addListeners(index);</span>
+				}
+
+<span class="nc" id="L189">				days[index].setMargin(new Insets(0, 0, 0, 0));</span>
+<span class="nc" id="L190">				days[index].setFocusPainted(false);</span>
+<span class="nc" id="L191">				dayPanel.add(days[index]);</span>
+			}
+		}
+
+<span class="nc" id="L195">		weekPanel = new JPanel();</span>
+<span class="nc" id="L196">		weekPanel.setLayout(new GridLayout(7, 1));</span>
+<span class="nc" id="L197">		weeks = new JButton[7];</span>
+
+<span class="nc bnc" id="L199" title="All 2 branches missed.">		for (int i = 0; i &lt; 7; i++) {</span>
+<span class="nc" id="L200">			weeks[i] = new DecoratorButton();</span>
+<span class="nc" id="L201">			weeks[i].setMargin(new Insets(0, 0, 0, 0));</span>
+<span class="nc" id="L202">			weeks[i].setFocusPainted(false);</span>
+<span class="nc" id="L203">			weeks[i].setForeground(new Color(100, 100, 100));</span>
+
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			if (i != 0) {</span>
+<span class="nc" id="L206">				weeks[i].setText(&quot;0&quot; + (i + 1));</span>
+			}
+
+<span class="nc" id="L209">			weekPanel.add(weeks[i]);</span>
+		}
+
+<span class="nc" id="L212">		Calendar tmpCalendar = Calendar.getInstance();</span>
+<span class="nc" id="L213">		tmpCalendar.set(1, 0, 1, 1, 1);</span>
+<span class="nc" id="L214">		defaultMinSelectableDate = tmpCalendar.getTime();</span>
+<span class="nc" id="L215">		minSelectableDate = defaultMinSelectableDate;</span>
+<span class="nc" id="L216">		tmpCalendar.set(9999, 0, 1, 1, 1);</span>
+<span class="nc" id="L217">		defaultMaxSelectableDate = tmpCalendar.getTime();</span>
+<span class="nc" id="L218">		maxSelectableDate = defaultMaxSelectableDate;</span>
+
+<span class="nc" id="L220">		init();</span>
+
+<span class="nc" id="L222">		setDay(Calendar.getInstance().get(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L223">		add(dayPanel, BorderLayout.CENTER);</span>
+
+<span class="nc bnc" id="L225" title="All 2 branches missed.">		if (weekOfYearVisible) {</span>
+<span class="nc" id="L226">			add(weekPanel, BorderLayout.WEST);</span>
+		}
+<span class="nc" id="L228">		initialized = true;</span>
+<span class="nc" id="L229">		updateUI();</span>
+<span class="nc" id="L230">	}</span>
+
+	public void addListeners(int index) {
+<span class="nc" id="L233">		days[index].addActionListener(this);</span>
+<span class="nc" id="L234">		days[index].addKeyListener(this);</span>
+<span class="nc" id="L235">		days[index].addFocusListener(this);</span>
+<span class="nc" id="L236">	}</span>
+
+	/**
+	 * Initilizes the locale specific names for the days of the week.
+	 */
+	protected void init() {
+<span class="nc" id="L242">		JButton testButton = new JButton();</span>
+<span class="nc" id="L243">		oldDayBackgroundColor = testButton.getBackground();</span>
+<span class="nc" id="L244">		selectedColor = new Color(160, 160, 160);</span>
+
+<span class="nc" id="L246">		Date date = calendar.getTime();</span>
+<span class="nc" id="L247">		calendar = Calendar.getInstance(locale);</span>
+<span class="nc" id="L248">		calendar.setTime(date);</span>
+
+<span class="nc" id="L250">		drawDayNames();</span>
+<span class="nc" id="L251">		drawDays();</span>
+<span class="nc" id="L252">	}</span>
+
+	/**
+	 * Draws the day names of the day columnes.
+	 */
+	private void drawDayNames() {
+<span class="nc" id="L258">		int firstDayOfWeek = calendar.getFirstDayOfWeek();</span>
+<span class="nc" id="L259">		DateFormatSymbols dateFormatSymbols = new DateFormatSymbols(locale);</span>
+<span class="nc" id="L260">		dayNames = dateFormatSymbols.getShortWeekdays();</span>
+
+<span class="nc" id="L262">		int day = firstDayOfWeek;</span>
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		for (int i = 0; i &lt; 7; i++) {</span>
+<span class="nc bnc" id="L265" title="All 4 branches missed.">			if (maxDayCharacters &gt; 0 &amp;&amp; maxDayCharacters &lt; 5) {</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">				if (dayNames[day].length() &gt;= maxDayCharacters) {</span>
+<span class="nc" id="L267">					dayNames[day] = dayNames[day]</span>
+<span class="nc" id="L268">							.substring(0, maxDayCharacters);</span>
+				}
+			}
+
+<span class="nc" id="L272">			days[i].setText(dayNames[day]);</span>
+
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (day == 1) {</span>
+<span class="nc" id="L275">				days[i].setForeground(sundayForeground);</span>
+<span class="nc" id="L276">			} else {</span>
+<span class="nc" id="L277">				days[i].setForeground(weekdayForeground);</span>
+			}
+
+<span class="nc bnc" id="L280" title="All 2 branches missed.">			if (day &lt; 7) {</span>
+<span class="nc" id="L281">				day++;</span>
+<span class="nc" id="L282">			} else {</span>
+<span class="nc" id="L283">				day -= 6;</span>
+			}
+		}
+<span class="nc" id="L286">	}</span>
+
+	/**
+	 * Initializes both day names and weeks of the year.
+	 */
+	protected void initDecorations() {
+<span class="nc bnc" id="L292" title="All 2 branches missed.">		for (int x = 0; x &lt; 7; x++) {</span>
+<span class="nc" id="L293">			days[x].setContentAreaFilled(decorationBackgroundVisible);</span>
+<span class="nc" id="L294">			days[x].setBorderPainted(decorationBordersVisible);</span>
+<span class="nc" id="L295">			days[x].invalidate();</span>
+<span class="nc" id="L296">			days[x].repaint();</span>
+<span class="nc" id="L297">			weeks[x].setContentAreaFilled(decorationBackgroundVisible);</span>
+<span class="nc" id="L298">			weeks[x].setBorderPainted(decorationBordersVisible);</span>
+<span class="nc" id="L299">			weeks[x].invalidate();</span>
+<span class="nc" id="L300">			weeks[x].repaint();</span>
+		}
+<span class="nc" id="L302">	}</span>
+
+	/**
+	 * Hides and shows the week buttons.
+	 */
+	protected void drawWeeks() {
+<span class="nc" id="L308">		Calendar tmpCalendar = (Calendar) calendar.clone();</span>
+
+<span class="nc bnc" id="L310" title="All 2 branches missed.">		for (int i = 1; i &lt; 7; i++) {</span>
+<span class="nc" id="L311">			tmpCalendar.set(Calendar.DAY_OF_MONTH, (i * 7) - 6);</span>
+
+<span class="nc" id="L313">			int week = tmpCalendar.get(Calendar.WEEK_OF_YEAR);</span>
+<span class="nc" id="L314">			String buttonText = Integer.toString(week);</span>
+
+<span class="nc bnc" id="L316" title="All 2 branches missed.">			if (week &lt; 10) {</span>
+<span class="nc" id="L317">				buttonText = &quot;0&quot; + buttonText;</span>
+			}
+
+<span class="nc" id="L320">			weeks[i].setText(buttonText);</span>
+
+<span class="nc bnc" id="L322" title="All 4 branches missed.">			if ((i == 5) || (i == 6)) {</span>
+<span class="nc" id="L323">				weeks[i].setVisible(days[i * 7].isVisible());</span>
+			}
+		}
+<span class="nc" id="L326">	}</span>
+
+	/**
+	 * Hides and shows the day buttons.
+	 */
+	protected void drawDays() {
+<span class="nc" id="L332">		Calendar tmpCalendar = (Calendar) calendar.clone();</span>
+<span class="nc" id="L333">		tmpCalendar.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L334">		tmpCalendar.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L335">		tmpCalendar.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L336">		tmpCalendar.set(Calendar.MILLISECOND, 0);</span>
+
+<span class="nc" id="L338">		Calendar minCal = Calendar.getInstance();</span>
+<span class="nc" id="L339">		minCal.setTime(minSelectableDate);</span>
+<span class="nc" id="L340">		minCal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L341">		minCal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L342">		minCal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L343">		minCal.set(Calendar.MILLISECOND, 0);</span>
+
+<span class="nc" id="L345">		Calendar maxCal = Calendar.getInstance();</span>
+<span class="nc" id="L346">		maxCal.setTime(maxSelectableDate);</span>
+<span class="nc" id="L347">		maxCal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L348">		maxCal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L349">		maxCal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L350">		maxCal.set(Calendar.MILLISECOND, 0);</span>
+
+<span class="nc" id="L352">		int firstDayOfWeek = tmpCalendar.getFirstDayOfWeek();</span>
+<span class="nc" id="L353">		tmpCalendar.set(Calendar.DAY_OF_MONTH, 1);</span>
+
+<span class="nc" id="L355">		int firstDay = tmpCalendar.get(Calendar.DAY_OF_WEEK) - firstDayOfWeek;</span>
+
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		if (firstDay &lt; 0) {</span>
+<span class="nc" id="L358">			firstDay += 7;</span>
+		}
+
+		int i;
+
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		for (i = 0; i &lt; firstDay; i++) {</span>
+<span class="nc" id="L364">			days[i + 7].setVisible(false);</span>
+<span class="nc" id="L365">			days[i + 7].setText(&quot;&quot;);</span>
+		}
+
+<span class="nc" id="L368">		tmpCalendar.add(Calendar.MONTH, 1);</span>
+
+<span class="nc" id="L370">		Date firstDayInNextMonth = tmpCalendar.getTime();</span>
+<span class="nc" id="L371">		tmpCalendar.add(Calendar.MONTH, -1);</span>
+
+<span class="nc" id="L373">		Date day = tmpCalendar.getTime();</span>
+<span class="nc" id="L374">		int n = 0;</span>
+<span class="nc" id="L375">		Color foregroundColor = getForeground();</span>
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">		while (day.before(firstDayInNextMonth)) {</span>
+<span class="nc" id="L378">			days[i + n + 7].setText(Integer.toString(n + 1));</span>
+<span class="nc" id="L379">			days[i + n + 7].setVisible(true);</span>
+
+<span class="nc bnc" id="L381" title="All 2 branches missed.">			if ((tmpCalendar.get(Calendar.DAY_OF_YEAR) == today</span>
+<span class="nc" id="L382">					.get(Calendar.DAY_OF_YEAR))</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">					&amp;&amp; (tmpCalendar.get(Calendar.YEAR) == today</span>
+<span class="nc" id="L384">							.get(Calendar.YEAR))) {</span>
+<span class="nc" id="L385">				days[i + n + 7].setForeground(sundayForeground);</span>
+<span class="nc" id="L386">			} else {</span>
+<span class="nc" id="L387">				days[i + n + 7].setForeground(foregroundColor);</span>
+			}
+
+<span class="nc bnc" id="L390" title="All 2 branches missed.">			if ((n + 1) == this.day) {</span>
+<span class="nc" id="L391">				days[i + n + 7].setBackground(selectedColor);</span>
+<span class="nc" id="L392">				selectedDay = days[i + n + 7];</span>
+<span class="nc" id="L393">			} else {</span>
+<span class="nc" id="L394">				days[i + n + 7].setBackground(oldDayBackgroundColor);</span>
+			}
+
+<span class="nc bnc" id="L397" title="All 4 branches missed.">			if (tmpCalendar.before(minCal) || tmpCalendar.after(maxCal)) {</span>
+<span class="nc" id="L398">				days[i + n + 7].setEnabled(false);</span>
+<span class="nc" id="L399">			} else {</span>
+<span class="nc" id="L400">				days[i + n + 7].setEnabled(true);</span>
+			}
+
+<span class="nc" id="L403">			n++;</span>
+<span class="nc" id="L404">			tmpCalendar.add(Calendar.DATE, 1);</span>
+<span class="nc" id="L405">			day = tmpCalendar.getTime();</span>
+		}
+
+<span class="nc bnc" id="L408" title="All 2 branches missed.">		for (int k = n + i + 7; k &lt; 49; k++) {</span>
+<span class="nc" id="L409">			days[k].setVisible(false);</span>
+<span class="nc" id="L410">			days[k].setText(&quot;&quot;);</span>
+			/* this was a try to display the days of the adjacent months, too,
+			 * but some points are missing: 
+			 * - only the last week should be filled
+			 *  
+			 */
+//			days[k].setVisible(true);
+//			days[k].setEnabled(false);
+//			days[k].setText(Integer.toString(k-(n+i+6)));
+		}
+
+<span class="nc" id="L421">		drawWeeks();</span>
+<span class="nc" id="L422">	}</span>
+
+	/**
+	 * Returns the locale.
+	 * 
+	 * @return the locale value
+	 * 
+	 * @see #setLocale
+	 */
+	public Locale getLocale() {
+<span class="nc" id="L432">		return locale;</span>
+	}
+
+	/**
+	 * Sets the locale.
+	 * 
+	 * @param locale
+	 *            the new locale value
+	 * 
+	 * @see #getLocale
+	 */
+	public void setLocale(Locale locale) {
+<span class="nc bnc" id="L444" title="All 2 branches missed.">		if (!initialized) {</span>
+<span class="nc" id="L445">			super.setLocale(locale);</span>
+<span class="nc" id="L446">		} else {</span>
+<span class="nc" id="L447">			this.locale = locale;</span>
+<span class="nc" id="L448">			super.setLocale(locale);</span>
+<span class="nc" id="L449">			init();</span>
+		}
+<span class="nc" id="L451">	}</span>
+
+	/**
+	 * Sets the day. This is a bound property.
+	 * 
+	 * @param d
+	 *            the day
+	 * 
+	 * @see #getDay
+	 */
+	public void setDay(int d) {
+<span class="nc bnc" id="L462" title="All 2 branches missed.">		if (d &lt; 1) {</span>
+<span class="nc" id="L463">			d = 1;</span>
+		}
+
+<span class="nc" id="L466">		int maxDaysInMonth = getDaysInMonth();</span>
+
+<span class="nc bnc" id="L468" title="All 2 branches missed.">		if (d &gt; maxDaysInMonth) {</span>
+<span class="nc" id="L469">			d = maxDaysInMonth;</span>
+		}
+
+<span class="nc" id="L472">		int oldDay = day;</span>
+<span class="nc" id="L473">		day = d;</span>
+
+<span class="nc bnc" id="L475" title="All 2 branches missed.">		if (selectedDay != null) {</span>
+<span class="nc" id="L476">			selectedDay.setBackground(oldDayBackgroundColor);</span>
+<span class="nc" id="L477">			selectedDay.repaint();</span>
+		}
+
+<span class="nc bnc" id="L480" title="All 2 branches missed.">		for (int i = 7; i &lt; 49; i++) {</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">			if (days[i].getText().equals(Integer.toString(day))) {</span>
+<span class="nc" id="L482">				selectedDay = days[i];</span>
+<span class="nc" id="L483">				selectedDay.setBackground(selectedColor);</span>
+<span class="nc" id="L484">				break;</span>
+			}
+		}
+		
+<span class="nc bnc" id="L488" title="All 2 branches missed.">		if (alwaysFireDayProperty) {</span>
+<span class="nc" id="L489">			firePropertyChange(DAY_PROPERTY, 0, day);</span>
+<span class="nc" id="L490">		} else {</span>
+<span class="nc" id="L491">			firePropertyChange(DAY_PROPERTY, oldDay, day);</span>
+		}
+<span class="nc" id="L493">	}</span>
+
+	/**
+	 * this is needed for JDateChooser.
+	 * 
+	 * @param alwaysFire
+	 *            true, if day property shall be fired every time a day is
+	 *            chosen.
+	 */
+	public void setAlwaysFireDayProperty(boolean alwaysFire) {
+<span class="nc" id="L503">		alwaysFireDayProperty = alwaysFire;</span>
+<span class="nc" id="L504">	}</span>
+
+	/**
+	 * Returns the selected day.
+	 * 
+	 * @return the day value
+	 * 
+	 * @see #setDay
+	 */
+	public int getDay() {
+<span class="nc" id="L514">		return day;</span>
+	}
+
+	/**
+	 * Sets a specific month. This is needed for correct graphical
+	 * representation of the days.
+	 * 
+	 * @param month
+	 *            the new month
+	 */
+	public void setMonth(int month) {
+<span class="nc" id="L525">		int maxDays = getDaysInMonth();</span>
+<span class="nc" id="L526">		calendar.set(Calendar.MONTH, month);</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">		if (maxDays == day) {</span>
+<span class="nc" id="L528">			day = getDaysInMonth();</span>
+		}
+
+		// Since the day does not change,
+		// don't fire a day property change, even if alwaysFireDayProperty is
+		// true :)
+<span class="nc" id="L534">		boolean storedMode = alwaysFireDayProperty;</span>
+<span class="nc" id="L535">		alwaysFireDayProperty = false;</span>
+<span class="nc" id="L536">		setDay(day);</span>
+<span class="nc" id="L537">		alwaysFireDayProperty = storedMode;</span>
+
+<span class="nc" id="L539">		drawDays();</span>
+<span class="nc" id="L540">	}</span>
+
+	public int getDaysInMonth() {
+<span class="nc" id="L543">		return calendar.getActualMaximum(Calendar.DAY_OF_MONTH);</span>
+	}
+
+	/**
+	 * Sets a specific year. This is needed for correct graphical representation
+	 * of the days.
+	 * 
+	 * @param year
+	 *            the new year
+	 */
+	public void setYear(int year) {
+<span class="nc" id="L554">		calendar.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L555">		drawDays();</span>
+<span class="nc" id="L556">	}</span>
+
+	/**
+	 * Sets a specific calendar. This is needed for correct graphical
+	 * representation of the days.
+	 * 
+	 * @param calendar
+	 *            the new calendar
+	 */
+	public void setCalendar(Calendar calendar) {
+<span class="nc" id="L566">		this.calendar = calendar;</span>
+<span class="nc" id="L567">		drawDays();</span>
+<span class="nc" id="L568">	}</span>
+
+	/**
+	 * Sets the font property.
+	 * 
+	 * @param font
+	 *            the new font
+	 */
+	public void setFont(Font font) {
+<span class="nc bnc" id="L577" title="All 2 branches missed.">		if (days != null) {</span>
+<span class="nc bnc" id="L578" title="All 2 branches missed.">			for (int i = 0; i &lt; 49; i++) {</span>
+<span class="nc" id="L579">				days[i].setFont(font);</span>
+			}
+		}
+<span class="nc bnc" id="L582" title="All 2 branches missed.">		if (weeks != null) {</span>
+<span class="nc bnc" id="L583" title="All 2 branches missed.">			for (int i = 0; i &lt; 7; i++) {</span>
+<span class="nc" id="L584">				weeks[i].setFont(font);</span>
+			}
+		}
+<span class="nc" id="L587">	}</span>
+
+	/**
+	 * Sets the foregroundColor color.
+	 * 
+	 * @param foreground
+	 *            the new foregroundColor
+	 */
+	public void setForeground(Color foreground) {
+<span class="nc" id="L596">		super.setForeground(foreground);</span>
+
+<span class="nc bnc" id="L598" title="All 2 branches missed.">		if (days != null) {</span>
+<span class="nc bnc" id="L599" title="All 2 branches missed.">			for (int i = 7; i &lt; 49; i++) {</span>
+<span class="nc" id="L600">				days[i].setForeground(foreground);</span>
+			}
+
+<span class="nc" id="L603">			drawDays();</span>
+		}
+<span class="nc" id="L605">	}</span>
+
+	/**
+	 * JDayChooser is the ActionListener for all day buttons.
+	 * 
+	 * @param e
+	 *            the ActionEvent
+	 */
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L614">		JButton button = (JButton) e.getSource();</span>
+<span class="nc" id="L615">		String buttonText = button.getText();</span>
+<span class="nc" id="L616">		int day = new Integer(buttonText).intValue();</span>
+<span class="nc" id="L617">		setDay(day);</span>
+<span class="nc" id="L618">	}</span>
+
+	/**
+	 * JDayChooser is the FocusListener for all day buttons. (Added by Thomas
+	 * Schaefer)
+	 * 
+	 * @param e
+	 *            the FocusEvent
+	 */
+	/*
+	 * Code below commented out by Mark Brown on 24 Aug 2004. This code breaks
+	 * the JDateChooser code by triggering the actionPerformed method on the
+	 * next day button. This causes the date chosen to always be incremented by
+	 * one day.
+	 */
+	public void focusGained(FocusEvent e) {
+		// JButton button = (JButton) e.getSource();
+		// String buttonText = button.getText();
+		//
+		// if ((buttonText != null) &amp;&amp; !buttonText.equals(&quot;&quot;) &amp;&amp;
+		// !e.isTemporary()) {
+		// actionPerformed(new ActionEvent(e.getSource(), 0, null));
+		// }
+<span class="nc" id="L641">	}</span>
+
+	/**
+	 * Does nothing.
+	 * 
+	 * @param e
+	 *            the FocusEvent
+	 */
+	public void focusLost(FocusEvent e) {
+<span class="nc" id="L650">	}</span>
+
+	/**
+	 * JDayChooser is the KeyListener for all day buttons. (Added by Thomas
+	 * Schaefer and modified by Austin Moore)
+	 * 
+	 * @param e
+	 *            the KeyEvent
+	 */
+	public void keyPressed(KeyEvent e) {
+		// System.out.println(&quot;KEY &quot; + e);
+
+<span class="nc" id="L662">		int newDay = getDay();</span>
+<span class="nc bnc" id="L663" title="All 9 branches missed.">		switch (e.getKeyCode()) {</span>
+		case KeyEvent.VK_UP:
+<span class="nc" id="L665">			newDay -= 7;</span>
+<span class="nc" id="L666">			break;</span>
+		case KeyEvent.VK_DOWN:
+<span class="nc" id="L668">			newDay += 7;</span>
+<span class="nc" id="L669">			break;</span>
+		case KeyEvent.VK_LEFT:
+<span class="nc" id="L671">			newDay -= 1;</span>
+<span class="nc" id="L672">			break;</span>
+		case KeyEvent.VK_RIGHT:
+<span class="nc" id="L674">			newDay += 1;</span>
+<span class="nc" id="L675">			break;</span>
+		case KeyEvent.VK_PAGE_DOWN:
+<span class="nc" id="L677">			newDay = getDaysInMonth() + diffMonth(1);</span>
+<span class="nc" id="L678">			break;</span>
+		case KeyEvent.VK_PAGE_UP:
+<span class="nc" id="L680">			newDay = diffMonth(-1);</span>
+<span class="nc" id="L681">			break;</span>
+		case KeyEvent.VK_HOME:
+<span class="nc" id="L683">			newDay = 1;</span>
+<span class="nc" id="L684">			break;</span>
+		case KeyEvent.VK_END:
+<span class="nc" id="L686">			newDay = getDaysInMonth();</span>
+			break;
+		}
+
+<span class="nc bnc" id="L690" title="All 4 branches missed.">		if ((newDay &gt;= 1) &amp;&amp; (newDay &lt;= getDaysInMonth())) {</span>
+<span class="nc" id="L691">			setDay(newDay);</span>
+<span class="nc bnc" id="L692" title="All 4 branches missed.">		} else if (monthChooser != null &amp;&amp; yearChooser != null) {</span>
+<span class="nc" id="L693">			GregorianCalendar tempCalendar = getTemporaryCalendar();</span>
+<span class="nc" id="L694">			tempCalendar.set(Calendar.DAY_OF_MONTH, newDay);</span>
+<span class="nc" id="L695">			int month = tempCalendar.get(Calendar.MONTH);</span>
+<span class="nc" id="L696">			int year = tempCalendar.get(Calendar.YEAR);</span>
+<span class="nc" id="L697">			int day = tempCalendar.get(Calendar.DAY_OF_MONTH);</span>
+<span class="nc" id="L698">			yearChooser.setYear(year);</span>
+<span class="nc" id="L699">			monthChooser.setMonth(month);</span>
+<span class="nc" id="L700">			this.setDay(day);</span>
+		}
+<span class="nc" id="L702">		setFocus();</span>
+<span class="nc" id="L703">	}</span>
+
+	private int diffMonth(int pMonthDiff) {
+<span class="nc" id="L706">		GregorianCalendar tempCalendar = getTemporaryCalendar();</span>
+<span class="nc" id="L707">		tempCalendar.add(Calendar.MONTH, pMonthDiff);</span>
+<span class="nc" id="L708">		int max = tempCalendar.getActualMaximum(Calendar.DAY_OF_MONTH);</span>
+<span class="nc" id="L709">		int dayMonth = tempCalendar.get(Calendar.DAY_OF_MONTH);</span>
+<span class="nc bnc" id="L710" title="All 2 branches missed.">		return (pMonthDiff &gt; 0) ? (dayMonth) : (-max + dayMonth);</span>
+	}
+
+	public GregorianCalendar getTemporaryCalendar() {
+<span class="nc" id="L714">		GregorianCalendar tempCalendar = new GregorianCalendar(</span>
+<span class="nc" id="L715">				yearChooser.getYear(), monthChooser.getMonth(), getDay());</span>
+<span class="nc" id="L716">		return tempCalendar;</span>
+	}
+
+	/**
+	 * Does nothing.
+	 * 
+	 * @param e
+	 *            the KeyEvent
+	 */
+	public void keyTyped(KeyEvent e) {
+<span class="nc" id="L726">	}</span>
+
+	/**
+	 * Does nothing.
+	 * 
+	 * @param e
+	 *            the KeyEvent
+	 */
+	public void keyReleased(KeyEvent e) {
+<span class="nc" id="L735">	}</span>
+
+	/**
+	 * Enable or disable the JDayChooser.
+	 * 
+	 * @param enabled
+	 *            The new enabled value
+	 */
+	public void setEnabled(boolean enabled) {
+<span class="nc" id="L744">		super.setEnabled(enabled);</span>
+
+<span class="nc bnc" id="L746" title="All 2 branches missed.">		for (short i = 0; i &lt; days.length; i++) {</span>
+<span class="nc bnc" id="L747" title="All 2 branches missed.">			if (days[i] != null) {</span>
+<span class="nc" id="L748">				days[i].setEnabled(enabled);</span>
+			}
+		}
+
+<span class="nc bnc" id="L752" title="All 2 branches missed.">		for (short i = 0; i &lt; weeks.length; i++) {</span>
+<span class="nc bnc" id="L753" title="All 2 branches missed.">			if (weeks[i] != null) {</span>
+<span class="nc" id="L754">				weeks[i].setEnabled(enabled);</span>
+			}
+		}
+<span class="nc" id="L757">	}</span>
+
+	/**
+	 * In some Countries it is often usefull to know in which week of the year a
+	 * date is.
+	 * 
+	 * @return boolean true, if the weeks of the year is shown
+	 */
+	public boolean isWeekOfYearVisible() {
+<span class="nc" id="L766">		return weekOfYearVisible;</span>
+	}
+
+	/**
+	 * In some Countries it is often usefull to know in which week of the year a
+	 * date is.
+	 * 
+	 * @param weekOfYearVisible
+	 *            true, if the weeks of the year shall be shown
+	 */
+	public void setWeekOfYearVisible(boolean weekOfYearVisible) {
+<span class="nc bnc" id="L777" title="All 2 branches missed.">		if (weekOfYearVisible == this.weekOfYearVisible) {</span>
+<span class="nc" id="L778">			return;</span>
+<span class="nc bnc" id="L779" title="All 2 branches missed.">		} else if (weekOfYearVisible) {</span>
+<span class="nc" id="L780">			add(weekPanel, BorderLayout.WEST);</span>
+<span class="nc" id="L781">		} else {</span>
+<span class="nc" id="L782">			remove(weekPanel);</span>
+		}
+
+<span class="nc" id="L785">		this.weekOfYearVisible = weekOfYearVisible;</span>
+<span class="nc" id="L786">		validate();</span>
+<span class="nc" id="L787">		dayPanel.validate();</span>
+<span class="nc" id="L788">	}</span>
+
+	/**
+	 * Returns the day panel.
+	 * 
+	 * @return the day panel
+	 */
+	public JPanel getDayPanel() {
+<span class="nc" id="L796">		return dayPanel;</span>
+	}
+
+	/**
+	 * Returns the color of the decoration (day names and weeks).
+	 * 
+	 * @return the color of the decoration (day names and weeks).
+	 */
+	public Color getDecorationBackgroundColor() {
+<span class="nc" id="L805">		return decorationBackgroundColor;</span>
+	}
+
+	/**
+	 * Sets the background of days and weeks of year buttons.
+	 * 
+	 * @param decorationBackgroundColor
+	 *            The background to set
+	 */
+	public void setDecorationBackgroundColor(Color decorationBackgroundColor) {
+<span class="nc" id="L815">		this.decorationBackgroundColor = decorationBackgroundColor;</span>
+
+<span class="nc bnc" id="L817" title="All 2 branches missed.">		if (days != null) {</span>
+<span class="nc bnc" id="L818" title="All 2 branches missed.">			for (int i = 0; i &lt; 7; i++) {</span>
+<span class="nc" id="L819">				days[i].setBackground(decorationBackgroundColor);</span>
+			}
+		}
+
+<span class="nc bnc" id="L823" title="All 2 branches missed.">		if (weeks != null) {</span>
+<span class="nc bnc" id="L824" title="All 2 branches missed.">			for (int i = 0; i &lt; 7; i++) {</span>
+<span class="nc" id="L825">				weeks[i].setBackground(decorationBackgroundColor);</span>
+			}
+		}
+<span class="nc" id="L828">	}</span>
+
+	/**
+	 * Returns the Sunday foreground.
+	 * 
+	 * @return Color the Sunday foreground.
+	 */
+	public Color getSundayForeground() {
+<span class="nc" id="L836">		return sundayForeground;</span>
+	}
+
+	/**
+	 * Returns the weekday foreground.
+	 * 
+	 * @return Color the weekday foreground.
+	 */
+	public Color getWeekdayForeground() {
+<span class="nc" id="L845">		return weekdayForeground;</span>
+	}
+
+	/**
+	 * Sets the Sunday foreground.
+	 * 
+	 * @param sundayForeground
+	 *            The sundayForeground to set
+	 */
+	public void setSundayForeground(Color sundayForeground) {
+<span class="nc" id="L855">		this.sundayForeground = sundayForeground;</span>
+<span class="nc" id="L856">		drawDayNames();</span>
+<span class="nc" id="L857">		drawDays();</span>
+<span class="nc" id="L858">	}</span>
+
+	/**
+	 * Sets the weekday foreground.
+	 * 
+	 * @param weekdayForeground
+	 *            The weekdayForeground to set
+	 */
+	public void setWeekdayForeground(Color weekdayForeground) {
+<span class="nc" id="L867">		this.weekdayForeground = weekdayForeground;</span>
+<span class="nc" id="L868">		drawDayNames();</span>
+<span class="nc" id="L869">		drawDays();</span>
+<span class="nc" id="L870">	}</span>
+
+	/**
+	 * Requests that the selected day also have the focus.
+	 */
+	public void setFocus() {
+<span class="nc bnc" id="L876" title="All 2 branches missed.">		if (selectedDay != null) {</span>
+<span class="nc" id="L877">			this.selectedDay.requestFocusInWindow();</span>
+		}
+<span class="nc" id="L879">	}</span>
+
+	/**
+	 * The decoration background is the background color of the day titles and
+	 * the weeks of the year.
+	 * 
+	 * @return Returns true, if the decoration background is painted.
+	 */
+	public boolean isDecorationBackgroundVisible() {
+<span class="nc" id="L888">		return decorationBackgroundVisible;</span>
+	}
+
+	/**
+	 * The decoration background is the background color of the day titles and
+	 * the weeks of the year.
+	 * 
+	 * @param decorationBackgroundVisible
+	 *            true, if the decoration background shall be painted.
+	 */
+	public void setDecorationBackgroundVisible(
+			boolean decorationBackgroundVisible) {
+<span class="nc" id="L900">		this.decorationBackgroundVisible = decorationBackgroundVisible;</span>
+<span class="nc" id="L901">		initDecorations();</span>
+<span class="nc" id="L902">	}</span>
+
+	/**
+	 * The decoration border is the button border of the day titles and the
+	 * weeks of the year.
+	 * 
+	 * @return Returns true, if the decoration border is painted.
+	 */
+	public boolean isDecorationBordersVisible() {
+<span class="nc" id="L911">		return decorationBordersVisible;</span>
+	}
+
+	public boolean isDayBordersVisible() {
+<span class="nc" id="L915">		return dayBordersVisible;</span>
+	}
+
+	/**
+	 * The decoration border is the button border of the day titles and the
+	 * weeks of the year.
+	 * 
+	 * @param decorationBordersVisible
+	 *            true, if the decoration border shall be painted.
+	 */
+	public void setDecorationBordersVisible(boolean decorationBordersVisible) {
+<span class="nc" id="L926">		this.decorationBordersVisible = decorationBordersVisible;</span>
+<span class="nc" id="L927">		initDecorations();</span>
+<span class="nc" id="L928">	}</span>
+
+	public void setDayBordersVisible(boolean dayBordersVisible) {
+<span class="nc" id="L931">		this.dayBordersVisible = dayBordersVisible;</span>
+<span class="nc bnc" id="L932" title="All 2 branches missed.">		if (initialized) {</span>
+<span class="nc bnc" id="L933" title="All 2 branches missed.">			for (int x = 7; x &lt; 49; x++) {</span>
+<span class="nc bnc" id="L934" title="All 2 branches missed.">				if (&quot;Windows&quot;.equals(UIManager.getLookAndFeel().getID())) {</span>
+<span class="nc" id="L935">					days[x].setContentAreaFilled(dayBordersVisible);</span>
+<span class="nc" id="L936">				} else {</span>
+<span class="nc" id="L937">					days[x].setContentAreaFilled(true);</span>
+				}
+<span class="nc" id="L939">				days[x].setBorderPainted(dayBordersVisible);</span>
+			}
+		}
+<span class="nc" id="L942">	}</span>
+
+	/**
+	 * Updates the UI and sets the day button preferences.
+	 */
+	public void updateUI() {
+<span class="nc" id="L948">		super.updateUI();</span>
+<span class="nc" id="L949">		setFont(Font.decode(&quot;Dialog Plain 11&quot;));</span>
+
+<span class="nc bnc" id="L951" title="All 2 branches missed.">		if (weekPanel != null) {</span>
+<span class="nc" id="L952">			weekPanel.updateUI();</span>
+		}
+<span class="nc bnc" id="L954" title="All 2 branches missed.">		if (initialized) {</span>
+<span class="nc bnc" id="L955" title="All 2 branches missed.">			if (&quot;Windows&quot;.equals(UIManager.getLookAndFeel().getID())) {</span>
+<span class="nc" id="L956">				setDayBordersVisible(false);</span>
+<span class="nc" id="L957">				setDecorationBackgroundVisible(true);</span>
+<span class="nc" id="L958">				setDecorationBordersVisible(false);</span>
+<span class="nc" id="L959">			} else {</span>
+<span class="nc" id="L960">				setDayBordersVisible(true);</span>
+<span class="nc" id="L961">				setDecorationBackgroundVisible(decorationBackgroundVisible);</span>
+<span class="nc" id="L962">				setDecorationBordersVisible(decorationBordersVisible);</span>
+			}
+		}
+<span class="nc" id="L965">	}</span>
+
+	/**
+	 * Sets a valid date range for selectable dates. If max is before min, the
+	 * default range with no limitation is set.
+	 * 
+	 * @param min
+	 *            the minimum selectable date or null (then the minimum date is
+	 *            set to 01\01\0001)
+	 * @param max
+	 *            the maximum selectable date or null (then the maximum date is
+	 *            set to 01\01\9999)
+	 */
+	public void setSelectableDateRange(Date min, Date max) {
+<span class="nc bnc" id="L979" title="All 2 branches missed.">		if (min == null) {</span>
+<span class="nc" id="L980">			minSelectableDate = defaultMinSelectableDate;</span>
+<span class="nc" id="L981">		} else {</span>
+<span class="nc" id="L982">			minSelectableDate = min;</span>
+		}
+<span class="nc bnc" id="L984" title="All 2 branches missed.">		if (max == null) {</span>
+<span class="nc" id="L985">			maxSelectableDate = defaultMaxSelectableDate;</span>
+<span class="nc" id="L986">		} else {</span>
+<span class="nc" id="L987">			maxSelectableDate = max;</span>
+		}
+<span class="nc bnc" id="L989" title="All 2 branches missed.">		if (maxSelectableDate.before(minSelectableDate)) {</span>
+<span class="nc" id="L990">			minSelectableDate = defaultMinSelectableDate;</span>
+<span class="nc" id="L991">			maxSelectableDate = defaultMaxSelectableDate;</span>
+		}
+<span class="nc" id="L993">		drawDays();</span>
+<span class="nc" id="L994">	}</span>
+
+	/**
+	 * Sets the maximum selectable date. If null, the date 01\01\9999 will be
+	 * set instead.
+	 * 
+	 * @param max
+	 *            the maximum selectable date
+	 * 
+	 * @return the maximum selectable date
+	 */
+	public Date setMaxSelectableDate(Date max) {
+<span class="nc bnc" id="L1006" title="All 2 branches missed.">		if (max == null) {</span>
+<span class="nc" id="L1007">			maxSelectableDate = defaultMaxSelectableDate;</span>
+<span class="nc" id="L1008">		} else {</span>
+<span class="nc" id="L1009">			maxSelectableDate = max;</span>
+		}
+<span class="nc" id="L1011">		drawDays();</span>
+<span class="nc" id="L1012">		return maxSelectableDate;</span>
+	}
+
+	/**
+	 * Sets the minimum selectable date. If null, the date 01\01\0001 will be
+	 * set instead.
+	 * 
+	 * @param min
+	 *            the minimum selectable date
+	 * 
+	 * @return the minimum selectable date
+	 */
+	public Date setMinSelectableDate(Date min) {
+<span class="nc bnc" id="L1025" title="All 2 branches missed.">		if (min == null) {</span>
+<span class="nc" id="L1026">			minSelectableDate = defaultMinSelectableDate;</span>
+<span class="nc" id="L1027">		} else {</span>
+<span class="nc" id="L1028">			minSelectableDate = min;</span>
+		}
+<span class="nc" id="L1030">		drawDays();</span>
+<span class="nc" id="L1031">		return minSelectableDate;</span>
+	}
+
+	/**
+	 * Gets the maximum selectable date.
+	 * 
+	 * @return the maximum selectable date
+	 */
+	public Date getMaxSelectableDate() {
+<span class="nc" id="L1040">		return maxSelectableDate;</span>
+	}
+
+	/**
+	 * Gets the minimum selectable date.
+	 * 
+	 * @return the minimum selectable date
+	 */
+	public Date getMinSelectableDate() {
+<span class="nc" id="L1049">		return minSelectableDate;</span>
+	}
+
+	/**
+	 * Gets the maximum number of characters of a day name or 0. If 0 is
+	 * returned, dateFormatSymbols.getShortWeekdays() will be used.
+	 * 
+	 * @return the maximum number of characters of a day name or 0.
+	 */
+	public int getMaxDayCharacters() {
+<span class="nc" id="L1059">		return maxDayCharacters;</span>
+	}
+
+	/**
+	 * Sets the maximum number of characters per day in the day bar. Valid
+	 * values are 0-4. If set to 0, dateFormatSymbols.getShortWeekdays() will be
+	 * used, otherwise theses strings will be reduced to the maximum number of
+	 * characters.
+	 * 
+	 * @param maxDayCharacters
+	 *            the maximum number of characters of a day name.
+	 */
+	public void setMaxDayCharacters(int maxDayCharacters) {
+<span class="nc bnc" id="L1072" title="All 2 branches missed.">		if (maxDayCharacters == this.maxDayCharacters) {</span>
+<span class="nc" id="L1073">			return;</span>
+		}
+
+<span class="nc bnc" id="L1076" title="All 4 branches missed.">		if (maxDayCharacters &lt; 0 || maxDayCharacters &gt; 4) {</span>
+<span class="nc" id="L1077">			this.maxDayCharacters = 0;</span>
+<span class="nc" id="L1078">		} else {</span>
+<span class="nc" id="L1079">			this.maxDayCharacters = maxDayCharacters;</span>
+		}
+<span class="nc" id="L1081">		drawDayNames();</span>
+<span class="nc" id="L1082">		drawDays();</span>
+<span class="nc" id="L1083">		invalidate();</span>
+<span class="nc" id="L1084">	}</span>
+
+	/**
+	 * Creates a JFrame with a JDayChooser inside and can be used for testing.
+	 * 
+	 * @param s
+	 *            The command line arguments
+	 */
+	public static void main(String[] s) {
+<span class="nc" id="L1093">		JFrame frame = new JFrame(&quot;JDayChooser&quot;);</span>
+<span class="nc" id="L1094">		frame.getContentPane().add(new JDayChooser());</span>
+<span class="nc" id="L1095">		frame.pack();</span>
+<span class="nc" id="L1096">		frame.setVisible(true);</span>
+<span class="nc" id="L1097">	}</span>
+
+	class DecoratorButton extends JButton {
+		private static final long serialVersionUID = -5306477668406547496L;
+
+<span class="nc" id="L1102">		public DecoratorButton() {</span>
+<span class="nc" id="L1103">			setBackground(decorationBackgroundColor);</span>
+<span class="nc" id="L1104">			setContentAreaFilled(decorationBackgroundVisible);</span>
+<span class="nc" id="L1105">			setBorderPainted(decorationBordersVisible);</span>
+<span class="nc" id="L1106">		}</span>
+
+		public void addMouseListener(MouseListener l) {
+<span class="nc" id="L1109">		}</span>
+
+		public boolean isFocusable() {
+<span class="nc" id="L1112">			return false;</span>
+		}
+
+		public void paint(Graphics g) {
+<span class="nc bnc" id="L1116" title="All 2 branches missed.">			if (&quot;Windows&quot;.equals(UIManager.getLookAndFeel().getID())) {</span>
+				// this is a hack to get the background painted
+				// when using Windows Look &amp; Feel
+<span class="nc bnc" id="L1119" title="All 2 branches missed.">				if (decorationBackgroundVisible) {</span>
+<span class="nc" id="L1120">					g.setColor(decorationBackgroundColor);</span>
+<span class="nc" id="L1121">				} else {</span>
+<span class="nc" id="L1122">					g.setColor(days[7].getBackground());</span>
+				}
+<span class="nc" id="L1124">				g.fillRect(0, 0, getWidth(), getHeight());</span>
+<span class="nc bnc" id="L1125" title="All 2 branches missed.">				if (isBorderPainted()) {</span>
+<span class="nc" id="L1126">					setContentAreaFilled(true);</span>
+<span class="nc" id="L1127">				} else {</span>
+<span class="nc" id="L1128">					setContentAreaFilled(false);</span>
+				}
+			}
+<span class="nc" id="L1131">			super.paint(g);</span>
+<span class="nc" id="L1132">		}</span>
+	}
+
+	public JButton getSelectedDay() {
+<span class="nc" id="L1136">		return selectedDay;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

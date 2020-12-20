@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Profile Extensions with Regular Model Elements</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProfXMI.html">Prev</a> - <a href="ProfOpt2.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="Profiles.html">8.7 Defining Metrics for Profiles</a> > 8.7.4 Profile Extensions with Regular Model Elements
+<hr>
+<h3><a name="ProfOpt1"></a>8.7.4 Profile Extensions with Regular Model Elements</h3>
+
+In our first and simplest approximation, we just define a new model 
+element type "requirement" in our SDMetrics metamodel (<a href="MetaModel.html">Section&nbsp;7.1 "SDMetrics Metamodel"</a>)
+to store the information from the <tt>&lt;sysml:Requirement&gt;</tt> XML element:
+
+<pre>
+&lt;modelelement name="requirement"&gt;
+  &lt;attribute name="base" type="ref"&gt;The extended class.&lt;/attribute&gt;
+  &lt;attribute name="text"&gt;Text of the requirement.&lt;/attribute&gt;
+  &lt;attribute name="reqid"&gt;ID of the requirement in the model.&lt;/attribute&gt;
+&lt;/modelelement&gt;
+</pre>
+
+The XMI transformation to process the <tt>&lt;sysml:Requirement&gt;</tt> XML 
+element looks like this:
+
+<pre>
+&lt;xmitransformation modelelement="requirement" xmipattern="sysml:Requirement"&gt;
+  &lt;trigger name="base" type="attrval" attr="base_Class" /&gt;
+  &lt;trigger name="text" type="attrval" attr="Text" /&gt;
+  &lt;trigger name="reqid" type="attrval" attr="Id" /&gt;
+&lt;/xmitransformation&gt;
+</pre>
+
+With these definitions in place, the SysML requirement of the SysML model
+is represented by two elements in SDMetrics: one "class" element
+and one "requirement" element.<p>
+
+How do we know if a class in the model represents a SysML requirement?
+The class represents a SysML requirement if there is a "requirement" 
+element in the model whose reference attribute "base" points to the class.
+Using the "filtervalue" procedure (<a href="FilterValue.html">Section&nbsp;8.1.7 "Value Filter"</a>), we can define a
+"helper" metric that yields the requirement element extending the class, 
+if one exists:
+
+<pre>
+&lt;metric name="Reqmt" domain="class" internal="true"&gt;
+  &lt;filtervalue relation="base" target="requirement"  /&gt;
+&lt;/metric&gt;
+</pre>
+
+We can then use this metric to identify classes that represent
+requirements. For example, to count the number of requirements in 
+a package, we count all classes where metric "Reqmt" is not empty:
+
+<pre>
+&lt;metric name="ReqCount" domain="package"&gt;
+  &lt;projection relation="context" target="class" condition="Reqmt!=''" /&gt;
+&lt;/metric&gt;
+</pre>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProfXMI.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Profiles.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ProfOpt2.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.7.3 "XMI Serialization of Profile Extensions"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.7.5 "Extension References without Inheritance"</td></tr></table>
+
+</body>
+</html>

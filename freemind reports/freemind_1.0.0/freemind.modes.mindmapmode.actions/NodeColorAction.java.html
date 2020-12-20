@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeColorAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">NodeColorAction.java</span></div><h1>NodeColorAction.java</h1><pre class="source lang-java linenums">/*
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2004 Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ * 
+ * See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 
+ * Created on 19.09.2004
+ */
+
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.util.ListIterator;
+
+import freemind.controller.Controller;
+import freemind.controller.actions.generated.instance.NodeColorFormatAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Tools;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+
+public class NodeColorAction extends FreemindAction implements ActorXml {
+	private final MindMapController controller;
+
+	public NodeColorAction(MindMapController controller) {
+<span class="nc" id="L45">		super(&quot;node_color&quot;, (String) null, controller);</span>
+<span class="nc" id="L46">		this.controller = controller;</span>
+<span class="nc" id="L47">		controller.getActionFactory().registerActor(this, getDoActionClass());</span>
+<span class="nc" id="L48">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L51">		Color color = Controller.showCommonJColorChooserDialog(controller</span>
+<span class="nc" id="L52">				.getView().getSelected(), controller</span>
+<span class="nc" id="L53">				.getText(&quot;choose_node_color&quot;), controller.getSelected()</span>
+<span class="nc" id="L54">				.getColor());</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (color == null) {</span>
+<span class="nc" id="L56">			return;</span>
+		}
+<span class="nc" id="L58">		for (ListIterator it = controller.getSelecteds().listIterator(); it</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L60">			MindMapNodeModel selected = (MindMapNodeModel) it.next();</span>
+<span class="nc" id="L61">			setNodeColor(selected, color);</span>
+		}
+<span class="nc" id="L63">	}</span>
+
+	public void setNodeColor(MindMapNode node, Color color) {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (Tools.safeEquals(color, node.getColor())) {</span>
+<span class="nc" id="L67">			return;</span>
+		}
+<span class="nc" id="L69">		NodeColorFormatAction doAction = createNodeColorFormatAction(node,</span>
+<span class="nc" id="L70">				color);</span>
+<span class="nc" id="L71">		NodeColorFormatAction undoAction = createNodeColorFormatAction(node,</span>
+<span class="nc" id="L72">				node.getColor());</span>
+<span class="nc" id="L73">		controller.doTransaction(this.getClass().getName(),</span>
+<span class="nc" id="L74">				new ActionPair(doAction, undoAction));</span>
+<span class="nc" id="L75">	}</span>
+
+	public NodeColorFormatAction createNodeColorFormatAction(MindMapNode node,
+			Color color) {
+<span class="nc" id="L79">		NodeColorFormatAction nodeAction = new NodeColorFormatAction();</span>
+<span class="nc" id="L80">		nodeAction.setNode(node.getObjectId(controller));</span>
+<span class="nc" id="L81">		nodeAction.setColor(Tools.colorToXml(color));</span>
+<span class="nc" id="L82">		return nodeAction;</span>
+	}
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		if (action instanceof NodeColorFormatAction) {</span>
+<span class="nc" id="L87">			NodeColorFormatAction nodeColorAction = (NodeColorFormatAction) action;</span>
+<span class="nc" id="L88">			Color color = Tools.xmlToColor(nodeColorAction.getColor());</span>
+<span class="nc" id="L89">			MindMapNode node = controller.getNodeFromID(nodeColorAction</span>
+<span class="nc" id="L90">					.getNode());</span>
+<span class="nc" id="L91">			Color oldColor = node.getColor();</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">			if (!Tools.safeEquals(color, oldColor)) {</span>
+<span class="nc" id="L93">				node.setColor(color); // null</span>
+<span class="nc" id="L94">				controller.nodeChanged(node);</span>
+			}
+		}
+<span class="nc" id="L97">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L100">		return NodeColorFormatAction.class;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ScriptEditor.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.script</a> &gt; <span class="el_source">ScriptEditor.java</span></div><h1>ScriptEditor.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2007  Joerg Mueller, Daniel Polansky, Dimitri Polivaev, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 10.01.2007
+ */
+/*$Id: ScriptEditor.java,v 1.1.2.11 2008/05/21 19:15:23 christianfoltin Exp $*/
+package plugins.script;
+
+import java.io.PrintStream;
+import java.util.Iterator;
+import java.util.Vector;
+
+import plugins.script.ScriptEditorPanel.ScriptHolder;
+import plugins.script.ScriptEditorPanel.ScriptModel;
+import plugins.script.ScriptingEngine.ErrorHandler;
+import freemind.controller.actions.generated.instance.ScriptEditorWindowConfigurationStorage;
+import freemind.main.Tools.BooleanHolder;
+import freemind.modes.MindMapNode;
+import freemind.modes.attributes.Attribute;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.hooks.MindMapHookAdapter;
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="nc" id="L43">public class ScriptEditor extends MindMapHookAdapter {</span>
+	private final class AttributeHolder {
+		Attribute mAttribute;
+		int mPosition;
+
+<span class="nc" id="L48">		public AttributeHolder(Attribute pAttribute, int pPosition) {</span>
+<span class="nc" id="L49">			super();</span>
+<span class="nc" id="L50">			mAttribute = pAttribute;</span>
+<span class="nc" id="L51">			mPosition = pPosition;</span>
+<span class="nc" id="L52">		}</span>
+	}
+
+	private final class NodeScriptModel implements ScriptModel {
+		/**
+		 * Of AttributeHolder
+		 */
+		private final Vector mScripts;
+		private final MindMapNode mNode;
+		private final MindMapController mMindMapController;
+<span class="nc" id="L62">		private boolean isDirty = false;</span>
+
+<span class="nc" id="L64">		private NodeScriptModel(Vector pScripts, MindMapNode node,</span>
+<span class="nc" id="L65">				MindMapController pMindMapController) {</span>
+<span class="nc" id="L66">			mScripts = pScripts;</span>
+<span class="nc" id="L67">			mNode = node;</span>
+<span class="nc" id="L68">			mMindMapController = pMindMapController;</span>
+<span class="nc" id="L69">		}</span>
+
+		public ScriptEditorWindowConfigurationStorage decorateDialog(
+				ScriptEditorPanel pPanel,
+				String pWindow_preference_storage_property) {
+<span class="nc" id="L74">			return (ScriptEditorWindowConfigurationStorage) getMindMapController()</span>
+<span class="nc" id="L75">					.decorateDialog(pPanel, pWindow_preference_storage_property);</span>
+		}
+
+		public boolean executeScript(int pIndex, PrintStream pOutStream,
+				ErrorHandler pErrorHandler) {
+<span class="nc" id="L80">			String script = getScript(pIndex).getScript();</span>
+			// get cookies from base plugin:
+<span class="nc" id="L82">			ScriptingRegistration reg = (ScriptingRegistration) getPluginBaseClass();</span>
+<span class="nc" id="L83">			return ScriptingEngine.executeScript(</span>
+<span class="nc" id="L84">					mMindMapController.getSelected(), new BooleanHolder(true),</span>
+<span class="nc" id="L85">					script, mMindMapController, pErrorHandler, pOutStream,</span>
+<span class="nc" id="L86">					reg.getScriptCookies());</span>
+		}
+
+		public int getAmountOfScripts() {
+<span class="nc" id="L90">			return mScripts.size();</span>
+		}
+
+		public ScriptHolder getScript(int pIndex) {
+<span class="nc" id="L94">			Attribute attribute = ((AttributeHolder) mScripts.get(pIndex)).mAttribute;</span>
+<span class="nc" id="L95">			return new ScriptHolder(attribute.getName(), attribute.getValue());</span>
+		}
+
+		public void setScript(int pIndex, ScriptHolder pScript) {
+<span class="nc" id="L99">			AttributeHolder oldHolder = (AttributeHolder) mScripts.get(pIndex);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			if (!pScript.mScriptName.equals(oldHolder.mAttribute.getName())) {</span>
+<span class="nc" id="L101">				isDirty = true;</span>
+			}
+<span class="nc bnc" id="L103" title="All 2 branches missed.">			if (!pScript.mScript.equals(oldHolder.mAttribute.getValue())) {</span>
+<span class="nc" id="L104">				isDirty = true;</span>
+			}
+<span class="nc" id="L106">			oldHolder.mAttribute.setName(pScript.mScriptName);</span>
+<span class="nc" id="L107">			oldHolder.mAttribute.setValue(pScript.mScript);</span>
+<span class="nc" id="L108">		}</span>
+
+		public void storeDialogPositions(ScriptEditorPanel pPanel,
+				ScriptEditorWindowConfigurationStorage pStorage,
+				String pWindow_preference_storage_property) {
+<span class="nc" id="L113">			getMindMapController().storeDialogPositions(pPanel, pStorage,</span>
+<span class="nc" id="L114">					pWindow_preference_storage_property);</span>
+<span class="nc" id="L115">		}</span>
+
+		public void endDialog(boolean pIsCanceled) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (!pIsCanceled) {</span>
+				// read length only once, as new attributes get this number as
+				// position.
+<span class="nc" id="L121">				int attributeTableLength = mNode.getAttributeTableLength();</span>
+				// store node attributes back
+<span class="nc bnc" id="L123" title="All 2 branches missed.">				for (Iterator iter = mScripts.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L124">					AttributeHolder holder = (AttributeHolder) iter.next();</span>
+<span class="nc" id="L125">					Attribute attribute = holder.mAttribute;</span>
+<span class="nc" id="L126">					int position = holder.mPosition;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">					if (attributeTableLength &lt;= position) {</span>
+						// add new attribute
+<span class="nc" id="L129">						mMindMapController.addAttribute(mNode, attribute);</span>
+<span class="nc" id="L130">					} else if (mNode.getAttribute(position).getValue() != attribute</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">							.getValue()) {</span>
+						// logger.info(&quot;Setting attribute &quot; + position + &quot; to &quot;
+						// + attribute);
+<span class="nc" id="L134">						mMindMapController.setAttribute(mNode, position,</span>
+<span class="nc" id="L135">								attribute);</span>
+					}
+				}
+			}
+<span class="nc" id="L139">		}</span>
+
+		public boolean isDirty() {
+<span class="nc" id="L142">			return isDirty;</span>
+		}
+
+		public int addNewScript() {
+<span class="nc" id="L146">			int index = mScripts.size();</span>
+			/**
+			 * is in general different from index, as not all attributes need to
+			 * be scripts.
+			 */
+<span class="nc" id="L151">			int attributeIndex = mNode.getAttributeTableLength();</span>
+<span class="nc" id="L152">			String scriptName = ScriptingEngine.SCRIPT_PREFIX;</span>
+<span class="nc" id="L153">			int scriptNameSuffix = 1;</span>
+			boolean found;
+			do {
+<span class="nc" id="L156">				found = false;</span>
+<span class="nc" id="L157">				for (Iterator iterator = mScripts.iterator(); iterator</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">						.hasNext();) {</span>
+<span class="nc" id="L159">					AttributeHolder holder = (AttributeHolder) iterator.next();</span>
+<span class="nc" id="L160">					if ((scriptName + scriptNameSuffix)</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">							.equals(holder.mAttribute.getName())) {</span>
+<span class="nc" id="L162">						found = true;</span>
+<span class="nc" id="L163">						scriptNameSuffix++;</span>
+<span class="nc" id="L164">						break;</span>
+					}
+				}
+<span class="nc bnc" id="L167" title="All 2 branches missed.">			} while (found);</span>
+<span class="nc" id="L168">			mScripts.add(new AttributeHolder(new Attribute(scriptName</span>
+<span class="nc" id="L169">					+ scriptNameSuffix, &quot;&quot;), attributeIndex));</span>
+<span class="nc" id="L170">			isDirty = true;</span>
+<span class="nc" id="L171">			return index;</span>
+		}
+	}
+
+	public void startupMapHook() {
+<span class="nc" id="L176">		super.startupMapHook();</span>
+<span class="nc" id="L177">		final MindMapNode node = getMindMapController().getSelected();</span>
+<span class="nc" id="L178">		final Vector scripts = new Vector();</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">		for (int position = 0; position &lt; node.getAttributeTableLength(); position++) {</span>
+<span class="nc" id="L180">			Attribute attribute = node.getAttribute(position);</span>
+<span class="nc bnc" id="L181" title="All 2 branches missed.">			if (attribute.getName().startsWith(ScriptingEngine.SCRIPT_PREFIX)) {</span>
+<span class="nc" id="L182">				scripts.add(new AttributeHolder(attribute, position));</span>
+			}
+		}
+<span class="nc" id="L185">		NodeScriptModel nodeScriptModel = new NodeScriptModel(scripts, node,</span>
+<span class="nc" id="L186">				getMindMapController());</span>
+<span class="nc" id="L187">		ScriptEditorPanel scriptEditorPanel = new ScriptEditorPanel(</span>
+<span class="nc" id="L188">				nodeScriptModel, getController().getFrame(), true);</span>
+<span class="nc" id="L189">		scriptEditorPanel.setVisible(true);</span>
+<span class="nc" id="L190">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

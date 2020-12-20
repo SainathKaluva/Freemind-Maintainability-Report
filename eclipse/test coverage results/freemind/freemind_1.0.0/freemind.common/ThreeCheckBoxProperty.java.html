@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ThreeCheckBoxProperty.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.common</a> &gt; <span class="el_source">ThreeCheckBoxProperty.java</span></div><h1>ThreeCheckBoxProperty.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*</span>
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ * 
+ * See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 
+ * Created on 25.02.2006
+ */
+
+package freemind.common;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+
+import freemind.controller.BlindIcon;
+import freemind.main.Resources;
+
+public class ThreeCheckBoxProperty extends PropertyBean implements
+		PropertyControl {
+<span class="nc" id="L41">	protected String mFalseValue = &quot;false&quot;;</span>
+
+<span class="nc" id="L43">	protected String mTrueValue = &quot;true&quot;;</span>
+
+<span class="nc" id="L45">	protected String mDontTouchValue = &quot;don_t_touch&quot;;</span>
+
+	static public final String FALSE_VALUE = &quot;false&quot;;
+
+	static public final String TRUE_VALUE = &quot;true&quot;;
+
+	public static final String DON_T_TOUCH_VALUE = &quot;don_t_touch&quot;;
+
+	protected static final int DON_T_TOUCH_VALUE_INT = 2;
+
+	protected static final int TRUE_VALUE_INT = 0;
+
+	protected static final int FALSE_VALUE_INT = 1;
+
+<span class="nc" id="L59">	private static final ImageIcon PLUS_IMAGE = new ImageIcon(Resources</span>
+<span class="nc" id="L60">			.getInstance().getResource(&quot;images/edit_add.png&quot;));</span>
+
+<span class="nc" id="L62">	private static final ImageIcon MINUS_IMAGE = new ImageIcon(Resources</span>
+<span class="nc" id="L63">			.getInstance().getResource(&quot;images/edit_remove.png&quot;));</span>
+
+<span class="nc" id="L65">	private static final Icon NO_IMAGE = new BlindIcon(15);</span>
+
+	String description;
+
+	String label;
+
+<span class="nc" id="L71">	int state = 0;</span>
+
+<span class="nc" id="L73">	JButton mButton = new JButton();</span>
+
+	/**
+     */
+	public ThreeCheckBoxProperty(String description, String label) {
+<span class="nc" id="L78">		super();</span>
+<span class="nc" id="L79">		this.description = description;</span>
+<span class="nc" id="L80">		this.label = label;</span>
+		// setState(0);
+<span class="nc" id="L82">		mButton.addActionListener(new ActionListener() {</span>
+
+			public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L85">				setState((getState() + 1) % 3);</span>
+<span class="nc" id="L86">				firePropertyChangeEvent();</span>
+<span class="nc" id="L87">			}</span>
+
+		});
+<span class="nc" id="L90">	}</span>
+
+	private int getState() {
+<span class="nc" id="L93">		return state;</span>
+	}
+
+	public String getDescription() {
+<span class="nc" id="L97">		return description;</span>
+	}
+
+	public String getLabel() {
+<span class="nc" id="L101">		return label;</span>
+	}
+
+	public void setValue(String value) {
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (value == null</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">				|| !(value.toLowerCase().equals(mTrueValue)</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">						|| value.toLowerCase().equals(mFalseValue) || value</span>
+<span class="nc bnc" id="L108" title="All 2 branches missed.">						.toLowerCase().equals(mDontTouchValue))) {</span>
+<span class="nc" id="L109">			throw new IllegalArgumentException(&quot;Cannot set a boolean to &quot;</span>
+<span class="nc" id="L110">					+ value);</span>
+		}
+<span class="nc" id="L112">		setState(transformString(value));</span>
+<span class="nc" id="L113">	}</span>
+
+	private int transformString(String string) {
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (string == null) {</span>
+<span class="nc" id="L117">			return DON_T_TOUCH_VALUE_INT;</span>
+		}
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (string.toLowerCase().equals(mTrueValue)) {</span>
+<span class="nc" id="L120">			return TRUE_VALUE_INT;</span>
+		}
+<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (string.toLowerCase().equals(mFalseValue)) {</span>
+<span class="nc" id="L123">			return FALSE_VALUE_INT;</span>
+		}
+<span class="nc" id="L125">		return DON_T_TOUCH_VALUE_INT;</span>
+	}
+
+	public String getValue() {
+<span class="nc bnc" id="L129" title="All 4 branches missed.">		switch (state) {</span>
+		case TRUE_VALUE_INT:
+<span class="nc" id="L131">			return mTrueValue;</span>
+		case FALSE_VALUE_INT:
+<span class="nc" id="L133">			return mFalseValue;</span>
+		case DON_T_TOUCH_VALUE_INT:
+<span class="nc" id="L135">			return mDontTouchValue;</span>
+		}
+<span class="nc" id="L137">		return null;</span>
+	}
+
+	public void layout(DefaultFormBuilder builder, TextTranslator pTranslator) {
+<span class="nc" id="L141">		JLabel label = builder.append(pTranslator.getText(getLabel()), mButton);</span>
+<span class="nc" id="L142">		String tooltiptext = pTranslator.getText(getDescription());</span>
+<span class="nc" id="L143">		label.setToolTipText(tooltiptext);</span>
+<span class="nc" id="L144">		mButton.setToolTipText(tooltiptext);</span>
+<span class="nc" id="L145">	}</span>
+
+	public void setEnabled(boolean pEnabled) {
+<span class="nc" id="L148">		mButton.setEnabled(pEnabled);</span>
+<span class="nc" id="L149">	}</span>
+
+	/**
+     * 
+     */
+	protected void setState(int newState) {
+<span class="nc" id="L155">		state = newState;</span>
+		Icon[] icons;
+<span class="nc" id="L157">		icons = new Icon[3]; // {MINUS_IMAGE, PLUS_IMAGE, NO_IMAGE};</span>
+<span class="nc" id="L158">		icons[TRUE_VALUE_INT] = PLUS_IMAGE;</span>
+<span class="nc" id="L159">		icons[FALSE_VALUE_INT] = MINUS_IMAGE;</span>
+<span class="nc" id="L160">		icons[DON_T_TOUCH_VALUE_INT] = NO_IMAGE;</span>
+		// mButton.setText(DISPLAY_VALUES[state]);
+<span class="nc" id="L162">		mButton.setIcon(icons[state]);</span>
+<span class="nc" id="L163">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

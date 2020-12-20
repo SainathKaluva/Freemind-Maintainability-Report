@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>Base64Coding.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">Base64Coding.java</span></div><h1>Base64Coding.java</h1><pre class="source lang-java linenums">/* AbstractPreferences -- Partial implementation of a Preference node
+   Copyright (C) 2001, 2003, 2004, 2006  Free Software Foundation, Inc.
+
+This file is part of GNU Classpath.
+
+GNU Classpath is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version.
+ 
+GNU Classpath is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with GNU Classpath; see the file COPYING.  If not, write to the
+Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
+
+Linking this library statically or dynamically with other modules is
+making a combined work based on this library.  Thus, the terms and
+conditions of the GNU General Public License cover the whole
+combination.
+
+As a special exception, the copyright holders of this library give you
+permission to link this library with independent modules to produce an
+executable, regardless of the license terms of these independent
+modules, and to copy and distribute the resulting executable under
+terms of your choice, provided that you also meet, for each linked
+independent module, the terms and conditions of the license of that
+module.  An independent module is a module which is not derived from
+or based on this library.  If you modify this library, you may extend
+this exception to your version of the library, but you are not
+obligated to do so.  If you do not wish to do so, delete this
+exception statement from your version. */
+
+package freemind.main;
+
+import java.io.ByteArrayOutputStream;
+
+/**
+ * Partial implementation of a Preference node.
+ * 
+ * @since 1.4
+ * @author Mark Wielaard (mark@klomp.org)
+ * 
+ *         22.3.2008: FC: Changed name from AbstractPreferences to the current,
+ *         Removed all but base64 coding.
+ */
+<span class="nc" id="L51">public class Base64Coding {</span>
+<span class="fc" id="L52">	private static java.util.logging.Logger logger = null;</span>
+	static {
+<span class="fc" id="L54">		logger = freemind.main.Resources.getInstance()</span>
+<span class="fc" id="L55">				.getLogger(&quot;Base64Coding&quot;);</span>
+<span class="fc" id="L56">	}</span>
+
+	/**
+	 * Helper method for decoding a Base64 string as an byte array. Returns null
+	 * on encoding error. This method does not allow any other characters
+	 * present in the string then the 65 special base64 chars.
+	 */
+	public static byte[] decode64(String s) {
+<span class="fc" id="L64">		ByteArrayOutputStream bs = new ByteArrayOutputStream(</span>
+<span class="fc" id="L65">				(s.length() / 4) * 3);</span>
+<span class="fc" id="L66">		char[] c = new char[s.length()];</span>
+<span class="fc" id="L67">		s.getChars(0, s.length(), c, 0);</span>
+
+		// Convert from base64 chars
+<span class="fc" id="L70">		int endchar = -1;</span>
+<span class="pc bpc" id="L71" title="1 of 4 branches missed.">		for (int j = 0; j &lt; c.length &amp;&amp; endchar == -1; j++) {</span>
+<span class="fc bfc" id="L72" title="All 4 branches covered.">			if (c[j] &gt;= 'A' &amp;&amp; c[j] &lt;= 'Z') {</span>
+<span class="fc" id="L73">				c[j] -= 'A';</span>
+<span class="pc bpc" id="L74" title="1 of 4 branches missed.">			} else if (c[j] &gt;= 'a' &amp;&amp; c[j] &lt;= 'z') {</span>
+<span class="fc" id="L75">				c[j] = (char) (c[j] + 26 - 'a');</span>
+<span class="pc bpc" id="L76" title="1 of 4 branches missed.">			} else if (c[j] &gt;= '0' &amp;&amp; c[j] &lt;= '9') {</span>
+<span class="fc" id="L77">				c[j] = (char) (c[j] + 52 - '0');</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">			} else if (c[j] == '+') {</span>
+<span class="nc" id="L79">				c[j] = 62;</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">			} else if (c[j] == '/') {</span>
+<span class="nc" id="L81">				c[j] = 63;</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">			} else if (c[j] == '=') {</span>
+<span class="fc" id="L83">				endchar = j;</span>
+<span class="fc" id="L84">			} else {</span>
+<span class="nc" id="L85">				logger.severe(&quot;Found illegal character in base64 coding: '&quot;</span>
+<span class="nc" id="L86">						+ c[j] + &quot;'&quot;);</span>
+<span class="nc" id="L87">				return null; // encoding exception</span>
+			}
+		}
+
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">		int remaining = endchar == -1 ? c.length : endchar;</span>
+<span class="fc" id="L92">		int i = 0;</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		while (remaining &gt; 0) {</span>
+			// Four input chars (6 bits) are decoded as three bytes as
+			// 000000 001111 111122 222222
+
+<span class="fc" id="L97">			byte b0 = (byte) (c[i] &lt;&lt; 2);</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">			if (remaining &gt;= 2) {</span>
+<span class="fc" id="L99">				b0 += (c[i + 1] &amp; 0x30) &gt;&gt; 4;</span>
+			}
+<span class="fc" id="L101">			bs.write(b0);</span>
+
+<span class="fc bfc" id="L103" title="All 2 branches covered.">			if (remaining &gt;= 3) {</span>
+<span class="fc" id="L104">				byte b1 = (byte) ((c[i + 1] &amp; 0x0F) &lt;&lt; 4);</span>
+<span class="fc" id="L105">				b1 += (byte) ((c[i + 2] &amp; 0x3C) &gt;&gt; 2);</span>
+<span class="fc" id="L106">				bs.write(b1);</span>
+			}
+
+<span class="fc bfc" id="L109" title="All 2 branches covered.">			if (remaining &gt;= 4) {</span>
+<span class="fc" id="L110">				byte b2 = (byte) ((c[i + 2] &amp; 0x03) &lt;&lt; 6);</span>
+<span class="fc" id="L111">				b2 += c[i + 3];</span>
+<span class="fc" id="L112">				bs.write(b2);</span>
+			}
+
+<span class="fc" id="L115">			i += 4;</span>
+<span class="fc" id="L116">			remaining -= 4;</span>
+		}
+
+<span class="fc" id="L119">		return bs.toByteArray();</span>
+	}
+
+	/**
+	 * Helper method for encoding an array of bytes as a Base64 String.
+	 */
+	public static String encode64(byte[] b) {
+<span class="fc" id="L126">		StringBuffer sb = new StringBuffer((b.length / 3) * 4);</span>
+
+<span class="fc" id="L128">		int i = 0;</span>
+<span class="fc" id="L129">		int remaining = b.length;</span>
+<span class="fc" id="L130">		char c[] = new char[4];</span>
+<span class="fc bfc" id="L131" title="All 2 branches covered.">		while (remaining &gt; 0) {</span>
+			// Three input bytes are encoded as four chars (6 bits) as
+			// 00000011 11112222 22333333
+
+<span class="fc" id="L135">			c[0] = (char) ((b[i] &amp; 0xFC) &gt;&gt; 2);</span>
+<span class="fc" id="L136">			c[1] = (char) ((b[i] &amp; 0x03) &lt;&lt; 4);</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">			if (remaining &gt;= 2) {</span>
+<span class="fc" id="L138">				c[1] += (char) ((b[i + 1] &amp; 0xF0) &gt;&gt; 4);</span>
+<span class="fc" id="L139">				c[2] = (char) ((b[i + 1] &amp; 0x0F) &lt;&lt; 2);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">				if (remaining &gt;= 3) {</span>
+<span class="fc" id="L141">					c[2] += (char) ((b[i + 2] &amp; 0xC0) &gt;&gt; 6);</span>
+<span class="fc" id="L142">					c[3] = (char) (b[i + 2] &amp; 0x3F);</span>
+<span class="fc" id="L143">				} else {</span>
+<span class="nc" id="L144">					c[3] = 64;</span>
+				}
+<span class="nc" id="L146">			} else {</span>
+<span class="fc" id="L147">				c[2] = 64;</span>
+<span class="fc" id="L148">				c[3] = 64;</span>
+			}
+
+			// Convert to base64 chars
+<span class="fc bfc" id="L152" title="All 2 branches covered.">			for (int j = 0; j &lt; 4; j++) {</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">				if (c[j] &lt; 26) {</span>
+<span class="fc" id="L154">					c[j] += 'A';</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">				} else if (c[j] &lt; 52) {</span>
+<span class="fc" id="L156">					c[j] = (char) (c[j] - 26 + 'a');</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">				} else if (c[j] &lt; 62) {</span>
+<span class="fc" id="L158">					c[j] = (char) (c[j] - 52 + '0');</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">				} else if (c[j] == 62) {</span>
+<span class="nc" id="L160">					c[j] = '+';</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">				} else if (c[j] == 63) {</span>
+<span class="nc" id="L162">					c[j] = '/';</span>
+<span class="nc" id="L163">				} else {</span>
+<span class="fc" id="L164">					c[j] = '=';</span>
+				}
+			}
+
+<span class="fc" id="L168">			sb.append(c);</span>
+<span class="fc" id="L169">			i += 3;</span>
+<span class="fc" id="L170">			remaining -= 3;</span>
+		}
+
+<span class="fc" id="L173">		return sb.toString();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

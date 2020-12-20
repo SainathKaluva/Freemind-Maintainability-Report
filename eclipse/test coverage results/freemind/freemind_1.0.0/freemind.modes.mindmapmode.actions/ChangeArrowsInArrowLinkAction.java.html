@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ChangeArrowsInArrowLinkAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">ChangeArrowsInArrowLinkAction.java</span></div><h1>ChangeArrowsInArrowLinkAction.java</h1><pre class="source lang-java linenums">/*
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2004 Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ * 
+ * See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 
+ * Created on 08.10.2004
+ */
+/*
+ * $Id: ChangeArrowsInArrowLinkAction.java,v 1.16.10.1 08.10.2004 23:12:57
+ * christianfoltin Exp $
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.event.ActionEvent;
+
+import freemind.controller.actions.generated.instance.ArrowLinkArrowXmlAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.modes.ArrowLinkAdapter;
+import freemind.modes.MindMapLink;
+import freemind.modes.MindMapLinkRegistry;
+import freemind.modes.mindmapmode.MindMapArrowLinkModel;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+
+public class ChangeArrowsInArrowLinkAction extends FreemindAction implements
+		ActorXml {
+	MindMapArrowLinkModel arrowLink;
+
+	boolean hasStartArrow;
+
+	boolean hasEndArrow;
+
+	private final MindMapController controller;
+
+	public ChangeArrowsInArrowLinkAction(MindMapController controller,
+			String text, String iconPath, MindMapArrowLinkModel arrowLink,
+			boolean hasStartArrow, boolean hasEndArrow) {
+<span class="nc" id="L55">		super(&quot;change_arrows_in_arrow_link&quot;, iconPath, controller);</span>
+<span class="nc" id="L56">		this.controller = controller;</span>
+<span class="nc" id="L57">		this.arrowLink = arrowLink;</span>
+<span class="nc" id="L58">		this.hasStartArrow = hasStartArrow;</span>
+<span class="nc" id="L59">		this.hasEndArrow = hasEndArrow;</span>
+<span class="nc" id="L60">		addActor(this);</span>
+<span class="nc" id="L61">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L64">		changeArrowsOfArrowLink(arrowLink, hasStartArrow, hasEndArrow);</span>
+<span class="nc" id="L65">	}</span>
+
+	public void changeArrowsOfArrowLink(MindMapArrowLinkModel arrowLink,
+			boolean hasStartArrow, boolean hasEndArrow) {
+<span class="nc" id="L69">		controller.doTransaction((String) getValue(NAME),</span>
+<span class="nc" id="L70">				getActionPair(arrowLink, hasStartArrow, hasEndArrow));</span>
+<span class="nc" id="L71">	}</span>
+
+	/**
+     */
+	private ActionPair getActionPair(MindMapArrowLinkModel arrowLink2,
+			boolean hasStartArrow2, boolean hasEndArrow2) {
+<span class="nc" id="L77">		return new ActionPair(createArrowLinkArrowXmlAction(arrowLink2,</span>
+<span class="nc" id="L78">				hasStartArrow2, hasEndArrow2), createArrowLinkArrowXmlAction(</span>
+<span class="nc" id="L79">				arrowLink2, arrowLink2.getStartArrow(),</span>
+<span class="nc" id="L80">				arrowLink2.getEndArrow()));</span>
+	}
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (action instanceof ArrowLinkArrowXmlAction) {</span>
+<span class="nc" id="L85">			ArrowLinkArrowXmlAction arrowAction = (ArrowLinkArrowXmlAction) action;</span>
+<span class="nc" id="L86">			MindMapLink link = getLinkRegistry().getLinkForId(</span>
+<span class="nc" id="L87">					arrowAction.getId());</span>
+<span class="nc" id="L88">			((ArrowLinkAdapter) link)</span>
+<span class="nc" id="L89">					.setStartArrow(arrowAction.getStartArrow());</span>
+<span class="nc" id="L90">			((ArrowLinkAdapter) link).setEndArrow(arrowAction.getEndArrow());</span>
+<span class="nc" id="L91">			controller.nodeChanged(link.getSource());</span>
+<span class="nc" id="L92">			controller.nodeChanged(link.getTarget());</span>
+		}
+<span class="nc" id="L94">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L97">		return ArrowLinkArrowXmlAction.class;</span>
+	}
+
+	private ArrowLinkArrowXmlAction createArrowLinkArrowXmlAction(
+			MindMapArrowLinkModel arrowLink, boolean hasStartArrow,
+			boolean hasEndArrow) {
+<span class="nc" id="L103">		return createArrowLinkArrowXmlAction(arrowLink,</span>
+<span class="nc bnc" id="L104" title="All 4 branches missed.">				(hasStartArrow) ? &quot;Default&quot; : &quot;None&quot;, (hasEndArrow) ? &quot;Default&quot;</span>
+<span class="nc" id="L105">						: &quot;None&quot;);</span>
+	}
+
+	private ArrowLinkArrowXmlAction createArrowLinkArrowXmlAction(
+			MindMapArrowLinkModel arrowLink, String hasStartArrow,
+			String hasEndArrow) {
+<span class="nc" id="L111">		ArrowLinkArrowXmlAction action = new ArrowLinkArrowXmlAction();</span>
+<span class="nc" id="L112">		action.setStartArrow(hasStartArrow);</span>
+<span class="nc" id="L113">		action.setEndArrow(hasEndArrow);</span>
+<span class="nc" id="L114">		action.setId(arrowLink.getUniqueId());</span>
+<span class="nc" id="L115">		return action;</span>
+	}
+
+	/**
+     */
+	private MindMapLinkRegistry getLinkRegistry() {
+<span class="nc" id="L121">		return controller.getMap().getLinkRegistry();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

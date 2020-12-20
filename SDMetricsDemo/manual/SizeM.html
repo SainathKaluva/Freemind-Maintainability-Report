@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Size</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="SProp.html">Prev</a> - <a href="CoupM.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="DesignMsmt.html">6 Design Measurement</a> > <a href="SProp.html">6.2 Structural Design Properties</a> > 6.2.1 Size
+<hr>
+<h3><a name="SizeM"></a>6.2.1 Size</h3>
+<a name="Glossary_Size"></a>
+<i>Definition</i><p>
+
+Design size metrics measure the size of design elements, typically by
+counting the elements contained within. For example, the number of
+operations in a class, the number of classes in a package, and so
+on.<p>
+
+<i>Impact on quality</i><p>
+
+Size metrics are good candidates for developing cost or effort
+estimates for implementation, review, testing, or maintenance
+activities. Such estimates are then used as input for project planning
+purposes and the allocation of personnel.<p>
+
+In addition, large sized design elements (e.g., big classes or
+packages) may suffer from poor design. In an iterative development
+process, more and more functionality is added to a class or package
+over time. The danger is that, eventually, many unrelated
+responsibilities are assigned to a design element. As a result, it has
+low functional cohesion. This in turn negatively impacts the
+understandability, reusability, and maintainability of the design
+element.<p>
+
+Therefore, interfaces and implementations of large classes or packages
+should be reviewed for functional cohesion. If there is no
+justification for the large size, the design element should be
+considered for refactoring, for instance, extract parts of the
+functionality to separate, more cohesive classes.<p>
+
+<i>Empirical results</i><p>
+
+Empirical studies consistently confirm the importance of size as the
+main cost driver in a software project.  Size metrics are also
+consistently good indicators of fault-proneness: large
+methods/classes/packages contain more faults. However, since size
+metrics systematically identify large design elements as fault-prone,
+these metrics alone are not suitable to find elements with high fault
+density.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="SProp.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="SProp.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="CoupM.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;6.2 "Structural Design Properties"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;6.2.2 "Coupling"</td></tr></table>
+
+</body>
+</html>

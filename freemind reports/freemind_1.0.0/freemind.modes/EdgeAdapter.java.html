@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>EdgeAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">EdgeAdapter.java</span></div><h1>EdgeAdapter.java</h1><pre class="source lang-java linenums">/*
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2001 Joerg Mueller &lt;joergmueller@bigfoot.com&gt; See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+
+package freemind.modes;
+
+import java.awt.Color;
+
+import freemind.controller.Controller;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindMain;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.preferences.FreemindPropertyListener;
+
+public abstract class EdgeAdapter extends LineAdapter implements MindMapEdge {
+
+	public static final String EDGE_WIDTH_THIN_STRING = &quot;thin&quot;;
+<span class="nc" id="L35">	private static Color standardColor = null;</span>
+<span class="nc" id="L36">	private static String standardStyle = null;</span>
+<span class="nc" id="L37">	private static EdgeAdapterListener listener = null;</span>
+
+	public static final int WIDTH_PARENT = -1;
+
+	public static final int WIDTH_THIN = 0;
+
+	public final static String EDGESTYLE_LINEAR = &quot;linear&quot;;
+	public final static String EDGESTYLE_BEZIER = &quot;bezier&quot;;
+	public final static String EDGESTYLE_SHARP_LINEAR = &quot;sharp_linear&quot;;
+	public final static String EDGESTYLE_SHARP_BEZIER = &quot;sharp_bezier&quot;;
+	public final static int INT_EDGESTYLE_LINEAR = 0;
+	public final static int INT_EDGESTYLE_BEZIER = 1;
+	public final static int INT_EDGESTYLE_SHARP_LINEAR = 2;
+<span class="nc" id="L50">	public final static int INT_EDGESTYLE_SHARP_BEZIER = 3;</span>
+
+	// private static Color standardEdgeColor = new Color(0);
+
+	public EdgeAdapter(MindMapNode target, FreeMindMain frame) {
+<span class="nc" id="L55">		super(target, frame);</span>
+<span class="nc" id="L56">		NORMAL_WIDTH = WIDTH_PARENT;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (listener == null) {</span>
+<span class="nc" id="L58">			listener = new EdgeAdapterListener();</span>
+<span class="nc" id="L59">			Controller.addPropertyChangeListener(listener);</span>
+		}
+<span class="nc" id="L61">	}</span>
+
+	//
+	// Attributes
+	//
+
+	public Color getColor() {
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (color == null) {</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			if (getTarget().isRoot()) {</span>
+<span class="nc" id="L70">				return getStandardColor();</span>
+			}
+<span class="nc" id="L72">			return getSource().getEdge().getColor();</span>
+		}
+<span class="nc" id="L74">		return color;</span>
+	}
+
+	public Color getRealColor() {
+<span class="nc" id="L78">		return color;</span>
+	}
+
+	public int getWidth() {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (width == WIDTH_PARENT) {</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (getTarget().isRoot()) {</span>
+<span class="nc" id="L84">				return WIDTH_THIN;</span>
+			}
+<span class="nc" id="L86">			return getSource().getEdge().getWidth();</span>
+		}
+<span class="nc" id="L88">		return width;</span>
+	}
+
+	public int getRealWidth() {
+<span class="nc" id="L92">		return width;</span>
+	}
+
+	public void setWidth(int width) {
+<span class="nc" id="L96">		this.width = width;</span>
+<span class="nc" id="L97">	}</span>
+
+	public String getStyle() {
+<span class="nc bnc" id="L100" title="All 2 branches missed.">		if (style == null) {</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (getTarget().isRoot()) {</span>
+<span class="nc" id="L102">				return getFrame().getProperty(getStandardStylePropertyString());</span>
+			}
+<span class="nc" id="L104">			return getSource().getEdge().getStyle();</span>
+		}
+<span class="nc" id="L106">		return style;</span>
+	}
+
+	public boolean hasStyle() {
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		return style != null;</span>
+	}
+
+	// /////////
+	// Private Methods
+	// ///////
+
+	private MindMapNode getSource() {
+<span class="nc" id="L118">		return target.getParentNode();</span>
+	}
+
+	public XMLElement save() {
+<span class="nc bnc" id="L122" title="All 6 branches missed.">		if (style != null || color != null || width != WIDTH_PARENT) {</span>
+<span class="nc" id="L123">			XMLElement edge = new XMLElement();</span>
+<span class="nc" id="L124">			edge.setName(&quot;edge&quot;);</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (style != null) {</span>
+<span class="nc" id="L127">				edge.setAttribute(&quot;STYLE&quot;, style);</span>
+			}
+<span class="nc bnc" id="L129" title="All 2 branches missed.">			if (color != null) {</span>
+<span class="nc" id="L130">				edge.setAttribute(&quot;COLOR&quot;, Tools.colorToXml(color));</span>
+			}
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if (width != WIDTH_PARENT) {</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">				if (width == WIDTH_THIN)</span>
+<span class="nc" id="L134">					edge.setAttribute(&quot;WIDTH&quot;, EDGE_WIDTH_THIN_STRING);</span>
+				else
+<span class="nc" id="L136">					edge.setAttribute(&quot;WIDTH&quot;, Integer.toString(width));</span>
+			}
+<span class="nc" id="L138">			return edge;</span>
+		}
+<span class="nc" id="L140">		return null;</span>
+	}
+
+	protected Color getStandardColor() {
+<span class="nc" id="L144">		return standardColor;</span>
+	}
+
+	protected void setStandardColor(Color standardColor) {
+<span class="nc" id="L148">		EdgeAdapter.standardColor = standardColor;</span>
+<span class="nc" id="L149">	}</span>
+
+	protected String getStandardStyle() {
+<span class="nc" id="L152">		return standardStyle;</span>
+	}
+
+	protected void setStandardStyle(String standardStyle) {
+<span class="nc" id="L156">		EdgeAdapter.standardStyle = standardStyle;</span>
+<span class="nc" id="L157">	}</span>
+
+	protected String getStandardColorPropertyString() {
+<span class="nc" id="L160">		return FreeMind.RESOURCES_EDGE_COLOR;</span>
+	}
+
+	protected String getStandardStylePropertyString() {
+<span class="nc" id="L164">		return FreeMind.RESOURCES_EDGE_STYLE;</span>
+	}
+
+<span class="nc" id="L167">	protected static class EdgeAdapterListener implements</span>
+			FreemindPropertyListener {
+		public void propertyChanged(String propertyName, String newValue,
+				String oldValue) {
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			if (propertyName.equals(FreeMind.RESOURCES_EDGE_COLOR)) {</span>
+<span class="nc" id="L172">				EdgeAdapter.standardColor = Tools.xmlToColor(newValue);</span>
+			}
+<span class="nc bnc" id="L174" title="All 2 branches missed.">			if (propertyName.equals(FreeMind.RESOURCES_EDGE_STYLE)) {</span>
+<span class="nc" id="L175">				EdgeAdapter.standardStyle = newValue;</span>
+			}
+<span class="nc" id="L177">		}</span>
+	}
+
+	/* (non-Javadoc)
+	 * @see freemind.modes.MindMapEdge#getStyleAsInt()
+	 */
+	public int getStyleAsInt() {
+<span class="nc" id="L184">		final String edgeStyle = getStyle();</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">		if (Tools.safeEquals(edgeStyle, EDGESTYLE_LINEAR)) {</span>
+<span class="nc" id="L186">			return INT_EDGESTYLE_LINEAR;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		} else if (Tools.safeEquals(edgeStyle, EDGESTYLE_BEZIER)) {</span>
+<span class="nc" id="L188">			return INT_EDGESTYLE_BEZIER;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		} else if (Tools.safeEquals(edgeStyle, EDGESTYLE_SHARP_LINEAR)) {</span>
+<span class="nc" id="L190">			return INT_EDGESTYLE_SHARP_LINEAR;</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		} else if (Tools.safeEquals(edgeStyle, EDGESTYLE_SHARP_BEZIER)) {</span>
+<span class="nc" id="L192">			return INT_EDGESTYLE_SHARP_BEZIER;</span>
+		} else {
+<span class="nc" id="L194">			throw new IllegalArgumentException(&quot;Unknown Edge Style &quot;+edgeStyle);</span>
+		}
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

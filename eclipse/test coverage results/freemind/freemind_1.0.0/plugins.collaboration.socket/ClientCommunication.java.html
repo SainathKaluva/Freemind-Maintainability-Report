@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ClientCommunication.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.socket</a> &gt; <span class="el_source">ClientCommunication.java</span></div><h1>ClientCommunication.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2012 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package plugins.collaboration.socket;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.Socket;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+
+import plugins.collaboration.socket.SocketBasics.UnableToGetLockException;
+import freemind.controller.actions.generated.instance.CollaborationActionBase;
+import freemind.controller.actions.generated.instance.CollaborationGoodbye;
+import freemind.controller.actions.generated.instance.CollaborationHello;
+import freemind.controller.actions.generated.instance.CollaborationReceiveLock;
+import freemind.controller.actions.generated.instance.CollaborationRequireLock;
+import freemind.controller.actions.generated.instance.CollaborationTransaction;
+import freemind.controller.actions.generated.instance.CollaborationUserInformation;
+import freemind.controller.actions.generated.instance.CollaborationWelcome;
+import freemind.controller.actions.generated.instance.CollaborationWhoAreYou;
+import freemind.controller.actions.generated.instance.CollaborationWrongCredentials;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.Tools;
+import freemind.modes.MapAdapter;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+
+/**
+ * @author foltin
+ * @date 06.09.2012
+ */
+public class ClientCommunication extends CommunicationBase {
+
+	private String mLockId;
+<span class="nc" id="L59">	private HashSet mLockIds = new HashSet();</span>
+	private String mPassword;
+<span class="nc" id="L61">	private SocketConnectionHook mSocketConnectionHook = null;</span>
+<span class="nc" id="L62">	private boolean mReceivedGoodbye = false;</span>
+	private CollaborationUserInformation mUserInfo;
+
+	/**
+	 * @param pName
+	 * @param pClient
+	 * @param pController
+	 * @param pPassword
+	 * @param pOut
+	 * @param pIn
+	 * @throws IOException
+	 */
+	public ClientCommunication(String pName, Socket pClient,
+			MindMapController pController, String pPassword) throws IOException {
+<span class="nc" id="L76">		super(pName, pClient, pController, new DataOutputStream(</span>
+<span class="nc" id="L77">				pClient.getOutputStream()), new DataInputStream(</span>
+<span class="nc" id="L78">				pClient.getInputStream()));</span>
+<span class="nc" id="L79">		mPassword = pPassword;</span>
+<span class="nc" id="L80">		setCurrentState(STATE_WAIT_FOR_WHO_ARE_YOU);</span>
+<span class="nc" id="L81">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * plugins.collaboration.socket.CommunicationBase#processCommand(freemind
+	 * .controller.actions.generated.instance.CollaborationActionBase)
+	 */
+	public void processCommand(CollaborationActionBase pCommand)
+			throws IOException {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (pCommand instanceof CollaborationGoodbye) {</span>
+<span class="nc" id="L93">			CollaborationGoodbye goodbye = (CollaborationGoodbye) pCommand;</span>
+<span class="nc" id="L94">			logger.info(&quot;Goodbye received from &quot; + goodbye.getUserId());</span>
+<span class="nc" id="L95">			terminateSocket();</span>
+<span class="nc" id="L96">			return;</span>
+		}
+<span class="nc" id="L98">		boolean commandHandled = false;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (pCommand instanceof CollaborationUserInformation) {</span>
+<span class="nc" id="L100">			CollaborationUserInformation userInfo = (CollaborationUserInformation) pCommand;</span>
+<span class="nc" id="L101">			mUserInfo = userInfo;</span>
+<span class="nc" id="L102">			commandHandled = true;</span>
+		}
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (pCommand instanceof CollaborationWhoAreYou) {</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">			if (getCurrentState() != STATE_WAIT_FOR_WHO_ARE_YOU) {</span>
+<span class="nc" id="L106">				printWrongState(pCommand);</span>
+			}
+			// send hello:
+<span class="nc" id="L109">			CollaborationHello helloCommand = new CollaborationHello();</span>
+<span class="nc" id="L110">			helloCommand.setUserId(Tools.getUserName());</span>
+<span class="nc" id="L111">			helloCommand.setPassword(mPassword);</span>
+<span class="nc" id="L112">			send(helloCommand);</span>
+<span class="nc" id="L113">			setCurrentState(STATE_WAIT_FOR_WELCOME);</span>
+<span class="nc" id="L114">			commandHandled = true;</span>
+		}
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		if (pCommand instanceof CollaborationWelcome) {</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			if (getCurrentState() != STATE_WAIT_FOR_WELCOME) {</span>
+<span class="nc" id="L118">				printWrongState(pCommand);</span>
+			}
+<span class="nc" id="L120">			CollaborationWelcome collWelcome = (CollaborationWelcome) pCommand;</span>
+<span class="nc" id="L121">			createNewMap(collWelcome.getMap());</span>
+<span class="nc" id="L122">			setCurrentState(STATE_IDLE);</span>
+<span class="nc" id="L123">			commandHandled = true;</span>
+		}
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (pCommand instanceof CollaborationWrongCredentials) {</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (getCurrentState() != STATE_WAIT_FOR_WELCOME) {</span>
+<span class="nc" id="L127">				printWrongState(pCommand);</span>
+			}
+			// Over and out.
+<span class="nc" id="L130">			terminateSocket();</span>
+			// Display error message!
+<span class="nc" id="L132">			getMindMapController().getController().errorMessage(</span>
+<span class="nc" id="L133">					getMindMapController().getText(&quot;socket_wrong_password&quot;));</span>
+<span class="nc" id="L134">			commandHandled = true;</span>
+		}
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if (pCommand instanceof CollaborationTransaction) {</span>
+<span class="nc" id="L137">			CollaborationTransaction trans = (CollaborationTransaction) pCommand;</span>
+			// check if it is from me!
+			boolean removeResult;
+<span class="nc" id="L140">			synchronized (mLockIds) {</span>
+<span class="nc" id="L141">				removeResult = mLockIds.remove(trans.getId());</span>
+			}
+<span class="nc bnc" id="L143" title="All 2 branches missed.">			if (!removeResult) {</span>
+				// it is not from me, so handle it:
+<span class="nc bnc" id="L145" title="All 2 branches missed.">				if (getCurrentState() != STATE_IDLE) {</span>
+<span class="nc" id="L146">					printWrongState(pCommand);</span>
+				}
+<span class="nc bnc" id="L148" title="All 2 branches missed.">				if (mSocketConnectionHook != null) {</span>
+<span class="nc" id="L149">					mSocketConnectionHook</span>
+<span class="nc" id="L150">							.executeTransaction(getActionPair(trans));</span>
+				}
+			}
+<span class="nc" id="L153">			commandHandled = true;</span>
+		}
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if (pCommand instanceof CollaborationReceiveLock) {</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			if (getCurrentState() != STATE_WAIT_FOR_LOCK) {</span>
+<span class="nc" id="L157">				printWrongState(pCommand);</span>
+			}
+<span class="nc" id="L159">			CollaborationReceiveLock lockReceived = (CollaborationReceiveLock) pCommand;</span>
+<span class="nc" id="L160">			this.mLockId = lockReceived.getId();</span>
+<span class="nc" id="L161">			synchronized (mLockIds) {</span>
+<span class="nc" id="L162">				mLockIds.add(mLockId);</span>
+			}
+<span class="nc" id="L164">			setCurrentState(STATE_LOCK_RECEIVED);</span>
+<span class="nc" id="L165">			commandHandled = true;</span>
+		}
+<span class="nc bnc" id="L167" title="All 2 branches missed.">		if (!commandHandled) {</span>
+<span class="nc" id="L168">			logger.warning(&quot;Received unknown message of type &quot;</span>
+<span class="nc" id="L169">					+ pCommand.getClass());</span>
+		}
+<span class="nc" id="L171">	}</span>
+
+	public void terminateSocket() {
+<span class="nc" id="L174">		mReceivedGoodbye = true;</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">		if (mSocketConnectionHook != null) {</span>
+			// first deregister, as otherwise, the toggle hook command is tried
+			// to
+			// be sent over the wire.
+<span class="nc" id="L179">			mSocketConnectionHook.deregisterFilter();</span>
+			// Terminates socket by shutdownHook.
+<span class="nc" id="L181">			toggleHook();</span>
+<span class="nc" id="L182">		} else {</span>
+			// Terminate socket.
+<span class="nc" id="L184">			shutdown();</span>
+		}
+<span class="nc" id="L186">	}</span>
+
+	public void toggleHook() {
+<span class="nc" id="L189">		SocketBasics.togglePermanentHook(getMindMapController(),</span>
+<span class="nc" id="L190">				SocketBasics.SLAVE_HOOK_LABEL);</span>
+<span class="nc" id="L191">	}</span>
+
+	/**
+	 * Sends the lock requests, blocks until timeout or answer and returns the
+	 * associated id. Exception otherwise.
+	 * 
+	 * @throws InterruptedException
+	 * @throws UnableToGetLockException
+	 */
+	public synchronized String sendLockRequest() throws InterruptedException,
+			UnableToGetLockException {
+		// TODO: Global lock needed?
+<span class="nc" id="L203">		mLockId = null;</span>
+<span class="nc" id="L204">		CollaborationRequireLock lockRequest = new CollaborationRequireLock();</span>
+<span class="nc" id="L205">		setCurrentState(STATE_WAIT_FOR_LOCK);</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		if (!send(lockRequest)) {</span>
+<span class="nc" id="L207">			setCurrentState(STATE_IDLE);</span>
+<span class="nc" id="L208">			throw new SocketBasics.UnableToGetLockException();</span>
+		}
+<span class="nc" id="L210">		final int sleepTime = ROUNDTRIP_TIMEOUT / ROUNDTRIP_ROUNDS;</span>
+<span class="nc" id="L211">		int timeout = ROUNDTRIP_ROUNDS;</span>
+<span class="nc bnc" id="L212" title="All 4 branches missed.">		while (getCurrentState() != STATE_LOCK_RECEIVED &amp;&amp; timeout &gt;= 0) {</span>
+<span class="nc" id="L213">			sleep(sleepTime);</span>
+<span class="nc" id="L214">			timeout--;</span>
+		}
+<span class="nc" id="L216">		setCurrentState(STATE_IDLE);</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">		if (timeout &lt; 0) {</span>
+<span class="nc" id="L218">			throw new SocketBasics.UnableToGetLockException();</span>
+		}
+<span class="nc" id="L220">		return mLockId;</span>
+	}
+
+	void createNewMap(String map) throws IOException {
+		{
+			// // deregister from old controller:
+			// deregisterFilter();
+<span class="nc" id="L227">			logger.info(&quot;Restoring the map...&quot;);</span>
+<span class="nc" id="L228">			MindMapController newModeController = (MindMapController) getMindMapController()</span>
+<span class="nc" id="L229">					.getMode().createModeController();</span>
+<span class="nc" id="L230">			MapAdapter newModel = new MindMapMapModel(getMindMapController()</span>
+<span class="nc" id="L231">					.getFrame(), newModeController);</span>
+<span class="nc" id="L232">			HashMap IDToTarget = new HashMap();</span>
+<span class="nc" id="L233">			StringReader reader = new StringReader(map);</span>
+<span class="nc" id="L234">			MindMapNodeModel rootNode = (MindMapNodeModel) newModeController</span>
+<span class="nc" id="L235">					.createNodeTreeFromXml(reader, IDToTarget);</span>
+<span class="nc" id="L236">			reader.close();</span>
+<span class="nc" id="L237">			newModel.setRoot(rootNode);</span>
+<span class="nc" id="L238">			rootNode.setMap(newModel);</span>
+<span class="nc" id="L239">			getMindMapController().newMap(newModel);</span>
+<span class="nc" id="L240">			newModeController.invokeHooksRecursively((NodeAdapter) rootNode,</span>
+<span class="nc" id="L241">					newModel);</span>
+<span class="nc" id="L242">			setController(newModeController);</span>
+			// add new hook
+<span class="nc" id="L244">			toggleHook();</span>
+			// tell him about this thread.
+<span class="nc" id="L246">			Collection activatedHooks = getMindMapController().getRootNode()</span>
+<span class="nc" id="L247">					.getActivatedHooks();</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">			for (Iterator it = activatedHooks.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L249">				PermanentNodeHook hook = (PermanentNodeHook) it.next();</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">				if (hook instanceof SocketConnectionHook) {</span>
+<span class="nc" id="L251">					SocketConnectionHook connHook = null;</span>
+<span class="nc" id="L252">					connHook = (SocketConnectionHook) hook;</span>
+					// Tell the hook about me
+<span class="nc" id="L254">					connHook.setClientCommunication(this);</span>
+					/* register as listener, as I am a slave. */
+<span class="nc" id="L256">					connHook.registerFilter();</span>
+<span class="nc" id="L257">					this.mSocketConnectionHook = connHook;</span>
+<span class="nc" id="L258">					break;</span>
+				}
+			}
+		}
+<span class="nc" id="L262">	}</span>
+
+	/**
+	 * @param pNewModeController
+	 */
+	private void setController(MindMapController pNewModeController) {
+<span class="nc" id="L268">		mController = pNewModeController;</span>
+<span class="nc" id="L269">	}</span>
+
+	/**
+	 * @return
+	 */
+	private MindMapController getMindMapController() {
+<span class="nc" id="L275">		return mController;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#shutdown()
+	 */
+	public void shutdown() {
+		// we don't want to read anymore, as we send the goodbye anyway!
+<span class="nc" id="L285">		commitSuicide();</span>
+		try {
+<span class="nc bnc" id="L287" title="All 2 branches missed.">			if (!mReceivedGoodbye) {</span>
+				// Send only, if own goodbye.
+<span class="nc" id="L289">				CollaborationGoodbye goodbye = new CollaborationGoodbye();</span>
+<span class="nc" id="L290">				goodbye.setUserId(Tools.getUserName());</span>
+<span class="nc" id="L291">				send(goodbye);</span>
+				// in between, the socket has been closed.
+			}
+<span class="nc" id="L294">		} catch (Exception e) {</span>
+<span class="nc" id="L295">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+		try {
+<span class="nc" id="L298">			close();</span>
+<span class="nc" id="L299">		} catch (IOException e) {</span>
+<span class="nc" id="L300">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L302">	}</span>
+
+	/**
+	 * @return
+	 */
+	public int getPort() {
+<span class="nc" id="L308">		return mSocket.getLocalPort();</span>
+	}
+
+	public CollaborationUserInformation getUserInfo() {
+<span class="nc" id="L312">		return mUserInfo;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

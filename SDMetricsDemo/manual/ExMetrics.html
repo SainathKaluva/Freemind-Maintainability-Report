@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Exporting Data Tables</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ExportData.html">Prev</a> - <a href="ExGraphs.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="ExportData.html">4.15 Exporting Data</a> > 4.15.1 Exporting Data Tables
+<hr>
+<h3><a name="ExMetrics"></a>4.15.1 Exporting Data Tables</h3>
+
+Figure&nbsp;23 shows the export dialog for data tables.<p>
+
+<img src="images/exportdlg.png" alt="Data Export Dialog"><br>
+<b>Figure 23:&nbsp;Data Export Dialog</b><p>
+
+To specify the export, you have a number of options:<p>
+
+<b>Select export to one file or separate files</b>.  Usually, you will
+have several data tables, one for each element type. Here you
+specify if you want to store all tables in one file, or have each
+table written to a separate file.<p>
+
+<b>Sanitize data</b>.  This option is only applicable to the data tables 
+of the metric data tables view. The first table column of those tables shows the
+names of the design elements that were analyzed. Check this option to
+suppress the output of the element names. This can be useful if, for
+confidentiality reasons, you want to pass on or publish the metric
+data without disclosing the element names.<p>
+
+<b>Select the file name</b>. Enter the name of the file to write the
+data to. If you chose to export the data to separate files, the name
+you enter here will serve as a base name for the files created.<br>
+
+Example: You have tables for classes, packages, and interfaces, and
+enter &quot;data&quot; as file base name. This will create three
+files:
+<ul>
+<li><tt>data_Class.txt</tt>
+<li><tt>data_Package.txt</tt>
+<li><tt>data_Interface.txt</tt>
+</ul>
+The file base name is extended with an underscore and the name
+of the model element type the file contains.<p>
+
+<b>Select the file format (Files of type)</b>. The following formats
+are available from the "Files of type" dropdown list:
+<ul>
+<li>Tab-separated text. <br>
+Writes the data to text files with &quot;.txt&quot; file
+extension. Columns are separated by tabs, the first row contains the
+metric names. This format can be read by most spreadsheet software and
+statistical packages.<br>
+
+<li>Comma-separated vectors.<br>
+Writes the data to text files with &quot;.csv&quot; file
+extension. Columns are separated by commas, unless you specified
+a different delimiter, see <a href="Output.html">Section&nbsp;4.16.3 "Output"</a>.<br>
+<b>Note:</b> For CSV and text files you should prefer the "export 
+to separate files" option, as these formats do not really 
+support multiple tables in a single file.
+
+<li>HTML.<br> 
+Writes the data to HTML files, using HTML tables. When you export
+to separate HTML files, SDMetrics will additionally create a
+HTML frame set for convenient viewing of all tables.
+
+<li>OpenDocument Spreadsheet<br>Writes the data to .ods files.
+This format is used by the various OpenOffice/LibreOffice incarnations,
+as well as many other office solutions.
+
+<li>Excel XML File<br>
+Writes the data to .xml files for Microsoft&reg;
+Excel&trade; XP (2002) or later.
+
+<li>OpenOffice.org Calc<br>Writes the data to .sxc files for
+OpenOffice.org 1.0 Calc or later.
+</ul>
+
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ExportData.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="ExportData.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ExGraphs.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.15 "Exporting Data"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.15.2 "Exporting Graphs"</td></tr></table>
+
+</body>
+</html>

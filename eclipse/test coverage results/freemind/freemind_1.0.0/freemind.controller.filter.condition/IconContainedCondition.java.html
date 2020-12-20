@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>IconContainedCondition.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter.condition</a> &gt; <span class="el_source">IconContainedCondition.java</span></div><h1>IconContainedCondition.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 05.05.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.controller.filter.condition;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Set;
+
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+
+import freemind.controller.Controller;
+import freemind.main.Resources;
+import freemind.main.XMLElement;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMapNode;
+
+public class IconContainedCondition implements Condition {
+	static final String ICON = &quot;icon&quot;;
+	static final String NAME = &quot;icon_contained_condition&quot;;
+	private String iconName;
+
+<span class="nc" id="L45">	public IconContainedCondition(String iconName) {</span>
+<span class="nc" id="L46">		this.iconName = iconName;</span>
+<span class="nc" id="L47">	}</span>
+
+	public boolean checkNode(Controller c, MindMapNode node) {
+<span class="nc bnc" id="L50" title="All 2 branches missed.">		return iconFirstIndex(node, iconName) != -1</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">				|| isStateIconContained(node, iconName);</span>
+	}
+
+	static public int iconFirstIndex(MindMapNode node, String iconName) {
+<span class="nc" id="L55">		List icons = node.getIcons();</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		for (ListIterator i = icons.listIterator(); i.hasNext();) {</span>
+<span class="nc" id="L57">			MindIcon nextIcon = (MindIcon) i.next();</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">			if (iconName.equals(nextIcon.getName()))</span>
+<span class="nc" id="L59">				return i.previousIndex();</span>
+		}
+<span class="nc" id="L61">		return -1;</span>
+
+	}
+
+	static public int iconLastIndex(MindMapNode node, String iconName) {
+<span class="nc" id="L66">		List icons = node.getIcons();</span>
+<span class="nc" id="L67">		ListIterator i = icons.listIterator(icons.size());</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		while (i.hasPrevious()) {</span>
+<span class="nc" id="L69">			MindIcon nextIcon = (MindIcon) i.previous();</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">			if (iconName.equals(nextIcon.getName()))</span>
+<span class="nc" id="L71">				return i.nextIndex();</span>
+		}
+<span class="nc" id="L73">		return -1;</span>
+
+	}
+
+	private static boolean isStateIconContained(MindMapNode node,
+			String iconName) {
+<span class="nc" id="L79">		Set stateIcons = node.getStateIcons().keySet();</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		for (Iterator stateIcon = stateIcons.iterator(); stateIcon.hasNext();) {</span>
+<span class="nc" id="L81">			String nextIcon = (String) stateIcon.next();</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (iconName.equals(nextIcon))</span>
+<span class="nc" id="L83">				return true;</span>
+		}
+<span class="nc" id="L85">		return false;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * javax.swing.ListCellRenderer#getListCellRendererComponent(javax.swing
+	 * .JList, java.lang.Object, int, boolean, boolean)
+	 */
+	public JComponent getListCellRendererComponent() {
+<span class="nc" id="L96">		JCondition component = new JCondition();</span>
+<span class="nc" id="L97">		String text = Resources.getInstance().getResourceString(&quot;filter_icon&quot;)</span>
+<span class="nc" id="L98">				+ ' '</span>
+<span class="nc" id="L99">				+ Resources.getInstance().getResourceString(&quot;filter_contains&quot;)</span>
+<span class="nc" id="L100">				+ ' ';</span>
+<span class="nc" id="L101">		component.add(new JLabel(text));</span>
+<span class="nc" id="L102">		component.add(MindIcon.factory(getIconName()).getRendererComponent());</span>
+<span class="nc" id="L103">		return component;</span>
+	}
+
+	private String getIconName() {
+<span class="nc" id="L107">		return iconName;</span>
+	}
+
+	public void save(XMLElement element) {
+<span class="nc" id="L111">		XMLElement child = new XMLElement();</span>
+<span class="nc" id="L112">		child.setName(NAME);</span>
+<span class="nc" id="L113">		child.setAttribute(ICON, iconName);</span>
+<span class="nc" id="L114">		element.addChild(child);</span>
+<span class="nc" id="L115">	}</span>
+
+	static Condition load(XMLElement element) {
+<span class="nc" id="L118">		return new IconContainedCondition(element.getStringAttribute(ICON));</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

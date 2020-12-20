@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>DatabaseRegistration.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.database</a> &gt; <span class="el_source">DatabaseRegistration.java</span></div><h1>DatabaseRegistration.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2009  Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 28.01.2009
+ */
+/*$Id: DatabaseRegistration.java,v 1.1.2.1 2009/02/04 19:31:21 christianfoltin Exp $*/
+
+package plugins.collaboration.database;
+
+import java.util.Collection;
+import java.util.Iterator;
+
+import javax.swing.Action;
+import javax.swing.JMenuItem;
+
+import freemind.controller.MenuItemEnabledListener;
+import freemind.controller.MenuItemSelectedListener;
+import freemind.extensions.HookRegistration;
+import freemind.extensions.PermanentNodeHook;
+import freemind.modes.MindMap;
+import freemind.modes.ModeController;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.NodeHookAction;
+
+public class DatabaseRegistration implements HookRegistration,
+		MenuItemSelectedListener, MenuItemEnabledListener {
+
+	private final MindMapController mController;
+	private final java.util.logging.Logger logger;
+	private MindMap mMap;
+
+<span class="nc" id="L48">	public DatabaseRegistration(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L49">		this.mController = (MindMapController) controller;</span>
+<span class="nc" id="L50">		mMap = map;</span>
+<span class="nc" id="L51">		logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L52">	}</span>
+
+	public void register() {
+<span class="nc" id="L55">		logger.fine(&quot;Registration of database registration.&quot;);</span>
+<span class="nc" id="L56">	}</span>
+
+	public void deRegister() {
+<span class="nc" id="L59">		logger.fine(&quot;Deregistration of database registration.&quot;);</span>
+<span class="nc" id="L60">	}</span>
+
+	public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+<span class="nc" id="L63">		logger.info(this + &quot; is asked for &quot; + pAction + &quot;.&quot;);</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (pAction instanceof NodeHookAction) {</span>
+<span class="nc" id="L65">			NodeHookAction action = (NodeHookAction) pAction;</span>
+<span class="nc" id="L66">			if (action.getHookName().equals(</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">					DatabaseConnector.SLAVE_STARTER_NAME)) {</span>
+<span class="nc" id="L68">				return isSlave();</span>
+			}
+		}
+<span class="nc" id="L71">		return isMaster();</span>
+	}
+
+	private boolean isMaster() {
+<span class="nc" id="L75">		Collection activatedHooks = mController.getRootNode()</span>
+<span class="nc" id="L76">				.getActivatedHooks();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		for (Iterator it = activatedHooks.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L78">			PermanentNodeHook hook = (PermanentNodeHook) it.next();</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">			if (hook instanceof DatabaseStarter) {</span>
+<span class="nc" id="L80">				return true;</span>
+			}
+		}
+<span class="nc" id="L83">		return false;</span>
+	}
+
+	private boolean isSlave() {
+<span class="nc" id="L87">		Collection activatedHooks = mController.getRootNode()</span>
+<span class="nc" id="L88">				.getActivatedHooks();</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for (Iterator it = activatedHooks.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L90">			PermanentNodeHook hook = (PermanentNodeHook) it.next();</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">			if (hook instanceof DatabaseConnectionHook) {</span>
+<span class="nc" id="L92">				return true;</span>
+			}
+		}
+<span class="nc" id="L95">		return false;</span>
+	}
+
+	/**
+	 * When one option is enabled, the other is impossible.
+	 * */
+	public boolean isEnabled(JMenuItem pItem, Action pAction) {
+<span class="nc" id="L102">		logger.info(this + &quot; is asked for &quot; + pAction + &quot;.&quot;);</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (pAction instanceof NodeHookAction) {</span>
+<span class="nc" id="L104">			NodeHookAction action = (NodeHookAction) pAction;</span>
+<span class="nc" id="L105">			if (action.getHookName().equals(</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">					DatabaseConnector.SLAVE_STARTER_NAME)) {</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				return !isMaster();</span>
+			}
+		}
+<span class="nc bnc" id="L110" title="All 2 branches missed.">		return !isSlave();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

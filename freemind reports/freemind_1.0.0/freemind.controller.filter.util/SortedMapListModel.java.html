@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>SortedMapListModel.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter.util</a> &gt; <span class="el_source">SortedMapListModel.java</span></div><h1>SortedMapListModel.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 14.05.2005
+ *
+ */
+package freemind.controller.filter.util;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import javax.swing.AbstractListModel;
+
+public class SortedMapListModel extends AbstractListModel implements
+		SortedListModel {
+	SortedSet model;
+
+<span class="nc" id="L38">	public SortedMapListModel() {</span>
+<span class="nc" id="L39">		model = new TreeSet();</span>
+<span class="nc" id="L40">	}</span>
+
+	public int getSize() {
+<span class="nc" id="L43">		return model.size();</span>
+	}
+
+	public Object getElementAt(int index) {
+<span class="nc" id="L47">		return model.toArray()[index];</span>
+	}
+
+	public void add(Object element) {
+<span class="nc bnc" id="L51" title="All 2 branches missed.">		if (model.add(element)) {</span>
+<span class="nc" id="L52">			fireContentsChanged(this, 0, getSize());</span>
+		}
+<span class="nc" id="L54">	}</span>
+
+	public void addAll(Object elements[]) {
+<span class="nc" id="L57">		Collection c = Arrays.asList(elements);</span>
+<span class="nc" id="L58">		model.addAll(c);</span>
+<span class="nc" id="L59">		fireContentsChanged(this, 0, getSize());</span>
+<span class="nc" id="L60">	}</span>
+
+	public void clear() {
+<span class="nc" id="L63">		int oldSize = getSize();</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">		if (oldSize &gt; 0) {</span>
+<span class="nc" id="L65">			model.clear();</span>
+<span class="nc" id="L66">			fireIntervalRemoved(this, 0, oldSize - 1);</span>
+		}
+<span class="nc" id="L68">	}</span>
+
+	public boolean contains(Object element) {
+<span class="nc" id="L71">		return model.contains(element);</span>
+	}
+
+	public Object firstElement() {
+<span class="nc" id="L75">		return model.first();</span>
+	}
+
+	public Iterator iterator() {
+<span class="nc" id="L79">		return model.iterator();</span>
+	}
+
+	public Object lastElement() {
+<span class="nc" id="L83">		return model.last();</span>
+	}
+
+	/**
+ */
+	public int getIndexOf(Object o) {
+<span class="nc" id="L89">		Iterator i = iterator();</span>
+<span class="nc" id="L90">		int count = -1;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		while (i.hasNext()) {</span>
+<span class="nc" id="L92">			count++;</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">			if (i.next().equals(o))</span>
+<span class="nc" id="L94">				return count;</span>
+		}
+<span class="nc" id="L96">		return -1;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.util.SortedListModel#replace(java.lang.Object,
+	 * java.lang.Object)
+	 */
+	public void replace(Object oldO, Object newO) {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (oldO.equals(newO))</span>
+<span class="nc" id="L108">			return;</span>
+<span class="nc" id="L109">		boolean removed = model.remove(oldO);</span>
+<span class="nc" id="L110">		boolean added = model.add(newO);</span>
+<span class="nc bnc" id="L111" title="All 4 branches missed.">		if (removed || added) {</span>
+<span class="nc" id="L112">			fireContentsChanged(this, 0, getSize());</span>
+		}
+<span class="nc" id="L114">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.util.SortedListModel#delete(java.lang.Object)
+	 */
+	public void remove(Object element) {
+<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (model.remove(element)) {</span>
+<span class="nc" id="L124">			fireContentsChanged(this, 0, getSize());</span>
+		}
+
+<span class="nc" id="L127">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

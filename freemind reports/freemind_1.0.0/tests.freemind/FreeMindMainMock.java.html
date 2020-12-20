@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FreeMindMainMock.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">FreeMindMainMock.java</span></div><h1>FreeMindMainMock.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2006  Christian Foltin &lt;christianfoltin@users.sourceforge.net&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: FreeMindMainMock.java,v 1.1.2.16 2009/03/29 19:37:23 christianfoltin Exp $*/
+
+package tests.freemind;
+
+import java.awt.Container;
+import java.io.File;
+import java.net.URL;
+import java.util.List;
+import java.util.Properties;
+import java.util.ResourceBundle;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLayeredPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+
+import freemind.controller.Controller;
+import freemind.controller.MenuBar;
+import freemind.main.FreeMindMain;
+import freemind.main.FreeMindStarter;
+import freemind.main.Resources;
+import freemind.view.mindmapview.MapView;
+
+/** */
+public class FreeMindMainMock implements FreeMindMain {
+
+	private Properties mProperties;
+
+	/**
+     * 
+     */
+	public FreeMindMainMock() {
+<span class="fc" id="L54">		super();</span>
+<span class="fc" id="L55">		mProperties = new FreeMindStarter().readDefaultPreferences();</span>
+<span class="fc" id="L56">		Resources.createInstance(this);</span>
+
+<span class="fc" id="L58">	}</span>
+
+	public JFrame getJFrame() {
+<span class="nc" id="L61">		return null;</span>
+	}
+
+	public boolean isApplet() {
+<span class="nc" id="L65">		return false;</span>
+	}
+
+	public MapView getView() {
+<span class="nc" id="L69">		return null;</span>
+	}
+
+	public void setView(MapView view) {
+<span class="nc" id="L73">	}</span>
+
+	public Controller getController() {
+<span class="nc" id="L76">		return null;</span>
+	}
+
+	public void setWaitingCursor(boolean waiting) {
+<span class="nc" id="L80">	}</span>
+
+	public File getPatternsFile() {
+<span class="nc" id="L83">		return null;</span>
+	}
+
+	public MenuBar getFreeMindMenuBar() {
+<span class="nc" id="L87">		return null;</span>
+	}
+
+	public ResourceBundle getResources() {
+<span class="nc" id="L91">		return null;</span>
+	}
+
+	public String getResourceString(String key) {
+<span class="fc" id="L95">		return key;</span>
+	}
+
+	public String getResourceString(String key, String resource) {
+<span class="nc" id="L99">		return key;</span>
+	}
+
+	public Container getContentPane() {
+<span class="nc" id="L103">		return null;</span>
+	}
+
+	public void out(String msg) {
+<span class="nc" id="L107">	}</span>
+
+	public void err(String msg) {
+<span class="nc" id="L110">	}</span>
+
+	public void openDocument(URL location) throws Exception {
+<span class="nc" id="L113">	}</span>
+
+	public void repaint() {
+<span class="nc" id="L116">	}</span>
+
+	public URL getResource(String name) {
+<span class="nc" id="L119">		return ClassLoader.getSystemResource(name);</span>
+	}
+
+	public int getIntProperty(String key, int defaultValue) {
+		try {
+<span class="nc" id="L124">			return Integer.parseInt(getProperty(key));</span>
+<span class="nc" id="L125">		} catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L126">			return defaultValue;</span>
+		}
+	}
+
+	public Properties getProperties() {
+<span class="nc" id="L131">		return mProperties;</span>
+	}
+
+	public String getProperty(String key) {
+<span class="fc" id="L135">		return mProperties.getProperty(key);</span>
+	}
+
+	public void setProperty(String key, String value) {
+<span class="nc" id="L139">	}</span>
+
+	public void saveProperties(boolean pIsShutdown) {
+<span class="nc" id="L142">	}</span>
+
+	public String getFreemindDirectory() {
+<span class="nc" id="L145">		return &quot;.&quot;;</span>
+	}
+
+	public JLayeredPane getLayeredPane() {
+<span class="nc" id="L149">		return null;</span>
+	}
+
+	public void setTitle(String title) {
+<span class="nc" id="L153">	}</span>
+
+	public int getWinHeight() {
+<span class="nc" id="L156">		return 0;</span>
+	}
+
+	public int getWinWidth() {
+<span class="nc" id="L160">		return 0;</span>
+	}
+
+	public int getWinState() {
+<span class="nc" id="L164">		return 0;</span>
+	}
+
+	public int getWinX() {
+<span class="nc" id="L168">		return 0;</span>
+	}
+
+	public int getWinY() {
+<span class="nc" id="L172">		return 0;</span>
+	}
+
+	public VersionInformation getFreemindVersion() {
+<span class="nc" id="L176">		return new VersionInformation(1, 0, 0, FreeMindMain.VERSION_TYPE_ALPHA,</span>
+<span class="nc" id="L177">				42);</span>
+	}
+
+	public Logger getLogger(String forClass) {
+<span class="fc" id="L181">		return java.util.logging.Logger.getLogger(forClass);</span>
+	}
+
+	public ClassLoader getFreeMindClassLoader() {
+<span class="nc" id="L185">		return this.getClass().getClassLoader();</span>
+	}
+
+	public String getFreemindBaseDir() {
+<span class="nc" id="L189">		return &quot;.&quot;;</span>
+	}
+
+	public String getAdjustableProperty(String pLabel) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L194">		return null;</span>
+	}
+
+	public void setDefaultProperty(String pKey, String pValue) {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L200">	}</span>
+
+	public JSplitPane insertComponentIntoSplitPane(JComponent pMindMapComponent) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L204">		return null;</span>
+	}
+
+	public void removeSplitPane() {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L210">	}</span>
+
+	public JComponent getContentComponent() {
+<span class="nc" id="L213">		return null;</span>
+	}
+
+	public JScrollPane getScrollPane() {
+<span class="nc" id="L217">		return null;</span>
+	}
+
+	public void registerStartupDoneListener(
+			StartupDoneListener pStartupDoneListener) {
+		// TODO Auto-generated method stub
+
+<span class="nc" id="L224">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.main.FreeMindMain#getLoggerList()
+	 */
+	public List getLoggerList() {
+<span class="nc" id="L230">		return new Vector();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

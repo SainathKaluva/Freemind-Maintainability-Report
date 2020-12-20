@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Set Expressions</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="DotOp.html">Prev</a> - <a href="DefCondExp.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="ExpTerms.html">8.5 Expression Terms</a> > 8.5.3 Set Expressions
+<hr>
+<h3><a name="DefSetExp"></a>8.5.3 Set Expressions</h3>
+
+A set expression is an expression that returns a set. It is made up of
+identifiers (names of sets), and set operations. Identifiers have been
+described in <a href="Ident.html">Section&nbsp;8.5.1.2 "Identifiers"</a>. The admissible set operations are:
+<ul>
+<li>A+B: the union of A and B.<br>
+
+If both A and B are regular sets, the resulting set will be a regular
+set containing the elements that occur in A or in B or both.<br>
+
+If A or B is a multiset, the resulting set will be a multiset,
+respecting the cardinality of elements. For example, if element
+<i>e</i> occurs five times in multiset A, and twice in multiset B, its
+cardinality in the union is seven. If B is a regular set containing
+element <i>e</i>, the cardinality of <i>e</i> in the union is six.
+
+<li>A*B: the intersection of A and B.<br>
+
+If A or B is a regular set, the resulting set will be a regular set
+containing the elements that occur both in A and in B.<br>
+
+If both A and B are multisets, the resulting set will be a multiset,
+respecting the cardinality of elements. For example, if element
+<i>e</i> occurs five times in multiset A, and twice in multiset B, its
+cardinality in the intersection is two.
+
+<li>A-B: A without B.<br>
+
+If A is a regular set, the resulting set will be a regular set
+containing all elements that occur in A but not in B.<br>
+
+If A is a multiset, the resulting set will be a multiset, respecting
+the cardinality of elements. For example, if element
+<i>e</i> occurs five times in multiset A, and twice in multiset B, its
+cardinality in the resulting set is three. If B is a regular set containing
+element <i>e</i>, the cardinality of <i>e</i> in the resulting set is four.
+
+
+<li> <tt>a</tt>.B: set B of model element <tt>a</tt>.<br> 
+The dot operator (see <a href="DotOp.html">Section&nbsp;8.5.2.2 "Special Operators"</a>) is also available in set
+expressions. The difference is that the right hand side, B, must be a
+set expression. Evaluating expression <tt>a</tt>.B for model element
+<i>e</i> thus works as follows:
+<ul>
+<li>Evaluate metric expression <tt>a</tt> for model element
+<i>e</i>. This yields a second model element, <i>e'</i>.
+<li>Evaluate set expression B for model element
+<i>e'</i>. This is the result of <tt>a</tt>.B.
+<li>If an error occurs during evaluation of expression <tt>a</tt> or
+B, or if expression <tt>a</tt> does not yield a model
+element, no error is reported. Instead, a regular empty set is
+returned as value of <tt>a.B</tt>.
+</ul>
+</ul>
+The dot operator has precedence over the * operator, which has precedence
+over the + and - operators. A+B-C is equivalent to (A+B)-C, not A+(B-C). Use
+parenthesis to enforce the intended precedence.<p>
+
+An example for a valid set expression is ((A+B)-context.C)*D.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="DotOp.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="ExpTerms.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="DefCondExp.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.5.2.2 "Special Operators"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.5.4 "Condition Expressions"</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>BrowseHookFactory.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.browsemode</a> &gt; <span class="el_source">BrowseHookFactory.java</span></div><h1>BrowseHookFactory.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2005  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 31.12.2005
+ */
+
+package freemind.modes.browsemode;
+
+import java.util.List;
+import java.util.Properties;
+import java.util.Vector;
+
+import freemind.extensions.HookFactoryAdapter;
+import freemind.extensions.HookInstanciationMethod;
+import freemind.extensions.ModeControllerHook;
+import freemind.extensions.NodeHook;
+import freemind.extensions.PermanentNodeHookSubstituteUnknown;
+import freemind.modes.common.plugins.MapNodePositionHolderBase;
+import freemind.modes.common.plugins.ReminderHookBase;
+
+/**
+ * @author foltin
+ * 
+ */
+public class BrowseHookFactory extends HookFactoryAdapter {
+
+	/**
+	 *
+	 */
+	public BrowseHookFactory() {
+<span class="nc" id="L47">		super();</span>
+<span class="nc" id="L48">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.HookFactory#getPossibleNodeHooks()
+	 */
+	public Vector getPossibleNodeHooks() {
+<span class="nc" id="L56">		return new Vector();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.HookFactory#getPossibleModeControllerHooks()
+	 */
+	public Vector getPossibleModeControllerHooks() {
+<span class="nc" id="L65">		return new Vector();</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.HookFactory#createModeControllerHook(java.lang.String
+	 * )
+	 */
+	public ModeControllerHook createModeControllerHook(String hookName) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L77">		return null;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.HookFactory#createNodeHook(java.lang.String)
+	 */
+	public NodeHook createNodeHook(String hookName) {
+		// System.out.println(&quot;create node hook:&quot;+hookName);
+		NodeHook hook;
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (hookName.equals(ReminderHookBase.PLUGIN_LABEL)) {</span>
+<span class="nc" id="L89">			hook = new BrowseReminderHook();</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		} else if (hookName.equals(MapNodePositionHolderBase.NODE_MAP_HOOK_NAME)) {</span>
+<span class="nc" id="L91">			hook = new MapNodePositionHolderBase();</span>
+<span class="nc" id="L92">		} else {</span>
+<span class="nc" id="L93">			hook = new PermanentNodeHookSubstituteUnknown(hookName);</span>
+		}
+		// decorate hook.
+<span class="nc" id="L96">		hook.setProperties(new Properties());</span>
+<span class="nc" id="L97">		hook.setName(hookName);</span>
+<span class="nc" id="L98">		hook.setPluginBaseClass(null);</span>
+<span class="nc" id="L99">		return hook;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.HookFactory#getHookMenuPositions(java.lang.String)
+	 */
+	public List getHookMenuPositions(String hookName) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L110">		return null;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.HookFactory#getInstanciationMethod(java.lang.String)
+	 */
+	public HookInstanciationMethod getInstanciationMethod(String hookName) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L121">		return null;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.HookFactory#getRegistrations()
+	 */
+	public List getRegistrations() {
+		// TODO Auto-generated method stub
+<span class="nc" id="L131">		return null;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.HookFactory#getPluginBaseClass(java.lang.String)
+	 */
+	public Object getPluginBaseClass(String hookName) {
+		// TODO Auto-generated method stub
+<span class="nc" id="L141">		return null;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

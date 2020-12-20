@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributePopupMenu.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview.attributeview</a> &gt; <span class="el_source">AttributePopupMenu.java</span></div><h1>AttributePopupMenu.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 26.11.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.view.mindmapview.attributeview;
+
+import java.awt.Component;
+import java.awt.EventQueue;
+import java.awt.KeyboardFocusManager;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
+import javax.swing.table.JTableHeader;
+
+import freemind.main.Resources;
+import freemind.modes.attributes.AttributeTableLayoutModel;
+import freemind.modes.attributes.AttributeTableModel;
+
+/**
+ * @author Dimitri Polivaev 26.11.2005
+ */
+<span class="nc" id="L48">public class AttributePopupMenu extends JPopupMenu implements MouseListener {</span>
+<span class="nc" id="L49">	private JMenuItem edit = null;</span>
+<span class="nc" id="L50">	private JMenuItem optimalWidth = null;</span>
+<span class="nc" id="L51">	private JMenuItem hide = null;</span>
+<span class="nc" id="L52">	private JMenuItem insert = null;</span>
+<span class="nc" id="L53">	private JMenuItem delete = null;</span>
+<span class="nc" id="L54">	private JMenuItem up = null;</span>
+<span class="nc" id="L55">	private JMenuItem down = null;</span>
+	private AttributeTable table;
+	private int row;
+
+	/**
+	 * @return Returns the optimalWidth.
+	 */
+	private JMenuItem getOptimalWidth() {
+<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (optimalWidth == null) {</span>
+<span class="nc" id="L64">			optimalWidth = new JMenuItem(Resources.getInstance()</span>
+<span class="nc" id="L65">					.getResourceString(&quot;attributes_popup_optimal_width&quot;));</span>
+<span class="nc" id="L66">			optimalWidth.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L68">					table.setOptimalColumnWidths();</span>
+<span class="nc" id="L69">				}</span>
+			});
+		}
+<span class="nc" id="L72">		return optimalWidth;</span>
+	}
+
+	/**
+	 * @return Returns the insert.
+	 */
+	private JMenuItem getInsert() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (insert == null) {</span>
+<span class="nc" id="L80">			insert = new JMenuItem(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L81">					&quot;attributes_popup_new&quot;));</span>
+<span class="nc" id="L82">			insert.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L84">					table.insertRow(row + 1);</span>
+<span class="nc" id="L85">				}</span>
+			});
+		}
+<span class="nc" id="L88">		return insert;</span>
+	}
+
+	/**
+	 * @return Returns the delete.
+	 */
+	private JMenuItem getDelete() {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (delete == null) {</span>
+<span class="nc" id="L96">			delete = new JMenuItem(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L97">					&quot;attributes_popup_delete&quot;));</span>
+<span class="nc" id="L98">			delete.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L100">					table.removeRow(row);</span>
+<span class="nc" id="L101">				}</span>
+			});
+		}
+<span class="nc" id="L104">		return delete;</span>
+	}
+
+	/**
+	 * @return Returns the up.
+	 */
+	private JMenuItem getUp() {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (up == null) {</span>
+<span class="nc" id="L112">			up = new JMenuItem(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L113">					&quot;attributes_popup_up&quot;));</span>
+<span class="nc" id="L114">			up.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L116">					table.moveRowUp(row);</span>
+<span class="nc" id="L117">				}</span>
+			});
+		}
+<span class="nc" id="L120">		return up;</span>
+	}
+
+	/**
+	 * @return Returns the down.
+	 */
+	private JMenuItem getDown() {
+<span class="nc bnc" id="L127" title="All 2 branches missed.">		if (down == null) {</span>
+<span class="nc" id="L128">			down = new JMenuItem(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L129">					&quot;attributes_popup_down&quot;));</span>
+<span class="nc" id="L130">			down.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L132">					table.moveRowDown(row);</span>
+<span class="nc" id="L133">				}</span>
+			});
+		}
+<span class="nc" id="L136">		return down;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.event.MouseListener#mouseClicked(java.awt.event.MouseEvent)
+	 */
+	public void mouseClicked(MouseEvent e) {
+<span class="nc" id="L145">	}</span>
+
+	public void mousePressed(MouseEvent e) {
+<span class="nc" id="L148">		maybeShowPopup(e);</span>
+<span class="nc" id="L149">	}</span>
+
+	public void mouseReleased(MouseEvent e) {
+<span class="nc" id="L152">		maybeShowPopup(e);</span>
+<span class="nc" id="L153">	}</span>
+
+	private void maybeShowPopup(MouseEvent e) {
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (e.isPopupTrigger()) {</span>
+<span class="nc" id="L157">			selectTable(e.getComponent(), e.getPoint());</span>
+<span class="nc" id="L158">			make();</span>
+<span class="nc" id="L159">			show(e.getComponent(), e.getX(), e.getY());</span>
+		}
+<span class="nc" id="L161">	}</span>
+
+	/**
+     * 
+     */
+	private void make() {
+<span class="nc" id="L167">		String attributeViewType = table.getAttributeView().getViewType();</span>
+<span class="nc" id="L168">		AttributeTableModel model = table.getAttributeTableModel();</span>
+<span class="nc" id="L169">		int rowCount = model.getRowCount();</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		if (attributeViewType.equals(AttributeTableLayoutModel.SHOW_ALL)) {</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			if (rowCount != 0) {</span>
+<span class="nc" id="L172">				add(getOptimalWidth());</span>
+			}
+<span class="nc" id="L174">			add(getInsert());</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">			if (row != -1) {</span>
+<span class="nc" id="L176">				add(getDelete());</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">				if (row != 0) {</span>
+<span class="nc" id="L178">					add(getUp());</span>
+				}
+<span class="nc bnc" id="L180" title="All 2 branches missed.">				if (row != rowCount - 1) {</span>
+<span class="nc" id="L181">					add(getDown());</span>
+				}
+			}
+<span class="nc" id="L184">		} else {</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">			if (rowCount != 0) {</span>
+<span class="nc" id="L186">				add(getOptimalWidth());</span>
+			}
+		}
+
+<span class="nc" id="L190">	}</span>
+
+	private void selectTable(Component component, Point point)
+			throws AssertionError {
+<span class="nc" id="L194">		int componentCount = getComponentCount();</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		for (int i = componentCount; i &gt; 0;) {</span>
+<span class="nc" id="L196">			remove(--i);</span>
+		}
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		if (component instanceof AttributeTable) {</span>
+<span class="nc" id="L199">			oldTable = false;</span>
+<span class="nc" id="L200">			table = (AttributeTable) component;</span>
+<span class="nc" id="L201">			row = table.rowAtPoint(point);</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">			if (table.getValueAt(row, 0).equals(&quot;&quot;)) {</span>
+<span class="nc" id="L203">				row--;</span>
+			}
+<span class="nc" id="L205">			int selectedRow = table.getSelectedRow();</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">		} else if (component instanceof JTableHeader) {</span>
+<span class="nc" id="L207">			oldTable = false;</span>
+<span class="nc" id="L208">			JTableHeader header = (JTableHeader) component;</span>
+<span class="nc" id="L209">			table = (AttributeTable) header.getTable();</span>
+<span class="nc" id="L210">			row = -1;</span>
+<span class="nc" id="L211">		} else {</span>
+<span class="nc" id="L212">			throw new AssertionError();</span>
+		}
+<span class="nc" id="L214">		table.requestFocus();</span>
+<span class="nc" id="L215">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.event.MouseListener#mouseEntered(java.awt.event.MouseEvent)
+	 */
+	public void mouseEntered(MouseEvent e) {
+<span class="nc" id="L223">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.awt.event.MouseListener#mouseExited(java.awt.event.MouseEvent)
+	 */
+	public void mouseExited(MouseEvent e) {
+<span class="nc" id="L231">	}</span>
+
+	private boolean oldTable;
+
+	protected void firePopupMenuWillBecomeInvisible() {
+<span class="nc bnc" id="L236" title="All 2 branches missed.">		if (row != -1) {</span>
+<span class="nc" id="L237">			table.removeRowSelectionInterval(row, row);</span>
+		}
+<span class="nc" id="L239">		oldTable = true;</span>
+<span class="nc" id="L240">		EventQueue.invokeLater(new Runnable() {</span>
+
+			public void run() {
+<span class="nc bnc" id="L243" title="All 2 branches missed.">				if (!oldTable) {</span>
+<span class="nc" id="L244">					return;</span>
+				}
+<span class="nc" id="L246">				final KeyboardFocusManager focusManager = java.awt.KeyboardFocusManager</span>
+<span class="nc" id="L247">						.getCurrentKeyboardFocusManager();</span>
+<span class="nc" id="L248">				final Component focusOwner = SwingUtilities.getAncestorOfClass(</span>
+<span class="nc" id="L249">						AttributeTable.class, focusManager.getFocusOwner());</span>
+<span class="nc bnc" id="L250" title="All 4 branches missed.">				if (table != focusOwner &amp;&amp; focusOwner instanceof JComponent) {</span>
+<span class="nc" id="L251">					table.requestFocus(true);</span>
+<span class="nc" id="L252">					((JComponent) focusOwner).requestFocus();</span>
+				}
+<span class="nc" id="L254">				table = null;</span>
+<span class="nc" id="L255">			}</span>
+		});
+<span class="nc" id="L257">	}</span>
+
+	protected void firePopupMenuWillBecomeVisible() {
+<span class="nc bnc" id="L260" title="All 2 branches missed.">		if (row != -1) {</span>
+<span class="nc" id="L261">			table.addRowSelectionInterval(row, row);</span>
+		}
+<span class="nc" id="L263">	}</span>
+
+	public AttributeTable getTable() {
+<span class="nc" id="L266">		return table;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

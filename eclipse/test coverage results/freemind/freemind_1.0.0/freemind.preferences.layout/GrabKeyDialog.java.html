@@ -1,0 +1,578 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>GrabKeyDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.preferences.layout</a> &gt; <span class="el_source">GrabKeyDialog.java</span></div><h1>GrabKeyDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*</span>
+ * GrabKeyDialog.java - Grabs keys from the keyboard
+ * :tabSize=8:indentSize=8:noTabs=false:
+ * :folding=explicit:collapseFolds=1:
+ *
+ * Copyright (C) 2001, 2002 Slava Pestov
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
+package freemind.preferences.layout;
+
+//{{{ Imports
+import java.awt.AWTEvent;
+import java.awt.Dialog;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.lang.reflect.Field;
+import java.util.Enumeration;
+import java.util.Vector;
+
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.border.EmptyBorder;
+
+import freemind.main.FreeMindMain;
+
+/**
+ * A dialog for getting shortcut keys.
+ */
+public class GrabKeyDialog extends JDialog {
+	private final FreeMindMain fmMain;
+
+<span class="nc" id="L53">	private static class Buffer {</span>
+
+		/**
+		 */
+		public int getLength() {
+			// TODO Auto-generated method stub
+<span class="nc" id="L59">			return 0;</span>
+		}
+
+		/**
+		 */
+		public void insert(int length, String string) {
+			// TODO Auto-generated method stub
+
+<span class="nc" id="L67">		}</span>
+
+	}
+
+	// {{{ toString() method
+	public static String toString(KeyEvent evt) {
+		String id;
+<span class="nc bnc" id="L74" title="All 4 branches missed.">		switch (evt.getID()) {</span>
+		case KeyEvent.KEY_PRESSED:
+<span class="nc" id="L76">			id = &quot;KEY_PRESSED&quot;;</span>
+<span class="nc" id="L77">			break;</span>
+		case KeyEvent.KEY_RELEASED:
+<span class="nc" id="L79">			id = &quot;KEY_RELEASED&quot;;</span>
+<span class="nc" id="L80">			break;</span>
+		case KeyEvent.KEY_TYPED:
+<span class="nc" id="L82">			id = &quot;KEY_TYPED&quot;;</span>
+<span class="nc" id="L83">			break;</span>
+		default:
+<span class="nc" id="L85">			id = &quot;unknown type&quot;;</span>
+<span class="nc" id="L86">			break;</span>
+		}
+
+<span class="nc" id="L89">		return id + &quot;,keyCode=0x&quot; + Integer.toString(evt.getKeyCode(), 16)</span>
+<span class="nc" id="L90">				+ &quot;,keyChar=0x&quot; + Integer.toString(evt.getKeyChar(), 16)</span>
+<span class="nc" id="L91">				+ &quot;,modifiers=0x&quot; + Integer.toString(evt.getModifiers(), 16);</span>
+	} // }}}
+
+	// {{{ GrabKeyDialog constructor
+	/**
+	 * Create and show a new modal dialog.
+	 * 
+	 * @param parent
+	 *            center dialog on this component.
+	 * @param binding
+	 *            the action/macro that should get a binding.
+	 * @param allBindings
+	 *            all other key bindings.
+	 * @param debugBuffer
+	 *            debug info will be dumped to this buffer (may be null)
+	 * @since jEdit 4.1pre7
+	 */
+	// private GrabKeyDialog(Dialog parent, KeyBinding binding,
+	// Vector allBindings, Buffer debugBuffer)
+	// {
+	// super(parent,(getText(&quot;&quot;grab-key.title&quot;)),true);
+	//
+	// init(binding,allBindings,debugBuffer);
+	// } //}}}
+
+	// {{{ GrabKeyDialog constructor
+	/**
+	 * Create and show a new modal dialog.
+	 * 
+	 * @param parent
+	 *            center dialog on this component.
+	 * @param binding
+	 *            the action/macro that should get a binding.
+	 * @param allBindings
+	 *            all other key bindings.
+	 * @param debugBuffer
+	 *            debug info will be dumped to this buffer (may be null)
+	 * @since jEdit 4.1pre7
+	 */
+	public GrabKeyDialog(FreeMindMain fmMain, Dialog parent,
+			KeyBinding binding, Vector allBindings, Buffer debugBuffer) {
+<span class="nc" id="L132">		this(fmMain, parent, binding, allBindings, debugBuffer, 0);</span>
+<span class="nc" id="L133">	}</span>
+
+	public GrabKeyDialog(FreeMindMain fmMain, Dialog parent,
+			KeyBinding binding, Vector allBindings, Buffer debugBuffer,
+			int modifierMask) {
+<span class="nc" id="L138">		super(parent, (/* FIXME: getText */(&quot;grab-key.title&quot;)), true);</span>
+<span class="nc" id="L139">		this.fmMain = fmMain;</span>
+<span class="nc" id="L140">		this.modifierMask = modifierMask;</span>
+<span class="nc" id="L141">		setTitle(getText(&quot;grab-key.title&quot;));</span>
+
+<span class="nc" id="L143">		init(binding, allBindings, debugBuffer);</span>
+<span class="nc" id="L144">	} // }}}</span>
+
+	// {{{ getShortcut() method
+	/**
+	 * Returns the shortcut, or null if the current shortcut should be removed
+	 * or the dialog either has been cancelled. Use isOK() to determine if the
+	 * latter is true.
+	 */
+	public String getShortcut() {
+<span class="nc bnc" id="L153" title="All 2 branches missed.">		if (isOK)</span>
+<span class="nc" id="L154">			return shortcut.getText();</span>
+		else
+<span class="nc" id="L156">			return null;</span>
+	} // }}}
+
+	// {{{ isOK() method
+	/**
+	 * Returns true, if the dialog has not been cancelled.
+	 * 
+	 * @since jEdit 3.2pre9
+	 */
+	public boolean isOK() {
+<span class="nc" id="L166">		return isOK;</span>
+	} // }}}
+
+	// {{{ isManagingFocus() method
+	/**
+	 * Returns if this component can be traversed by pressing the Tab key. This
+	 * returns false.
+	 */
+	public boolean isManagingFocus() {
+<span class="nc" id="L175">		return false;</span>
+	} // }}}
+
+	// {{{ getFocusTraversalKeysEnabled() method
+	/**
+	 * Makes the tab key work in Java 1.4.
+	 * 
+	 * @since jEdit 3.2pre4
+	 */
+	public boolean getFocusTraversalKeysEnabled() {
+<span class="nc" id="L185">		return false;</span>
+	} // }}}
+
+	// {{{ processKeyEvent() method
+	protected void processKeyEvent(KeyEvent evt) {
+<span class="nc" id="L190">		shortcut.processKeyEvent(evt);</span>
+<span class="nc" id="L191">	} // }}}</span>
+
+	// {{{ Private members
+
+	// {{{ Instance variables
+	private InputPane shortcut; // this is a bad hack
+	private JLabel assignedTo;
+	private JButton ok;
+	private JButton remove;
+	private JButton cancel;
+	private JButton clear;
+	private boolean isOK;
+	private KeyBinding binding;
+	private Vector allBindings;
+	private Buffer debugBuffer;
+	private int modifierMask;
+	// }}}
+	public final static String MODIFIER_SEPARATOR = &quot; &quot;;
+
+	// {{{ init() method
+	private void init(KeyBinding binding, Vector allBindings, Buffer debugBuffer) {
+<span class="nc" id="L212">		this.binding = binding;</span>
+<span class="nc" id="L213">		this.allBindings = allBindings;</span>
+<span class="nc" id="L214">		this.debugBuffer = debugBuffer;</span>
+
+<span class="nc" id="L216">		enableEvents(AWTEvent.KEY_EVENT_MASK);</span>
+
+		// create a panel with a BoxLayout. Can't use Box here
+		// because Box doesn't have setBorder().
+<span class="nc" id="L220">		JPanel content = new JPanel(new GridLayout(0, 1, 0, 6)) {</span>
+			/**
+			 * Returns if this component can be traversed by pressing the Tab
+			 * key. This returns false.
+			 */
+			public boolean isManagingFocus() {
+<span class="nc" id="L226">				return false;</span>
+			}
+
+			/**
+			 * Makes the tab key work in Java 1.4.
+			 * 
+			 * @since jEdit 3.2pre4
+			 */
+			public boolean getFocusTraversalKeysEnabled() {
+<span class="nc" id="L235">				return false;</span>
+			}
+		};
+<span class="nc" id="L238">		content.setBorder(new EmptyBorder(12, 12, 12, 12));</span>
+<span class="nc" id="L239">		setContentPane(content);</span>
+
+<span class="nc" id="L241">		JLabel label = new JLabel(</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">				debugBuffer == null ? (getText(&quot;grab-key.caption&quot;) + &quot; &quot; + binding.label)</span>
+						// FIXME: getText(&quot;grab-key.caption&quot;)+new String[] {
+						// binding.label })
+<span class="nc" id="L245">						: (getText(&quot;grab-key.keyboard-test&quot;)));</span>
+
+<span class="nc" id="L247">		Box input = Box.createHorizontalBox();</span>
+
+<span class="nc" id="L249">		shortcut = new InputPane();</span>
+<span class="nc" id="L250">		input.add(shortcut);</span>
+<span class="nc" id="L251">		input.add(Box.createHorizontalStrut(12));</span>
+
+<span class="nc" id="L253">		clear = new JButton((getText(&quot;grab-key.clear&quot;)));</span>
+<span class="nc" id="L254">		clear.addActionListener(new ActionHandler());</span>
+<span class="nc" id="L255">		input.add(clear);</span>
+
+<span class="nc" id="L257">		assignedTo = new JLabel();</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">		if (debugBuffer == null)</span>
+<span class="nc" id="L259">			updateAssignedTo(null);</span>
+
+<span class="nc" id="L261">		Box buttons = Box.createHorizontalBox();</span>
+<span class="nc" id="L262">		buttons.add(Box.createGlue());</span>
+
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		if (debugBuffer == null) {</span>
+<span class="nc" id="L265">			ok = new JButton(getText(&quot;common.ok&quot;));</span>
+<span class="nc" id="L266">			ok.addActionListener(new ActionHandler());</span>
+<span class="nc" id="L267">			buttons.add(ok);</span>
+<span class="nc" id="L268">			buttons.add(Box.createHorizontalStrut(12));</span>
+
+<span class="nc bnc" id="L270" title="All 2 branches missed.">			if (binding.isAssigned()) {</span>
+				// show &quot;remove&quot; button
+<span class="nc" id="L272">				remove = new JButton((getText(&quot;grab-key.remove&quot;)));</span>
+<span class="nc" id="L273">				remove.addActionListener(new ActionHandler());</span>
+				// FIXME: REACTIVATE buttons.add(remove);
+<span class="nc" id="L275">				buttons.add(Box.createHorizontalStrut(12));</span>
+			}
+		}
+
+<span class="nc" id="L279">		cancel = new JButton(getText(&quot;common.cancel&quot;));</span>
+<span class="nc" id="L280">		cancel.addActionListener(new ActionHandler());</span>
+<span class="nc" id="L281">		buttons.add(cancel);</span>
+<span class="nc" id="L282">		buttons.add(Box.createGlue());</span>
+
+		// FIXME: REACTIVATE content.add(label);
+<span class="nc" id="L285">		content.add(input);</span>
+		// if(debugBuffer == null)
+		// FIXME: REACTIVATE content.add(assignedTo);
+<span class="nc" id="L288">		content.add(buttons);</span>
+
+<span class="nc" id="L290">		setDefaultCloseOperation(DISPOSE_ON_CLOSE);</span>
+
+<span class="nc" id="L292">		pack();</span>
+<span class="nc" id="L293">		setLocationRelativeTo(getParent());</span>
+<span class="nc" id="L294">		setResizable(false);</span>
+<span class="nc" id="L295">		setVisible(true);</span>
+<span class="nc" id="L296">	} // }}}</span>
+
+	// {{{ getSymbolicName() method
+	private String getSymbolicName(int keyCode) {
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		if (keyCode == KeyEvent.VK_UNDEFINED)</span>
+<span class="nc" id="L301">			return null;</span>
+		/*
+		 * else if(keyCode == KeyEvent.VK_OPEN_BRACKET) return &quot;[&quot;; else
+		 * if(keyCode == KeyEvent.VK_CLOSE_BRACKET) return &quot;]&quot;;
+		 */
+
+<span class="nc bnc" id="L307" title="All 4 branches missed.">		if (keyCode &gt;= KeyEvent.VK_A &amp;&amp; keyCode &lt;= KeyEvent.VK_Z) {</span>
+<span class="nc" id="L308">			return String.valueOf(Character.toLowerCase((char) keyCode));</span>
+		}
+
+		try {
+<span class="nc" id="L312">			Field[] fields = KeyEvent.class.getFields();</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			for (int i = 0; i &lt; fields.length; i++) {</span>
+<span class="nc" id="L314">				Field field = fields[i];</span>
+<span class="nc" id="L315">				String name = field.getName();</span>
+<span class="nc bnc" id="L316" title="All 4 branches missed.">				if (name.startsWith(&quot;VK_&quot;) &amp;&amp; field.getInt(null) == keyCode) {</span>
+<span class="nc" id="L317">					return name.substring(3);</span>
+				}
+			}
+<span class="nc" id="L320">		} catch (Exception e) {</span>
+			// Log.log(Log.ERROR,this,e);
+		}
+
+<span class="nc" id="L324">		return null;</span>
+	} // }}}
+
+	// {{{ updateAssignedTo() method
+	private void updateAssignedTo(String shortcut) {
+<span class="nc" id="L329">		String text = (getText(&quot;grab-key.assigned-to.none&quot;));</span>
+<span class="nc" id="L330">		KeyBinding kb = getKeyBinding(shortcut);</span>
+
+<span class="nc bnc" id="L332" title="All 2 branches missed.">		if (kb != null)</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if (kb.isPrefix)</span>
+<span class="nc" id="L334">				text = getText(&quot;grab-key.assigned-to.prefix&quot;) + &quot; &quot; + shortcut;</span>
+			// FIXME: getText(&quot;grab-key.assigned-to.prefix&quot;)+
+			// new String[] { shortcut };
+			else
+<span class="nc" id="L338">				text = kb.label;</span>
+
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		if (ok != null)</span>
+<span class="nc bnc" id="L341" title="All 4 branches missed.">			ok.setEnabled(kb == null || !kb.isPrefix);</span>
+
+<span class="nc" id="L343">		assignedTo.setText((getText(&quot;grab-key.assigned-to&quot;) + &quot; &quot; + text));</span>
+		// FIXME: assignedTo.setText(
+		// (getText(&quot;grab-key.assigned-to&quot;)+
+		// new String[] { text }));
+<span class="nc" id="L347">	} // }}}</span>
+
+	// {{{ getKeyBinding() method
+	private KeyBinding getKeyBinding(String shortcut) {
+<span class="nc bnc" id="L351" title="All 4 branches missed.">		if (shortcut == null || shortcut.length() == 0)</span>
+<span class="nc" id="L352">			return null;</span>
+
+<span class="nc" id="L354">		String spacedShortcut = shortcut + &quot; &quot;;</span>
+<span class="nc" id="L355">		Enumeration e = allBindings.elements();</span>
+
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		while (e.hasMoreElements()) {</span>
+<span class="nc" id="L358">			KeyBinding kb = (KeyBinding) e.nextElement();</span>
+
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			if (!kb.isAssigned())</span>
+<span class="nc" id="L361">				continue;</span>
+
+<span class="nc" id="L363">			String spacedKbShortcut = kb.shortcut + &quot; &quot;;</span>
+
+			// eg, trying to bind C+n C+p if C+n already bound
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (spacedShortcut.startsWith(spacedKbShortcut))</span>
+<span class="nc" id="L367">				return kb;</span>
+
+			// eg, trying to bind C+e if C+e is a prefix
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			if (spacedKbShortcut.startsWith(spacedShortcut)) {</span>
+				// create a temporary (synthetic) prefix
+				// KeyBinding, that won't be saved
+<span class="nc" id="L373">				return new KeyBinding(kb.name, kb.label, shortcut, true);</span>
+			}
+		}
+
+<span class="nc" id="L377">		return null;</span>
+	} // }}}
+
+	// }}}
+
+	// {{{ KeyBinding class
+	/**
+	 * A jEdit action or macro with its two possible shortcuts.
+	 * 
+	 * @since jEdit 3.2pre8
+	 */
+	public static class KeyBinding {
+<span class="nc" id="L389">		public KeyBinding(String name, String label, String shortcut,</span>
+				boolean isPrefix) {
+<span class="nc" id="L391">			this.name = name;</span>
+<span class="nc" id="L392">			this.label = label;</span>
+<span class="nc" id="L393">			this.shortcut = shortcut;</span>
+<span class="nc" id="L394">			this.isPrefix = isPrefix;</span>
+<span class="nc" id="L395">		}</span>
+
+		public String name;
+		public String label;
+		public String shortcut;
+		public boolean isPrefix;
+
+		public boolean isAssigned() {
+<span class="nc bnc" id="L403" title="All 4 branches missed.">			return shortcut != null &amp;&amp; shortcut.length() &gt; 0;</span>
+		}
+	} // }}}
+
+	// {{{ InputPane class
+<span class="nc" id="L408">	class InputPane extends JTextField {</span>
+		// {{{ getFocusTraversalKeysEnabled() method
+		/**
+		 * Makes the tab key work in Java 1.4.
+		 * 
+		 * @since jEdit 3.2pre4
+		 */
+		public boolean getFocusTraversalKeysEnabled() {
+<span class="nc" id="L416">			return false;</span>
+		} // }}}
+
+		// {{{ processKeyEvent() method
+		protected void processKeyEvent(KeyEvent _evt) {
+<span class="nc bnc" id="L421" title="All 2 branches missed.">			if ((getModifierMask() &amp; _evt.getModifiers()) != 0) {</span>
+<span class="nc" id="L422">				KeyEvent evt = new KeyEvent(_evt.getComponent(), _evt.getID(),</span>
+<span class="nc" id="L423">						_evt.getWhen(), ~getModifierMask()</span>
+<span class="nc" id="L424">								&amp; _evt.getModifiers(), _evt.getKeyCode(),</span>
+<span class="nc" id="L425">						_evt.getKeyChar(), _evt.getKeyLocation());</span>
+<span class="nc" id="L426">				processKeyEvent(evt);</span>
+<span class="nc bnc" id="L427" title="All 2 branches missed.">				if (evt.isConsumed()) {</span>
+<span class="nc" id="L428">					_evt.consume();</span>
+				}
+<span class="nc" id="L430">				return;</span>
+			}
+<span class="nc" id="L432">			KeyEvent evt = KeyEventWorkaround.processKeyEvent(_evt);</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">			if (debugBuffer != null) {</span>
+<span class="nc" id="L434">				debugBuffer.insert(debugBuffer.getLength(), &quot;Event &quot;</span>
+<span class="nc" id="L435">						+ GrabKeyDialog.toString(_evt)</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">						+ (evt == null ? &quot; filtered\n&quot; : &quot; passed\n&quot;));</span>
+			}
+
+<span class="nc bnc" id="L439" title="All 2 branches missed.">			if (evt == null)</span>
+<span class="nc" id="L440">				return;</span>
+
+<span class="nc" id="L442">			evt.consume();</span>
+
+<span class="nc" id="L444">			KeyEventTranslator.Key key = KeyEventTranslator</span>
+<span class="nc" id="L445">					.translateKeyEvent(evt);</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">			if (key == null)</span>
+<span class="nc" id="L447">				return;</span>
+
+<span class="nc bnc" id="L449" title="All 2 branches missed.">			if (debugBuffer != null) {</span>
+<span class="nc" id="L450">				debugBuffer.insert(debugBuffer.getLength(),</span>
+<span class="nc" id="L451">						&quot;==&gt; Translated to &quot; + key + &quot;\n&quot;);</span>
+			}
+
+<span class="nc" id="L454">			StringBuffer keyString = new StringBuffer(/* getText() */);</span>
+
+			// if(getDocument().getLength() != 0)
+			// keyString.append(' ');
+
+<span class="nc bnc" id="L459" title="All 2 branches missed.">			if (key.modifiers != null)</span>
+<span class="nc" id="L460">				keyString.append(key.modifiers).append(' '); // TODO: plus ??</span>
+																// .append('+');
+
+<span class="nc bnc" id="L463" title="All 2 branches missed.">			if (key.input == ' ')</span>
+<span class="nc" id="L464">				keyString.append(&quot;SPACE&quot;);</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">			else if (key.input != '\0')</span>
+<span class="nc" id="L466">				keyString.append(key.input);</span>
+			else {
+<span class="nc" id="L468">				String symbolicName = getSymbolicName(key.key);</span>
+
+<span class="nc bnc" id="L470" title="All 2 branches missed.">				if (symbolicName == null)</span>
+<span class="nc" id="L471">					return;</span>
+
+<span class="nc" id="L473">				keyString.append(symbolicName);</span>
+			}
+
+<span class="nc" id="L476">			setText(keyString.toString());</span>
+<span class="nc bnc" id="L477" title="All 2 branches missed.">			if (debugBuffer == null)</span>
+<span class="nc" id="L478">				updateAssignedTo(keyString.toString());</span>
+<span class="nc" id="L479">		} // }}}</span>
+	} // }}}
+
+	// {{{ ActionHandler class
+<span class="nc" id="L483">	class ActionHandler implements ActionListener {</span>
+		// {{{ actionPerformed() method
+		public void actionPerformed(ActionEvent evt) {
+<span class="nc bnc" id="L486" title="All 2 branches missed.">			if (evt.getSource() == ok) {</span>
+<span class="nc bnc" id="L487" title="All 2 branches missed.">				if (canClose())</span>
+<span class="nc" id="L488">					dispose();</span>
+<span class="nc bnc" id="L489" title="All 2 branches missed.">			} else if (evt.getSource() == remove) {</span>
+<span class="nc" id="L490">				shortcut.setText(null);</span>
+<span class="nc" id="L491">				isOK = true;</span>
+<span class="nc" id="L492">				dispose();</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">			} else if (evt.getSource() == cancel)</span>
+<span class="nc" id="L494">				dispose();</span>
+<span class="nc bnc" id="L495" title="All 2 branches missed.">			else if (evt.getSource() == clear) {</span>
+<span class="nc" id="L496">				shortcut.setText(null);</span>
+<span class="nc bnc" id="L497" title="All 2 branches missed.">				if (debugBuffer == null)</span>
+<span class="nc" id="L498">					updateAssignedTo(null);</span>
+<span class="nc" id="L499">				shortcut.requestFocus();</span>
+			}
+<span class="nc" id="L501">		} // }}}</span>
+
+		// {{{ canClose() method
+		private boolean canClose() {
+<span class="nc" id="L505">			String shortcutString = shortcut.getText();</span>
+<span class="nc bnc" id="L506" title="All 4 branches missed.">			if (shortcutString.length() == 0 &amp;&amp; binding.isAssigned()) {</span>
+				// ask whether to remove the old shortcut
+<span class="nc" id="L508">				int answer = JOptionPane</span>
+<span class="nc" id="L509">						.showConfirmDialog(GrabKeyDialog.this,</span>
+<span class="nc" id="L510">								getText(&quot;grab-key.remove-ask&quot;), null,</span>
+<span class="nc" id="L511">								JOptionPane.YES_NO_OPTION,</span>
+<span class="nc" id="L512">								JOptionPane.QUESTION_MESSAGE);</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">				if (answer == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L514">					shortcut.setText(null);</span>
+<span class="nc" id="L515">					isOK = true;</span>
+<span class="nc" id="L516">				} else</span>
+<span class="nc" id="L517">					return false;</span>
+			}
+
+			// check whether this shortcut already exists
+<span class="nc" id="L521">			KeyBinding other = getKeyBinding(shortcutString);</span>
+<span class="nc bnc" id="L522" title="All 4 branches missed.">			if (other == null || other == binding) {</span>
+<span class="nc" id="L523">				isOK = true;</span>
+<span class="nc" id="L524">				return true;</span>
+			}
+
+			// check whether the other shortcut is the alt. shortcut
+<span class="nc bnc" id="L528" title="All 2 branches missed.">			if (other.name == binding.name) {</span>
+				// we don't need two identical shortcuts
+<span class="nc" id="L530">				JOptionPane.showMessageDialog(GrabKeyDialog.this,</span>
+<span class="nc" id="L531">						getText(&quot;grab-key.duplicate-alt-shortcut&quot;));</span>
+<span class="nc" id="L532">				return false;</span>
+			}
+
+			// check whether shortcut is a prefix to others
+<span class="nc bnc" id="L536" title="All 2 branches missed.">			if (other.isPrefix) {</span>
+				// can't override prefix shortcuts
+<span class="nc" id="L538">				JOptionPane.showMessageDialog(GrabKeyDialog.this,</span>
+<span class="nc" id="L539">						getText(&quot;grab-key.prefix-shortcut&quot;));</span>
+<span class="nc" id="L540">				return false;</span>
+			}
+
+			// ask whether to override that other shortcut
+<span class="nc" id="L544">			int answer = JOptionPane.showConfirmDialog(GrabKeyDialog.this,</span>
+<span class="nc" id="L545">					getText(&quot;grab-key.duplicate-shortcut&quot;)</span>
+<span class="nc" id="L546">							+ new Object[] { other.label }, null,</span>
+<span class="nc" id="L547">					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">			if (answer == JOptionPane.YES_OPTION) {</span>
+<span class="nc bnc" id="L549" title="All 2 branches missed.">				if (other.shortcut != null</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">						&amp;&amp; shortcutString.startsWith(other.shortcut)) {</span>
+<span class="nc" id="L551">					other.shortcut = null;</span>
+				}
+<span class="nc" id="L553">				isOK = true;</span>
+<span class="nc" id="L554">				return true;</span>
+			} else
+<span class="nc" id="L556">				return false;</span>
+		} // }}}
+
+	} // }}}
+
+	/**
+	 */
+	private String getText(String resourceString) {
+<span class="nc" id="L564">		return fmMain.getResourceString(&quot;GrabKeyDialog.&quot; + resourceString);</span>
+	}
+
+	private int getModifierMask() {
+<span class="nc" id="L568">		return modifierMask;</span>
+	}
+
+	/**
+	 * FIXME: make method here.
+	 */
+	public static boolean isMacOS() {
+<span class="nc" id="L575">		return false;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,1333 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>OptionPanel.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.preferences.layout</a> &gt; <span class="el_source">OptionPanel.java</span></div><h1>OptionPanel.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2005   Christian Foltin.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 06.05.2005
+ */
+
+package freemind.preferences.layout;
+
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Vector;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JColorChooser;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.UIManager;
+import javax.swing.UIManager.LookAndFeelInfo;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.factories.ButtonBarFactory;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.RowSpec;
+
+import freemind.common.BooleanProperty;
+import freemind.common.ColorProperty;
+import freemind.common.ComboProperty;
+import freemind.common.DontShowNotificationProperty;
+import freemind.common.NextLineProperty;
+import freemind.common.NumberProperty;
+import freemind.common.PasswordProperty;
+import freemind.common.PropertyBean;
+import freemind.common.PropertyControl;
+import freemind.common.RemindValueProperty;
+import freemind.common.SeparatorProperty;
+import freemind.common.StringProperty;
+import freemind.common.TextTranslator;
+import freemind.common.XmlBindingTools;
+import freemind.controller.StructuredMenuHolder;
+import freemind.controller.actions.generated.instance.OptionPanelWindowConfigurationStorage;
+import freemind.controller.actions.generated.instance.WindowConfigurationStorage;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindCommon;
+import freemind.main.Tools;
+import freemind.modes.IconInformation;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.preferences.FreemindPropertyContributor;
+
+/**
+ * @author foltin
+ * 
+ */
+public class OptionPanel implements TextTranslator {
+	// TODO: Cancel and windowClose =&gt; Are you sure, or save.
+	// FIXME: key dialog
+	// FIXME: Translate me and html
+
+	private static final String TOOLTIP_EXT = &quot;.tooltip&quot;;
+
+<span class="nc" id="L94">	private static final Color MARKED_BUTTON_COLOR = Color.BLUE;</span>
+
+	private Vector controls;
+
+	private final JDialog frame;
+
+<span class="nc" id="L100">	private HashMap tabButtonMap = new HashMap();</span>
+<span class="nc" id="L101">	private HashMap tabActionMap = new HashMap();</span>
+<span class="nc" id="L102">	private String selectedPanel = null;</span>
+
+	private static JColorChooser colorChooser;
+
+	private final OptionPanelFeedback feedback;
+
+	private static FreeMind fmMain;
+
+	private static final String PREFERENCE_STORAGE_PROPERTY = &quot;OptionPanel_Window_Properties&quot;;
+	private static final String DEFAULT_LAYOUT_FORMAT = &quot;right:max(40dlu;p), 4dlu, 120dlu, 7dlu&quot;;
+
+	/**
+	 * @throws IOException
+	 * 
+	 */
+	public OptionPanel(FreeMind fm, JDialog frame, OptionPanelFeedback feedback) {
+<span class="nc" id="L118">		super();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (fmMain == null) {</span>
+<span class="nc" id="L120">			fmMain = fm;</span>
+		}
+<span class="nc" id="L122">		this.frame = frame;</span>
+<span class="nc" id="L123">		this.feedback = feedback;</span>
+		// Retrieve window size and column positions.
+<span class="nc" id="L125">		WindowConfigurationStorage storage = XmlBindingTools.getInstance()</span>
+<span class="nc" id="L126">				.decorateDialog(fm.getController(), frame,</span>
+<span class="nc" id="L127">						PREFERENCE_STORAGE_PROPERTY);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">		if (storage != null</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">				&amp;&amp; storage instanceof OptionPanelWindowConfigurationStorage) {</span>
+<span class="nc" id="L130">			OptionPanelWindowConfigurationStorage oWindowSettings = (OptionPanelWindowConfigurationStorage) storage;</span>
+<span class="nc" id="L131">			selectedPanel = oWindowSettings.getPanel();</span>
+		}
+<span class="nc" id="L133">	}</span>
+
+	public interface OptionPanelFeedback {
+		void writeProperties(Properties props);
+	}
+
+<span class="nc" id="L139">	public static Vector changeListeners = new Vector();</span>
+
+	/**
+	 */
+	public void setProperties() {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		for (Iterator i = controls.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L145">			PropertyControl control = (PropertyControl) i.next();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (control instanceof PropertyBean) {</span>
+<span class="nc" id="L147">				PropertyBean bean = (PropertyBean) control;</span>
+				// System.out.println(&quot;grep -n -e \&quot;&quot;+bean.getLabel()+&quot;\&quot; -r * |
+				// grep -e \&quot;\\.(java|xml):\&quot;&quot;);
+<span class="nc" id="L150">				final String label = bean.getLabel();</span>
+<span class="nc" id="L151">				String value = fmMain.getAdjustableProperty(label);</span>
+				// System.out.println(&quot;Setting property &quot; + bean.getLabel()
+				// + &quot; to &quot; + value);
+<span class="nc" id="L154">				bean.setValue(value);</span>
+			}
+		}
+<span class="nc" id="L157">	}</span>
+
+	private Properties getOptionProperties() {
+<span class="nc" id="L160">		Properties p = new Properties();</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		for (Iterator i = controls.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L162">			PropertyControl control = (PropertyControl) i.next();</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">			if (control instanceof PropertyBean) {</span>
+<span class="nc" id="L164">				PropertyBean bean = (PropertyBean) control;</span>
+<span class="nc" id="L165">				final String value = bean.getValue();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">				if (value != null)</span>
+<span class="nc" id="L167">					p.setProperty(bean.getLabel(), value);</span>
+			}
+		}
+<span class="nc" id="L170">		return p;</span>
+	}
+
+	public void buildPanel() {
+
+<span class="nc" id="L175">		FormLayout leftLayout = new FormLayout(&quot;80dlu&quot;, &quot;&quot;);</span>
+<span class="nc" id="L176">		DefaultFormBuilder leftBuilder = new DefaultFormBuilder(leftLayout);</span>
+
+<span class="nc" id="L178">		CardLayout cardLayout = new VariableSizeCardLayout();</span>
+<span class="nc" id="L179">		JPanel rightStack = new JPanel(cardLayout);</span>
+
+<span class="nc" id="L181">		FormLayout rightLayout = null; // add rows dynamically</span>
+<span class="nc" id="L182">		DefaultFormBuilder rightBuilder = null;</span>
+<span class="nc" id="L183">		String lastTabName = null;</span>
+
+<span class="nc" id="L185">		controls = getControls();</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		for (Iterator i = controls.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L187">			PropertyControl control = (PropertyControl) i.next();</span>
+			// System.out.println(&quot;layouting : &quot; + control.getLabel());
+
+<span class="nc bnc" id="L190" title="All 2 branches missed.">			if (control instanceof NewTabProperty) {</span>
+<span class="nc" id="L191">				NewTabProperty newTab = (NewTabProperty) control;</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				if (rightBuilder != null) {</span>
+					// terminate old panel:
+<span class="nc" id="L194">					rightStack.add(rightBuilder.getPanel(), lastTabName);</span>
+				}
+<span class="nc" id="L196">				rightLayout = new FormLayout(newTab.getDescription(), &quot;&quot;);</span>
+<span class="nc" id="L197">				rightBuilder = new DefaultFormBuilder(rightLayout);</span>
+<span class="nc" id="L198">				rightBuilder.setDefaultDialogBorder();</span>
+<span class="nc" id="L199">				lastTabName = newTab.getLabel();</span>
+				// add a button to the left side:
+<span class="nc" id="L201">				JButton tabButton = new JButton(getText(lastTabName));</span>
+<span class="nc" id="L202">				ChangeTabAction changeTabAction = new ChangeTabAction(</span>
+<span class="nc" id="L203">						cardLayout, rightStack, lastTabName);</span>
+<span class="nc" id="L204">				tabButton.addActionListener(changeTabAction);</span>
+<span class="nc" id="L205">				registerTabButton(tabButton, lastTabName, changeTabAction);</span>
+<span class="nc" id="L206">				leftBuilder.append(tabButton);</span>
+<span class="nc" id="L207">			} else {</span>
+<span class="nc" id="L208">				control.layout(rightBuilder, this);</span>
+			}
+		}
+		// add the last one, too
+<span class="nc" id="L212">		rightStack.add(rightBuilder.getPanel(), lastTabName);</span>
+		// select one panel:
+<span class="nc bnc" id="L214" title="All 4 branches missed.">		if (selectedPanel != null &amp;&amp; tabActionMap.containsKey(selectedPanel)) {</span>
+<span class="nc" id="L215">			((ChangeTabAction) tabActionMap.get(selectedPanel))</span>
+<span class="nc" id="L216">					.actionPerformed(null);</span>
+		}
+<span class="nc" id="L218">		JScrollPane rightScrollPane = new JScrollPane(rightStack);</span>
+<span class="nc" id="L219">		rightScrollPane.getVerticalScrollBar().setUnitIncrement(100);</span>
+<span class="nc" id="L220">		JSplitPane centralPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,</span>
+<span class="nc" id="L221">				leftBuilder.getPanel(), rightScrollPane);</span>
+<span class="nc" id="L222">		frame.getContentPane().add(centralPanel, BorderLayout.CENTER);</span>
+<span class="nc" id="L223">		JButton cancelButton = new JButton(getText(&quot;Cancel&quot;));</span>
+<span class="nc" id="L224">		cancelButton.addActionListener(new ActionListener() {</span>
+
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L227">				closeWindow();</span>
+<span class="nc" id="L228">			}</span>
+		});
+<span class="nc" id="L230">		JButton okButton = new JButton(getText(&quot;OK&quot;));</span>
+<span class="nc" id="L231">		okButton.addActionListener(new ActionListener() {</span>
+
+			public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L234">				feedback.writeProperties(getOptionProperties());</span>
+<span class="nc" id="L235">				closeWindow();</span>
+<span class="nc" id="L236">			}</span>
+
+		});
+<span class="nc" id="L239">		frame.getRootPane().setDefaultButton(okButton);</span>
+<span class="nc" id="L240">		frame.getContentPane().add(</span>
+<span class="nc" id="L241">				ButtonBarFactory.buildOKCancelBar(cancelButton, okButton),</span>
+<span class="nc" id="L242">				BorderLayout.SOUTH);</span>
+<span class="nc" id="L243">	}</span>
+
+<span class="nc" id="L245">	private static String lastKey = &quot;&quot;;</span>
+
+	/**
+	 */
+	public String getText(String string) {
+<span class="nc bnc" id="L250" title="All 2 branches missed.">		if (string == null)</span>
+<span class="nc" id="L251">			return null;</span>
+<span class="nc" id="L252">		checkConnectionToFreeMindMain();</span>
+<span class="nc" id="L253">		return fmMain.getResourceString(&quot;OptionPanel.&quot; + string);</span>
+	}
+
+	private static void checkConnectionToFreeMindMain() {
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		if (fmMain == null) {</span>
+<span class="nc" id="L258">			throw new IllegalArgumentException(&quot;FreeMindMain not set yet.&quot;);</span>
+		}
+<span class="nc" id="L260">	}</span>
+
+	/**
+	 */
+	private void registerTabButton(JButton tabButton, String name,
+			ChangeTabAction changeTabAction) {
+<span class="nc" id="L266">		tabButtonMap.put(name, tabButton);</span>
+<span class="nc" id="L267">		tabActionMap.put(name, changeTabAction);</span>
+		// if no default panel was given, we use the first.
+<span class="nc bnc" id="L269" title="All 2 branches missed.">		if (selectedPanel == null) {</span>
+<span class="nc" id="L270">			selectedPanel = name;</span>
+		}
+<span class="nc" id="L272">	}</span>
+
+	private JButton getTabButton(String name) {
+<span class="nc" id="L275">		return (JButton) tabButtonMap.get(name);</span>
+	}
+
+	private Collection getAllButtons() {
+<span class="nc" id="L279">		return tabButtonMap.values();</span>
+	}
+
+	private final class ChangeTabAction implements ActionListener {
+		private CardLayout cardLayout;
+
+		private JPanel centralPanel;
+
+		private String tabName;
+
+		private ChangeTabAction(CardLayout cardLayout, JPanel centralPanel,
+<span class="nc" id="L290">				String tabName) {</span>
+<span class="nc" id="L291">			super();</span>
+<span class="nc" id="L292">			this.cardLayout = cardLayout;</span>
+<span class="nc" id="L293">			this.centralPanel = centralPanel;</span>
+<span class="nc" id="L294">			this.tabName = tabName;</span>
+<span class="nc" id="L295">		}</span>
+
+		public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L298">			cardLayout.show(centralPanel, tabName);</span>
+			// design: mark selected button with a color
+<span class="nc" id="L300">			Collection c = getAllButtons();</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">			for (Iterator i = c.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L302">				JButton button = (JButton) i.next();</span>
+<span class="nc" id="L303">				button.setForeground(null);</span>
+			}
+<span class="nc" id="L305">			getTabButton(tabName).setForeground(MARKED_BUTTON_COLOR);</span>
+<span class="nc" id="L306">			selectedPanel = tabName;</span>
+<span class="nc" id="L307">		}</span>
+	}
+
+	public static class NewTabProperty implements PropertyControl {
+
+		private String label;
+		private String layoutFormat;
+
+		public NewTabProperty(String label) {
+<span class="nc" id="L316">			this(label, DEFAULT_LAYOUT_FORMAT);</span>
+<span class="nc" id="L317">		}</span>
+
+		public NewTabProperty(String label, String layoutFormat) {
+<span class="nc" id="L320">			super();</span>
+<span class="nc" id="L321">			this.label = label;</span>
+<span class="nc" id="L322">			this.layoutFormat = layoutFormat;</span>
+<span class="nc" id="L323">		}</span>
+
+		public String getDescription() {
+<span class="nc" id="L326">			return layoutFormat;</span>
+		}
+
+		public String getLabel() {
+<span class="nc" id="L330">			return label;</span>
+		}
+
+		public void layout(DefaultFormBuilder builder,
+				TextTranslator pTranslator) {
+
+<span class="nc" id="L336">		}</span>
+
+		public void setEnabled(boolean pEnabled) {
+
+<span class="nc" id="L340">		}</span>
+
+	}
+
+	private static class KeyProperty extends PropertyBean implements
+			PropertyControl {
+<span class="nc" id="L346">		private int modifierMask = 0;</span>
+		String description;
+
+		String label;
+
+<span class="nc" id="L351">		JButton mButton = new JButton();</span>
+		private String labelText;
+		private ImageIcon icon;
+
+		private static RowSpec rowSpec;
+
+		/**
+		 */
+		public KeyProperty(final JDialog frame, String description, String label) {
+<span class="nc" id="L360">			super();</span>
+<span class="nc" id="L361">			this.description = description;</span>
+<span class="nc" id="L362">			this.label = label;</span>
+<span class="nc" id="L363">			mButton.addActionListener(new ActionListener() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+					// FIXME: Determine bindings.
+<span class="nc" id="L367">					Vector allKeybindings = new Vector();</span>
+<span class="nc" id="L368">					GrabKeyDialog dialog = new GrabKeyDialog(fmMain, frame,</span>
+<span class="nc" id="L369">							new GrabKeyDialog.KeyBinding(getLabel(),</span>
+<span class="nc" id="L370">									getLabel(), getValue(), false),</span>
+<span class="nc" id="L371">							allKeybindings, null, modifierMask);</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">					if (dialog.isOK()) {</span>
+<span class="nc" id="L373">						setValue(dialog.getShortcut());</span>
+<span class="nc" id="L374">						firePropertyChangeEvent();</span>
+					}
+<span class="nc" id="L376">				}</span>
+			});
+<span class="nc" id="L378">		}</span>
+
+		public void disableModifiers() {
+<span class="nc" id="L381">			modifierMask = KeyEvent.ALT_MASK | KeyEvent.CTRL_MASK;</span>
+<span class="nc" id="L382">		}</span>
+
+		public String getDescription() {
+<span class="nc" id="L385">			return description;</span>
+		}
+
+		public String getLabel() {
+<span class="nc" id="L389">			return label;</span>
+		}
+
+		public void setValue(String value) {
+<span class="nc" id="L393">			mButton.setText(value);</span>
+<span class="nc" id="L394">			mButton.setToolTipText(mButton.getText());</span>
+<span class="nc" id="L395">		}</span>
+
+		public String getValue() {
+<span class="nc" id="L398">			return mButton.getText();</span>
+		}
+
+		public void layout(DefaultFormBuilder builder,
+				TextTranslator pTranslator) {
+<span class="nc bnc" id="L403" title="All 2 branches missed.">			if (labelText == null)</span>
+<span class="nc" id="L404">				labelText = pTranslator.getText(getLabel());</span>
+
+<span class="nc" id="L406">			JLabel label = new JLabel(labelText, icon, JLabel.RIGHT);</span>
+<span class="nc" id="L407">			label.setToolTipText(pTranslator.getText(getDescription()));</span>
+<span class="nc bnc" id="L408" title="All 2 branches missed.">			if (rowSpec == null) {</span>
+<span class="nc" id="L409">				rowSpec = new RowSpec(&quot;fill:20dlu&quot;);</span>
+			}
+<span class="nc bnc" id="L411" title="All 2 branches missed.">			if (3 &lt; builder.getColumn()) {</span>
+<span class="nc" id="L412">				builder.appendRelatedComponentsGapRow();</span>
+<span class="nc" id="L413">				builder.appendRow(rowSpec);</span>
+<span class="nc" id="L414">				builder.nextLine(2);</span>
+<span class="nc" id="L415">			} else {</span>
+<span class="nc" id="L416">				builder.nextColumn(2);</span>
+			}
+<span class="nc" id="L418">			builder.add(label);</span>
+<span class="nc" id="L419">			builder.nextColumn(2);</span>
+<span class="nc" id="L420">			builder.add(mButton);</span>
+<span class="nc" id="L421">		}</span>
+
+		public void setEnabled(boolean pEnabled) {
+<span class="nc" id="L424">			mButton.setEnabled(pEnabled);</span>
+<span class="nc" id="L425">		}</span>
+
+		public void setLabelText(String labelText) {
+<span class="nc" id="L428">			this.labelText = labelText;</span>
+<span class="nc" id="L429">		}</span>
+
+		public void setImageIcon(ImageIcon icon) {
+<span class="nc" id="L432">			this.icon = icon;</span>
+
+<span class="nc" id="L434">		}</span>
+	}
+
+	//
+	private Vector getControls() {
+<span class="nc" id="L439">		Vector controls = new Vector();</span>
+		/***********************************************************************
+		 * Language
+		 * ****************************************************************
+		 */
+<span class="nc" id="L444">		controls.add(new NewTabProperty(&quot;Environment&quot;));</span>
+<span class="nc" id="L445">		controls.add(new SeparatorProperty(&quot;language&quot;));</span>
+		// TODO: Search class path for translations.
+<span class="nc" id="L447">		controls.add(new ComboProperty(</span>
+
+		/**
+		 * For the codes see
+		 * http://www.loc.gov/standards/iso639-2/php/English_list.php
+		 */
+<span class="nc" id="L453">		&quot;language.tooltip&quot;, FreeMindCommon.RESOURCE_LANGUAGE,</span>
+<span class="nc" id="L454">				new String[] { &quot;automatic&quot;, &quot;ar&quot;, &quot;bg&quot;, &quot;cs&quot;, &quot;de&quot;, &quot;dk&quot;, &quot;en&quot;,</span>
+<span class="nc" id="L455">						&quot;el&quot;, &quot;es&quot;, &quot;et&quot;, &quot;eu&quot;, &quot;fr&quot;, &quot;gl&quot;, &quot;hr&quot;, &quot;hu&quot;, &quot;id&quot;,</span>
+<span class="nc" id="L456">						&quot;it&quot;, &quot;ja&quot;, &quot;ko&quot;, &quot;lt&quot;, &quot;nl&quot;, &quot;nn&quot;, &quot;nb&quot;, &quot;pl&quot;,</span>
+<span class="nc" id="L457">						&quot;pt_BR&quot;, &quot;pt_PT&quot;, &quot;ro&quot;, &quot;ru&quot;, &quot;sk&quot;, &quot;se&quot;, &quot;sl&quot;, &quot;sr&quot;,</span>
+<span class="nc" id="L458">						&quot;tr&quot;, &quot;uk_UA&quot;, &quot;vi&quot;, &quot;zh_TW&quot;, &quot;zh_CN&quot; },</span>
+<span class="nc" id="L459">				new TextTranslator() {</span>
+
+					public String getText(String pKey) {
+						// decorator, that removes &quot;TranslateMe&quot; comments.
+<span class="nc" id="L463">						return Tools.removeTranslateComment(OptionPanel.this</span>
+<span class="nc" id="L464">								.getText(pKey));</span>
+					}
+				})); // automatic
+
+<span class="nc" id="L468">		controls.add(new BooleanProperty(FreeMindCommon.CHECK_SPELLING</span>
+<span class="nc" id="L469">				+ TOOLTIP_EXT, FreeMindCommon.CHECK_SPELLING)); // true</span>
+
+		// INTERNAL PROPERTY.
+		// controls
+		// .add(new StringProperty(
+		// &quot;The Modes which Freemind will load on startup, full Class names,
+		// comma, identifier, separated by a comma.&quot;,
+		// &quot;modes_since_0_8_0&quot;)); //
+		// freemind.modes.browsemode.BrowseMode,Browse,freemind.modes.mindmapmode.MindMapMode,MindMap,freemind.modes.filemode.FileMode,File
+		//
+		// controls.add(new StringProperty(
+		// &quot;The initial mode that is loaded on startup&quot;, &quot;initial_mode&quot;)); //
+		// MindMap
+		//
+		// controls
+		// .add(new StringProperty(
+		// &quot;This is the place where the users properties file is located. It is
+		// ignored by the applet (set Parameters in the html file instead). You
+		// can write '~' to indicate the users home directory. Of course this
+		// works only in the default 'freemind.properties', which is included in
+		// the jar file, not for the users freemind.props out of the jar file.&quot;,
+		// &quot;properties_folder&quot;)); // .freemind
+
+<span class="nc" id="L492">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L493">		controls.add(new SeparatorProperty(&quot;proxy&quot;));</span>
+<span class="nc" id="L494">		controls.add(new BooleanProperty(FreeMind.PROXY_USE_SETTINGS</span>
+<span class="nc" id="L495">				+ TOOLTIP_EXT, FreeMind.PROXY_USE_SETTINGS));</span>
+<span class="nc" id="L496">		controls.add(new StringProperty(FreeMind.PROXY_HOST + TOOLTIP_EXT,</span>
+<span class="nc" id="L497">				FreeMind.PROXY_HOST));</span>
+<span class="nc" id="L498">		controls.add(new NumberProperty(FreeMind.PROXY_PORT + TOOLTIP_EXT,</span>
+<span class="nc" id="L499">				FreeMind.PROXY_PORT, 1, 65535, 1));</span>
+<span class="nc" id="L500">		controls.add(new BooleanProperty(FreeMind.PROXY_IS_AUTHENTICATED</span>
+<span class="nc" id="L501">				+ TOOLTIP_EXT, FreeMind.PROXY_IS_AUTHENTICATED));</span>
+<span class="nc" id="L502">		controls.add(new StringProperty(FreeMind.PROXY_USER + TOOLTIP_EXT,</span>
+<span class="nc" id="L503">				FreeMind.PROXY_USER));</span>
+<span class="nc" id="L504">		controls.add(new PasswordProperty(</span>
+<span class="nc" id="L505">				FreeMind.PROXY_PASSWORD + TOOLTIP_EXT, FreeMind.PROXY_PASSWORD));</span>
+
+<span class="nc" id="L507">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L508">		controls.add(new SeparatorProperty(&quot;files&quot;));</span>
+<span class="nc" id="L509">		controls.add(new NumberProperty(null, &quot;last_opened_list_length&quot;, 0,</span>
+<span class="nc" id="L510">				200, 1)); // 25</span>
+<span class="nc" id="L511">		controls.add(new BooleanProperty(FreeMindCommon.LOAD_LAST_MAP</span>
+<span class="nc" id="L512">				+ TOOLTIP_EXT, FreeMindCommon.LOAD_LAST_MAP)); // true</span>
+<span class="nc" id="L513">		controls.add(new BooleanProperty(FreeMind.RESOURCES_DON_T_OPEN_PORT</span>
+<span class="nc" id="L514">				+ TOOLTIP_EXT, FreeMind.RESOURCES_DON_T_OPEN_PORT));</span>
+<span class="nc" id="L515">		controls.add(new BooleanProperty(</span>
+<span class="nc" id="L516">				FreeMindCommon.LOAD_LAST_MAPS_AND_LAYOUT + TOOLTIP_EXT,</span>
+<span class="nc" id="L517">				FreeMindCommon.LOAD_LAST_MAPS_AND_LAYOUT)); // true</span>
+<span class="nc" id="L518">		controls.add(new BooleanProperty(</span>
+
+<span class="nc" id="L520">		&quot;experimental_file_locking_on.tooltip&quot;, &quot;experimental_file_locking_on&quot;)); // false</span>
+<span class="nc" id="L521">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L522">		controls.add(new StringProperty(null, &quot;userproperties&quot;)); // user.properties</span>
+
+		// FIXME: Remove autoproperties from Freemind.
+		// controls.add(new StringProperty(null, &quot;autoproperties&quot;)); //
+		// auto.properties
+
+<span class="nc" id="L528">		controls.add(new StringProperty(null, &quot;patternsfile&quot;)); // patterns.xml</span>
+		// FIXME: Which one? controls.add(new StringProperty(
+		// &quot;The URL of the documentation mindmap (.mm)&quot;, &quot;docmapurl&quot;)); //
+		// ./doc/freemind.mm
+
+		// replaced by browsemode_initial_map?? (See Controller,
+		// DocumentationAction).
+		// controls.add(new StringProperty(null,
+		// &quot;docmapurl_since_version_0_7_0&quot;)); // ./doc/freemind.mm
+		//
+		// The Browse Mode
+		//
+
+<span class="nc" id="L541">		controls.add(new StringProperty(&quot;browsemode_initial_map.tooltip&quot;,</span>
+<span class="nc" id="L542">				&quot;browsemode_initial_map&quot;)); // ./doc/freemind.mm</span>
+<span class="nc" id="L543">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L544">		controls.add(new SeparatorProperty(&quot;automatic_save&quot;));</span>
+<span class="nc" id="L545">		controls.add(new StringProperty(&quot;time_for_automatic_save.tooltip&quot;,</span>
+<span class="nc" id="L546">				&quot;time_for_automatic_save&quot;)); // 60000</span>
+		//
+
+<span class="nc" id="L549">		controls.add(new BooleanProperty(</span>
+<span class="nc" id="L550">				&quot;delete_automatic_saves_at_exit.tooltip&quot;,</span>
+<span class="nc" id="L551">				&quot;delete_automatic_saves_at_exit&quot;)); // true</span>
+
+<span class="nc" id="L553">		controls.add(new StringProperty(</span>
+<span class="nc" id="L554">				&quot;number_of_different_files_for_automatic_save.tooltip&quot;,</span>
+<span class="nc" id="L555">				&quot;number_of_different_files_for_automatic_save&quot;)); // 10</span>
+
+<span class="nc" id="L557">		controls.add(new StringProperty(&quot;path_to_automatic_saves.tooltip&quot;,</span>
+<span class="nc" id="L558">				&quot;path_to_automatic_saves&quot;)); // freemind_home</span>
+
+<span class="nc" id="L560">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L561">		controls.add(new SeparatorProperty(&quot;save&quot;));</span>
+
+<span class="nc" id="L563">		controls.add(new BooleanProperty(</span>
+<span class="nc" id="L564">				&quot;resources_save_folding_state.tooltip&quot;,</span>
+<span class="nc" id="L565">				FreeMind.RESOURCES_SAVE_FOLDING_STATE)); // true</span>
+<span class="nc" id="L566">		controls.add(new BooleanProperty(</span>
+<span class="nc" id="L567">				&quot;save_only_intrisically_needed_ids.tooltip&quot;,</span>
+<span class="nc" id="L568">				FreeMindCommon.SAVE_ONLY_INTRISICALLY_NEEDED_IDS)); // false</span>
+		/***********************************************************************
+		 * Defaults
+		 * ****************************************************************
+		 */
+<span class="nc" id="L573">		controls.add(new NewTabProperty(&quot;Defaults&quot;));</span>
+<span class="nc" id="L574">		controls.add(new SeparatorProperty(&quot;default_styles&quot;));</span>
+<span class="nc" id="L575">		controls.add(new ComboProperty(&quot;standardnodestyle.tooltip&quot;,</span>
+<span class="nc" id="L576">				FreeMind.RESOURCES_NODE_STYLE, MindMapNode.NODE_STYLES, this)); // as_parent</span>
+
+<span class="nc" id="L578">		controls.add(new ComboProperty(&quot;standardrootnodestyle.tooltip&quot;,</span>
+<span class="nc" id="L579">				FreeMind.RESOURCES_ROOT_NODE_STYLE, new String[] {</span>
+<span class="nc" id="L580">						MindMapNode.STYLE_FORK, MindMapNode.STYLE_BUBBLE,</span>
+<span class="nc" id="L581">						MindMapNode.STYLE_COMBINED }, this)); // fork</span>
+
+<span class="nc" id="L583">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L584">		controls.add(new SeparatorProperty(&quot;default_colors&quot;));</span>
+<span class="nc" id="L585">		controls.add(new ColorProperty(&quot;standardnodetextcolor.tooltip&quot;,</span>
+<span class="nc" id="L586">				FreeMind.RESOURCES_NODE_TEXT_COLOR,</span>
+<span class="nc" id="L587">				fmMain.getDefaultProperty(FreeMind.RESOURCES_NODE_TEXT_COLOR),</span>
+<span class="nc" id="L588">				this)); // #000000</span>
+
+<span class="nc" id="L590">		controls.add(new ColorProperty(&quot;standardedgecolor.tooltip&quot;,</span>
+<span class="nc" id="L591">				FreeMind.RESOURCES_EDGE_COLOR, fmMain</span>
+<span class="nc" id="L592">						.getDefaultProperty(FreeMind.RESOURCES_EDGE_COLOR),</span>
+<span class="nc" id="L593">				this)); // #808080</span>
+
+<span class="nc" id="L595">		controls.add(new ColorProperty(&quot;standardlinkcolor.tooltip&quot;,</span>
+<span class="nc" id="L596">				FreeMind.RESOURCES_LINK_COLOR, fmMain</span>
+<span class="nc" id="L597">						.getDefaultProperty(FreeMind.RESOURCES_LINK_COLOR),</span>
+<span class="nc" id="L598">				this)); // #b0b0b0</span>
+
+<span class="nc" id="L600">		controls.add(new ColorProperty(&quot;standardbackgroundcolor.tooltip&quot;,</span>
+<span class="nc" id="L601">				FreeMind.RESOURCES_BACKGROUND_COLOR,</span>
+<span class="nc" id="L602">				fmMain.getDefaultProperty(FreeMind.RESOURCES_BACKGROUND_COLOR),</span>
+<span class="nc" id="L603">				this)); // #ffffff</span>
+
+<span class="nc" id="L605">		controls.add(new BooleanProperty(</span>
+<span class="nc" id="L606">				FreeMind.RESOURCE_PRINT_ON_WHITE_BACKGROUND + TOOLTIP_EXT,</span>
+<span class="nc" id="L607">				FreeMind.RESOURCE_PRINT_ON_WHITE_BACKGROUND)); // true</span>
+
+<span class="nc" id="L609">		controls.add(new ColorProperty(&quot;standardcloudcolor.tooltip&quot;,</span>
+<span class="nc" id="L610">				FreeMind.RESOURCES_CLOUD_COLOR, fmMain</span>
+<span class="nc" id="L611">						.getDefaultProperty(FreeMind.RESOURCES_CLOUD_COLOR),</span>
+<span class="nc" id="L612">				this)); // #f0f0f0</span>
+
+<span class="nc" id="L614">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L615">		controls.add(new SeparatorProperty(&quot;default_fonts&quot;));</span>
+<span class="nc" id="L616">		controls.add(new StringProperty(</span>
+
+<span class="nc" id="L618">		&quot;defaultfont.tooltip&quot;, &quot;defaultfont&quot;)); // SansSerif</span>
+
+<span class="nc" id="L620">		controls.add(new StringProperty(null, &quot;defaultfontstyle&quot;)); // 0</span>
+
+<span class="nc" id="L622">		controls.add(new NumberProperty(&quot;defaultfontsize.tooltip&quot;,</span>
+<span class="nc" id="L623">				&quot;defaultfontsize&quot;, 1,</span>
+<span class="nc" id="L624">				96 /* taken from openoffice as maximum. */, 1)); // 12</span>
+		// controls.add(new StringProperty(null, &quot;defaultfontsize&quot;)); // 12
+
+<span class="nc" id="L627">		controls.add(new NumberProperty(&quot;max_node_width.tooltip&quot;,</span>
+<span class="nc" id="L628">				&quot;max_node_width&quot;, 1, Integer.MAX_VALUE, 1)); // 600</span>
+
+<span class="nc" id="L630">		controls.add(new NumberProperty(&quot;max_tooltip_width.tooltip&quot;,</span>
+<span class="nc" id="L631">				&quot;max_tooltip_width&quot;, 1, Integer.MAX_VALUE, 1)); // 600</span>
+
+<span class="nc" id="L633">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L634">		controls.add(new SeparatorProperty(&quot;other_defaults&quot;));</span>
+<span class="nc" id="L635">		controls.add(new ComboProperty(&quot;standardedgestyle.tooltip&quot;,</span>
+<span class="nc" id="L636">				FreeMind.RESOURCES_EDGE_STYLE, new String[] { &quot;bezier&quot;,</span>
+<span class="nc" id="L637">						&quot;linear&quot; }, this)); // bezier</span>
+
+		// controls.add(new ComboProperty(
+		//
+		// &quot;standardcloudestyle.tooltip&quot;, &quot;standardcloudestyle&quot;,
+		// new String[] { &quot;bezier&quot; })); // bezier
+		//
+		// controls.add(new ComboProperty(
+		//
+		// &quot;standardlinkestyle.tooltip&quot;, &quot;standardlinkestyle&quot;,
+		// new String[] { &quot;bezier&quot; })); // bezier
+
+		/***********************************************************************
+		 * Appearance
+		 * ****************************************************************
+		 */
+<span class="nc" id="L653">		controls.add(new NewTabProperty(&quot;Appearance&quot;));</span>
+<span class="nc" id="L654">		controls.add(new SeparatorProperty(&quot;look_and_feel&quot;));</span>
+<span class="nc" id="L655">		LookAndFeelInfo[] lafInfo = UIManager.getInstalledLookAndFeels();</span>
+<span class="nc" id="L656">		int reservedCount = 6;</span>
+<span class="nc" id="L657">		String[] lafNames = new String[lafInfo.length + reservedCount];</span>
+<span class="nc" id="L658">		Vector translatedLafNames = new Vector();</span>
+<span class="nc" id="L659">		lafNames[0] = &quot;default&quot;;</span>
+<span class="nc" id="L660">		translatedLafNames.add(getText(&quot;default&quot;));</span>
+<span class="nc" id="L661">		lafNames[1] = &quot;metal&quot;;</span>
+<span class="nc" id="L662">		translatedLafNames.add(getText(&quot;metal&quot;));</span>
+<span class="nc" id="L663">		lafNames[2] = &quot;windows&quot;;</span>
+<span class="nc" id="L664">		translatedLafNames.add(getText(&quot;windows&quot;));</span>
+<span class="nc" id="L665">		lafNames[3] = &quot;motif&quot;;</span>
+<span class="nc" id="L666">		translatedLafNames.add(getText(&quot;motif&quot;));</span>
+<span class="nc" id="L667">		lafNames[4] = &quot;gtk&quot;;</span>
+<span class="nc" id="L668">		translatedLafNames.add(getText(&quot;gtk&quot;));</span>
+<span class="nc" id="L669">		lafNames[5] = &quot;nothing&quot;;</span>
+<span class="nc" id="L670">		translatedLafNames.add(getText(&quot;nothing&quot;));</span>
+<span class="nc bnc" id="L671" title="All 2 branches missed.">		for (int i = 0; i &lt; lafInfo.length; i++) {</span>
+<span class="nc" id="L672">			LookAndFeelInfo info = lafInfo[i];</span>
+<span class="nc" id="L673">			String className = info.getClassName();</span>
+<span class="nc" id="L674">			lafNames[i + reservedCount] = className;</span>
+<span class="nc" id="L675">			translatedLafNames.add(info.getName());</span>
+		}
+<span class="nc" id="L677">		controls.add(new ComboProperty(&quot;lookandfeel.tooltip&quot;,</span>
+<span class="nc" id="L678">				FreeMind.RESOURCE_LOOKANDFEEL, lafNames, translatedLafNames)); // default</span>
+
+<span class="nc" id="L680">		controls.add(new BooleanProperty(&quot;use_tabbed_pane.tooltip&quot;,</span>
+<span class="nc" id="L681">				FreeMind.RESOURCES_USE_TABBED_PANE)); // true</span>
+<span class="nc" id="L682">		controls.add(new ComboProperty(FreeMind.J_SPLIT_PANE_SPLIT_TYPE</span>
+<span class="nc" id="L683">				+ TOOLTIP_EXT, FreeMind.J_SPLIT_PANE_SPLIT_TYPE,</span>
+<span class="nc" id="L684">				new String[] { FreeMind.VERTICAL_SPLIT_BELOW,</span>
+<span class="nc" id="L685">						FreeMind.HORIZONTAL_SPLIT_RIGHT }, this));</span>
+
+<span class="nc" id="L687">		controls.add(new NumberProperty(</span>
+<span class="nc" id="L688">				StructuredMenuHolder.AMOUNT_OF_VISIBLE_MENU_ITEMS + TOOLTIP_EXT,</span>
+<span class="nc" id="L689">				StructuredMenuHolder.AMOUNT_OF_VISIBLE_MENU_ITEMS, 10,</span>
+<span class="nc" id="L690">				Integer.MAX_VALUE, 1));</span>
+
+<span class="nc" id="L692">		controls.add(new BooleanProperty(FreeMind.RESOURCES_DISPLAY_FOLDING_BUTTONS+TOOLTIP_EXT,</span>
+<span class="nc" id="L693">				FreeMind.RESOURCES_DISPLAY_FOLDING_BUTTONS)); // true</span>
+		// controls.add(new BooleanProperty(
+		//
+		// &quot;use_split_pane.tooltip&quot;, FreeMind.RESOURCES_USE_SPLIT_PANE)); //
+		// true
+
+		/* ***************************************************************** */
+<span class="nc" id="L700">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L701">		controls.add(new SeparatorProperty(&quot;selection_colors&quot;));</span>
+<span class="nc" id="L702">		controls.add(new BooleanProperty(</span>
+<span class="nc" id="L703">				FreeMind.RESOURCE_DRAW_RECTANGLE_FOR_SELECTION + TOOLTIP_EXT,</span>
+<span class="nc" id="L704">				FreeMind.RESOURCE_DRAW_RECTANGLE_FOR_SELECTION)); // false</span>
+<span class="nc" id="L705">		controls.add(new ColorProperty(</span>
+<span class="nc" id="L706">				&quot;standardselectednoderectanglecolor.tooltip&quot;,</span>
+<span class="nc" id="L707">				FreeMind.RESOURCES_SELECTED_NODE_RECTANGLE_COLOR,</span>
+<span class="nc" id="L708">				fmMain.getDefaultProperty(FreeMind.RESOURCES_SELECTED_NODE_RECTANGLE_COLOR),</span>
+<span class="nc" id="L709">				this)); // #000000</span>
+
+<span class="nc" id="L711">		controls.add(new ColorProperty(</span>
+<span class="nc" id="L712">				&quot;standardselectednodecolor.tooltip&quot;,</span>
+<span class="nc" id="L713">				FreeMind.RESOURCES_SELECTED_NODE_COLOR,</span>
+<span class="nc" id="L714">				fmMain.getDefaultProperty(FreeMind.RESOURCES_SELECTED_NODE_COLOR),</span>
+<span class="nc" id="L715">				this)); // #D2D2D2</span>
+
+		/* ***************************************************************** */
+<span class="nc" id="L718">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L719">		final String RESOURCE_ROOT_NODE = &quot;root_node_appearance&quot;;</span>
+<span class="nc" id="L720">		final String RESOURCE_USE_COMMON_OUT_POINT_FOR_ROOT_NODE = &quot;use_common_out_point_for_root_node&quot;;</span>
+<span class="nc" id="L721">		controls.add(new SeparatorProperty(RESOURCE_ROOT_NODE));</span>
+<span class="nc" id="L722">		controls.add(new BooleanProperty(</span>
+<span class="nc" id="L723">				RESOURCE_USE_COMMON_OUT_POINT_FOR_ROOT_NODE + TOOLTIP_EXT,</span>
+<span class="nc" id="L724">				RESOURCE_USE_COMMON_OUT_POINT_FOR_ROOT_NODE)); // false</span>
+		/* ***************************************************************** */
+<span class="nc" id="L726">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L727">		controls.add(new SeparatorProperty(&quot;anti_alias&quot;));</span>
+<span class="nc" id="L728">		controls.add(new ComboProperty(&quot;antialias.tooltip&quot;,</span>
+<span class="nc" id="L729">				FreeMindCommon.RESOURCE_ANTIALIAS, new String[] {</span>
+<span class="nc" id="L730">						&quot;antialias_edges&quot;, &quot;antialias_all&quot;, &quot;antialias_none&quot; },</span>
+<span class="nc" id="L731">				this)); // true</span>
+
+		/* ***************************************************************** */
+<span class="nc" id="L734">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L735">		controls.add(new SeparatorProperty(&quot;initial_map_size&quot;));</span>
+<span class="nc" id="L736">		controls.add(new StringProperty(&quot;mapxsize.tooltip&quot;, &quot;mapxsize&quot;)); // 1000</span>
+
+<span class="nc" id="L738">		controls.add(new StringProperty(null, &quot;mapysize&quot;)); // 3200</span>
+
+		/* ***************************************************************** */
+<span class="nc" id="L741">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L742">		controls.add(new SeparatorProperty(&quot;hyperlink_types&quot;));</span>
+<span class="nc" id="L743">		controls.add(new ComboProperty(&quot;links.tooltip&quot;, &quot;links&quot;, new String[] {</span>
+<span class="nc" id="L744">				&quot;relative&quot;, &quot;absolute&quot; }, this)); // relative</span>
+
+		/* ***************************************************************** */
+<span class="nc" id="L747">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L748">		controls.add(new SeparatorProperty(&quot;edit_long_node_window&quot;));</span>
+<span class="nc" id="L749">		controls.add(new StringProperty(&quot;el__buttons_position.tooltip&quot;,</span>
+<span class="nc" id="L750">				&quot;el__buttons_position&quot;)); // above</span>
+
+<span class="nc" id="L752">		controls.add(new BooleanProperty(null, &quot;el__position_window_below_node&quot;)); // true</span>
+
+<span class="nc" id="L754">		controls.add(new StringProperty(null, &quot;el__min_default_window_height&quot;)); // 150</span>
+
+<span class="nc" id="L756">		controls.add(new StringProperty(null, &quot;el__max_default_window_height&quot;)); // 500</span>
+
+<span class="nc" id="L758">		controls.add(new StringProperty(null, &quot;el__min_default_window_width&quot;)); // 600</span>
+
+<span class="nc" id="L760">		controls.add(new StringProperty(null, &quot;el__max_default_window_width&quot;)); // 600</span>
+
+<span class="nc" id="L762">		controls.add(new BooleanProperty(null, &quot;el__enter_confirms_by_default&quot;)); // true</span>
+
+<span class="nc" id="L764">		controls.add(new BooleanProperty(null, &quot;el__show_icon_for_attributes&quot;)); // true</span>
+
+<span class="nc" id="L766">		controls.add(new SeparatorProperty(&quot;note_properties&quot;));</span>
+<span class="nc" id="L767">		controls.add(new BooleanProperty(null,</span>
+<span class="nc" id="L768">				FreeMind.RESOURCES_DON_T_SHOW_NOTE_ICONS));</span>
+<span class="nc" id="L769">		controls.add(new BooleanProperty(null,</span>
+<span class="nc" id="L770">				FreeMind.RESOURCES_DON_T_SHOW_NOTE_TOOLTIPS));</span>
+<span class="nc" id="L771">		controls.add(new NumberProperty(FreeMind.TOOLTIP_DISPLAY_TIME</span>
+<span class="nc" id="L772">				+ &quot;.tooltip&quot;, FreeMind.TOOLTIP_DISPLAY_TIME, 0,</span>
+<span class="nc" id="L773">				Integer.MAX_VALUE, 1)); // 4000</span>
+<span class="nc" id="L774">		controls.add(new SeparatorProperty(&quot;icon_properties&quot;));</span>
+<span class="nc" id="L775">		controls.add(new StringProperty(&quot;icon_order_description&quot;,</span>
+<span class="nc" id="L776">				MindIcon.PROPERTY_STRING_ICONS_LIST));</span>
+		/***********************************************************************
+		 * Keystrokes
+		 * ****************************************************************
+		 */
+<span class="nc" id="L781">		String form = &quot;right:max(40dlu;p), 4dlu, 80dlu, 7dlu&quot;;</span>
+<span class="nc" id="L782">		controls.add(new NewTabProperty(&quot;Keystrokes&quot;, form + &quot;,&quot; + form)); // &quot;, right:max(40dlu;p), 4dlu, 60dlu&quot;));</span>
+		//
+		// These are the accelerators for the menu items. Valid modifiers are:
+		// shift | control | alt | meta | button1 | button2 | button3
+		// Valid keys should be all that are defined in java.awt.event.KeyEvent
+		// (without the &quot;VK_&quot; prefix), but I found this buggy. All normal char's
+		// should work.
+
+		// The ideas employed in choice of keyboard shortcuts are:
+		// If there is a standard for a feature, use it
+		// Use control modifier whereever possible
+
+		// Commands for the program
+<span class="nc" id="L795">		controls.add(new SeparatorProperty(&quot;commands_for_the_program&quot;));</span>
+<span class="nc" id="L796">		controls.add(new KeyProperty(frame, null, &quot;keystroke_newMap&quot;)); // control</span>
+		// N
+
+<span class="nc" id="L799">		controls.add(new KeyProperty(frame, null, &quot;keystroke_open&quot;)); // control</span>
+		// O
+
+<span class="nc" id="L802">		controls.add(new KeyProperty(frame, null, &quot;keystroke_save&quot;)); // control</span>
+		// S
+
+<span class="nc" id="L805">		controls.add(new KeyProperty(frame, null, &quot;keystroke_saveAs&quot;)); // control</span>
+		// shift
+		// S
+
+<span class="nc" id="L809">		controls.add(new KeyProperty(frame, null, &quot;keystroke_print&quot;)); // control</span>
+		// P
+
+<span class="nc" id="L812">		controls.add(new KeyProperty(frame, null, &quot;keystroke_close&quot;)); // control</span>
+		// W
+
+<span class="nc" id="L815">		controls.add(new KeyProperty(frame, null, &quot;keystroke_quit&quot;)); // control</span>
+		// Q
+
+<span class="nc" id="L818">		controls.add(new KeyProperty(frame, null, &quot;keystroke_option_dialog&quot;)); // control</span>
+																				// COMMA
+
+<span class="nc" id="L821">		controls.add(new KeyProperty(frame, null, &quot;keystroke_export_to_html&quot;)); // control</span>
+		// E
+
+<span class="nc" id="L824">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L825">				&quot;keystroke_export_branch_to_html&quot;)); // control</span>
+		// H
+
+<span class="nc" id="L828">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L829">				&quot;keystroke_open_first_in_history&quot;)); // control</span>
+		// shift
+		// W
+
+<span class="nc" id="L833">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L834">				FreeMind.KEYSTROKE_PREVIOUS_MAP)); // control</span>
+		// LEFT
+
+<span class="nc" id="L837">		controls.add(new KeyProperty(frame, null, FreeMind.KEYSTROKE_NEXT_MAP)); // control</span>
+		// RIGHT
+
+<span class="nc" id="L840">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L841">				FreeMind.KEYSTROKE_MOVE_MAP_LEFT));</span>
+
+<span class="nc" id="L843">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L844">				FreeMind.KEYSTROKE_MOVE_MAP_RIGHT));</span>
+
+<span class="nc" id="L846">		controls.add(new KeyProperty(frame, null, &quot;keystroke_mode_MindMap&quot;)); // alt</span>
+		// 1
+
+<span class="nc" id="L849">		controls.add(new KeyProperty(frame, null, &quot;keystroke_mode_Browse&quot;)); // alt</span>
+		// 2
+
+<span class="nc" id="L852">		controls.add(new KeyProperty(frame, null, &quot;keystroke_mode_File&quot;)); // alt</span>
+		// 3
+
+<span class="nc" id="L855">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L856">				&quot;keystroke_node_toggle_italic&quot;)); // control</span>
+		// I
+
+<span class="nc" id="L859">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L860">				&quot;keystroke_node_toggle_boldface&quot;)); // control</span>
+		// B
+
+<span class="nc" id="L863">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L864">				&quot;keystroke_node_toggle_underlined&quot;)); // control</span>
+		// U
+
+<span class="nc" id="L867">		controls.add(new KeyProperty(frame, null, &quot;keystroke_node_toggle_cloud&quot;)); // control</span>
+		// shift
+		// B
+
+<span class="nc" id="L871">		controls.add(new KeyProperty(frame, null, &quot;keystroke_undo&quot;)); // control</span>
+		// Z
+
+<span class="nc" id="L874">		controls.add(new KeyProperty(frame, null, &quot;keystroke_redo&quot;)); // control</span>
+		// Y
+
+<span class="nc" id="L877">		controls.add(new KeyProperty(frame, null, &quot;keystroke_delete_child&quot;)); // DELETE</span>
+
+<span class="nc" id="L879">		controls.add(new KeyProperty(frame, null, &quot;keystroke_select_all&quot;)); // control</span>
+		// A
+
+<span class="nc" id="L882">		controls.add(new KeyProperty(frame, null, &quot;keystroke_select_branch&quot;)); // control</span>
+		// shift A
+
+<span class="nc" id="L885">		controls.add(new KeyProperty(frame, null, &quot;keystroke_zoom_out&quot;)); // alt</span>
+		// UP
+
+<span class="nc" id="L888">		controls.add(new KeyProperty(frame, null, &quot;keystroke_zoom_in&quot;)); // alt</span>
+		// DOWN
+
+		// Node editing commands
+<span class="nc" id="L892">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L893">		controls.add(new SeparatorProperty(&quot;node_editing_commands&quot;));</span>
+<span class="nc" id="L894">		controls.add(new KeyProperty(frame, null, &quot;keystroke_cut&quot;)); // control</span>
+		// X
+
+<span class="nc" id="L897">		controls.add(new KeyProperty(frame, null, &quot;keystroke_copy&quot;)); // control</span>
+		// C
+
+<span class="nc" id="L900">		controls.add(new KeyProperty(frame, null, &quot;keystroke_copy_single&quot;)); // control</span>
+		// shift C
+
+<span class="nc" id="L903">		controls.add(new KeyProperty(frame, null, &quot;keystroke_paste&quot;)); // control</span>
+		// V
+
+<span class="nc" id="L906">		controls.add(new KeyProperty(frame, null, &quot;keystroke_pasteAsPlainText&quot;));</span>
+
+<span class="nc" id="L908">		controls.add(new KeyProperty(frame, null, &quot;keystroke_remove&quot;)); // none</span>
+
+<span class="nc" id="L910">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L911">				&quot;keystroke_add_arrow_link_action&quot;)); // control</span>
+		// L
+
+<span class="nc" id="L914">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L915">				&quot;keystroke_add_local_link_action&quot;)); // alt</span>
+
+		// L
+
+		// Unline with control X, the node you remove with action remove cannot
+		// be
+		// pasted again. Therefore, we do not provide any quick shortcut. We
+		// suggest
+		// that you use cut instead of remove.
+
+		// Node navigation commands
+<span class="nc" id="L926">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L927">		controls.add(new SeparatorProperty(&quot;node_navigation_commands&quot;));</span>
+<span class="nc" id="L928">		controls.add(new KeyProperty(frame, null, &quot;keystroke_moveToRoot&quot;)); // ESCAPE</span>
+
+<span class="nc" id="L930">		controls.add(new KeyProperty(frame, null, &quot;keystroke_move_up&quot;)); // E</span>
+
+<span class="nc" id="L932">		controls.add(new KeyProperty(frame, null, &quot;keystroke_move_down&quot;)); // D</span>
+
+<span class="nc" id="L934">		controls.add(new KeyProperty(frame, null, &quot;keystroke_move_left&quot;)); // S</span>
+
+<span class="nc" id="L936">		controls.add(new KeyProperty(frame, null, &quot;keystroke_move_right&quot;)); // F</span>
+
+<span class="nc" id="L938">		controls.add(new KeyProperty(frame, null, &quot;keystroke_follow_link&quot;)); // control</span>
+
+		// ENTER
+
+		// New node commands
+<span class="nc" id="L943">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L944">		controls.add(new SeparatorProperty(&quot;new_node_commands&quot;));</span>
+<span class="nc" id="L945">		controls.add(new KeyProperty(frame, null, &quot;keystroke_add&quot;)); // ENTER</span>
+
+<span class="nc" id="L947">		controls.add(new KeyProperty(frame, null, &quot;keystroke_add_child&quot;)); // INSERT</span>
+
+<span class="nc" id="L949">		controls.add(new KeyProperty(frame, null, &quot;keystroke_add_child_mac&quot;)); // TAB</span>
+
+<span class="nc" id="L951">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L952">				&quot;keystroke_add_sibling_before&quot;)); // shift</span>
+
+		// ENTER
+
+		// Node editing commands
+<span class="nc" id="L957">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L958">		controls.add(new SeparatorProperty(&quot;node_editing_commands&quot;));</span>
+<span class="nc" id="L959">		controls.add(new KeyProperty(frame, null, &quot;keystroke_edit&quot;)); // F2</span>
+
+<span class="nc" id="L961">		controls.add(new KeyProperty(frame, null, &quot;keystroke_edit_long_node&quot;)); // alt</span>
+		// ENTER
+
+<span class="nc" id="L964">		controls.add(new KeyProperty(frame, null, &quot;keystroke_join_nodes&quot;)); // control</span>
+		// J
+
+<span class="nc" id="L967">		controls.add(new KeyProperty(frame, null, &quot;keystroke_toggle_folded&quot;)); // SPACE</span>
+
+<span class="nc" id="L969">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L970">				&quot;keystroke_toggle_children_folded&quot;)); // control</span>
+		// SPACE
+
+<span class="nc" id="L973">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L974">				&quot;keystroke_set_link_by_filechooser&quot;)); // control</span>
+		// shift
+		// K
+
+<span class="nc" id="L978">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L979">				&quot;keystroke_set_link_by_textfield&quot;)); // control</span>
+		// K
+
+<span class="nc" id="L982">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L983">				&quot;keystroke_set_image_by_filechooser&quot;)); // alt</span>
+		// K
+
+<span class="nc" id="L986">		controls.add(new KeyProperty(frame, null, &quot;keystroke_node_up&quot;)); // control</span>
+		// UP
+
+<span class="nc" id="L989">		controls.add(new KeyProperty(frame, null, &quot;keystroke_node_down&quot;)); // control</span>
+		// DOWN
+
+<span class="nc" id="L992">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L993">				&quot;keystroke_node_increase_font_size&quot;)); // control</span>
+		// PLUS
+
+<span class="nc" id="L996">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L997">				&quot;keystroke_node_decrease_font_size&quot;)); // control</span>
+		// MINUS
+
+		// controls.add(new KeyProperty(frame, null,
+		// &quot;keystroke_branch_increase_font_size&quot;)); // control
+		// // shift
+		// // PLUS
+		//
+		// controls.add(new KeyProperty(frame, null,
+		// &quot;keystroke_branch_decrease_font_size&quot;)); // control
+		// // shift
+		// // MINUS
+		//
+<span class="nc" id="L1010">		controls.add(new KeyProperty(frame, null, &quot;keystroke_export_branch&quot;)); // alt</span>
+		// A
+		//
+
+<span class="nc" id="L1014">		controls.add(new KeyProperty(frame, null, &quot;keystroke_node_color&quot;)); // alt</span>
+		// F
+
+<span class="nc" id="L1017">		controls.add(new KeyProperty(frame, null, &quot;keystroke_node_color_blend&quot;)); // alt</span>
+		// B
+
+<span class="nc" id="L1020">		controls.add(new KeyProperty(frame, null, &quot;keystroke_edge_color&quot;)); // alt</span>
+		// E
+
+<span class="nc" id="L1023">		controls.add(new KeyProperty(frame, null, &quot;keystroke_find&quot;)); // ctrl F</span>
+
+<span class="nc" id="L1025">		controls.add(new KeyProperty(frame, null, &quot;keystroke_find_next&quot;)); // ctrl</span>
+		// G
+
+		// Apply patterns
+
+		// There is no limiting number of the pattern, you can have as many
+		// keystrokes for patterns as you want. The reason I do not follow to
+		// F10 and further in this default is that F10 has special function on
+		// Windows.
+
+<span class="nc" id="L1035">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1036">		controls.add(new SeparatorProperty(&quot;patterns&quot;));</span>
+<span class="nc" id="L1037">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1038">				&quot;keystroke_accessories/plugins/ManagePatterns_manage_patterns_dialog&quot;)); // control</span>
+																							// shift
+																							// F1
+<span class="nc" id="L1041">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_1&quot;)); // F1</span>
+
+<span class="nc" id="L1043">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_2&quot;)); // control</span>
+		// shift
+		// N
+
+<span class="nc" id="L1047">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_3&quot;)); // F3</span>
+
+<span class="nc" id="L1049">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_4&quot;)); // F4</span>
+
+<span class="nc" id="L1051">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_5&quot;)); // F5</span>
+
+<span class="nc" id="L1053">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_6&quot;)); // F6</span>
+
+<span class="nc" id="L1055">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_7&quot;)); // F7</span>
+
+<span class="nc" id="L1057">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_8&quot;)); // F8</span>
+
+<span class="nc" id="L1059">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_9&quot;)); // F9</span>
+
+<span class="nc" id="L1061">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_10&quot;)); // control</span>
+		// F1
+
+<span class="nc" id="L1064">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_11&quot;)); // control</span>
+		// F2
+
+<span class="nc" id="L1067">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_12&quot;)); // control</span>
+		// F3
+
+<span class="nc" id="L1070">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_13&quot;)); // control</span>
+
+		// F4
+
+<span class="nc" id="L1074">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_14&quot;)); // control</span>
+		// F5
+
+<span class="nc" id="L1077">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_15&quot;)); // control</span>
+		// F6
+
+<span class="nc" id="L1080">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_16&quot;)); // control</span>
+		// F7
+
+<span class="nc" id="L1083">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_17&quot;)); // control</span>
+		// F8
+
+<span class="nc" id="L1086">		controls.add(new KeyProperty(frame, null, &quot;keystroke_apply_pattern_18&quot;)); // control</span>
+		// F9
+
+<span class="nc" id="L1089">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1090">		controls.add(new SeparatorProperty(&quot;others&quot;));</span>
+
+<span class="nc" id="L1092">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1093">				&quot;keystroke_accessories/plugins/ChangeNodeLevelAction_left.properties_key&quot;));</span>
+<span class="nc" id="L1094">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1095">				&quot;keystroke_accessories/plugins/ChangeNodeLevelAction_right.properties_key&quot;));</span>
+<span class="nc" id="L1096">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1097">				&quot;keystroke_accessories/plugins/FormatCopy.properties.properties_key&quot;));</span>
+<span class="nc" id="L1098">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1099">				&quot;keystroke_accessories/plugins/FormatPaste.properties.properties_key&quot;));</span>
+<span class="nc" id="L1100">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1101">				&quot;keystroke_accessories/plugins/IconSelectionPlugin.properties.properties_key&quot;));</span>
+<span class="nc" id="L1102">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1103">				&quot;keystroke_accessories/plugins/NewParentNode.properties_key&quot;));</span>
+		// controls.add(new KeyProperty(frame, null,
+		// &quot;keystroke_accessories/plugins/NodeNote.properties_key&quot;));
+<span class="nc" id="L1106">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1107">				&quot;keystroke_accessories/plugins/NodeNote_jumpto.keystroke.alt_N&quot;));</span>
+<span class="nc" id="L1108">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1109">				&quot;keystroke_accessories/plugins/NodeNote_hide_show.keystroke.control_shift_less&quot;));</span>
+<span class="nc" id="L1110">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1111">				&quot;keystroke_accessories/plugins/RemoveNote.properties.properties_key&quot;));</span>
+<span class="nc" id="L1112">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1113">				&quot;keystroke_accessories/plugins/UnfoldAll.keystroke.alt_PAGE_UP&quot;));</span>
+<span class="nc" id="L1114">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1115">				&quot;keystroke_accessories/plugins/UnfoldAll.keystroke.alt_PAGE_DOWN&quot;));</span>
+<span class="nc" id="L1116">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1117">				&quot;keystroke_accessories/plugins/UnfoldAll.keystroke.alt_HOME&quot;));</span>
+<span class="nc" id="L1118">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1119">				&quot;keystroke_accessories/plugins/UnfoldAll.keystroke.alt_END&quot;));</span>
+
+<span class="nc" id="L1121">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1122">		controls.add(new SeparatorProperty(&quot;attributes&quot;));</span>
+<span class="nc" id="L1123">		controls.add(new KeyProperty(frame, null, &quot;keystroke_edit_attributes&quot;)); // control</span>
+<span class="nc" id="L1124">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1125">				&quot;keystroke_show_all_attributes&quot;)); // control</span>
+<span class="nc" id="L1126">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1127">				&quot;keystroke_show_selected_attributes&quot;)); // control</span>
+<span class="nc" id="L1128">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1129">				&quot;keystroke_hide_all_attributes&quot;)); // control</span>
+<span class="nc" id="L1130">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1131">				&quot;keystroke_show_attribute_manager&quot;)); // control</span>
+<span class="nc" id="L1132">		controls.add(new KeyProperty(frame, null, &quot;keystroke_assign_attributes&quot;)); // control</span>
+<span class="nc" id="L1133">		controls.add(new KeyProperty(frame, null,</span>
+<span class="nc" id="L1134">				&quot;keystroke_plugins/ScriptingEngine.keystroke.evaluate&quot;));</span>
+
+<span class="nc" id="L1136">		final ModeController modeController = fmMain.getController()</span>
+<span class="nc" id="L1137">				.getModeController();</span>
+<span class="nc bnc" id="L1138" title="All 2 branches missed.">		if (modeController instanceof MindMapController) {</span>
+<span class="nc" id="L1139">			MindMapController controller = (MindMapController) modeController;</span>
+<span class="nc" id="L1140">			Vector iconActions = controller.iconActions;</span>
+<span class="nc" id="L1141">			Vector actions = new Vector();</span>
+<span class="nc" id="L1142">			actions.addAll(iconActions);</span>
+<span class="nc" id="L1143">			actions.add(controller.removeLastIconAction);</span>
+<span class="nc" id="L1144">			actions.add(controller.removeAllIconsAction);</span>
+<span class="nc" id="L1145">			controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1146">			controls.add(new SeparatorProperty(&quot;icons&quot;));</span>
+<span class="nc" id="L1147">			final Iterator iterator = actions.iterator();</span>
+<span class="nc bnc" id="L1148" title="All 2 branches missed.">			while (iterator.hasNext()) {</span>
+<span class="nc" id="L1149">				IconInformation info = (IconInformation) iterator.next();</span>
+<span class="nc" id="L1150">				final KeyProperty keyProperty = new KeyProperty(frame, null,</span>
+<span class="nc" id="L1151">						info.getKeystrokeResourceName());</span>
+<span class="nc" id="L1152">				keyProperty.setLabelText(info.getDescription());</span>
+<span class="nc" id="L1153">				keyProperty.setImageIcon(info.getIcon());</span>
+<span class="nc" id="L1154">				keyProperty.disableModifiers();</span>
+<span class="nc" id="L1155">				controls.add(keyProperty);</span>
+			}
+
+		}
+
+		/***********************************************************************
+		 * Misc ****************************************************************
+		 */
+<span class="nc" id="L1163">		controls.add(new NewTabProperty(&quot;Behaviour&quot;));</span>
+<span class="nc" id="L1164">		controls.add(new SeparatorProperty(&quot;behaviour&quot;));</span>
+<span class="nc" id="L1165">		controls.add(new BooleanProperty(&quot;enable_node_movement.tooltip&quot;,</span>
+<span class="nc" id="L1166">				&quot;enable_node_movement&quot;));</span>
+<span class="nc" id="L1167">		controls.add(new BooleanProperty(FreeMind.RESOURCES_SEARCH_IN_NOTES_TOO</span>
+<span class="nc" id="L1168">				+ TOOLTIP_EXT, FreeMind.RESOURCES_SEARCH_IN_NOTES_TOO));</span>
+
+<span class="nc" id="L1170">		controls.add(new ComboProperty(&quot;placenewbranches.tooltip&quot;,</span>
+<span class="nc" id="L1171">				&quot;placenewbranches&quot;, new String[] { &quot;first&quot;, &quot;last&quot; }, this)); // last</span>
+<span class="nc" id="L1172">		controls.add(new BooleanProperty(&quot;draganddrop.tooltip&quot;, &quot;draganddrop&quot;)); // true</span>
+
+<span class="nc" id="L1174">		controls.add(new BooleanProperty(&quot;unfold_on_paste.tooltip&quot;,</span>
+<span class="nc" id="L1175">				&quot;unfold_on_paste&quot;)); // true</span>
+
+<span class="nc" id="L1177">		controls.add(new BooleanProperty(&quot;disable_cursor_move_paper.tooltip&quot;,</span>
+<span class="nc" id="L1178">				&quot;disable_cursor_move_paper&quot;)); // false</span>
+
+<span class="nc" id="L1180">		controls.add(new BooleanProperty(&quot;enable_leaves_folding.tooltip&quot;,</span>
+<span class="nc" id="L1181">				&quot;enable_leaves_folding&quot;)); // false</span>
+
+<span class="nc" id="L1183">		controls.add(new StringProperty(&quot;foldingsymbolwidth.tooltip&quot;,</span>
+<span class="nc" id="L1184">				&quot;foldingsymbolwidth&quot;)); // 6</span>
+
+<span class="nc" id="L1186">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1187">		controls.add(new SeparatorProperty(&quot;key_typing&quot;));</span>
+<span class="nc" id="L1188">		controls.add(new BooleanProperty(&quot;disable_key_type.tooltip&quot;,</span>
+<span class="nc" id="L1189">				&quot;disable_key_type&quot;)); // false</span>
+
+<span class="nc" id="L1191">		controls.add(new BooleanProperty(&quot;key_type_adds_new.tooltip&quot;,</span>
+<span class="nc" id="L1192">				&quot;key_type_adds_new&quot;)); // false</span>
+
+<span class="nc" id="L1194">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1195">		controls.add(new SeparatorProperty(&quot;resources_notifications&quot;));</span>
+<span class="nc" id="L1196">		controls.add(new RemindValueProperty(</span>
+<span class="nc" id="L1197">				&quot;remind_type_of_new_nodes.tooltip&quot;,</span>
+<span class="nc" id="L1198">				FreeMind.RESOURCES_REMIND_USE_RICH_TEXT_IN_NEW_LONG_NODES,</span>
+<span class="nc" id="L1199">				modeController));</span>
+<span class="nc" id="L1200">		controls.add(new DontShowNotificationProperty(</span>
+<span class="nc" id="L1201">				&quot;resources_convert_to_current_version.tooltip&quot;,</span>
+<span class="nc" id="L1202">				FreeMind.RESOURCES_CONVERT_TO_CURRENT_VERSION));</span>
+<span class="nc" id="L1203">		controls.add(new RemindValueProperty(</span>
+<span class="nc" id="L1204">				&quot;reload_files_without_question.tooltip&quot;,</span>
+<span class="nc" id="L1205">				FreeMind.RESOURCES_RELOAD_FILES_WITHOUT_QUESTION,</span>
+<span class="nc" id="L1206">				modeController));</span>
+<span class="nc" id="L1207">		controls.add(new DontShowNotificationProperty(</span>
+<span class="nc" id="L1208">				&quot;delete_nodes_without_question.tooltip&quot;,</span>
+<span class="nc" id="L1209">				FreeMind.RESOURCES_DELETE_NODES_WITHOUT_QUESTION));</span>
+<span class="nc" id="L1210">		controls.add(new DontShowNotificationProperty(</span>
+<span class="nc" id="L1211">				&quot;cut_nodes_without_question.tooltip&quot;,</span>
+<span class="nc" id="L1212">				FreeMind.RESOURCES_CUT_NODES_WITHOUT_QUESTION));</span>
+<span class="nc" id="L1213">		controls.add(new DontShowNotificationProperty(</span>
+<span class="nc" id="L1214">				&quot;remove_notes_without_question.tooltip&quot;,</span>
+<span class="nc" id="L1215">				FreeMind.RESOURCES_REMOVE_NOTES_WITHOUT_QUESTION));</span>
+<span class="nc" id="L1216">		controls.add(new RemindValueProperty(</span>
+<span class="nc" id="L1217">				FreeMind.RESOURCES_COMPLETE_CLONING + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L1218">				FreeMind.RESOURCES_COMPLETE_CLONING, modeController));</span>
+<span class="nc" id="L1219">		controls.add(new DontShowNotificationProperty(</span>
+<span class="nc" id="L1220">				&quot;execute_scripts_without_asking.tooltip&quot;,</span>
+<span class="nc" id="L1221">				FreeMind.RESOURCES_EXECUTE_SCRIPTS_WITHOUT_ASKING));</span>
+
+<span class="nc" id="L1223">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1224">		controls.add(new SeparatorProperty(FreeMind.RESOURCES_SELECTION_METHOD));</span>
+<span class="nc" id="L1225">		controls.add(new ComboProperty(&quot;selection_method.tooltip&quot;,</span>
+<span class="nc" id="L1226">				FreeMind.RESOURCES_SELECTION_METHOD, new String[] {</span>
+<span class="nc" id="L1227">						&quot;selection_method_direct&quot;, &quot;selection_method_delayed&quot;,</span>
+<span class="nc" id="L1228">						&quot;selection_method_by_click&quot; }, this)); // selection_method_direct</span>
+
+<span class="nc" id="L1230">		controls.add(new NumberProperty(&quot;time_for_delayed_selection.tooltip&quot;,</span>
+<span class="nc" id="L1231">				&quot;time_for_delayed_selection&quot;, 1, Integer.MAX_VALUE, 1)); // 500</span>
+
+<span class="nc" id="L1233">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1234">		controls.add(new SeparatorProperty(&quot;mouse_wheel&quot;));</span>
+<span class="nc" id="L1235">		controls.add(new NumberProperty(&quot;wheel_velocity.tooltip&quot;,</span>
+<span class="nc" id="L1236">				FreeMind.RESOURCES_WHEEL_VELOCITY, 1, 250, 1));</span>
+<span class="nc" id="L1237">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1238">		controls.add(new SeparatorProperty(&quot;undo&quot;));</span>
+<span class="nc" id="L1239">		controls.add(new NumberProperty(&quot;undo_levels.tooltip&quot;, &quot;undo_levels&quot;,</span>
+<span class="nc" id="L1240">				2, 1000, 1));</span>
+
+		/***********************************************************************
+		 * Browser/external apps
+		 * ****************************************************************
+		 */
+<span class="nc" id="L1246">		controls.add(new NewTabProperty(&quot;HTML&quot;));</span>
+<span class="nc" id="L1247">		controls.add(new SeparatorProperty(&quot;browser&quot;));</span>
+		//
+		// The default browser setting
+		//
+		// For Windows (the \&quot;\&quot; signs are necessary due to links, that have &quot;=&quot;
+		// in their URL).
+		// default_browser_command_windows_nt = explorer &quot;{0}&quot;
+		//
+		// The next setting works for the default browser, but eventually starts
+		// programs without questions, so be careful!
+		//
+		// default_browser_command_windows_nt = rundll32
+		// url.dll,FileProtocolHandler {0}
+
+<span class="nc" id="L1261">		controls.add(new StringProperty(</span>
+<span class="nc" id="L1262">				&quot;default_browser_command_windows_nt.tooltip&quot;,</span>
+<span class="nc" id="L1263">				&quot;default_browser_command_windows_nt&quot;)); // cmd.exe</span>
+		// /c
+		// start
+		// &quot;&quot;
+		// &quot;{0}&quot;
+
+<span class="nc" id="L1269">		controls.add(new StringProperty(</span>
+<span class="nc" id="L1270">				&quot;default_browser_command_windows_9x.tooltip&quot;,</span>
+<span class="nc" id="L1271">				&quot;default_browser_command_windows_9x&quot;)); // command.com</span>
+		// /c
+		// start
+		// &quot;{0}&quot;
+		// Dimitri proposed:
+		// default_browser_command_windows_9x = explorer &quot;{0}&quot;
+		//
+		// Here the default browser for other operating systems goes:
+		//
+
+<span class="nc" id="L1281">		controls.add(new StringProperty(</span>
+<span class="nc" id="L1282">				&quot;default_browser_command_other_os.tooltip&quot;,</span>
+<span class="nc" id="L1283">				&quot;default_browser_command_other_os&quot;)); // mozilla {0}</span>
+		//
+
+<span class="nc" id="L1286">		controls.add(new StringProperty(&quot;default_browser_command_mac.tooltip&quot;,</span>
+<span class="nc" id="L1287">				&quot;default_browser_command_mac&quot;)); // open -a</span>
+		// /Applications/Safari.app {0}
+
+<span class="nc" id="L1290">		controls.add(new SeparatorProperty(&quot;html_export&quot;));</span>
+		//
+<span class="nc" id="L1292">		controls.add(new ComboProperty(</span>
+<span class="nc" id="L1293">				null,</span>
+<span class="nc" id="L1294">				&quot;html_export_folding&quot;,</span>
+<span class="nc" id="L1295">				new String[] { &quot;html_export_no_folding&quot;,</span>
+<span class="nc" id="L1296">						&quot;html_export_fold_currently_folded&quot;,</span>
+<span class="nc" id="L1297">						&quot;html_export_fold_all&quot;, &quot;html_export_based_on_headings&quot; },</span>
+<span class="nc" id="L1298">				this)); // html_export_fold_currently_folded</span>
+
+<span class="nc" id="L1300">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L1301">		controls.add(new BooleanProperty(&quot;export_icons_in_html.tooltip&quot;,</span>
+<span class="nc" id="L1302">				&quot;export_icons_in_html&quot;)); // false</span>
+
+<span class="nc bnc" id="L1304" title="All 2 branches missed.">		for (Iterator iter = sContributors.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L1305">			FreemindPropertyContributor contributor = (FreemindPropertyContributor) iter</span>
+<span class="nc" id="L1306">					.next();</span>
+<span class="nc" id="L1307">			controls.addAll(contributor.getControls(this));</span>
+		}
+<span class="nc" id="L1309">		return controls;</span>
+	}
+
+	public void closeWindow() {
+<span class="nc" id="L1313">		OptionPanelWindowConfigurationStorage storage = new OptionPanelWindowConfigurationStorage();</span>
+<span class="nc" id="L1314">		storage.setPanel(selectedPanel);</span>
+<span class="nc" id="L1315">		XmlBindingTools.getInstance().storeDialogPositions(</span>
+<span class="nc" id="L1316">				fmMain.getController(), frame, storage,</span>
+<span class="nc" id="L1317">				PREFERENCE_STORAGE_PROPERTY);</span>
+<span class="nc" id="L1318">		frame.setVisible(false);</span>
+<span class="nc" id="L1319">		frame.dispose();</span>
+<span class="nc" id="L1320">	}</span>
+
+<span class="nc" id="L1322">	private static Set sContributors = new HashSet();</span>
+
+	public static void addContributor(FreemindPropertyContributor contributor) {
+<span class="nc" id="L1325">		sContributors.add(contributor);</span>
+<span class="nc" id="L1326">	}</span>
+
+	public static void removeContributor(FreemindPropertyContributor contributor) {
+<span class="nc" id="L1329">		sContributors.remove(contributor);</span>
+<span class="nc" id="L1330">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

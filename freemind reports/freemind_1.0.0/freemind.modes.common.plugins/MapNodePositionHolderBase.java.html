@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MapNodePositionHolderBase.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.common.plugins</a> &gt; <span class="el_source">MapNodePositionHolderBase.java</span></div><h1>MapNodePositionHolderBase.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2012 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.modes.common.plugins;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import javax.swing.ImageIcon;
+
+import freemind.extensions.PermanentNodeHook;
+import freemind.extensions.PermanentNodeHookAdapter;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.MindMapNode;
+
+/**
+ * @author foltin
+ * @date 16.08.2012
+ */
+public class MapNodePositionHolderBase extends PermanentNodeHookAdapter {
+
+	public static final String NODE_MAP_HOOK_NAME = &quot;plugins/map/MapNodePositionHolder.properties&quot;;
+	public static final String NODE_MAP_LOCATION_ICON = &quot;node_map_location_icon&quot;;
+	protected static final String XML_STORAGE_POS_LON = &quot;XML_STORAGE_POS_LON&quot;;
+	protected static final String XML_STORAGE_POS_LAT = &quot;XML_STORAGE_POS_LAT&quot;;
+	protected static final String XML_STORAGE_MAP_LON = &quot;XML_STORAGE_MAP_LON&quot;;
+	protected static final String XML_STORAGE_MAP_LAT = &quot;XML_STORAGE_MAP_LAT&quot;;
+	protected static final String XML_STORAGE_ZOOM = &quot;XML_STORAGE_ZOOM&quot;;
+	protected static final String XML_STORAGE_TILE_SOURCE = &quot;XML_STORAGE_TILE_SOURCE&quot;;
+	protected static final String XML_STORAGE_MAP_TOOLTIP_LOCATION = &quot;XML_STORAGE_MAP_TOOLTIP_LOCATION&quot;;
+	protected static final String NODE_MAP_STORE_TOOLTIP = &quot;node_map_store_tooltip&quot;;
+	protected static final String NODE_MAP_SHOW_TOOLTIP = &quot;node_map_show_tooltip&quot;;
+	public static final String TILE_SOURCE_MAP_QUEST_OPEN_MAP = &quot;plugins.map.FreeMindMapController.MapQuestOpenMap&quot;;
+	public static final String TILE_SOURCE_TRANSPORT_MAP = &quot;plugins.map.FreeMindMapController.TransportMap&quot;;
+	public static final String TILE_SOURCE_CYCLE_MAP = &quot;org.openstreetmap.gui.jmapviewer.tilesources.OsmTileSource$CycleMap&quot;;
+	public static final String TILE_SOURCE_MAPNIK = &quot;org.openstreetmap.gui.jmapviewer.tilesources.OsmTileSource$Mapnik&quot;;
+	public static final String SHORT_MAP_QUEST_OPEN_MAP = &quot;Q&quot;;
+	public static final String SHORT_TRANSPORT_MAP = &quot;T&quot;;
+	public static final String SHORT_CYCLE_MAP = &quot;C&quot;;
+	public static final String SHORT_MAPNIK = &quot;M&quot;;
+	public static ImageIcon sMapLocationIcon;
+<span class="nc" id="L62">	protected String mTooltipLocation = null;</span>
+<span class="nc" id="L63">	protected File mTooltipFile = null;</span>
+	private HashMap mValues;
+
+	public static ImageIcon getMapLocationIcon() {
+		// icon
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (sMapLocationIcon == null) {</span>
+<span class="nc" id="L69">			sMapLocationIcon = new ImageIcon(Resources.getInstance()</span>
+<span class="nc" id="L70">					.getResource(&quot;images/map_location.png&quot;));</span>
+		}
+<span class="nc" id="L72">		return sMapLocationIcon;</span>
+	}
+
+	protected void setStateIcon(MindMapNode node, boolean enabled) {
+<span class="nc" id="L76">		node.setStateIcon(NODE_MAP_LOCATION_ICON,</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">				(enabled) ? getMapLocationIcon() : null);</span>
+<span class="nc" id="L78">	}</span>
+
+	/**
+	 * 
+	 */
+	public MapNodePositionHolderBase() {
+<span class="nc" id="L84">		super();</span>
+<span class="nc" id="L85">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.PermanentNodeHookAdapter#shutdownMapHook()
+	 */
+	public void shutdownMapHook() {
+<span class="nc" id="L93">		setStateIcon(getNode(), false);</span>
+<span class="nc" id="L94">		hideTooltip();</span>
+<span class="nc" id="L95">		super.shutdownMapHook();</span>
+<span class="nc" id="L96">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.NodeHookAdapter#invoke(freemind.modes.MindMapNode)
+	 */
+	public void invoke(MindMapNode pNode) {
+<span class="nc" id="L105">		super.invoke(pNode);</span>
+<span class="nc" id="L106">		setStateIcon(pNode, true);</span>
+<span class="nc" id="L107">		showTooltip();</span>
+<span class="nc" id="L108">	}</span>
+	
+	public void showTooltip() {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">		if (isTooltipDesired()) {</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">			if (mTooltipLocation != null) {</span>
+<span class="nc" id="L113">				addTooltip();</span>
+			}
+		}
+<span class="nc" id="L116">	}</span>
+
+	protected boolean isTooltipDesired() {
+<span class="nc bnc" id="L119" title="All 2 branches missed.">		return Resources.getInstance().getBoolProperty(NODE_MAP_SHOW_TOOLTIP) &amp;&amp; </span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				!Tools.safeEquals(mTooltipLocation, &quot;false&quot;);</span>
+	}
+
+
+	public void loadFrom(XMLElement pChild) {
+<span class="nc" id="L125">		super.loadFrom(pChild);</span>
+<span class="nc" id="L126">		mValues = loadNameValuePairs(pChild);</span>
+		// if no value stored, the get method returns null.
+<span class="nc" id="L128">		mTooltipLocation = (String) mValues</span>
+<span class="nc" id="L129">				.get(XML_STORAGE_MAP_TOOLTIP_LOCATION);</span>
+<span class="nc" id="L130">	}</span>
+
+	public void addTooltip() {
+<span class="nc" id="L133">		String imageHtml = getImageHtml();</span>
+<span class="nc" id="L134">		setToolTip(NODE_MAP_HOOK_NAME, imageHtml);</span>
+<span class="nc" id="L135">	}</span>
+
+	public String getImageHtml() {
+<span class="nc" id="L138">		String imageTag = &quot;&lt;img src=\&quot;file:./&quot; + mTooltipLocation + &quot;\&quot;/&gt;&quot;;</span>
+<span class="nc" id="L139">		String imageHtml = &quot;&lt;html&gt;&lt;body&gt;&quot; + imageTag + &quot;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+<span class="nc" id="L140">		logger.fine(&quot;Tooltip at &quot; + imageTag);</span>
+<span class="nc" id="L141">		return imageHtml;</span>
+	}
+
+	/**
+	 * 
+	 */
+	protected void hideTooltip() {
+<span class="nc" id="L148">		setToolTip(NODE_MAP_HOOK_NAME, null);		</span>
+<span class="nc" id="L149">	}</span>
+
+	public static MapNodePositionHolderBase getBaseHook(MindMapNode node) {
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		for (Iterator j = node.getActivatedHooks().iterator(); j.hasNext();) {</span>
+<span class="nc" id="L153">			PermanentNodeHook element = (PermanentNodeHook) j.next();</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">			if (element instanceof MapNodePositionHolderBase) {</span>
+<span class="nc" id="L155">				return (MapNodePositionHolderBase) element;</span>
+			}
+		}
+<span class="nc" id="L158">		return null;</span>
+	}
+
+	public String[] getBarePosition() {
+<span class="nc" id="L162">		return new String[] {(String) mValues.get(XML_STORAGE_POS_LAT), </span>
+<span class="nc" id="L163">				(String) mValues.get(XML_STORAGE_POS_LON), </span>
+<span class="nc" id="L164">				(String) mValues.get(XML_STORAGE_MAP_LAT),</span>
+<span class="nc" id="L165">				(String) mValues.get(XML_STORAGE_MAP_LON),</span>
+<span class="nc" id="L166">				(String) mValues.get(XML_STORAGE_ZOOM),</span>
+<span class="nc" id="L167">				(String) mValues.get(XML_STORAGE_TILE_SOURCE)};</span>
+	}
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

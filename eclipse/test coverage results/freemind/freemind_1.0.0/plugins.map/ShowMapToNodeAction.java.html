@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ShowMapToNodeAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.map</a> &gt; <span class="el_source">ShowMapToNodeAction.java</span></div><h1>ShowMapToNodeAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2011 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package plugins.map;
+
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+
+/**
+ * @author foltin
+ * @date 12.12.2011
+ */
+<span class="nc" id="L30">public class ShowMapToNodeAction extends MindMapNodeHookAdapter {</span>
+
+	static final String NODE_CONTEXT_PLUGIN_NAME = &quot;plugins/map/MapDialog_ShowMapToNode.properties&quot;;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.extensions.NodeHookAdapter#invoke(freemind.modes.MindMapNode)
+	 */
+	public void invoke(MindMapNode pNode) {
+		// is the map open? Ask base class.
+<span class="nc" id="L42">		Registration registration = getRegistration();</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">		if (registration != null) {</span>
+			// is the map open?
+<span class="nc" id="L45">			MapDialog mapDialog = registration.getMapDialog();</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			if (mapDialog == null) {</span>
+				// if not, open it!
+<span class="nc" id="L48">				getMindMapController().createModeControllerHook(MapDialog.MAP_HOOK_NAME);</span>
+			}
+<span class="nc" id="L50">			mapDialog = registration.getMapDialog();</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">			if (mapDialog != null) {</span>
+<span class="nc" id="L52">				mapDialog.getFreeMindMapController().showSelectedNodes();</span>
+<span class="nc" id="L53">				mapDialog.getMapDialog().requestFocus();</span>
+<span class="nc" id="L54">			} else {</span>
+<span class="nc" id="L55">				logger.warning(&quot;Can't find dialog to connect to!&quot;);</span>
+			}
+<span class="nc" id="L57">		} else {</span>
+<span class="nc" id="L58">			logger.warning(&quot;Can't find registration base class!&quot;);</span>
+			
+		}
+<span class="nc" id="L61">	}</span>
+
+	public Registration getRegistration() {
+<span class="nc" id="L64">		return (Registration) getPluginBaseClass();</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

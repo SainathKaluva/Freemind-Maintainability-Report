@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExportToOoWriter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">ExportToOoWriter.java</span></div><h1>ExportToOoWriter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 28.03.2004
+ *
+ */
+package accessories.plugins;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.net.URL;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.StringTokenizer;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
+import freemind.extensions.ExportHook;
+import freemind.main.Tools;
+
+/**
+ * @author foltin
+ * 
+ */
+public class ExportToOoWriter extends ExportHook {
+<span class="nc" id="L55">	private static java.util.logging.Logger logger = null;</span>
+
+	/**
+	 * 
+	 */
+	public ExportToOoWriter() {
+<span class="nc" id="L61">		super();</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L63">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L64">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L66">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.extensions.MindMapHook#startupMapHook()
+	 */
+	public void startupMapHook() {
+<span class="nc" id="L74">		super.startupMapHook();</span>
+<span class="nc" id="L75">		File chosenFile = chooseFile(getResourceString(&quot;file_type&quot;), null /*</span>
+																		 * getTranslatableResourceString
+																		 * (
+																		 * &quot;file_description&quot;
+																		 * )
+																		 */,
+<span class="nc" id="L81">				null);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (chosenFile == null) {</span>
+<span class="nc" id="L83">			return;</span>
+		}
+<span class="nc" id="L85">		getController().getFrame().setWaitingCursor(true);</span>
+		try {
+<span class="nc" id="L87">			exportToOoWriter(chosenFile);</span>
+<span class="nc" id="L88">		} catch (IOException e) {</span>
+<span class="nc" id="L89">			freemind.main.Resources.getInstance().logException(e);</span>
+		}
+<span class="nc" id="L91">		getController().getFrame().setWaitingCursor(false);</span>
+<span class="nc" id="L92">	}</span>
+
+	public boolean exportToOoWriter(File chosenFile) throws IOException {
+		// get output:
+<span class="nc" id="L96">		StringWriter writer = new StringWriter();</span>
+		// get XML
+<span class="nc" id="L98">		getController().getMap().getFilteredXml(writer);</span>
+<span class="nc" id="L99">		String xslts = getResourceString(&quot;files&quot;);</span>
+<span class="nc" id="L100">		return exportToOoWriter(chosenFile, writer, xslts);</span>
+	}
+
+	/**
+	 * @return true, if successful.
+	 */
+	private boolean applyXsltFile(String xsltFileName, StringWriter writer,
+			Result result) throws IOException {
+<span class="nc" id="L108">		URL xsltUrl = getResource(xsltFileName);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (xsltUrl == null) {</span>
+<span class="nc" id="L110">			logger.severe(&quot;Can't find &quot; + xsltFileName + &quot; as resource.&quot;);</span>
+<span class="nc" id="L111">			throw new IllegalArgumentException(&quot;Can't find &quot; + xsltFileName</span>
+<span class="nc" id="L112">					+ &quot; as resource.&quot;);</span>
+		}
+<span class="nc" id="L114">		InputStream xsltStream = xsltUrl.openStream();</span>
+		// System.out.println(&quot;set xsl&quot;);
+<span class="nc" id="L116">		Source xsltSource = new StreamSource(xsltStream);</span>
+
+		// create an instance of TransformerFactory
+		try {
+<span class="nc" id="L120">			StringReader reader = new StringReader(writer.getBuffer()</span>
+<span class="nc" id="L121">					.toString());</span>
+
+			// System.out.println(&quot;make transform instance&quot;);
+<span class="nc" id="L124">			TransformerFactory transFact = TransformerFactory.newInstance();</span>
+
+<span class="nc" id="L126">			Transformer trans = transFact.newTransformer(xsltSource);</span>
+<span class="nc" id="L127">			trans.setParameter(</span>
+<span class="nc" id="L128">					&quot;date&quot;,</span>
+<span class="nc" id="L129">					DateFormat.getDateInstance(DateFormat.SHORT).format(</span>
+<span class="nc" id="L130">							new Date()));</span>
+
+<span class="nc" id="L132">			trans.transform(new StreamSource(reader), result);</span>
+<span class="nc" id="L133">			return true;</span>
+<span class="nc" id="L134">		} catch (Exception e) {</span>
+			// System.err.println(&quot;error applying the xslt file &quot;+e);
+<span class="nc" id="L136">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L137">			return false;</span>
+		}
+	}
+
+	public boolean exportToOoWriter(File file, StringWriter writer, String xslts)
+			throws IOException {
+<span class="nc" id="L143">		boolean resultValue = true;</span>
+<span class="nc" id="L144">		ZipOutputStream zipout = new ZipOutputStream(new FileOutputStream(file));</span>
+
+<span class="nc" id="L146">		Result result = new StreamResult(zipout);</span>
+<span class="nc" id="L147">		StringTokenizer tokenizer = new StringTokenizer(xslts, &quot;,&quot;);</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		while (tokenizer.hasMoreTokens()) {</span>
+<span class="nc" id="L149">			String token = tokenizer.nextToken();</span>
+<span class="nc" id="L150">			String[] files = token.split(&quot;-&gt;&quot;);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			if (files.length == 2) {</span>
+<span class="nc" id="L152">				ZipEntry entry = new ZipEntry(files[1]);</span>
+<span class="nc" id="L153">				zipout.putNextEntry(entry);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">				if (files[0].endsWith(&quot;.xsl&quot;)) {</span>
+<span class="nc" id="L155">					logger.info(&quot;Transforming with xslt &quot; + files[0]</span>
+<span class="nc" id="L156">							+ &quot; to file &quot; + files[1]);</span>
+<span class="nc" id="L157">					resultValue &amp;= applyXsltFile(files[0], writer, result);</span>
+<span class="nc" id="L158">				} else {</span>
+<span class="nc" id="L159">					logger.info(&quot;Copying resource from &quot; + files[0]</span>
+<span class="nc" id="L160">							+ &quot; to file &quot; + files[1]);</span>
+<span class="nc" id="L161">					resultValue &amp;= copyFromResource(files[0], zipout);</span>
+				}
+<span class="nc" id="L163">				zipout.closeEntry();</span>
+			}
+		}
+<span class="nc" id="L166">		zipout.close();</span>
+<span class="nc" id="L167">		return resultValue;</span>
+	}
+
+	/**
+	 * @return true, if successful.
+	 */
+	private boolean copyFromResource(String fileName, OutputStream out) {
+		// adapted from http://javaalmanac.com/egs/java.io/CopyFile.html
+		// Copies src file to dst file.
+		// If the dst file does not exist, it is created
+		try {
+<span class="nc" id="L178">			logger.finest(&quot;searching for &quot; + fileName);</span>
+<span class="nc" id="L179">			URL resource = getResource(fileName);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			if (resource == null) {</span>
+<span class="nc" id="L181">				logger.severe(&quot;Cannot find resource: &quot; + fileName);</span>
+<span class="nc" id="L182">				return false;</span>
+			}
+<span class="nc" id="L184">			InputStream in = resource.openStream();</span>
+<span class="nc" id="L185">			Tools.copyStream(in, out, false);</span>
+<span class="nc" id="L186">			return true;</span>
+<span class="nc" id="L187">		} catch (Exception e) {</span>
+<span class="nc" id="L188">			logger.severe(&quot;File not found or could not be copied. &quot;</span>
+<span class="nc" id="L189">					+ &quot;Was earching for &quot; + fileName + &quot; and should go to &quot;</span>
+<span class="nc" id="L190">					+ out);</span>
+<span class="nc" id="L191">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L192">			return false;</span>
+		}
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

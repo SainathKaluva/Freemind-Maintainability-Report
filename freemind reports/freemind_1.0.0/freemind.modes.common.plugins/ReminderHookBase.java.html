@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ReminderHookBase.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.common.plugins</a> &gt; <span class="el_source">ReminderHookBase.java</span></div><h1>ReminderHookBase.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2005  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 06.02.2005
+ */
+
+package freemind.modes.common.plugins;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.MessageFormat;
+import java.util.Date;
+import java.util.HashMap;
+
+import javax.swing.ImageIcon;
+import javax.swing.Timer;
+
+import freemind.extensions.PermanentNodeHookAdapter;
+import freemind.main.XMLElement;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMapNode;
+
+/**
+ * @author foltin
+ * 
+ */
+public abstract class ReminderHookBase extends PermanentNodeHookAdapter {
+
+	public static final String PLUGIN_LABEL = &quot;plugins/TimeManagementReminder.xml&quot;;
+
+	private static final int CLOCK_INVISIBLE = 0;
+
+	private static final int CLOCK_VISIBLE = 1;
+
+	private static final int REMOVE_CLOCK = -1;
+
+	public static final String REMINDUSERAT = &quot;REMINDUSERAT&quot;;
+
+	private static final int BLINK_INTERVAL_IN_MILLIES = 3000;
+
+<span class="nc" id="L57">	private long remindUserAt = 0;</span>
+
+	private Timer timer;
+
+<span class="nc" id="L61">	private static ImageIcon clockIcon = null;</span>
+
+	private static ImageIcon bellIcon;
+
+<span class="nc" id="L65">	private static ImageIcon flagIcon;</span>
+
+	// private Vector dateVector = new Vector();
+
+	/**
+	 *
+	 */
+	public ReminderHookBase() {
+<span class="nc" id="L73">		super();</span>
+<span class="nc" id="L74">	}</span>
+
+	public void loadFrom(XMLElement child) {
+<span class="nc" id="L77">		super.loadFrom(child);</span>
+<span class="nc" id="L78">		HashMap hash = loadNameValuePairs(child);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (hash.containsKey(REMINDUSERAT)) {</span>
+<span class="nc" id="L80">			String remindAt = (String) hash.get(REMINDUSERAT);</span>
+<span class="nc" id="L81">			setRemindUserAt(new Long(remindAt).longValue());</span>
+		}
+
+<span class="nc" id="L84">	}</span>
+
+	public void save(XMLElement xml) {
+<span class="nc" id="L87">		super.save(xml);</span>
+<span class="nc" id="L88">		HashMap nameValuePairs = new HashMap();</span>
+<span class="nc" id="L89">		nameValuePairs.put(REMINDUSERAT, new Long(remindUserAt));</span>
+<span class="nc" id="L90">		saveNameValuePairs(nameValuePairs, xml);</span>
+<span class="nc" id="L91">	}</span>
+
+	public void shutdownMapHook() {
+<span class="nc" id="L94">		setToolTip(getNode(), getName(), null);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (timer != null) {</span>
+<span class="nc" id="L96">			timer.stop();</span>
+		}
+<span class="nc" id="L98">		displayState(REMOVE_CLOCK, getNode(), true);</span>
+<span class="nc" id="L99">		super.shutdownMapHook();</span>
+<span class="nc" id="L100">	}</span>
+
+	public void invoke(MindMapNode node) {
+<span class="nc" id="L103">		super.invoke(node);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (remindUserAt == 0) {</span>
+<span class="nc" id="L105">			return;</span>
+		}
+<span class="nc bnc" id="L107" title="All 2 branches missed.">		if (timer == null) {</span>
+<span class="nc" id="L108">			scheduleTimer();</span>
+<span class="nc" id="L109">			Date date = new Date(remindUserAt);</span>
+<span class="nc" id="L110">			Object[] messageArguments = { date };</span>
+<span class="nc" id="L111">			MessageFormat formatter = new MessageFormat(</span>
+<span class="nc" id="L112">					getResourceString(&quot;plugins/TimeManagement.xml_reminderNode_tooltip&quot;));</span>
+<span class="nc" id="L113">			String message = formatter.format(messageArguments);</span>
+<span class="nc" id="L114">			setToolTip(node, getName(), message);</span>
+<span class="nc" id="L115">			displayState(CLOCK_VISIBLE, getNode(), false);</span>
+		}
+<span class="nc" id="L117">		logger.info(&quot;Invoke for node: &quot; + node.getObjectId(getController()));</span>
+<span class="nc" id="L118">	}</span>
+
+	/**
+	 */
+	private void scheduleTimer() {
+<span class="nc" id="L123">		timer = new Timer(getRemindUserAtAsSecondsFromNow(),</span>
+<span class="nc" id="L124">				new TimerBlinkTask(false));</span>
+<span class="nc" id="L125">		timer.setDelay(BLINK_INTERVAL_IN_MILLIES);</span>
+<span class="nc" id="L126">		timer.start();</span>
+<span class="nc" id="L127">	}</span>
+
+	private ImageIcon getClockIcon() {
+		// icon
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (clockIcon == null) {</span>
+<span class="nc" id="L132">			clockIcon = MindIcon.factory(&quot;clock2&quot;).getIcon();</span>
+		}
+<span class="nc" id="L134">		return clockIcon;</span>
+	}
+
+	private ImageIcon getBellIcon() {
+		// icon
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (bellIcon == null) {</span>
+<span class="nc" id="L140">			bellIcon = MindIcon.factory(&quot;bell&quot;).getIcon();</span>
+		}
+<span class="nc" id="L142">		return bellIcon;</span>
+	}
+
+	private ImageIcon getFlagIcon() {
+		// icon
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (flagIcon == null) {</span>
+<span class="nc" id="L148">			flagIcon = MindIcon.factory(&quot;flag&quot;).getIcon();</span>
+		}
+<span class="nc" id="L150">		return flagIcon;</span>
+	}
+
+	public class TimerBlinkTask implements ActionListener {
+
+		/**
+		 */
+<span class="nc" id="L157">		public TimerBlinkTask(boolean stateAdded) {</span>
+<span class="nc" id="L158">			super();</span>
+<span class="nc" id="L159">			this.stateAdded = stateAdded;</span>
+<span class="nc" id="L160">		}</span>
+
+<span class="nc" id="L162">		private boolean stateAdded = false;</span>
+
+		public void actionPerformed(ActionEvent pE) {
+			// check for time over:
+<span class="nc" id="L166">			int remindAt = getRemindUserAtAsSecondsFromNow();</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">			if(remindAt &gt; BLINK_INTERVAL_IN_MILLIES) {</span>
+				// time not over (maybe due to integer-long conversion too big)
+<span class="nc" id="L169">				timer.stop();</span>
+<span class="nc" id="L170">				scheduleTimer();</span>
+<span class="nc" id="L171">				return;</span>
+				
+			}
+			// time is over, we add the new icon until
+			// the user removes the reminder.
+			//
+<span class="nc bnc" id="L177" title="All 2 branches missed.">			stateAdded = !stateAdded;</span>
+<span class="nc" id="L178">			setRemindUserAt(System.currentTimeMillis()</span>
+<span class="nc" id="L179">					+ BLINK_INTERVAL_IN_MILLIES); // 3</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">			displayState((stateAdded) ? CLOCK_VISIBLE : CLOCK_INVISIBLE,</span>
+<span class="nc" id="L181">					getNode(), true);</span>
+
+<span class="nc" id="L183">		}</span>
+
+	}
+
+	public void displayState(int stateAdded, MindMapNode pNode, boolean recurse) {
+<span class="nc" id="L188">		ImageIcon icon = null;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		if (stateAdded == CLOCK_VISIBLE) {</span>
+<span class="nc" id="L190">			icon = getClockIcon();</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		} else if (stateAdded == CLOCK_INVISIBLE) {</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">			if (pNode == getNode()) {</span>
+<span class="nc" id="L193">				icon = getBellIcon();</span>
+<span class="nc" id="L194">			} else {</span>
+<span class="nc" id="L195">				icon = getFlagIcon();</span>
+			}
+		}
+<span class="nc" id="L198">		pNode.setStateIcon(getStateKey(), icon);</span>
+<span class="nc" id="L199">		nodeRefresh(pNode);</span>
+<span class="nc bnc" id="L200" title="All 4 branches missed.">		if (recurse &amp;&amp; !pNode.isRoot()) {</span>
+<span class="nc" id="L201">			displayState(stateAdded, pNode.getParentNode(), recurse);</span>
+		}
+<span class="nc" id="L203">	}</span>
+
+	protected abstract void nodeRefresh(MindMapNode node);
+
+	protected abstract void setToolTip(MindMapNode node, String key,
+			String value);
+
+	public long getRemindUserAt() {
+<span class="nc" id="L211">		return remindUserAt;</span>
+	}
+
+	public int getRemindUserAtAsSecondsFromNow() {
+<span class="nc" id="L215">		long timeDiff = remindUserAt - System.currentTimeMillis();</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">		if(timeDiff &gt; Integer.MAX_VALUE) {</span>
+<span class="nc" id="L217">			return Integer.MAX_VALUE;</span>
+		}
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		if(timeDiff &lt; Integer.MIN_VALUE) {</span>
+<span class="nc" id="L220">			return Integer.MIN_VALUE;</span>
+		}
+<span class="nc" id="L222">		return (int) timeDiff;</span>
+	}
+
+	public void setRemindUserAt(long remindUserAt) {
+<span class="nc" id="L226">		this.remindUserAt = remindUserAt;</span>
+<span class="nc" id="L227">	}</span>
+
+<span class="nc" id="L229">	private final String STATE_TOOLTIP = TimerBlinkTask.class.getName()</span>
+<span class="nc" id="L230">			+ &quot;_STATE_&quot;;</span>
+
+<span class="nc" id="L232">	private String mStateTooltipName = null;</span>
+
+	public String getStateKey() {
+<span class="nc bnc" id="L235" title="All 2 branches missed.">		if (mStateTooltipName == null) {</span>
+<span class="nc" id="L236">			mStateTooltipName = STATE_TOOLTIP;</span>
+			// + getNode().getObjectId(getController());
+		}
+<span class="nc" id="L239">		return mStateTooltipName;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapModeAttributeController.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.attributeactors</a> &gt; <span class="el_source">MindMapModeAttributeController.java</span></div><h1>MindMapModeAttributeController.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 22.01.2006
+ * Created by Dimitri Polivaev
+ */
+package freemind.modes.mindmapmode.attributeactors;
+
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+
+import freemind.controller.filter.util.SortedComboBoxModel;
+import freemind.modes.MindMapNode;
+import freemind.modes.attributes.Attribute;
+import freemind.modes.attributes.AttributeController;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.attributes.AttributeRegistryElement;
+import freemind.modes.attributes.NodeAttributeTableModel;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+public class MindMapModeAttributeController implements AttributeController {
+	private static interface Visitor {
+		void visit(NodeAttributeTableModel model);
+	}
+
+	private class AttributeRenamer implements Visitor {
+
+		private Object oldName;
+		private Object newName;
+
+<span class="nc" id="L50">		public AttributeRenamer(Object oldName, Object newName) {</span>
+<span class="nc" id="L51">			super();</span>
+<span class="nc" id="L52">			this.newName = newName;</span>
+<span class="nc" id="L53">			this.oldName = oldName;</span>
+<span class="nc" id="L54">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * freemind.modes.attributes.AttributeRegistry.Visitor#visit(freemind
+		 * .modes.attributes.ConcreteAttributeTableModel)
+		 */
+		public void visit(NodeAttributeTableModel model) {
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			for (int i = 0; i &lt; model.getRowCount(); i++) {</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">				if (model.getName(i).equals(oldName)) {</span>
+<span class="nc" id="L66">					final ActionPair setAttributeNameActionPair = setAttributeNameActor</span>
+<span class="nc" id="L67">							.createActionPair(model, i, newName.toString());</span>
+<span class="nc" id="L68">					controller.doTransaction(</span>
+<span class="nc" id="L69">							&quot;setAttributeNameActionPair&quot;,</span>
+<span class="nc" id="L70">							setAttributeNameActionPair);</span>
+				}
+			}
+<span class="nc" id="L73">		}</span>
+
+	}
+
+	private class AttributeChanger implements Visitor {
+		private Object name;
+		private Object oldValue;
+		private Object newValue;
+
+<span class="nc" id="L82">		public AttributeChanger(Object name, Object oldValue, Object newValue) {</span>
+<span class="nc" id="L83">			super();</span>
+<span class="nc" id="L84">			this.name = name;</span>
+<span class="nc" id="L85">			this.oldValue = oldValue;</span>
+<span class="nc" id="L86">			this.newValue = newValue;</span>
+<span class="nc" id="L87">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * freemind.modes.attributes.AttributeRegistry.Visitor#visit(freemind
+		 * .modes.attributes.ConcreteAttributeTableModel)
+		 */
+		public void visit(NodeAttributeTableModel model) {
+<span class="nc bnc" id="L97" title="All 2 branches missed.">			for (int i = 0; i &lt; model.getRowCount(); i++) {</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">				if (model.getName(i).equals(name)</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">						&amp;&amp; model.getValue(i).equals(oldValue)) {</span>
+<span class="nc" id="L100">					final ActionPair setAttributeValueActionPair = setAttributeValueActor</span>
+<span class="nc" id="L101">							.createActionPair(model, i, newValue.toString());</span>
+<span class="nc" id="L102">					controller.doTransaction(</span>
+<span class="nc" id="L103">							&quot;setAttributeValueActionPair&quot;,</span>
+<span class="nc" id="L104">							setAttributeValueActionPair);</span>
+				}
+			}
+<span class="nc" id="L107">		}</span>
+	}
+
+	private class AttributeRemover implements Visitor {
+		private Object name;
+
+<span class="nc" id="L113">		public AttributeRemover(Object name) {</span>
+<span class="nc" id="L114">			super();</span>
+<span class="nc" id="L115">			this.name = name;</span>
+<span class="nc" id="L116">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * freemind.modes.attributes.AttributeRegistry.Visitor#visit(freemind
+		 * .modes.attributes.ConcreteAttributeTableModel)
+		 */
+		public void visit(NodeAttributeTableModel model) {
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			for (int i = 0; i &lt; model.getRowCount(); i++) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				if (model.getName(i).equals(name)) {</span>
+<span class="nc" id="L128">					final ActionPair removeAttributeActionPair = removeAttributeActor</span>
+<span class="nc" id="L129">							.createActionPair(model, i);</span>
+<span class="nc" id="L130">					controller.doTransaction(</span>
+<span class="nc" id="L131">							&quot;removeAttributeActionPair&quot;,</span>
+<span class="nc" id="L132">							removeAttributeActionPair);</span>
+				}
+			}
+<span class="nc" id="L135">		}</span>
+	}
+
+	private class AttributeValueRemover implements Visitor {
+
+		private Object name;
+		private Object value;
+
+<span class="nc" id="L143">		public AttributeValueRemover(Object name, Object value) {</span>
+<span class="nc" id="L144">			super();</span>
+<span class="nc" id="L145">			this.name = name;</span>
+<span class="nc" id="L146">			this.value = value;</span>
+<span class="nc" id="L147">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * freemind.modes.attributes.AttributeRegistry.Visitor#visit(freemind
+		 * .modes.attributes.ConcreteAttributeTableModel)
+		 */
+		public void visit(NodeAttributeTableModel model) {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			for (int i = 0; i &lt; model.getRowCount(); i++) {</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">				if (model.getName(i).equals(name)</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">						&amp;&amp; model.getValue(i).equals(value)) {</span>
+<span class="nc" id="L160">					final ActionPair removeAttributeActionPair = removeAttributeActor</span>
+<span class="nc" id="L161">							.createActionPair(model, i);</span>
+<span class="nc" id="L162">					controller.doTransaction(</span>
+<span class="nc" id="L163">							&quot;removeAttributeActionPair&quot;,</span>
+<span class="nc" id="L164">							removeAttributeActionPair);</span>
+				}
+			}
+<span class="nc" id="L167">		}</span>
+	}
+
+	private static class Iterator {
+		private Visitor visitor;
+
+<span class="nc" id="L173">		Iterator(Visitor v) {</span>
+<span class="nc" id="L174">			this.visitor = v;</span>
+<span class="nc" id="L175">		}</span>
+
+		/**
+         */
+		void iterate(MindMapNode node) {
+<span class="nc" id="L180">			visitor.visit(node.getAttributes());</span>
+<span class="nc" id="L181">			ListIterator iterator = node.childrenUnfolded();</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			while (iterator.hasNext()) {</span>
+<span class="nc" id="L183">				MindMapNode child = (MindMapNode) iterator.next();</span>
+<span class="nc" id="L184">				iterate(child);</span>
+			}
+<span class="nc" id="L186">		}</span>
+	}
+
+	SetAttributeNameActor setAttributeNameActor;
+	SetAttributeValueActor setAttributeValueActor;
+	RemoveAttributeActor removeAttributeActor;
+	InsertAttributeActor insertAttributeActor;
+	SetAttributeColumnWidthActor setAttributeColumnWidthActor;
+	RegistryAttributeActor registryAttributeActor;
+	UnregistryAttributeActor unregistryAttributeActor;
+	RegistryAttributeValueActor registryAttributeValueActor;
+	UnregistryAttributeValueActor unregistryAttributeValueActor;
+	ReplaceAttributeValueActor replaceAttributeValueActor;
+	SetAttributeFontSizeActor setAttributeFontSizeActor;
+	SetAttributeVisibleActor setAttributeVisibleActor;
+	SetAttributeRestrictedActor setAttributeRestrictedActor;
+
+	private MindMapController controller;
+
+<span class="nc" id="L205">	public MindMapModeAttributeController(MindMapController controller) {</span>
+<span class="nc" id="L206">		this.controller = controller;</span>
+<span class="nc" id="L207">		setAttributeNameActor = new SetAttributeNameActor(controller);</span>
+<span class="nc" id="L208">		setAttributeValueActor = new SetAttributeValueActor(controller);</span>
+<span class="nc" id="L209">		removeAttributeActor = new RemoveAttributeActor(controller);</span>
+<span class="nc" id="L210">		insertAttributeActor = new InsertAttributeActor(controller);</span>
+<span class="nc" id="L211">		setAttributeColumnWidthActor = new SetAttributeColumnWidthActor(</span>
+<span class="nc" id="L212">				controller);</span>
+<span class="nc" id="L213">		registryAttributeActor = new RegistryAttributeActor(controller);</span>
+<span class="nc" id="L214">		unregistryAttributeActor = new UnregistryAttributeActor(controller);</span>
+<span class="nc" id="L215">		registryAttributeValueActor = new RegistryAttributeValueActor(</span>
+<span class="nc" id="L216">				controller);</span>
+<span class="nc" id="L217">		replaceAttributeValueActor = new ReplaceAttributeValueActor(controller);</span>
+<span class="nc" id="L218">		unregistryAttributeValueActor = new UnregistryAttributeValueActor(</span>
+<span class="nc" id="L219">				controller);</span>
+<span class="nc" id="L220">		setAttributeFontSizeActor = new SetAttributeFontSizeActor(controller);</span>
+<span class="nc" id="L221">		setAttributeVisibleActor = new SetAttributeVisibleActor(controller);</span>
+<span class="nc" id="L222">		setAttributeRestrictedActor = new SetAttributeRestrictedActor(</span>
+<span class="nc" id="L223">				controller);</span>
+<span class="nc" id="L224">	}</span>
+
+	public void performSetValueAt(NodeAttributeTableModel model, Object o,
+			int row, int col) {
+<span class="nc" id="L228">		Attribute attribute = model.getAttribute(row);</span>
+
+<span class="nc" id="L230">		AttributeRegistry attributes = getAttributeRegistry();</span>
+<span class="nc bnc" id="L231" title="All 3 branches missed.">		switch (col) {</span>
+		case 0: {
+<span class="nc" id="L233">			String name = o.toString().trim();</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">			if (attribute.getName().equals(name))</span>
+<span class="nc" id="L235">				return;</span>
+<span class="nc" id="L236">			controller.doTransaction(</span>
+<span class="nc" id="L237">					&quot;setAttributeNameActionPair&quot;,</span>
+<span class="nc" id="L238">					setAttributeNameActor.createActionPair(model, row, name));</span>
+			try {
+<span class="nc" id="L240">				AttributeRegistryElement element = attributes.getElement(name);</span>
+<span class="nc" id="L241">				String value = model.getValueAt(row, 1).toString();</span>
+<span class="nc" id="L242">				int index = element.getValues().getIndexOf(value);</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">				if (index == -1) {</span>
+<span class="nc" id="L244">					final ActionPair setAttributeValueActionPair = setAttributeValueActor</span>
+<span class="nc" id="L245">							.createActionPair(model, row, element.getValues()</span>
+<span class="nc" id="L246">									.firstElement().toString());</span>
+<span class="nc" id="L247">					controller.doTransaction(</span>
+<span class="nc" id="L248">							&quot;setAttributeValueActionPair&quot;,</span>
+<span class="nc" id="L249">							setAttributeValueActionPair);</span>
+				}
+<span class="nc" id="L251">			} catch (NoSuchElementException ex) {</span>
+<span class="nc" id="L252">				controller.doTransaction(</span>
+<span class="nc" id="L253">						&quot;registryAttributeActionPair&quot;,</span>
+<span class="nc" id="L254">						registryAttributeActor.createActionPair(name));</span>
+<span class="nc" id="L255">				controller.getActionFactory()</span>
+<span class="nc" id="L256">						.doTransaction(</span>
+<span class="nc" id="L257">								&quot;setAttributeValueActionPair&quot;,</span>
+<span class="nc" id="L258">								setAttributeValueActor.createActionPair(model,</span>
+<span class="nc" id="L259">										row, &quot;&quot;));</span>
+			}
+<span class="nc" id="L261">			break;</span>
+		}
+		case 1: {
+<span class="nc" id="L264">			String value = o.toString().trim();</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">			if (attribute.getValue().equals(value))</span>
+<span class="nc" id="L266">				return;</span>
+<span class="nc" id="L267">			final ActionPair setValueActionPair = setAttributeValueActor</span>
+<span class="nc" id="L268">					.createActionPair(model, row, value);</span>
+<span class="nc" id="L269">			controller.doTransaction(&quot;setValueActionPair&quot;,</span>
+<span class="nc" id="L270">					setValueActionPair);</span>
+<span class="nc" id="L271">			String name = model.getValueAt(row, 0).toString();</span>
+<span class="nc" id="L272">			AttributeRegistryElement element = attributes.getElement(name);</span>
+<span class="nc" id="L273">			int index = element.getValues().getIndexOf(value);</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">			if (index == -1) {</span>
+<span class="nc" id="L275">				final ActionPair registryAttributeValueActionPair = registryAttributeValueActor</span>
+<span class="nc" id="L276">						.createActionPair(name, value);</span>
+<span class="nc" id="L277">				controller.doTransaction(</span>
+<span class="nc" id="L278">						&quot;registryAttributeValueActionPair&quot;,</span>
+<span class="nc" id="L279">						registryAttributeValueActionPair);</span>
+			}
+			break;
+		}
+		}
+
+<span class="nc" id="L285">	}</span>
+
+	public void performInsertRow(NodeAttributeTableModel model, int row,
+			String name, String value) {
+<span class="nc" id="L289">		AttributeRegistry attributes = getAttributeRegistry();</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		if (name.equals(&quot;&quot;))</span>
+<span class="nc" id="L291">			return;</span>
+		try {
+<span class="nc" id="L293">			AttributeRegistryElement element = attributes.getElement(name);</span>
+<span class="nc" id="L294">			int index = element.getValues().getIndexOf(value);</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">			if (index == -1) {</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">				if (element.isRestricted()) {</span>
+<span class="nc" id="L297">					value = element.getValues().firstElement().toString();</span>
+<span class="nc" id="L298">				} else {</span>
+<span class="nc" id="L299">					final ActionPair registryNewAttributeActionPair = registryAttributeValueActor</span>
+<span class="nc" id="L300">							.createActionPair(name, value);</span>
+<span class="nc" id="L301">					controller.doTransaction(</span>
+<span class="nc" id="L302">							&quot;performInsertRow&quot;, registryNewAttributeActionPair);</span>
+				}
+			}
+<span class="nc" id="L305">		} catch (NoSuchElementException ex) {</span>
+<span class="nc" id="L306">			controller.doTransaction(&quot;performInsertRow&quot;,</span>
+<span class="nc" id="L307">					registryAttributeActor.createActionPair(name));</span>
+<span class="nc" id="L308">			controller.doTransaction(</span>
+<span class="nc" id="L309">					&quot;registryAttributeValueActor&quot;,</span>
+<span class="nc" id="L310">					registryAttributeValueActor.createActionPair(name, value));</span>
+		}
+<span class="nc" id="L312">		final ActionPair insertAttributeActionPair = insertAttributeActor</span>
+<span class="nc" id="L313">				.createActionPair(model, row, name, value);</span>
+<span class="nc" id="L314">		controller.doTransaction(</span>
+<span class="nc" id="L315">				&quot;insertAttributeActionPair&quot;, insertAttributeActionPair);</span>
+<span class="nc" id="L316">	}</span>
+
+	public void performRemoveRow(NodeAttributeTableModel model, int row) {
+<span class="nc" id="L319">		controller.doTransaction(&quot;performRemoveRow&quot;,</span>
+<span class="nc" id="L320">				removeAttributeActor.createActionPair(model, row));</span>
+<span class="nc" id="L321">	}</span>
+
+	public void performSetColumnWidth(NodeAttributeTableModel model, int col,
+			int width) {
+<span class="nc bnc" id="L325" title="All 2 branches missed.">		if (width == model.getLayout().getColumnWidth(col))</span>
+<span class="nc" id="L326">			return;</span>
+<span class="nc" id="L327">		controller.doTransaction(</span>
+<span class="nc" id="L328">				&quot;performSetColumnWidth&quot;,</span>
+<span class="nc" id="L329">				setAttributeColumnWidthActor</span>
+<span class="nc" id="L330">						.createActionPair(model, col, width));</span>
+<span class="nc" id="L331">	}</span>
+
+	public void performRemoveAttributeValue(String name, String value) {
+<span class="nc" id="L334">		controller.doTransaction(</span>
+<span class="nc" id="L335">				&quot;removeAttributeActionPair&quot;,</span>
+<span class="nc" id="L336">				unregistryAttributeValueActor.createActionPair(name, value));</span>
+<span class="nc" id="L337">		Visitor remover = new AttributeValueRemover(name, value);</span>
+<span class="nc" id="L338">		Iterator iterator = new Iterator(remover);</span>
+<span class="nc" id="L339">		MindMapNode root = controller.getRootNode();</span>
+<span class="nc" id="L340">		iterator.iterate(root);</span>
+<span class="nc" id="L341">	}</span>
+
+	public void performReplaceAttributeValue(String name, String oldValue,
+			String newValue) {
+<span class="nc" id="L345">		controller.doTransaction(</span>
+<span class="nc" id="L346">				&quot;replaceAttributeActionPair&quot;,</span>
+<span class="nc" id="L347">				replaceAttributeValueActor.createActionPair(name, oldValue,</span>
+<span class="nc" id="L348">						newValue));</span>
+<span class="nc" id="L349">		Visitor replacer = new AttributeChanger(name, oldValue, newValue);</span>
+<span class="nc" id="L350">		Iterator iterator = new Iterator(replacer);</span>
+<span class="nc" id="L351">		MindMapNode root = controller.getRootNode();</span>
+<span class="nc" id="L352">		iterator.iterate(root);</span>
+<span class="nc" id="L353">	}</span>
+
+	public void performSetFontSize(AttributeRegistry registry, int size) {
+<span class="nc bnc" id="L356" title="All 2 branches missed.">		if (size == registry.getFontSize())</span>
+<span class="nc" id="L357">			return;</span>
+<span class="nc" id="L358">		controller.doTransaction(&quot;setFontSizeActionPair&quot;,</span>
+<span class="nc" id="L359">				setAttributeFontSizeActor.createActionPair(size));</span>
+<span class="nc" id="L360">	}</span>
+
+	public void performSetVisibility(int index, boolean isVisible) {
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		if (getAttributeRegistry().getElement(index).isVisible() == isVisible)</span>
+<span class="nc" id="L364">			return;</span>
+<span class="nc" id="L365">		controller.doTransaction(&quot;setVisibilityActionPair&quot;,</span>
+<span class="nc" id="L366">				setAttributeVisibleActor.createActionPair(index, isVisible));</span>
+<span class="nc" id="L367">	}</span>
+
+	public void performSetRestriction(int index, boolean isRestricted) {
+		boolean currentValue;
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		if (index == AttributeRegistry.GLOBAL) {</span>
+<span class="nc" id="L372">			currentValue = getAttributeRegistry().isRestricted();</span>
+<span class="nc" id="L373">		} else {</span>
+<span class="nc" id="L374">			currentValue = getAttributeRegistry().getElement(index)</span>
+<span class="nc" id="L375">					.isRestricted();</span>
+		}
+
+<span class="nc bnc" id="L378" title="All 2 branches missed.">		if (currentValue == isRestricted)</span>
+<span class="nc" id="L379">			return;</span>
+<span class="nc" id="L380">		controller.doTransaction(</span>
+<span class="nc" id="L381">				&quot;setRestrictionActionPair&quot;,</span>
+<span class="nc" id="L382">				setAttributeRestrictedActor.createActionPair(index,</span>
+<span class="nc" id="L383">						isRestricted));</span>
+<span class="nc" id="L384">	}</span>
+
+	public void performReplaceAtributeName(String oldName, String newName) {
+<span class="nc bnc" id="L387" title="All 6 branches missed.">		if (oldName.equals(&quot;&quot;) || newName.equals(&quot;&quot;) || oldName.equals(newName))</span>
+<span class="nc" id="L388">			return;</span>
+<span class="nc" id="L389">		AttributeRegistry registry = getAttributeRegistry();</span>
+<span class="nc" id="L390">		int iOld = registry.getElements().indexOf(oldName);</span>
+<span class="nc" id="L391">		AttributeRegistryElement oldElement = registry.getElement(iOld);</span>
+<span class="nc" id="L392">		final SortedComboBoxModel values = oldElement.getValues();</span>
+<span class="nc" id="L393">		controller.doTransaction(</span>
+<span class="nc" id="L394">				&quot;registryNewAttributeActionPair&quot;,</span>
+<span class="nc" id="L395">				registryAttributeActor.createActionPair(newName));</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">		for (int i = 0; i &lt; values.getSize(); i++) {</span>
+<span class="nc" id="L397">			controller.doTransaction(</span>
+<span class="nc" id="L398">					&quot;registryNewAttributeValueActionPair&quot;,</span>
+<span class="nc" id="L399">					registryAttributeValueActor.createActionPair(newName,</span>
+<span class="nc" id="L400">							values.getElementAt(i).toString()));</span>
+		}
+<span class="nc" id="L402">		Visitor replacer = new AttributeRenamer(oldName, newName);</span>
+<span class="nc" id="L403">		Iterator iterator = new Iterator(replacer);</span>
+<span class="nc" id="L404">		MindMapNode root = controller.getRootNode();</span>
+<span class="nc" id="L405">		iterator.iterate(root);</span>
+<span class="nc" id="L406">		controller.doTransaction(</span>
+<span class="nc" id="L407">				&quot;unregistryOldAttributeActionPair&quot;,</span>
+<span class="nc" id="L408">				unregistryAttributeActor.createActionPair(oldName));</span>
+<span class="nc" id="L409">	}</span>
+
+	public void performRemoveAttribute(String name) {
+<span class="nc" id="L412">		controller.doTransaction(</span>
+<span class="nc" id="L413">				&quot;unregistryOldAttributeActionPair&quot;,</span>
+<span class="nc" id="L414">				unregistryAttributeActor.createActionPair(name));</span>
+<span class="nc" id="L415">		Visitor remover = new AttributeRemover(name);</span>
+<span class="nc" id="L416">		Iterator iterator = new Iterator(remover);</span>
+<span class="nc" id="L417">		MindMapNode root = controller.getRootNode();</span>
+<span class="nc" id="L418">		iterator.iterate(root);</span>
+<span class="nc" id="L419">	}</span>
+
+	public void performRegistryAttribute(String name) {
+<span class="nc bnc" id="L422" title="All 2 branches missed.">		if (name.equals(&quot;&quot;))</span>
+<span class="nc" id="L423">			return;</span>
+		try {
+<span class="nc" id="L425">			final AttributeRegistryElement element = getAttributeRegistry()</span>
+<span class="nc" id="L426">					.getElement(name);</span>
+<span class="nc" id="L427">		} catch (NoSuchElementException ex) {</span>
+<span class="nc" id="L428">			controller.doTransaction(</span>
+<span class="nc" id="L429">					&quot;registryNewAttributeActionPair&quot;,</span>
+<span class="nc" id="L430">					registryAttributeActor.createActionPair(name));</span>
+<span class="nc" id="L431">			return;</span>
+		}
+
+<span class="nc" id="L434">	}</span>
+
+	public void performRegistryAttributeValue(String name, String value) {
+<span class="nc bnc" id="L437" title="All 2 branches missed.">		if (name.equals(&quot;&quot;))</span>
+<span class="nc" id="L438">			return;</span>
+		try {
+<span class="nc" id="L440">			final AttributeRegistryElement element = getAttributeRegistry()</span>
+<span class="nc" id="L441">					.getElement(name);</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">			if (element.getValues().contains(value)) {</span>
+<span class="nc" id="L443">				return;</span>
+			}
+<span class="nc" id="L445">			controller.doTransaction(</span>
+<span class="nc" id="L446">					&quot;registryNewAttributeActionPair&quot;,</span>
+<span class="nc" id="L447">					registryAttributeValueActor.createActionPair(name, value));</span>
+<span class="nc" id="L448">			return;</span>
+<span class="nc" id="L449">		} catch (NoSuchElementException ex) {</span>
+<span class="nc" id="L450">			controller.doTransaction(</span>
+<span class="nc" id="L451">					&quot;registryAttributeActionPair&quot;,</span>
+<span class="nc" id="L452">					registryAttributeActor.createActionPair(name));</span>
+<span class="nc" id="L453">			controller.doTransaction(</span>
+<span class="nc" id="L454">					&quot;registryAttributeValueActionPair&quot;,</span>
+<span class="nc" id="L455">					registryAttributeValueActor.createActionPair(name, value));</span>
+<span class="nc" id="L456">			return;</span>
+		}
+
+	}
+
+	private AttributeRegistry getAttributeRegistry() {
+<span class="nc" id="L462">		return controller.getMap().getRegistry().getAttributes();</span>
+	}
+
+	public void performRegistrySubtreeAttributes(MindMapNodeModel node) {
+<span class="nc bnc" id="L466" title="All 2 branches missed.">		for (int i = 0; i &lt; node.getAttributes().getRowCount(); i++) {</span>
+<span class="nc" id="L467">			String name = node.getAttributes().getValueAt(i, 0).toString();</span>
+<span class="nc" id="L468">			String value = node.getAttributes().getValueAt(i, 1).toString();</span>
+<span class="nc" id="L469">			performRegistryAttributeValue(name, value);</span>
+		}
+<span class="nc bnc" id="L471" title="All 2 branches missed.">		for (ListIterator e = node.childrenUnfolded(); e.hasNext();) {</span>
+<span class="nc" id="L472">			final MindMapNodeModel child = (MindMapNodeModel) e.next();</span>
+<span class="nc" id="L473">			performRegistrySubtreeAttributes(child);</span>
+		}
+<span class="nc" id="L475">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

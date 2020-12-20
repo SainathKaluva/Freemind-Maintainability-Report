@@ -1,0 +1,3207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>XMLElement.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">XMLElement.java</span></div><h1>XMLElement.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/* XMLElement.java
+ *
+ * $Revision: 1.7.18.4.2.8 $
+ * $Date: 2009/08/27 20:04:10 $
+ * $Name: fm_060405_integration $
+ *
+ * This file is part of NanoXML 2 Lite.
+ * Copyright (C) 2000-2002 Marc De Scheemaecker, All Rights Reserved.
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * In no event will the authors be held liable for any damages arising from the
+ * use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ *  1. The origin of this software must not be misrepresented; you must not
+ *     claim that you wrote the original software. If you use this software in
+ *     a product, an acknowledgment in the product documentation would be
+ *     appreciated but is not required.
+ *
+ *  2. Altered source versions must be plainly marked as such, and must not be
+ *     misrepresented as being the original software.
+ *
+ *  3. This notice may not be removed or altered from any source distribution.
+ *****************************************************************************/
+
+/*
+ * This version of XMLElement has been *altered* for the purposes of FreeMind
+ * toUpperCase(Locale.ENGLISH) for turkish added.
+ */
+
+package freemind.main;
+
+import java.io.ByteArrayOutputStream;
+import java.io.CharArrayReader;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.TreeMap;
+import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * XMLElement is a representation of an XML object. The object is able to parse
+ * XML code.
+ * &lt;P&gt;
+ * &lt;DL&gt;
+ * &lt;DT&gt;&lt;B&gt;Parsing XML Data&lt;/B&gt;&lt;/DT&gt;
+ * &lt;DD&gt;
+ * You can parse XML data using the following code:
+ * &lt;UL&gt;
+ * &lt;CODE&gt;
+ * XMLElement xml = new XMLElement();&lt;BR&gt;
+ * FileReader reader = new FileReader(&quot;filename.xml&quot;);&lt;BR&gt;
+ * xml.parseFromReader(reader);
+ * &lt;/CODE&gt;
+ * &lt;/UL&gt;
+ * &lt;/DD&gt;
+ * &lt;/DL&gt;
+ * &lt;DL&gt;
+ * &lt;DT&gt;&lt;B&gt;Retrieving Attributes&lt;/B&gt;&lt;/DT&gt;
+ * &lt;DD&gt;
+ * You can enumerate the attributes of an element using the method
+ * {@link #enumerateAttributeNames() enumerateAttributeNames}. The attribute
+ * values can be retrieved using the method
+ * {@link #getStringAttribute(java.lang.String) getStringAttribute}. The
+ * following example shows how to list the attributes of an element:
+ * &lt;UL&gt;
+ * &lt;CODE&gt;
+ * XMLElement element = ...;&lt;BR&gt;
+ * Enumeration enumerator = element.getAttributeNames();&lt;BR&gt;
+ * while (enumerator.hasMoreElements()) {&lt;BR&gt;
+ * &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;String key = (String) enumerator.nextElement();&lt;BR&gt;
+ * &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;String value = element.getStringAttribute(key);&lt;BR&gt;
+ * &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;System.out.println(key + &quot; = &quot; + value);&lt;BR&gt;
+ * }
+ * &lt;/CODE&gt;
+ * &lt;/UL&gt;
+ * &lt;/DD&gt;
+ * &lt;/DL&gt;
+ * &lt;DL&gt;
+ * &lt;DT&gt;&lt;B&gt;Retrieving Child Elements&lt;/B&gt;&lt;/DT&gt;
+ * &lt;DD&gt;
+ * You can enumerate the children of an element using
+ * {@link #enumerateChildren() enumerateChildren}. The number of child elements
+ * can be retrieved using {@link #countChildren() countChildren}.&lt;/DD&gt;
+ * &lt;/DL&gt;
+ * &lt;DL&gt;
+ * &lt;DT&gt;&lt;B&gt;Elements Containing Character Data&lt;/B&gt;&lt;/DT&gt;
+ * &lt;DD&gt;
+ * If an elements contains character data, like in the following example:
+ * &lt;UL&gt;
+ * &lt;CODE&gt;
+ * &amp;lt;title&amp;gt;The Title&amp;lt;/title&amp;gt;
+ * &lt;/CODE&gt;
+ * &lt;/UL&gt;
+ * you can retrieve that data using the method {@link #getContent() getContent}.
+ * &lt;/DD&gt;
+ * &lt;/DL&gt;
+ * &lt;DL&gt;
+ * &lt;DT&gt;&lt;B&gt;Subclassing XMLElement&lt;/B&gt;&lt;/DT&gt;
+ * &lt;DD&gt;
+ * When subclassing XMLElement, you need to override the method
+ * {@link #createAnotherElement() createAnotherElement} which has to return a
+ * new copy of the receiver.&lt;/DD&gt;
+ * &lt;/DL&gt;
+ * &lt;P&gt;
+ * 
+ * 
+ * 
+ * @author Marc De Scheemaecker &amp;lt;&lt;A
+ *         href=&quot;mailto:cyberelf@mac.com&quot;&gt;cyberelf@mac.com&lt;/A&gt;&amp;gt;
+ * @version $Name: fm_060405_integration $, $Revision: 1.7.18.4.2.8 $
+ */
+public class XMLElement {
+
+	public static final String XML_NODE_XHTML_CONTENT_TAG = &quot;richcontent&quot;;
+
+	public static final String XML_NODE_XHTML_CONTENT_END_TAG_REGEXP = &quot;&lt;\\s*/\\s*&quot;
+			+ XML_NODE_XHTML_CONTENT_TAG + &quot;\\s*&gt;&quot;;
+
+<span class="fc" id="L150">	private static Pattern sContentEndTagPattern = null;</span>
+
+	/**
+	 * Serialization serial version ID.
+	 */
+	static final long serialVersionUID = 6685035139346394777L;
+
+	/**
+	 * Major version of NanoXML. Classes with the same major and minor version
+	 * are binary compatible. Classes with the same major version are source
+	 * compatible. If the major version is different, you may need to modify the
+	 * client source code.
+	 * 
+	 * @see freemind.main.XMLElement#NANOXML_MINOR_VERSION
+	 */
+	public static final int NANOXML_MAJOR_VERSION = 2;
+
+	/**
+	 * Minor version of NanoXML. Classes with the same major and minor version
+	 * are binary compatible. Classes with the same major version are source
+	 * compatible. If the major version is different, you may need to modify the
+	 * client source code.
+	 * 
+	 * @see freemind.main.XMLElement#NANOXML_MAJOR_VERSION
+	 */
+<span class="fc" id="L175">	public static final int NANOXML_MINOR_VERSION = 2;</span>
+
+	/**
+	 * The attributes given to the element.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Invariants:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The field can be empty.
+	 * &lt;li&gt;The field is never &lt;code&gt;null&lt;/code&gt;.
+	 * &lt;li&gt;The keys and the values are strings.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	private TreeMap attributes;
+
+	/**
+	 * Child elements of the element.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Invariants:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The field can be empty.
+	 * &lt;li&gt;The field is never &lt;code&gt;null&lt;/code&gt;.
+	 * &lt;li&gt;The elements are instances of &lt;code&gt;XMLElement&lt;/code&gt; or a subclass
+	 * of &lt;code&gt;XMLElement&lt;/code&gt;.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	private Vector children;
+
+	/**
+	 * The name of the element.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Invariants:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The field is &lt;code&gt;null&lt;/code&gt; iff the element is not initialized by
+	 * either parse or setName.
+	 * &lt;li&gt;If the field is not &lt;code&gt;null&lt;/code&gt;, it's not empty.
+	 * &lt;li&gt;If the field is not &lt;code&gt;null&lt;/code&gt;, it contains a valid XML
+	 * identifier.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	private String name;
+
+	/**
+	 * The #PCDATA content of the object.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Invariants:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The field is &lt;code&gt;null&lt;/code&gt; iff the element is not a #PCDATA
+	 * element.
+	 * &lt;li&gt;The field can be any string, including the empty string.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	private String contents;
+	/**
+	 * fc, 17.5.06: enable buld xml writing.
+	 */
+	private boolean dontEncodeContents;
+
+	/**
+	 * Conversion table for &amp;amp;...; entities. The keys are the entity names
+	 * without the &amp;amp; and ; delimiters.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Invariants:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The field is never &lt;code&gt;null&lt;/code&gt;.
+	 * &lt;li&gt;The field always contains the following associations:
+	 * &quot;lt&quot;&amp;nbsp;=&amp;gt;&amp;nbsp;&quot;&amp;lt;&quot;, &quot;gt&quot;&amp;nbsp;=&amp;gt;&amp;nbsp;&quot;&amp;gt;&quot;,
+	 * &quot;quot&quot;&amp;nbsp;=&amp;gt;&amp;nbsp;&quot;\&quot;&quot;, &quot;apos&quot;&amp;nbsp;=&amp;gt;&amp;nbsp;&quot;'&quot;,
+	 * &quot;amp&quot;&amp;nbsp;=&amp;gt;&amp;nbsp;&quot;&amp;amp;&quot;
+	 * &lt;li&gt;The keys are strings
+	 * &lt;li&gt;The values are char arrays
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	private Hashtable entities;
+
+	/**
+	 * The line number where the element starts.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Invariants:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;lineNr &amp;gt= 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	private int lineNr;
+
+	/**
+	 * &lt;code&gt;true&lt;/code&gt; if the case of the element and attribute names are case
+	 * insensitive.
+	 */
+	protected boolean ignoreCase;
+
+	/**
+	 * &lt;code&gt;true&lt;/code&gt; if the leading and trailing whitespace of #PCDATA
+	 * sections have to be ignored.
+	 */
+	private boolean ignoreWhitespace;
+
+	/**
+	 * Character read too much. This character provides push-back functionality
+	 * to the input reader without having to use a PushbackReader. If there is
+	 * no such character, this field is '\0'.
+	 */
+	private char charReadTooMuch;
+
+	/**
+	 * The reader provided by the caller of the parse method.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Invariants:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The field is not &lt;code&gt;null&lt;/code&gt; while the parse method is running.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	private Reader reader;
+
+	/**
+	 * The current line number in the source content.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Invariants:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;parserLineNr &amp;gt; 0 while the parse method is running.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	private int parserLineNr;
+
+	/**
+	 * Creates and initializes a new XML element. Calling the construction is
+	 * equivalent to:
+	 * &lt;ul&gt;
+	 * &lt;code&gt;new XMLElement(new Hashtable(), false, true)
+	 * &lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;countChildren() =&gt; 0
+	 * &lt;li&gt;enumerateChildren() =&gt; empty enumeration
+	 * &lt;li&gt;enumeratePropertyNames() =&gt; empty enumeration
+	 * &lt;li&gt;getChildren() =&gt; empty vector
+	 * &lt;li&gt;getContent() =&gt; &quot;&quot;
+	 * &lt;li&gt;getLineNr() =&gt; 0
+	 * &lt;li&gt;getName() =&gt; null
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#XMLElement(java.util.Hashtable)
+	 *      XMLElement(Hashtable)
+	 * @see freemind.main.XMLElement#XMLElement(boolean)
+	 * @see freemind.main.XMLElement#XMLElement(java.util.Hashtable,boolean)
+	 *      XMLElement(Hashtable, boolean)
+	 */
+	public XMLElement() {
+<span class="fc" id="L360">		this(new Hashtable(), false, true, true);</span>
+<span class="fc" id="L361">	}</span>
+
+	/**
+	 * Creates and initializes a new XML element. Calling the construction is
+	 * equivalent to:
+	 * &lt;ul&gt;
+	 * &lt;code&gt;new XMLElement(entities, false, true)
+	 * &lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * 
+	 * The entity conversion table.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;entities != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;countChildren() =&gt; 0
+	 * &lt;li&gt;enumerateChildren() =&gt; empty enumeration
+	 * &lt;li&gt;enumeratePropertyNames() =&gt; empty enumeration
+	 * &lt;li&gt;getChildren() =&gt; empty vector
+	 * &lt;li&gt;getContent() =&gt; &quot;&quot;
+	 * &lt;li&gt;getLineNr() =&gt; 0
+	 * &lt;li&gt;getName() =&gt; null
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#XMLElement()
+	 * @see freemind.main.XMLElement#XMLElement(boolean)
+	 * @see freemind.main.XMLElement#XMLElement(java.util.Hashtable,boolean)
+	 *      XMLElement(Hashtable, boolean)
+	 */
+	public XMLElement(Hashtable entities) {
+<span class="nc" id="L405">		this(entities, false, true, true);</span>
+<span class="nc" id="L406">	}</span>
+
+	/**
+	 * Creates and initializes a new XML element. Calling the construction is
+	 * equivalent to:
+	 * &lt;ul&gt;
+	 * &lt;code&gt;new XMLElement(new Hashtable(), skipLeadingWhitespace, true)
+	 * &lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * 
+	 * &lt;code&gt;true&lt;/code&gt; if leading and trailing whitespace in PCDATA content
+	 * has to be removed.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;countChildren() =&gt; 0
+	 * &lt;li&gt;enumerateChildren() =&gt; empty enumeration
+	 * &lt;li&gt;enumeratePropertyNames() =&gt; empty enumeration
+	 * &lt;li&gt;getChildren() =&gt; empty vector
+	 * &lt;li&gt;getContent() =&gt; &quot;&quot;
+	 * &lt;li&gt;getLineNr() =&gt; 0
+	 * &lt;li&gt;getName() =&gt; null
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#XMLElement()
+	 * @see freemind.main.XMLElement#XMLElement(java.util.Hashtable)
+	 *      XMLElement(Hashtable)
+	 * @see freemind.main.XMLElement#XMLElement(java.util.Hashtable,boolean)
+	 *      XMLElement(Hashtable, boolean)
+	 */
+	public XMLElement(boolean skipLeadingWhitespace) {
+<span class="nc" id="L443">		this(new Hashtable(), skipLeadingWhitespace, true, true);</span>
+<span class="nc" id="L444">	}</span>
+
+	/**
+	 * Creates and initializes a new XML element. Calling the construction is
+	 * equivalent to:
+	 * &lt;ul&gt;
+	 * &lt;code&gt;new XMLElement(entities, skipLeadingWhitespace, true)
+	 * &lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * 
+	 * The entity conversion table. &lt;code&gt;true&lt;/code&gt; if leading and trailing
+	 * whitespace in PCDATA content has to be removed.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;entities != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;countChildren() =&gt; 0
+	 * &lt;li&gt;enumerateChildren() =&gt; empty enumeration
+	 * &lt;li&gt;enumeratePropertyNames() =&gt; empty enumeration
+	 * &lt;li&gt;getChildren() =&gt; empty vector
+	 * &lt;li&gt;getContent() =&gt; &quot;&quot;
+	 * &lt;li&gt;getLineNr() =&gt; 0
+	 * &lt;li&gt;getName() =&gt; null
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#XMLElement()
+	 * @see freemind.main.XMLElement#XMLElement(boolean)
+	 * @see freemind.main.XMLElement#XMLElement(java.util.Hashtable)
+	 *      XMLElement(Hashtable)
+	 */
+	public XMLElement(Hashtable entities, boolean skipLeadingWhitespace) {
+<span class="nc" id="L489">		this(entities, skipLeadingWhitespace, true, true);</span>
+<span class="nc" id="L490">	}</span>
+
+	/**
+	 * Creates and initializes a new XML element.
+	 * 
+	 * The entity conversion table. &lt;code&gt;true&lt;/code&gt; if leading and trailing
+	 * whitespace in PCDATA content has to be removed. &lt;code&gt;true&lt;/code&gt; if the
+	 * case of element and attribute names have to be ignored.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;entities != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;countChildren() =&gt; 0
+	 * &lt;li&gt;enumerateChildren() =&gt; empty enumeration
+	 * &lt;li&gt;enumeratePropertyNames() =&gt; empty enumeration
+	 * &lt;li&gt;getChildren() =&gt; empty vector
+	 * &lt;li&gt;getContent() =&gt; &quot;&quot;
+	 * &lt;li&gt;getLineNr() =&gt; 0
+	 * &lt;li&gt;getName() =&gt; null
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#XMLElement()
+	 * @see freemind.main.XMLElement#XMLElement(boolean)
+	 * @see freemind.main.XMLElement#XMLElement(java.util.Hashtable)
+	 *      XMLElement(Hashtable)
+	 * @see freemind.main.XMLElement#XMLElement(java.util.Hashtable,boolean)
+	 *      XMLElement(Hashtable, boolean)
+	 */
+	public XMLElement(Hashtable entities, boolean skipLeadingWhitespace,
+			boolean ignoreCase) {
+<span class="nc" id="L534">		this(entities, skipLeadingWhitespace, true, ignoreCase);</span>
+<span class="nc" id="L535">	}</span>
+
+	/**
+	 * Creates and initializes a new XML element.
+	 * &lt;P&gt;
+	 * This constructor should &lt;I&gt;only&lt;/I&gt; be called from
+	 * {@link #createAnotherElement() createAnotherElement} to create child
+	 * elements.
+	 * 
+	 * The entity conversion table. &lt;code&gt;true&lt;/code&gt; if leading and trailing
+	 * whitespace in PCDATA content has to be removed. &lt;code&gt;true&lt;/code&gt; if the
+	 * basic entities need to be added to the entity list. &lt;code&gt;true&lt;/code&gt; if
+	 * the case of element and attribute names have to be ignored.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;entities != null&lt;/code&gt;
+	 * &lt;li&gt;if &lt;code&gt;fillBasicConversionTable == false&lt;/code&gt; then
+	 * &lt;code&gt;entities&lt;/code&gt; contains at least the following entries:
+	 * &lt;code&gt;amp&lt;/code&gt;, &lt;code&gt;lt&lt;/code&gt;, &lt;code&gt;gt&lt;/code&gt;, &lt;code&gt;apos&lt;/code&gt; and
+	 * &lt;code&gt;quot&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;countChildren() =&gt; 0
+	 * &lt;li&gt;enumerateChildren() =&gt; empty enumeration
+	 * &lt;li&gt;enumeratePropertyNames() =&gt; empty enumeration
+	 * &lt;li&gt;getChildren() =&gt; empty vector
+	 * &lt;li&gt;getContent() =&gt; &quot;&quot;
+	 * &lt;li&gt;getLineNr() =&gt; 0
+	 * &lt;li&gt;getName() =&gt; null
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#createAnotherElement()
+	 */
+<span class="fc" id="L581">	protected XMLElement(Hashtable entities, boolean skipLeadingWhitespace,</span>
+			boolean fillBasicConversionTable, boolean ignoreCase) {
+<span class="fc" id="L583">		this.ignoreWhitespace = skipLeadingWhitespace;</span>
+<span class="fc" id="L584">		this.ignoreCase = ignoreCase;</span>
+<span class="fc" id="L585">		this.name = null;</span>
+<span class="fc" id="L586">		this.contents = &quot;&quot;;</span>
+<span class="fc" id="L587">		this.attributes = new TreeMap();</span>
+<span class="fc" id="L588">		this.children = new Vector();</span>
+<span class="fc" id="L589">		this.entities = entities;</span>
+<span class="fc" id="L590">		this.lineNr = 0;</span>
+<span class="fc" id="L591">		Enumeration enumerator = this.entities.keys();</span>
+<span class="pc bpc" id="L592" title="1 of 2 branches missed.">		while (enumerator.hasMoreElements()) {</span>
+<span class="nc" id="L593">			Object key = enumerator.nextElement();</span>
+<span class="nc" id="L594">			Object value = this.entities.get(key);</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">			if (value instanceof String) {</span>
+<span class="nc" id="L596">				value = ((String) value).toCharArray();</span>
+<span class="nc" id="L597">				this.entities.put(key, value);</span>
+			}
+		}
+<span class="pc bpc" id="L600" title="1 of 2 branches missed.">		if (fillBasicConversionTable) {</span>
+<span class="fc" id="L601">			this.entities.put(&quot;amp&quot;, new char[] { '&amp;' });</span>
+<span class="fc" id="L602">			this.entities.put(&quot;quot&quot;, new char[] { '&quot;' });</span>
+<span class="fc" id="L603">			this.entities.put(&quot;apos&quot;, new char[] { '\'' });</span>
+<span class="fc" id="L604">			this.entities.put(&quot;lt&quot;, new char[] { '&lt;' });</span>
+<span class="fc" id="L605">			this.entities.put(&quot;gt&quot;, new char[] { '&gt;' });</span>
+		}
+<span class="fc" id="L607">	}</span>
+
+	// We may expect that some subclass would like to have its own object
+	public Object getUserObject() {
+<span class="nc" id="L611">		return null;</span>
+	}
+
+	/**
+	 * Adds a child element.
+	 * 
+	 * The child element to add.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;child != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;child.getName() != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;child&lt;/code&gt; does not have a parent element
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;countChildren() =&gt; old.countChildren() + 1
+	 * &lt;li&gt;enumerateChildren() =&gt; old.enumerateChildren() + child
+	 * &lt;li&gt;getChildren() =&gt; old.enumerateChildren() + child
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#countChildren()
+	 * @see freemind.main.XMLElement#enumerateChildren()
+	 * @see freemind.main.XMLElement#getChildren()
+	 * @see freemind.main.XMLElement#removeChild(XMLElement)
+	 *      removeChild(XMLElement)
+	 */
+	public void addChild(XMLElement child) {
+<span class="nc" id="L650">		this.children.addElement(child);</span>
+<span class="nc" id="L651">	}</span>
+
+	/**
+	 * Adds or modifies an attribute.
+	 * 
+	 * The name of the attribute. The value of the attribute.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;li&gt;&lt;code&gt;value != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;enumerateAttributeNames() =&gt; old.enumerateAttributeNames() + name
+	 * &lt;li&gt;getAttribute(name) =&gt; value
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setDoubleAttribute(java.lang.String,
+	 *      double) setDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#setIntAttribute(java.lang.String, int)
+	 *      setIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String)
+	 *      getAttribute(String)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.lang.Object) getAttribute(String, Object)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean) getAttribute(String,
+	 *      Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String)
+	 *      getStringAttribute(String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.lang.String) getStringAttribute(String, String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getStringAttribute(String, Hashtable, String, boolean)
+	 */
+	public void setAttribute(String name, Object value) {
+<span class="nc bnc" id="L702" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L703">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L705">		this.attributes.put(name, value.toString());</span>
+<span class="nc" id="L706">	}</span>
+
+	/**
+	 * Adds or modifies an attribute.
+	 * 
+	 * The name of the attribute. The value of the attribute.
+	 * 
+	 * @deprecated Use {@link #setAttribute(java.lang.String, java.lang.Object)
+	 *             setAttribute} instead.
+	 */
+	public void addProperty(String name, Object value) {
+<span class="nc" id="L717">		this.setAttribute(name, value);</span>
+<span class="nc" id="L718">	}</span>
+
+	/**
+	 * Adds or modifies an attribute.
+	 * 
+	 * The name of the attribute. The value of the attribute.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;enumerateAttributeNames() =&gt; old.enumerateAttributeNames() + name
+	 * &lt;li&gt;getIntAttribute(name) =&gt; value
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setDoubleAttribute(java.lang.String,
+	 *      double) setDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String)
+	 *      getIntAttribute(String)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String, int)
+	 *      getIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getIntAttribute(String, Hashtable, String, boolean)
+	 */
+	public void setIntAttribute(String name, int value) {
+<span class="nc bnc" id="L763" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L764">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L766">		this.attributes.put(name, Integer.toString(value));</span>
+<span class="nc" id="L767">	}</span>
+
+	/**
+	 * Adds or modifies an attribute.
+	 * 
+	 * The name of the attribute. The value of the attribute.
+	 * 
+	 * @deprecated Use {@link #setIntAttribute(java.lang.String, int)
+	 *             setIntAttribute} instead.
+	 */
+	public void addProperty(String key, int value) {
+<span class="nc" id="L778">		this.setIntAttribute(key, value);</span>
+<span class="nc" id="L779">	}</span>
+
+	/**
+	 * Adds or modifies an attribute.
+	 * 
+	 * The name of the attribute. The value of the attribute.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;enumerateAttributeNames() =&gt; old.enumerateAttributeNames() + name
+	 * &lt;li&gt;getDoubleAttribute(name) =&gt; value
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setIntAttribute(java.lang.String, int)
+	 *      setIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String)
+	 *      getDoubleAttribute(String)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      double) getDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getDoubleAttribute(String, Hashtable, String, boolean)
+	 */
+	public void setDoubleAttribute(String name, double value) {
+<span class="nc bnc" id="L824" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L825">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L827">		this.attributes.put(name, Double.toString(value));</span>
+<span class="nc" id="L828">	}</span>
+
+	/**
+	 * Adds or modifies an attribute.
+	 * 
+	 * The name of the attribute. The value of the attribute.
+	 * 
+	 * @deprecated Use {@link #setDoubleAttribute(java.lang.String, double)
+	 *             setDoubleAttribute} instead.
+	 */
+	public void addProperty(String name, double value) {
+<span class="nc" id="L839">		this.setDoubleAttribute(name, value);</span>
+<span class="nc" id="L840">	}</span>
+
+	/**
+	 * Returns the number of child elements of the element.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;result &gt;= 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#addChild(XMLElement) addChild(XMLElement)
+	 * @see freemind.main.XMLElement#enumerateChildren()
+	 * @see freemind.main.XMLElement#getChildren()
+	 * @see freemind.main.XMLElement#removeChild(XMLElement)
+	 *      removeChild(XMLElement)
+	 */
+	public int countChildren() {
+<span class="nc" id="L861">		return this.children.size();</span>
+	}
+
+	/**
+	 * Enumerates the attribute names.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;result != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setDoubleAttribute(java.lang.String,
+	 *      double) setDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#setIntAttribute(java.lang.String, int)
+	 *      setIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String)
+	 *      getAttribute(String)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.lang.Object) getAttribute(String, String)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean) getAttribute(String,
+	 *      Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String)
+	 *      getStringAttribute(String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.lang.String) getStringAttribute(String, String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getStringAttribute(String, Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String)
+	 *      getIntAttribute(String)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String, int)
+	 *      getIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getIntAttribute(String, Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String)
+	 *      getDoubleAttribute(String)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      double) getDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getDoubleAttribute(String, Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getBooleanAttribute(java.lang.String,
+	 *      java.lang.String, java.lang.String, boolean)
+	 *      getBooleanAttribute(String, String, String, boolean)
+	 */
+	public Iterator enumerateAttributeNames() {
+<span class="nc" id="L917">		return this.attributes.keySet().iterator();</span>
+	}
+
+	/**
+	 * Enumerates the attribute names.
+	 * 
+	 * @deprecated Use {@link #enumerateAttributeNames()
+	 *             enumerateAttributeNames} instead.
+	 */
+	public Iterator enumeratePropertyNames() {
+<span class="nc" id="L927">		return this.enumerateAttributeNames();</span>
+	}
+
+	/**
+	 * Enumerates the child elements.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;result != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#addChild(XMLElement) addChild(XMLElement)
+	 * @see freemind.main.XMLElement#countChildren()
+	 * @see freemind.main.XMLElement#getChildren()
+	 * @see freemind.main.XMLElement#removeChild(XMLElement)
+	 *      removeChild(XMLElement)
+	 */
+	public Enumeration enumerateChildren() {
+<span class="nc" id="L949">		return this.children.elements();</span>
+	}
+
+	/**
+	 * Returns the child elements as a Vector. It is safe to modify this Vector.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;result != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#addChild(XMLElement) addChild(XMLElement)
+	 * @see freemind.main.XMLElement#countChildren()
+	 * @see freemind.main.XMLElement#enumerateChildren()
+	 * @see freemind.main.XMLElement#removeChild(XMLElement)
+	 *      removeChild(XMLElement)
+	 */
+	public Vector getChildren() {
+		try {
+<span class="nc" id="L972">			return (Vector) this.children.clone();</span>
+<span class="nc" id="L973">		} catch (Exception e) {</span>
+			// this never happens, however, some Java compilers are so
+			// braindead that they require this exception clause
+<span class="nc" id="L976">			return null;</span>
+		}
+	}
+
+	/**
+	 * Returns the PCDATA content of the object. If there is no such content,
+	 * &lt;CODE&gt;null&lt;/CODE&gt; is returned.
+	 * 
+	 * @deprecated Use {@link #getContent() getContent} instead.
+	 */
+	public String getContents() {
+<span class="nc" id="L987">		return this.getContent();</span>
+	}
+
+	/**
+	 * Returns the PCDATA content of the object. If there is no such content,
+	 * &lt;CODE&gt;null&lt;/CODE&gt; is returned.
+	 * 
+	 * @see freemind.main.XMLElement#setContent(java.lang.String)
+	 *      setContent(String)
+	 */
+	public String getContent() {
+<span class="fc" id="L998">		return this.contents;</span>
+	}
+
+	/**
+	 * Returns the line nr in the source data on which the element is found.
+	 * This method returns &lt;code&gt;0&lt;/code&gt; there is no associated source data.
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;result &gt;= 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	public int getLineNr() {
+<span class="nc" id="L1015">		return this.lineNr;</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;null&lt;/code&gt; is returned.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.lang.Object) getAttribute(String, Object)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean) getAttribute(String,
+	 *      Hashtable, String, boolean)
+	 */
+	public Object getAttribute(String name) {
+<span class="nc" id="L1049">		return this.getAttribute(name, null);</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;defaultValue&lt;/code&gt; is returned.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * @param defaultValue
+	 *            Key to use if the attribute is missing.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String)
+	 *      getAttribute(String)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean) getAttribute(String,
+	 *      Hashtable, String, boolean)
+	 */
+	public Object getAttribute(String name, Object defaultValue) {
+<span class="nc bnc" id="L1085" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L1086">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L1088">		Object value = this.attributes.get(name);</span>
+<span class="nc bnc" id="L1089" title="All 2 branches missed.">		if (value == null) {</span>
+<span class="nc" id="L1090">			value = defaultValue;</span>
+		}
+<span class="nc" id="L1092">		return value;</span>
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable. If the attribute
+	 * doesn't exist, the value corresponding to defaultKey is returned.
+	 * &lt;P&gt;
+	 * As an example, if valueSet contains the mapping &lt;code&gt;&quot;one&quot; =&gt;
+	 * &quot;1&quot;&lt;/code&gt; and the element contains the attribute &lt;code&gt;attr=&quot;one&quot;&lt;/code&gt;
+	 * , then &lt;code&gt;getAttribute(&quot;attr&quot;, mapping, defaultKey, false)&lt;/code&gt;
+	 * returns &lt;code&gt;&quot;1&quot;&lt;/code&gt;.
+	 * 
+	 * The name of the attribute. Hashtable mapping keys to values. Key to use
+	 * if the attribute is missing. &lt;code&gt;true&lt;/code&gt; if literals are valid.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;li&gt;&lt;code&gt;valueSet&lt;/code&gt; != null
+	 * &lt;li&gt;the keys of &lt;code&gt;valueSet&lt;/code&gt; are strings
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String)
+	 *      getAttribute(String)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.lang.Object) getAttribute(String, Object)
+	 */
+	public Object getAttribute(String name, Hashtable valueSet,
+			String defaultKey, boolean allowLiterals) {
+<span class="nc bnc" id="L1133" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L1134">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L1136">		Object key = this.attributes.get(name);</span>
+		Object result;
+<span class="nc bnc" id="L1138" title="All 2 branches missed.">		if (key == null) {</span>
+<span class="nc" id="L1139">			key = defaultKey;</span>
+		}
+<span class="nc" id="L1141">		result = valueSet.get(key);</span>
+<span class="nc bnc" id="L1142" title="All 2 branches missed.">		if (result == null) {</span>
+<span class="nc bnc" id="L1143" title="All 2 branches missed.">			if (allowLiterals) {</span>
+<span class="nc" id="L1144">				result = key;</span>
+<span class="nc" id="L1145">			} else {</span>
+<span class="nc" id="L1146">				throw this.invalidValue(name, (String) key);</span>
+			}
+		}
+<span class="nc" id="L1149">		return result;</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;null&lt;/code&gt; is returned.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.lang.String) getStringAttribute(String, String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getStringAttribute(String, Hashtable, String, boolean)
+	 */
+	public String getStringAttribute(String name) {
+<span class="nc" id="L1183">		return this.getStringAttribute(name, null);</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;defaultValue&lt;/code&gt; is returned.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * @param defaultValue
+	 *            Key to use if the attribute is missing.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String)
+	 *      getStringAttribute(String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getStringAttribute(String, Hashtable, String, boolean)
+	 */
+	public String getStringAttribute(String name, String defaultValue) {
+<span class="nc" id="L1219">		return (String) this.getAttribute(name, defaultValue);</span>
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable. If the attribute
+	 * doesn't exist, the value corresponding to defaultKey is returned.
+	 * &lt;P&gt;
+	 * As an example, if valueSet contains the mapping &lt;code&gt;&quot;one&quot; =&gt;
+	 * &quot;1&quot;&lt;/code&gt; and the element contains the attribute &lt;code&gt;attr=&quot;one&quot;&lt;/code&gt;
+	 * , then &lt;code&gt;getAttribute(&quot;attr&quot;, mapping, defaultKey, false)&lt;/code&gt;
+	 * returns &lt;code&gt;&quot;1&quot;&lt;/code&gt;.
+	 * 
+	 * The name of the attribute. Hashtable mapping keys to values. Key to use
+	 * if the attribute is missing. &lt;code&gt;true&lt;/code&gt; if literals are valid.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;li&gt;&lt;code&gt;valueSet&lt;/code&gt; != null
+	 * &lt;li&gt;the keys of &lt;code&gt;valueSet&lt;/code&gt; are strings
+	 * &lt;li&gt;the values of &lt;code&gt;valueSet&lt;/code&gt; are strings
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String)
+	 *      getStringAttribute(String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.lang.String) getStringAttribute(String, String)
+	 */
+	public String getStringAttribute(String name, Hashtable valueSet,
+			String defaultKey, boolean allowLiterals) {
+<span class="nc" id="L1261">		return (String) this.getAttribute(name, valueSet, defaultKey,</span>
+<span class="nc" id="L1262">				allowLiterals);</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;0&lt;/code&gt; is returned.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setIntAttribute(java.lang.String, int)
+	 *      setIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String, int)
+	 *      getIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getIntAttribute(String, Hashtable, String, boolean)
+	 */
+	public int getIntAttribute(String name) {
+<span class="nc" id="L1294">		return this.getIntAttribute(name, 0);</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;defaultValue&lt;/code&gt; is returned.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * @param defaultValue
+	 *            Key to use if the attribute is missing.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setIntAttribute(java.lang.String, int)
+	 *      setIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String)
+	 *      getIntAttribute(String)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getIntAttribute(String, Hashtable, String, boolean)
+	 */
+	public int getIntAttribute(String name, int defaultValue) {
+<span class="nc bnc" id="L1328" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L1329">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L1331">		String value = (String) this.attributes.get(name);</span>
+<span class="nc bnc" id="L1332" title="All 2 branches missed.">		if (value == null) {</span>
+<span class="nc" id="L1333">			return defaultValue;</span>
+		} else {
+			try {
+<span class="nc" id="L1336">				return Integer.parseInt(value);</span>
+<span class="nc" id="L1337">			} catch (NumberFormatException e) {</span>
+<span class="nc" id="L1338">				throw this.invalidValue(name, value);</span>
+			}
+		}
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable. If the attribute
+	 * doesn't exist, the value corresponding to defaultKey is returned.
+	 * &lt;P&gt;
+	 * As an example, if valueSet contains the mapping &lt;code&gt;&quot;one&quot; =&gt; 1&lt;/code&gt;
+	 * and the element contains the attribute &lt;code&gt;attr=&quot;one&quot;&lt;/code&gt;, then
+	 * &lt;code&gt;getIntAttribute(&quot;attr&quot;, mapping, defaultKey, false)&lt;/code&gt; returns
+	 * &lt;code&gt;1&lt;/code&gt;.
+	 * 
+	 * The name of the attribute. Hashtable mapping keys to values. Key to use
+	 * if the attribute is missing. &lt;code&gt;true&lt;/code&gt; if literal numbers are
+	 * valid.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;li&gt;&lt;code&gt;valueSet&lt;/code&gt; != null
+	 * &lt;li&gt;the keys of &lt;code&gt;valueSet&lt;/code&gt; are strings
+	 * &lt;li&gt;the values of &lt;code&gt;valueSet&lt;/code&gt; are Integer objects
+	 * &lt;li&gt;&lt;code&gt;defaultKey&lt;/code&gt; is either &lt;code&gt;null&lt;/code&gt;, a key in
+	 * &lt;code&gt;valueSet&lt;/code&gt; or an integer.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setIntAttribute(java.lang.String, int)
+	 *      setIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String)
+	 *      getIntAttribute(String)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String, int)
+	 *      getIntAttribute(String, int)
+	 */
+	public int getIntAttribute(String name, Hashtable valueSet,
+			String defaultKey, boolean allowLiteralNumbers) {
+<span class="nc bnc" id="L1383" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L1384">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L1386">		Object key = this.attributes.get(name);</span>
+		Integer result;
+<span class="nc bnc" id="L1388" title="All 2 branches missed.">		if (key == null) {</span>
+<span class="nc" id="L1389">			key = defaultKey;</span>
+		}
+		try {
+<span class="nc" id="L1392">			result = (Integer) valueSet.get(key);</span>
+<span class="nc" id="L1393">		} catch (ClassCastException e) {</span>
+<span class="nc" id="L1394">			throw this.invalidValueSet(name);</span>
+		}
+<span class="nc bnc" id="L1396" title="All 2 branches missed.">		if (result == null) {</span>
+<span class="nc bnc" id="L1397" title="All 2 branches missed.">			if (!allowLiteralNumbers) {</span>
+<span class="nc" id="L1398">				throw this.invalidValue(name, (String) key);</span>
+			}
+			try {
+<span class="nc" id="L1401">				result = Integer.valueOf((String) key);</span>
+<span class="nc" id="L1402">			} catch (NumberFormatException e) {</span>
+<span class="nc" id="L1403">				throw this.invalidValue(name, (String) key);</span>
+			}
+		}
+<span class="nc" id="L1406">		return result.intValue();</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;0.0&lt;/code&gt; is returned.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setDoubleAttribute(java.lang.String,
+	 *      double) setDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      double) getDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getDoubleAttribute(String, Hashtable, String, boolean)
+	 */
+	public double getDoubleAttribute(String name) {
+<span class="nc" id="L1438">		return this.getDoubleAttribute(name, 0.);</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;defaultValue&lt;/code&gt; is returned.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * @param defaultValue
+	 *            Key to use if the attribute is missing.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setDoubleAttribute(java.lang.String,
+	 *      double) setDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String)
+	 *      getDoubleAttribute(String)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getDoubleAttribute(String, Hashtable, String, boolean)
+	 */
+	public double getDoubleAttribute(String name, double defaultValue) {
+<span class="nc bnc" id="L1472" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L1473">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L1475">		String value = (String) this.attributes.get(name);</span>
+<span class="nc bnc" id="L1476" title="All 2 branches missed.">		if (value == null) {</span>
+<span class="nc" id="L1477">			return defaultValue;</span>
+		} else {
+			try {
+<span class="nc" id="L1480">				return Double.valueOf(value).doubleValue();</span>
+<span class="nc" id="L1481">			} catch (NumberFormatException e) {</span>
+<span class="nc" id="L1482">				throw this.invalidValue(name, value);</span>
+			}
+		}
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable. If the attribute
+	 * doesn't exist, the value corresponding to defaultKey is returned.
+	 * &lt;P&gt;
+	 * As an example, if valueSet contains the mapping &lt;code&gt;&quot;one&quot; =&amp;gt;
+	 * 1.0&lt;/code&gt; and the element contains the attribute &lt;code&gt;attr=&quot;one&quot;&lt;/code&gt;
+	 * , then
+	 * &lt;code&gt;getDoubleAttribute(&quot;attr&quot;, mapping, defaultKey, false)&lt;/code&gt;
+	 * returns &lt;code&gt;1.0&lt;/code&gt;.
+	 * 
+	 * The name of the attribute. Hashtable mapping keys to values. Key to use
+	 * if the attribute is missing. &lt;code&gt;true&lt;/code&gt; if literal numbers are
+	 * valid.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;li&gt;&lt;code&gt;valueSet != null&lt;/code&gt;
+	 * &lt;li&gt;the keys of &lt;code&gt;valueSet&lt;/code&gt; are strings
+	 * &lt;li&gt;the values of &lt;code&gt;valueSet&lt;/code&gt; are Double objects
+	 * &lt;li&gt;&lt;code&gt;defaultKey&lt;/code&gt; is either &lt;code&gt;null&lt;/code&gt;, a key in
+	 * &lt;code&gt;valueSet&lt;/code&gt; or a double.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setDoubleAttribute(java.lang.String,
+	 *      double) setDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String)
+	 *      getDoubleAttribute(String)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      double) getDoubleAttribute(String, double)
+	 */
+	public double getDoubleAttribute(String name, Hashtable valueSet,
+			String defaultKey, boolean allowLiteralNumbers) {
+<span class="nc bnc" id="L1528" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L1529">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L1531">		Object key = this.attributes.get(name);</span>
+		Double result;
+<span class="nc bnc" id="L1533" title="All 2 branches missed.">		if (key == null) {</span>
+<span class="nc" id="L1534">			key = defaultKey;</span>
+		}
+		try {
+<span class="nc" id="L1537">			result = (Double) valueSet.get(key);</span>
+<span class="nc" id="L1538">		} catch (ClassCastException e) {</span>
+<span class="nc" id="L1539">			throw this.invalidValueSet(name);</span>
+		}
+<span class="nc bnc" id="L1541" title="All 2 branches missed.">		if (result == null) {</span>
+<span class="nc bnc" id="L1542" title="All 2 branches missed.">			if (!allowLiteralNumbers) {</span>
+<span class="nc" id="L1543">				throw this.invalidValue(name, (String) key);</span>
+			}
+			try {
+<span class="nc" id="L1546">				result = Double.valueOf((String) key);</span>
+<span class="nc" id="L1547">			} catch (NumberFormatException e) {</span>
+<span class="nc" id="L1548">				throw this.invalidValue(name, (String) key);</span>
+			}
+		}
+<span class="nc" id="L1551">		return result.doubleValue();</span>
+	}
+
+	/**
+	 * Returns an attribute of the element. If the attribute doesn't exist,
+	 * &lt;code&gt;defaultValue&lt;/code&gt; is returned. If the value of the attribute is
+	 * equal to &lt;code&gt;trueValue&lt;/code&gt;, &lt;code&gt;true&lt;/code&gt; is returned. If the
+	 * value of the attribute is equal to &lt;code&gt;falseValue&lt;/code&gt;,
+	 * &lt;code&gt;false&lt;/code&gt; is returned. If the value doesn't match
+	 * &lt;code&gt;trueValue&lt;/code&gt; or &lt;code&gt;falseValue&lt;/code&gt;, an exception is
+	 * thrown.
+	 * 
+	 * @param name
+	 *            The name of the attribute.
+	 * @param trueValue
+	 *            The value associated with &lt;code&gt;true&lt;/code&gt;.
+	 * @param falseValue
+	 *            The value associated with &lt;code&gt;true&lt;/code&gt;.
+	 * @param defaultValue
+	 *            Value to use if the attribute is missing.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 *            &lt;li&gt;&lt;code&gt;trueValue&lt;/code&gt; and &lt;code&gt;falseValue&lt;/code&gt; are
+	 *            different strings.
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#removeAttribute(java.lang.String)
+	 *      removeAttribute(String)
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 */
+	public boolean getBooleanAttribute(String name, String trueValue,
+			String falseValue, boolean defaultValue) {
+<span class="nc bnc" id="L1594" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L1595">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L1597">		Object value = this.attributes.get(name);</span>
+<span class="nc bnc" id="L1598" title="All 2 branches missed.">		if (value == null) {</span>
+<span class="nc" id="L1599">			return defaultValue;</span>
+<span class="nc bnc" id="L1600" title="All 2 branches missed.">		} else if (value.equals(trueValue)) {</span>
+<span class="nc" id="L1601">			return true;</span>
+<span class="nc bnc" id="L1602" title="All 2 branches missed.">		} else if (value.equals(falseValue)) {</span>
+<span class="nc" id="L1603">			return false;</span>
+		} else {
+<span class="nc" id="L1605">			throw this.invalidValue(name, (String) value);</span>
+		}
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable.
+	 * 
+	 * @deprecated Use
+	 *             {@link #getIntAttribute(java.lang.String, java.util.Hashtable, java.lang.String, boolean)
+	 *             getIntAttribute} instead.
+	 */
+	public int getIntProperty(String name, Hashtable valueSet, String defaultKey) {
+<span class="nc" id="L1617">		return this.getIntAttribute(name, valueSet, defaultKey, false);</span>
+	}
+
+	/**
+	 * Returns an attribute.
+	 * 
+	 * @deprecated Use {@link #getStringAttribute(java.lang.String)
+	 *             getStringAttribute} instead.
+	 */
+	public String getProperty(String name) {
+<span class="nc" id="L1627">		return this.getStringAttribute(name);</span>
+	}
+
+	/**
+	 * Returns an attribute.
+	 * 
+	 * @deprecated Use
+	 *             {@link #getStringAttribute(java.lang.String, java.lang.String)
+	 *             getStringAttribute} instead.
+	 */
+	public String getProperty(String name, String defaultValue) {
+<span class="nc" id="L1638">		return this.getStringAttribute(name, defaultValue);</span>
+	}
+
+	/**
+	 * Returns an attribute.
+	 * 
+	 * @deprecated Use {@link #getIntAttribute(java.lang.String, int)
+	 *             getIntAttribute} instead.
+	 */
+	public int getProperty(String name, int defaultValue) {
+<span class="nc" id="L1648">		return this.getIntAttribute(name, defaultValue);</span>
+	}
+
+	/**
+	 * Returns an attribute.
+	 * 
+	 * @deprecated Use {@link #getDoubleAttribute(java.lang.String, double)
+	 *             getDoubleAttribute} instead.
+	 */
+	public double getProperty(String name, double defaultValue) {
+<span class="nc" id="L1658">		return this.getDoubleAttribute(name, defaultValue);</span>
+	}
+
+	/**
+	 * Returns an attribute.
+	 * 
+	 * @deprecated Use
+	 *             {@link #getBooleanAttribute(java.lang.String, java.lang.String, java.lang.String, boolean)
+	 *             getBooleanAttribute} instead.
+	 */
+	public boolean getProperty(String key, String trueValue, String falseValue,
+			boolean defaultValue) {
+<span class="nc" id="L1670">		return this.getBooleanAttribute(key, trueValue, falseValue,</span>
+<span class="nc" id="L1671">				defaultValue);</span>
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable.
+	 * 
+	 * @deprecated Use
+	 *             {@link #getAttribute(java.lang.String, java.util.Hashtable, java.lang.String, boolean)
+	 *             getAttribute} instead.
+	 */
+	public Object getProperty(String name, Hashtable valueSet, String defaultKey) {
+<span class="nc" id="L1682">		return this.getAttribute(name, valueSet, defaultKey, false);</span>
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable.
+	 * 
+	 * @deprecated Use
+	 *             {@link #getStringAttribute(java.lang.String, java.util.Hashtable, java.lang.String, boolean)
+	 *             getStringAttribute} instead.
+	 */
+	public String getStringProperty(String name, Hashtable valueSet,
+			String defaultKey) {
+<span class="nc" id="L1694">		return this.getStringAttribute(name, valueSet, defaultKey, false);</span>
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable.
+	 * 
+	 * @deprecated Use
+	 *             {@link #getIntAttribute(java.lang.String, java.util.Hashtable, java.lang.String, boolean)
+	 *             getIntAttribute} instead.
+	 */
+	public int getSpecialIntProperty(String name, Hashtable valueSet,
+			String defaultKey) {
+<span class="nc" id="L1706">		return this.getIntAttribute(name, valueSet, defaultKey, true);</span>
+	}
+
+	/**
+	 * Returns an attribute by looking up a key in a hashtable.
+	 * 
+	 * @deprecated Use
+	 *             {@link #getDoubleAttribute(java.lang.String, java.util.Hashtable, java.lang.String, boolean)
+	 *             getDoubleAttribute} instead.
+	 */
+	public double getSpecialDoubleProperty(String name, Hashtable valueSet,
+			String defaultKey) {
+<span class="nc" id="L1718">		return this.getDoubleAttribute(name, valueSet, defaultKey, true);</span>
+	}
+
+	/**
+	 * Returns the name of the element.
+	 * 
+	 * @see freemind.main.XMLElement#setName(java.lang.String) setName(String)
+	 */
+	public String getName() {
+<span class="nc" id="L1727">		return this.name;</span>
+	}
+
+	/**
+	 * Returns the name of the element.
+	 * 
+	 * @deprecated Use {@link #getName() getName} instead.
+	 */
+	public String getTagName() {
+<span class="nc" id="L1736">		return this.getName();</span>
+	}
+
+	/**
+	 * Reads one XML element from a java.io.Reader and parses it.
+	 * 
+	 * The reader from which to retrieve the XML data.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;reader != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;reader&lt;/code&gt; is not closed
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;the state of the receiver is updated to reflect the XML element
+	 * parsed from the reader
+	 * &lt;li&gt;the reader points to the first character following the last '&amp;gt;'
+	 * character of the XML element
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @throws java.io.IOException
+	 *             If an error occured while reading the input.
+	 * @throws XMLParseException
+	 *             If an error occured while parsing the read data.
+	 */
+	public void parseFromReader(Reader reader) throws IOException,
+			XMLParseException {
+<span class="fc" id="L1775">		this.parseFromReader(reader, /* startingLineNr */1);</span>
+<span class="fc" id="L1776">	}</span>
+
+	/**
+	 * Reads one XML element from a java.io.Reader and parses it.
+	 * 
+	 * The reader from which to retrieve the XML data. The line number of the
+	 * first line in the data.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;reader != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;reader&lt;/code&gt; is not closed
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;the state of the receiver is updated to reflect the XML element
+	 * parsed from the reader
+	 * &lt;li&gt;the reader points to the first character following the last '&amp;gt;'
+	 * character of the XML element
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @throws java.io.IOException
+	 *             If an error occured while reading the input.
+	 * @throws XMLParseException
+	 *             If an error occured while parsing the read data.
+	 */
+	public void parseFromReader(Reader reader, int startingLineNr)
+			throws IOException, XMLParseException {
+<span class="fc" id="L1815">		this.charReadTooMuch = '\0';</span>
+<span class="fc" id="L1816">		this.reader = reader;</span>
+<span class="fc" id="L1817">		this.parserLineNr = startingLineNr;</span>
+
+		for (;;) {
+<span class="fc" id="L1820">			char ch = this.scanWhitespace();</span>
+
+<span class="pc bpc" id="L1822" title="1 of 2 branches missed.">			if (ch != '&lt;') {</span>
+<span class="nc" id="L1823">				throw this.expectedInput(&quot;&lt;&quot;);</span>
+			}
+
+<span class="fc" id="L1826">			ch = this.readChar();</span>
+
+<span class="pc bpc" id="L1828" title="2 of 4 branches missed.">			if ((ch == '!') || (ch == '?')) {</span>
+<span class="nc" id="L1829">				this.skipSpecialTag(0);</span>
+<span class="nc" id="L1830">			} else {</span>
+<span class="fc" id="L1831">				this.unreadChar(ch);</span>
+<span class="fc" id="L1832">				this.scanElement(this);</span>
+<span class="fc" id="L1833">				return;</span>
+			}
+		}
+	}
+
+	/**
+	 * Reads one XML element from a String and parses it.
+	 * 
+	 * The reader from which to retrieve the XML data.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;string != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;string.length() &amp;gt; 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;the state of the receiver is updated to reflect the XML element
+	 * parsed from the reader
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @throws XMLParseException
+	 *             If an error occured while parsing the string.
+	 */
+	public void parseString(String string) throws XMLParseException {
+		try {
+<span class="nc" id="L1870">			this.parseFromReader(new StringReader(string),</span>
+<span class="nc" id="L1871">			/* startingLineNr */1);</span>
+<span class="nc" id="L1872">		} catch (IOException e) {</span>
+			// Java exception handling suxx
+		}
+<span class="nc" id="L1875">	}</span>
+
+	/**
+	 * Reads one XML element from a String and parses it.
+	 * 
+	 * The reader from which to retrieve the XML data. The first character in
+	 * &lt;code&gt;string&lt;/code&gt; to scan.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;string != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;lt; string.length()&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;gt;= 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;the state of the receiver is updated to reflect the XML element
+	 * parsed from the reader
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @throws XMLParseException
+	 *             If an error occured while parsing the string.
+	 */
+	public void parseString(String string, int offset) throws XMLParseException {
+<span class="nc" id="L1910">		this.parseString(string.substring(offset));</span>
+<span class="nc" id="L1911">	}</span>
+
+	/**
+	 * Reads one XML element from a String and parses it.
+	 * 
+	 * The reader from which to retrieve the XML data. The first character in
+	 * &lt;code&gt;string&lt;/code&gt; to scan. The character where to stop scanning. This
+	 * character is not scanned.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;string != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;end &amp;lt;= string.length()&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;lt; end&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;gt;= 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;the state of the receiver is updated to reflect the XML element
+	 * parsed from the reader
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @throws XMLParseException
+	 *             If an error occured while parsing the string.
+	 */
+	public void parseString(String string, int offset, int end)
+			throws XMLParseException {
+<span class="nc" id="L1949">		this.parseString(string.substring(offset, end));</span>
+<span class="nc" id="L1950">	}</span>
+
+	/**
+	 * Reads one XML element from a String and parses it.
+	 * 
+	 * The reader from which to retrieve the XML data. The first character in
+	 * &lt;code&gt;string&lt;/code&gt; to scan. The character where to stop scanning. This
+	 * character is not scanned. The line number of the first line in the data.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;string != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;end &amp;lt;= string.length()&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;lt; end&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;gt;= 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;the state of the receiver is updated to reflect the XML element
+	 * parsed from the reader
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @throws XMLParseException
+	 *             If an error occured while parsing the string.
+	 */
+	public void parseString(String string, int offset, int end,
+			int startingLineNr) throws XMLParseException {
+<span class="nc" id="L1988">		string = string.substring(offset, end);</span>
+		try {
+<span class="nc" id="L1990">			this.parseFromReader(new StringReader(string), startingLineNr);</span>
+<span class="nc" id="L1991">		} catch (IOException e) {</span>
+			// Java exception handling suxx
+		}
+<span class="nc" id="L1994">	}</span>
+
+	/**
+	 * Reads one XML element from a char array and parses it.
+	 * 
+	 * The reader from which to retrieve the XML data. The first character in
+	 * &lt;code&gt;string&lt;/code&gt; to scan. The character where to stop scanning. This
+	 * character is not scanned.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;input != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;end &amp;lt;= input.length&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;lt; end&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;gt;= 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;the state of the receiver is updated to reflect the XML element
+	 * parsed from the reader
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @throws XMLParseException
+	 *             If an error occured while parsing the string.
+	 */
+	public void parseCharArray(char[] input, int offset, int end)
+			throws XMLParseException {
+<span class="nc" id="L2032">		this.parseCharArray(input, offset, end, /* startingLineNr */1);</span>
+<span class="nc" id="L2033">	}</span>
+
+	/**
+	 * Reads one XML element from a char array and parses it.
+	 * 
+	 * The reader from which to retrieve the XML data. The first character in
+	 * &lt;code&gt;string&lt;/code&gt; to scan. The character where to stop scanning. This
+	 * character is not scanned. The line number of the first line in the data.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;input != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;end &amp;lt;= input.length&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;lt; end&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;offset &amp;gt;= 0&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;the state of the receiver is updated to reflect the XML element
+	 * parsed from the reader
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @throws XMLParseException
+	 *             If an error occured while parsing the string.
+	 */
+	public void parseCharArray(char[] input, int offset, int end,
+			int startingLineNr) throws XMLParseException {
+		try {
+<span class="nc" id="L2072">			Reader reader = new CharArrayReader(input, offset, end);</span>
+<span class="nc" id="L2073">			this.parseFromReader(reader, startingLineNr);</span>
+<span class="nc" id="L2074">		} catch (IOException e) {</span>
+			// This exception will never happen.
+		}
+<span class="nc" id="L2077">	}</span>
+
+	/**
+	 * Removes a child element.
+	 * 
+	 * The child element to remove.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;child != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;child&lt;/code&gt; is a child element of the receiver
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;countChildren() =&gt; old.countChildren() - 1
+	 * &lt;li&gt;enumerateChildren() =&gt; old.enumerateChildren() - child
+	 * &lt;li&gt;getChildren() =&gt; old.enumerateChildren() - child
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#addChild(XMLElement) addChild(XMLElement)
+	 * @see freemind.main.XMLElement#countChildren()
+	 * @see freemind.main.XMLElement#enumerateChildren()
+	 * @see freemind.main.XMLElement#getChildren()
+	 */
+	public void removeChild(XMLElement child) {
+<span class="nc" id="L2113">		this.children.removeElement(child);</span>
+<span class="nc" id="L2114">	}</span>
+
+	/**
+	 * Removes an attribute.
+	 * 
+	 * The name of the attribute.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;enumerateAttributeNames() =&gt; old.enumerateAttributeNames() - name
+	 * &lt;li&gt;getAttribute(name) =&gt; &lt;code&gt;null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#enumerateAttributeNames()
+	 * @see freemind.main.XMLElement#setDoubleAttribute(java.lang.String,
+	 *      double) setDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#setIntAttribute(java.lang.String, int)
+	 *      setIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#setAttribute(java.lang.String,
+	 *      java.lang.Object) setAttribute(String, Object)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String)
+	 *      getAttribute(String)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.lang.Object) getAttribute(String, Object)
+	 * @see freemind.main.XMLElement#getAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean) getAttribute(String,
+	 *      Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String)
+	 *      getStringAttribute(String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.lang.String) getStringAttribute(String, String)
+	 * @see freemind.main.XMLElement#getStringAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getStringAttribute(String, Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String)
+	 *      getIntAttribute(String)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String, int)
+	 *      getIntAttribute(String, int)
+	 * @see freemind.main.XMLElement#getIntAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getIntAttribute(String, Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String)
+	 *      getDoubleAttribute(String)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      double) getDoubleAttribute(String, double)
+	 * @see freemind.main.XMLElement#getDoubleAttribute(java.lang.String,
+	 *      java.util.Hashtable, java.lang.String, boolean)
+	 *      getDoubleAttribute(String, Hashtable, String, boolean)
+	 * @see freemind.main.XMLElement#getBooleanAttribute(java.lang.String,
+	 *      java.lang.String, java.lang.String, boolean)
+	 *      getBooleanAttribute(String, String, String, boolean)
+	 */
+	public void removeAttribute(String name) {
+<span class="nc bnc" id="L2183" title="All 2 branches missed.">		if (this.ignoreCase) {</span>
+<span class="nc" id="L2184">			name = name.toUpperCase(Locale.ENGLISH);</span>
+		}
+<span class="nc" id="L2186">		this.attributes.remove(name);</span>
+<span class="nc" id="L2187">	}</span>
+
+	/**
+	 * Removes an attribute.
+	 * 
+	 * The name of the attribute.
+	 * 
+	 * @deprecated Use {@link #removeAttribute(java.lang.String)
+	 *             removeAttribute} instead.
+	 */
+	public void removeProperty(String name) {
+<span class="nc" id="L2198">		this.removeAttribute(name);</span>
+<span class="nc" id="L2199">	}</span>
+
+	/**
+	 * Removes an attribute.
+	 * 
+	 * The name of the attribute.
+	 * 
+	 * @deprecated Use {@link #removeAttribute(java.lang.String)
+	 *             removeAttribute} instead.
+	 */
+	public void removeChild(String name) {
+<span class="nc" id="L2210">		this.removeAttribute(name);</span>
+<span class="nc" id="L2211">	}</span>
+
+	/**
+	 * Creates a new similar XML element.
+	 * &lt;P&gt;
+	 * You should override this method when subclassing XMLElement.
+	 */
+	protected XMLElement createAnotherElement() {
+<span class="nc" id="L2219">		return new XMLElement(this.entities, this.ignoreWhitespace, false,</span>
+<span class="nc" id="L2220">				this.ignoreCase);</span>
+	}
+
+	// You should override this method when subclassing XMLElement.
+	protected void completeElement() {
+<span class="fc" id="L2225">	}</span>
+
+	/**
+	 * Changes the content string.
+	 * 
+	 * The new content string.
+	 */
+	public void setContent(String content) {
+<span class="fc" id="L2233">		this.contents = content;</span>
+<span class="fc" id="L2234">		this.dontEncodeContents = false;</span>
+<span class="fc" id="L2235">	}</span>
+
+	/**
+	 * Changes the content string.
+	 * 
+	 * The new content string.
+	 */
+	public void setEncodedContent(String content) {
+<span class="nc" id="L2243">		this.contents = content;</span>
+<span class="nc" id="L2244">		this.dontEncodeContents = true;</span>
+<span class="nc" id="L2245">	}</span>
+
+	/**
+	 * Changes the name of the element.
+	 * 
+	 * The new name.
+	 * 
+	 * @deprecated Use {@link #setName(java.lang.String) setName} instead.
+	 */
+	public void setTagName(String name) {
+<span class="nc" id="L2255">		this.setName(name);</span>
+<span class="nc" id="L2256">	}</span>
+
+	/**
+	 * Changes the name of the element.
+	 * 
+	 * The new name.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;name&lt;/code&gt; is a valid XML identifier
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * @see freemind.main.XMLElement#getName()
+	 */
+	public void setName(String name) {
+<span class="fc" id="L2277">		this.name = name;</span>
+<span class="fc" id="L2278">	}</span>
+
+	/**
+	 * Writes the XML element to a string.
+	 * 
+	 * @see freemind.main.XMLElement#write(java.io.Writer) write(Writer)
+	 */
+	public String toString() {
+		try {
+<span class="nc" id="L2287">			ByteArrayOutputStream out = new ByteArrayOutputStream();</span>
+<span class="nc" id="L2288">			OutputStreamWriter writer = new OutputStreamWriter(out);</span>
+<span class="nc" id="L2289">			this.write(writer);</span>
+<span class="nc" id="L2290">			writer.flush();</span>
+<span class="nc" id="L2291">			return new String(out.toByteArray());</span>
+<span class="nc" id="L2292">		} catch (IOException e) {</span>
+			// Java exception handling suxx
+<span class="nc" id="L2294">			return super.toString();</span>
+		}
+	}
+
+	/**
+	 * Writes the XML element to a writer.
+	 * 
+	 * The writer to write the XML data to.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;writer != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;writer&lt;/code&gt; is not closed
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * @throws java.io.IOException
+	 *             If the data could not be written to the writer.
+	 * 
+	 * @see freemind.main.XMLElement#toString()
+	 */
+	public void write(Writer writer) throws IOException {
+<span class="nc" id="L2320">		write(writer, true);</span>
+<span class="nc" id="L2321">	}</span>
+
+	public void writeWithoutClosingTag(Writer writer) throws IOException {
+<span class="nc" id="L2324">		write(writer, false);</span>
+<span class="nc" id="L2325">	}</span>
+
+	public void writeClosingTag(Writer writer) throws IOException {
+<span class="nc" id="L2328">		writer.write('&lt;');</span>
+<span class="nc" id="L2329">		writer.write('/');</span>
+<span class="nc" id="L2330">		writer.write(this.name);</span>
+<span class="nc" id="L2331">		writer.write('&gt;');</span>
+<span class="nc" id="L2332">		writer.write('\n');</span>
+<span class="nc" id="L2333">	}</span>
+
+	public void write(Writer writer, boolean withClosingTag) throws IOException {
+<span class="nc bnc" id="L2336" title="All 2 branches missed.">		if (this.name == null) {</span>
+			// fc, 17.5.06: support encoded contents
+<span class="nc bnc" id="L2338" title="All 2 branches missed.">			if (dontEncodeContents) {</span>
+<span class="nc" id="L2339">				writer.write(this.contents);</span>
+<span class="nc" id="L2340">			} else {</span>
+<span class="nc" id="L2341">				this.writeEncoded(writer, this.contents);</span>
+			}
+<span class="nc" id="L2343">			return;</span>
+		}
+<span class="nc" id="L2345">		writer.write('&lt;');</span>
+<span class="nc" id="L2346">		writer.write(this.name);</span>
+<span class="nc bnc" id="L2347" title="All 2 branches missed.">		if (!this.attributes.isEmpty()) {</span>
+<span class="nc" id="L2348">			Iterator enumerator = this.attributes.keySet().iterator();</span>
+<span class="nc bnc" id="L2349" title="All 2 branches missed.">			while (enumerator.hasNext()) {</span>
+<span class="nc" id="L2350">				writer.write(' ');</span>
+<span class="nc" id="L2351">				String key = (String) enumerator.next();</span>
+<span class="nc" id="L2352">				String value = (String) this.attributes.get(key);</span>
+<span class="nc" id="L2353">				writer.write(key);</span>
+<span class="nc" id="L2354">				writer.write('=');</span>
+<span class="nc" id="L2355">				writer.write('&quot;');</span>
+<span class="nc" id="L2356">				this.writeEncoded(writer, value);</span>
+<span class="nc" id="L2357">				writer.write('&quot;');</span>
+			}
+		}
+<span class="nc bnc" id="L2360" title="All 4 branches missed.">		if ((this.contents != null) &amp;&amp; (this.contents.length() &gt; 0)) {</span>
+<span class="nc" id="L2361">			writer.write('&gt;');</span>
+			// writer.write('\n');
+			// fc, 17.5.06: support encoded contents
+<span class="nc bnc" id="L2364" title="All 2 branches missed.">			if (dontEncodeContents) {</span>
+<span class="nc" id="L2365">				writer.write(this.contents);</span>
+<span class="nc" id="L2366">			} else {</span>
+<span class="nc" id="L2367">				this.writeEncoded(writer, this.contents);</span>
+			}
+<span class="nc bnc" id="L2369" title="All 2 branches missed.">			if (withClosingTag) {</span>
+<span class="nc" id="L2370">				writer.write('&lt;');</span>
+<span class="nc" id="L2371">				writer.write('/');</span>
+<span class="nc" id="L2372">				writer.write(this.name);</span>
+<span class="nc" id="L2373">				writer.write('&gt;');</span>
+<span class="nc" id="L2374">				writer.write('\n');</span>
+			}
+<span class="nc bnc" id="L2376" title="All 2 branches missed.">		} else if (this.children.isEmpty()) {</span>
+<span class="nc bnc" id="L2377" title="All 2 branches missed.">			if (withClosingTag) {</span>
+<span class="nc" id="L2378">				writer.write('/');</span>
+			}
+<span class="nc" id="L2380">			writer.write('&gt;');</span>
+<span class="nc" id="L2381">			writer.write('\n');</span>
+<span class="nc" id="L2382">		} else {</span>
+<span class="nc" id="L2383">			writer.write('&gt;');</span>
+<span class="nc" id="L2384">			writer.write('\n');</span>
+<span class="nc" id="L2385">			Enumeration enumerator = this.enumerateChildren();</span>
+<span class="nc bnc" id="L2386" title="All 2 branches missed.">			while (enumerator.hasMoreElements()) {</span>
+<span class="nc" id="L2387">				XMLElement child = (XMLElement) enumerator.nextElement();</span>
+<span class="nc" id="L2388">				child.write(writer);</span>
+			}
+<span class="nc bnc" id="L2390" title="All 2 branches missed.">			if (withClosingTag) {</span>
+<span class="nc" id="L2391">				writer.write('&lt;');</span>
+<span class="nc" id="L2392">				writer.write('/');</span>
+<span class="nc" id="L2393">				writer.write(this.name);</span>
+<span class="nc" id="L2394">				writer.write('&gt;');</span>
+<span class="nc" id="L2395">				writer.write('\n');</span>
+			}
+		}
+<span class="nc" id="L2398">	}</span>
+
+	/**
+	 * Writes a string encoded to a writer.
+	 * 
+	 * The writer to write the XML data to. The string to write encoded.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;writer != null&lt;/code&gt;
+	 * &lt;li&gt;&lt;code&gt;writer&lt;/code&gt; is not closed
+	 * &lt;li&gt;&lt;code&gt;str != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	protected void writeEncoded(Writer writer, String str) throws IOException {
+<span class="nc bnc" id="L2418" title="All 2 branches missed.">		for (int i = 0; i &lt; str.length(); i += 1) {</span>
+<span class="nc" id="L2419">			char ch = str.charAt(i);</span>
+<span class="nc bnc" id="L2420" title="All 6 branches missed.">			switch (ch) {</span>
+			case '&lt;':
+<span class="nc" id="L2422">				writer.write('&amp;');</span>
+<span class="nc" id="L2423">				writer.write('l');</span>
+<span class="nc" id="L2424">				writer.write('t');</span>
+<span class="nc" id="L2425">				writer.write(';');</span>
+<span class="nc" id="L2426">				break;</span>
+			case '&gt;':
+<span class="nc" id="L2428">				writer.write('&amp;');</span>
+<span class="nc" id="L2429">				writer.write('g');</span>
+<span class="nc" id="L2430">				writer.write('t');</span>
+<span class="nc" id="L2431">				writer.write(';');</span>
+<span class="nc" id="L2432">				break;</span>
+			case '&amp;':
+<span class="nc" id="L2434">				writer.write('&amp;');</span>
+<span class="nc" id="L2435">				writer.write('a');</span>
+<span class="nc" id="L2436">				writer.write('m');</span>
+<span class="nc" id="L2437">				writer.write('p');</span>
+<span class="nc" id="L2438">				writer.write(';');</span>
+<span class="nc" id="L2439">				break;</span>
+			case '&quot;':
+<span class="nc" id="L2441">				writer.write('&amp;');</span>
+<span class="nc" id="L2442">				writer.write('q');</span>
+<span class="nc" id="L2443">				writer.write('u');</span>
+<span class="nc" id="L2444">				writer.write('o');</span>
+<span class="nc" id="L2445">				writer.write('t');</span>
+<span class="nc" id="L2446">				writer.write(';');</span>
+<span class="nc" id="L2447">				break;</span>
+			case '\'':
+<span class="nc" id="L2449">				writer.write('&amp;');</span>
+<span class="nc" id="L2450">				writer.write('a');</span>
+<span class="nc" id="L2451">				writer.write('p');</span>
+<span class="nc" id="L2452">				writer.write('o');</span>
+<span class="nc" id="L2453">				writer.write('s');</span>
+<span class="nc" id="L2454">				writer.write(';');</span>
+<span class="nc" id="L2455">				break;</span>
+			default:
+<span class="nc" id="L2457">				int unicode = (int) ch;</span>
+<span class="nc bnc" id="L2458" title="All 4 branches missed.">				if ((unicode &lt; 32) || (unicode &gt; 126)) {</span>
+<span class="nc" id="L2459">					writer.write('&amp;');</span>
+<span class="nc" id="L2460">					writer.write('#');</span>
+<span class="nc" id="L2461">					writer.write('x');</span>
+<span class="nc" id="L2462">					writer.write(Integer.toString(unicode, 16));</span>
+<span class="nc" id="L2463">					writer.write(';');</span>
+<span class="nc" id="L2464">				} else {</span>
+<span class="nc" id="L2465">					writer.write(ch);</span>
+				}
+			}
+		}
+<span class="nc" id="L2469">	}</span>
+
+	/**
+	 * Scans an identifier from the current reader. The scanned identifier is
+	 * appended to &lt;code&gt;result&lt;/code&gt;.
+	 * 
+	 * The buffer in which the scanned identifier will be put.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;result != null&lt;/code&gt;
+	 * &lt;li&gt;The next character read from the reader is a valid first character of
+	 * an XML identifier.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * 
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Postconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The next character read from the reader won't be an identifier
+	 * character.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 */
+	protected void scanIdentifier(StringBuffer result) throws IOException {
+<span class="fc" id="L2501">		for (;;) {</span>
+<span class="fc" id="L2502">			char ch = this.readChar();</span>
+<span class="pc bpc" id="L2503" title="2 of 8 branches missed.">			if (((ch &lt; 'A') || (ch &gt; 'Z')) &amp;&amp; ((ch &lt; 'a') || (ch &gt; 'z'))</span>
+<span class="pc bpc" id="L2504" title="4 of 8 branches missed.">					&amp;&amp; ((ch &lt; '0') || (ch &gt; '9')) &amp;&amp; (ch != '_') &amp;&amp; (ch != '.')</span>
+<span class="pc bpc" id="L2505" title="3 of 6 branches missed.">					&amp;&amp; (ch != ':') &amp;&amp; (ch != '-') &amp;&amp; (ch &lt;= '\u007E')) {</span>
+<span class="fc" id="L2506">				this.unreadChar(ch);</span>
+<span class="fc" id="L2507">				return;</span>
+			}
+<span class="fc" id="L2509">			result.append(ch);</span>
+		}
+	}
+
+	/**
+	 * This method scans an identifier from the current reader.
+	 * 
+	 * @return the next character following the whitespace.
+	 */
+	protected char scanWhitespace() throws IOException {
+		for (;;) {
+<span class="fc" id="L2520">			char ch = this.readChar();</span>
+<span class="pc bpc" id="L2521" title="1 of 2 branches missed.">			switch (ch) {</span>
+			case ' ':
+			case '\t':
+			case '\n':
+			case '\r':
+<span class="nc" id="L2526">				break;</span>
+			default:
+<span class="fc" id="L2528">				return ch;</span>
+			}
+		}
+	}
+
+	/**
+	 * This method scans an identifier from the current reader. The scanned
+	 * whitespace is appended to &lt;code&gt;result&lt;/code&gt;.
+	 * 
+	 * @return the next character following the whitespace.
+	 * 
+	 *         &lt;/dl&gt;
+	 *         &lt;dl&gt;
+	 *         &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *         &lt;dd&gt;
+	 *         &lt;ul&gt;
+	 *         &lt;li&gt;&lt;code&gt;result != null&lt;/code&gt;
+	 *         &lt;/ul&gt;
+	 *         &lt;/dd&gt;
+	 *         &lt;/dl&gt;
+	 */
+	protected char scanWhitespace(StringBuffer result) throws IOException {
+		for (;;) {
+<span class="nc" id="L2551">			char ch = this.readChar();</span>
+<span class="nc bnc" id="L2552" title="All 3 branches missed.">			switch (ch) {</span>
+			case ' ':
+			case '\t':
+			case '\n':
+<span class="nc" id="L2556">				result.append(ch);</span>
+			case '\r':
+<span class="nc" id="L2558">				break;</span>
+			default:
+<span class="nc" id="L2560">				return ch;</span>
+			}
+		}
+	}
+
+	/**
+	 * This method scans a delimited string from the current reader. The scanned
+	 * string without delimiters is appended to &lt;code&gt;string&lt;/code&gt;.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;string != null&lt;/code&gt;
+	 * &lt;li&gt;the next char read is the string delimiter
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	protected void scanString(StringBuffer string) throws IOException {
+<span class="nc" id="L2581">		char delimiter = this.readChar();</span>
+<span class="nc bnc" id="L2582" title="All 4 branches missed.">		if ((delimiter != '\'') &amp;&amp; (delimiter != '&quot;')) {</span>
+<span class="nc" id="L2583">			throw this.expectedInput(&quot;' or \&quot;&quot;);</span>
+		}
+<span class="nc" id="L2585">		for (;;) {</span>
+<span class="nc" id="L2586">			char ch = this.readChar();</span>
+<span class="nc bnc" id="L2587" title="All 2 branches missed.">			if (ch == delimiter) {</span>
+<span class="nc" id="L2588">				return;</span>
+<span class="nc bnc" id="L2589" title="All 2 branches missed.">			} else if (ch == '&amp;') {</span>
+<span class="nc" id="L2590">				this.resolveEntity(string);</span>
+<span class="nc" id="L2591">			} else {</span>
+<span class="nc" id="L2592">				string.append(ch);</span>
+			}
+		}
+	}
+
+	/**
+	 * Scans a #PCDATA element. CDATA sections and entities are resolved. The
+	 * next &amp;lt; char is skipped. The scanned data is appended to
+	 * &lt;code&gt;data&lt;/code&gt;.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;data != null&lt;/code&gt;
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	protected void scanPCData(StringBuffer data) throws IOException {
+<span class="nc" id="L2613">		for (;;) {</span>
+<span class="nc" id="L2614">			char ch = this.readChar();</span>
+<span class="nc bnc" id="L2615" title="All 2 branches missed.">			if (ch == '&lt;') {</span>
+<span class="nc" id="L2616">				ch = this.readChar();</span>
+<span class="nc bnc" id="L2617" title="All 2 branches missed.">				if (ch == '!') {</span>
+<span class="nc" id="L2618">					this.checkCDATA(data);</span>
+<span class="nc" id="L2619">				} else {</span>
+<span class="nc" id="L2620">					this.unreadChar(ch);</span>
+<span class="nc" id="L2621">					return;</span>
+				}
+<span class="nc bnc" id="L2623" title="All 2 branches missed.">			} else if (ch == '&amp;') {</span>
+<span class="nc" id="L2624">				this.resolveEntity(data);</span>
+<span class="nc" id="L2625">			} else {</span>
+<span class="nc" id="L2626">				data.append(ch);</span>
+			}
+		}
+	}
+
+	/**
+	 * Scans a special tag and if the tag is a CDATA section, append its content
+	 * to &lt;code&gt;buf&lt;/code&gt;.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;&lt;code&gt;buf != null&lt;/code&gt;
+	 * &lt;li&gt;The first &amp;lt; has already been read.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	protected boolean checkCDATA(StringBuffer buf) throws IOException {
+<span class="nc" id="L2647">		char ch = this.readChar();</span>
+<span class="nc bnc" id="L2648" title="All 2 branches missed.">		if (ch != '[') {</span>
+<span class="nc" id="L2649">			this.unreadChar(ch);</span>
+<span class="nc" id="L2650">			this.skipSpecialTag(0);</span>
+<span class="nc" id="L2651">			return false;</span>
+<span class="nc bnc" id="L2652" title="All 2 branches missed.">		} else if (!this.checkLiteral(&quot;CDATA[&quot;)) {</span>
+<span class="nc" id="L2653">			this.skipSpecialTag(1); // one [ has already been read</span>
+<span class="nc" id="L2654">			return false;</span>
+		} else {
+<span class="nc" id="L2656">			int delimiterCharsSkipped = 0;</span>
+<span class="nc bnc" id="L2657" title="All 2 branches missed.">			while (delimiterCharsSkipped &lt; 3) {</span>
+<span class="nc" id="L2658">				ch = this.readChar();</span>
+<span class="nc bnc" id="L2659" title="All 3 branches missed.">				switch (ch) {</span>
+				case ']':
+<span class="nc bnc" id="L2661" title="All 2 branches missed.">					if (delimiterCharsSkipped &lt; 2) {</span>
+<span class="nc" id="L2662">						delimiterCharsSkipped += 1;</span>
+<span class="nc" id="L2663">					} else {</span>
+<span class="nc" id="L2664">						buf.append(']');</span>
+<span class="nc" id="L2665">						buf.append(']');</span>
+<span class="nc" id="L2666">						delimiterCharsSkipped = 0;</span>
+					}
+<span class="nc" id="L2668">					break;</span>
+				case '&gt;':
+<span class="nc bnc" id="L2670" title="All 2 branches missed.">					if (delimiterCharsSkipped &lt; 2) {</span>
+<span class="nc bnc" id="L2671" title="All 2 branches missed.">						for (int i = 0; i &lt; delimiterCharsSkipped; i++) {</span>
+<span class="nc" id="L2672">							buf.append(']');</span>
+						}
+<span class="nc" id="L2674">						delimiterCharsSkipped = 0;</span>
+<span class="nc" id="L2675">						buf.append('&gt;');</span>
+<span class="nc" id="L2676">					} else {</span>
+<span class="nc" id="L2677">						delimiterCharsSkipped = 3;</span>
+					}
+<span class="nc" id="L2679">					break;</span>
+				default:
+<span class="nc bnc" id="L2681" title="All 2 branches missed.">					for (int i = 0; i &lt; delimiterCharsSkipped; i += 1) {</span>
+<span class="nc" id="L2682">						buf.append(']');</span>
+					}
+<span class="nc" id="L2684">					buf.append(ch);</span>
+<span class="nc" id="L2685">					delimiterCharsSkipped = 0;</span>
+				}
+			}
+<span class="nc" id="L2688">			return true;</span>
+		}
+	}
+
+	/**
+	 * Skips a comment.
+	 * 
+	 * &lt;/dl&gt;
+	 * &lt;dl&gt;
+	 * &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 * &lt;dd&gt;
+	 * &lt;ul&gt;
+	 * &lt;li&gt;The first &amp;lt;!-- has already been read.
+	 * &lt;/ul&gt;
+	 * &lt;/dd&gt;
+	 * &lt;/dl&gt;
+	 */
+	protected void skipComment() throws IOException {
+<span class="nc" id="L2706">		int dashesToRead = 2;</span>
+<span class="nc bnc" id="L2707" title="All 2 branches missed.">		while (dashesToRead &gt; 0) {</span>
+<span class="nc" id="L2708">			char ch = this.readChar();</span>
+<span class="nc bnc" id="L2709" title="All 2 branches missed.">			if (ch == '-') {</span>
+<span class="nc" id="L2710">				dashesToRead -= 1;</span>
+<span class="nc" id="L2711">			} else {</span>
+<span class="nc" id="L2712">				dashesToRead = 2;</span>
+			}
+		}
+<span class="nc bnc" id="L2715" title="All 2 branches missed.">		if (this.readChar() != '&gt;') {</span>
+<span class="nc" id="L2716">			throw this.expectedInput(&quot;&gt;&quot;);</span>
+		}
+<span class="nc" id="L2718">	}</span>
+
+	/**
+	 * Skips a special tag or comment.
+	 * 
+	 * @param bracketLevel
+	 *            The number of open square brackets ([) that have already been
+	 *            read.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;The first &amp;lt;! has already been read.
+	 *            &lt;li&gt;&lt;code&gt;bracketLevel &gt;= 0&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected void skipSpecialTag(int bracketLevel) throws IOException {
+<span class="nc" id="L2739">		int tagLevel = 1; // &lt;</span>
+<span class="nc" id="L2740">		char stringDelimiter = '\0';</span>
+<span class="nc bnc" id="L2741" title="All 2 branches missed.">		if (bracketLevel == 0) {</span>
+<span class="nc" id="L2742">			char ch = this.readChar();</span>
+<span class="nc bnc" id="L2743" title="All 2 branches missed.">			if (ch == '[') {</span>
+<span class="nc" id="L2744">				bracketLevel += 1;</span>
+<span class="nc bnc" id="L2745" title="All 2 branches missed.">			} else if (ch == '-') {</span>
+<span class="nc" id="L2746">				ch = this.readChar();</span>
+<span class="nc bnc" id="L2747" title="All 2 branches missed.">				if (ch == '[') {</span>
+<span class="nc" id="L2748">					bracketLevel += 1;</span>
+<span class="nc bnc" id="L2749" title="All 2 branches missed.">				} else if (ch == ']') {</span>
+<span class="nc" id="L2750">					bracketLevel -= 1;</span>
+<span class="nc bnc" id="L2751" title="All 2 branches missed.">				} else if (ch == '-') {</span>
+<span class="nc" id="L2752">					this.skipComment();</span>
+<span class="nc" id="L2753">					return;</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L2757" title="All 2 branches missed.">		while (tagLevel &gt; 0) {</span>
+<span class="nc" id="L2758">			char ch = this.readChar();</span>
+<span class="nc bnc" id="L2759" title="All 2 branches missed.">			if (stringDelimiter == '\0') {</span>
+<span class="nc bnc" id="L2760" title="All 4 branches missed.">				if ((ch == '&quot;') || (ch == '\'')) {</span>
+<span class="nc" id="L2761">					stringDelimiter = ch;</span>
+<span class="nc bnc" id="L2762" title="All 2 branches missed.">				} else if (bracketLevel &lt;= 0) {</span>
+<span class="nc bnc" id="L2763" title="All 2 branches missed.">					if (ch == '&lt;') {</span>
+<span class="nc" id="L2764">						tagLevel += 1;</span>
+<span class="nc bnc" id="L2765" title="All 2 branches missed.">					} else if (ch == '&gt;') {</span>
+<span class="nc" id="L2766">						tagLevel -= 1;</span>
+					}
+				}
+<span class="nc bnc" id="L2769" title="All 2 branches missed.">				if (ch == '[') {</span>
+<span class="nc" id="L2770">					bracketLevel += 1;</span>
+<span class="nc bnc" id="L2771" title="All 2 branches missed.">				} else if (ch == ']') {</span>
+<span class="nc" id="L2772">					bracketLevel -= 1;</span>
+				}
+<span class="nc" id="L2774">			} else {</span>
+<span class="nc bnc" id="L2775" title="All 2 branches missed.">				if (ch == stringDelimiter) {</span>
+<span class="nc" id="L2776">					stringDelimiter = '\0';</span>
+				}
+			}
+		}
+<span class="nc" id="L2780">	}</span>
+
+	/**
+	 * Scans the data for literal text. Scanning stops when a character does not
+	 * match or after the complete text has been checked, whichever comes first.
+	 * 
+	 * @param literal
+	 *            the literal to check.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;literal != null&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected boolean checkLiteral(String literal) throws IOException {
+<span class="nc" id="L2800">		int length = literal.length();</span>
+<span class="nc bnc" id="L2801" title="All 2 branches missed.">		for (int i = 0; i &lt; length; i += 1) {</span>
+<span class="nc bnc" id="L2802" title="All 2 branches missed.">			if (this.readChar() != literal.charAt(i)) {</span>
+<span class="nc" id="L2803">				return false;</span>
+			}
+		}
+<span class="nc" id="L2806">		return true;</span>
+	}
+
+	/**
+	 * Reads a character from a reader.
+	 */
+	protected char readChar() throws IOException {
+<span class="fc bfc" id="L2813" title="All 2 branches covered.">		if (this.charReadTooMuch != '\0') {</span>
+<span class="fc" id="L2814">			char ch = this.charReadTooMuch;</span>
+<span class="fc" id="L2815">			this.charReadTooMuch = '\0';</span>
+<span class="fc" id="L2816">			return ch;</span>
+		} else {
+<span class="fc" id="L2818">			int i = this.reader.read();</span>
+<span class="pc bpc" id="L2819" title="1 of 2 branches missed.">			if (i &lt; 0) {</span>
+<span class="nc" id="L2820">				throw this.unexpectedEndOfData();</span>
+<span class="pc bpc" id="L2821" title="1 of 2 branches missed.">			} else if (i == 10) {</span>
+<span class="nc" id="L2822">				this.parserLineNr += 1;</span>
+<span class="nc" id="L2823">				return '\n';</span>
+			} else {
+<span class="fc" id="L2825">				return (char) i;</span>
+			}
+		}
+	}
+
+	/**
+	 * Scans an XML element.
+	 * 
+	 * @param elt
+	 *            The element that will contain the result.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;The first &amp;lt; has already been read.
+	 *            &lt;li&gt;&lt;code&gt;elt != null&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected void scanElement(XMLElement elt) throws IOException {
+<span class="fc" id="L2848">		boolean isCollectionMode = false;</span>
+<span class="fc" id="L2849">		StringBuffer buf = new StringBuffer();</span>
+<span class="fc" id="L2850">		this.scanIdentifier(buf);</span>
+<span class="fc" id="L2851">		String name = buf.toString();</span>
+<span class="fc" id="L2852">		elt.setName(name);</span>
+<span class="pc bpc" id="L2853" title="1 of 2 branches missed.">		if (XML_NODE_XHTML_CONTENT_TAG.equals(name)) {</span>
+			/*
+			 * special case of html content tag: collect chars until &lt;/...&gt;
+			 * occurs.
+			 */
+<span class="fc" id="L2858">			isCollectionMode = true;</span>
+		}
+<span class="fc" id="L2860">		char ch = this.scanWhitespace();</span>
+
+		// Scan the attributes of opening tag
+
+<span class="pc bpc" id="L2864" title="3 of 4 branches missed.">		while ((ch != '&gt;') &amp;&amp; (ch != '/')) { // Not the end of the tag</span>
+<span class="nc" id="L2865">			buf.setLength(0);</span>
+<span class="nc" id="L2866">			this.unreadChar(ch);</span>
+<span class="nc" id="L2867">			this.scanIdentifier(buf);</span>
+<span class="nc" id="L2868">			String key = buf.toString();</span>
+<span class="nc" id="L2869">			ch = this.scanWhitespace();</span>
+<span class="nc bnc" id="L2870" title="All 2 branches missed.">			if (ch != '=') {</span>
+<span class="nc" id="L2871">				throw this.expectedInput(&quot;=&quot;);</span>
+			}
+<span class="nc" id="L2873">			this.unreadChar(this.scanWhitespace());</span>
+<span class="nc" id="L2874">			buf.setLength(0);</span>
+<span class="nc" id="L2875">			this.scanString(buf);</span>
+<span class="nc" id="L2876">			elt.setAttribute(key, buf);</span>
+<span class="nc" id="L2877">			ch = this.scanWhitespace();</span>
+		}
+<span class="pc bpc" id="L2879" title="1 of 2 branches missed.">		if (ch == '/') { // Case of self ending tag</span>
+<span class="nc" id="L2880">			ch = this.readChar();</span>
+<span class="nc bnc" id="L2881" title="All 2 branches missed.">			if (ch != '&gt;') {</span>
+<span class="nc" id="L2882">				throw this.expectedInput(&quot;&gt;&quot;);</span>
+			}
+<span class="nc" id="L2884">			elt.completeElement();</span>
+<span class="nc" id="L2885">			return;</span>
+		}
+
+		// special collection mode:
+<span class="pc bpc" id="L2889" title="1 of 2 branches missed.">		if (isCollectionMode) {</span>
+<span class="fc" id="L2890">			StringBuffer waitingBuf = new StringBuffer();</span>
+<span class="fc" id="L2891">			int lastOpeningBreak = -1;</span>
+			for (;;) {
+<span class="fc" id="L2893">				ch = this.readChar();</span>
+<span class="fc" id="L2894">				waitingBuf.append(ch);</span>
+<span class="fc bfc" id="L2895" title="All 2 branches covered.">				if (ch == '&lt;') {</span>
+<span class="fc" id="L2896">					lastOpeningBreak = waitingBuf.length() - 1;</span>
+				}
+<span class="pc bpc" id="L2898" title="1 of 4 branches missed.">				if (ch == '&gt;' &amp;&amp; lastOpeningBreak &gt;= 0) {</span>
+<span class="fc" id="L2899">					String content = waitingBuf.toString();</span>
+<span class="fc bfc" id="L2900" title="All 2 branches covered.">					if (sContentEndTagPattern == null) {</span>
+<span class="fc" id="L2901">						sContentEndTagPattern = Pattern</span>
+<span class="fc" id="L2902">								.compile(XML_NODE_XHTML_CONTENT_END_TAG_REGEXP);</span>
+					}
+<span class="fc" id="L2904">					String substring = content.substring(lastOpeningBreak);</span>
+<span class="fc" id="L2905">					Matcher matcher = sContentEndTagPattern.matcher(substring);</span>
+<span class="fc bfc" id="L2906" title="All 2 branches covered.">					if (matcher.matches()) {</span>
+						// end found, remove the end tag:
+<span class="fc" id="L2908">						content = content.substring(0, lastOpeningBreak);</span>
+						// Dimitry: begin
+						// // PCDATA
+						// if (this.ignoreWhitespace) {
+						// elt.setContent(content.trim());
+						// } else {
+						// elt.setContent(content);
+						// }
+						// Dimitry: always remove spaces around the rich content
+						// block because it should be valid xml.
+<span class="fc" id="L2918">						elt.setContent(content.trim());</span>
+						// Dimitry: end
+<span class="fc" id="L2920">						elt.completeElement();</span>
+<span class="fc" id="L2921">						return;</span>
+					}
+				}
+			}
+		}
+
+		// This part is unclear - probing for PCDATA
+
+<span class="nc" id="L2929">		buf.setLength(0);</span>
+<span class="nc" id="L2930">		ch = this.scanWhitespace(buf);</span>
+<span class="nc bnc" id="L2931" title="All 2 branches missed.">		if (ch != '&lt;') { // Either: PCDATA</span>
+<span class="nc" id="L2932">			this.unreadChar(ch);</span>
+<span class="nc" id="L2933">			this.scanPCData(buf);</span>
+<span class="nc" id="L2934">		} else { // Or: Maybe sequence of children tags</span>
+			for (;;) { // This is a loop, after all
+<span class="nc" id="L2936">				ch = this.readChar();</span>
+<span class="nc bnc" id="L2937" title="All 2 branches missed.">				if (ch == '!') {</span>
+<span class="nc bnc" id="L2938" title="All 2 branches missed.">					if (this.checkCDATA(buf)) {</span>
+<span class="nc" id="L2939">						this.scanPCData(buf);</span>
+<span class="nc" id="L2940">						break;</span>
+					} else {
+<span class="nc" id="L2942">						ch = this.scanWhitespace(buf);</span>
+<span class="nc bnc" id="L2943" title="All 2 branches missed.">						if (ch != '&lt;') {</span>
+<span class="nc" id="L2944">							this.unreadChar(ch);</span>
+<span class="nc" id="L2945">							this.scanPCData(buf);</span>
+<span class="nc" id="L2946">							break;</span>
+						}
+					}
+				} else {
+<span class="nc" id="L2950">					buf.setLength(0);</span>
+					break;
+				}
+			}
+		}
+
+<span class="nc bnc" id="L2956" title="All 2 branches missed.">		if (buf.length() == 0) {</span>
+
+			// Not PCDATA, '&lt;' already read
+
+<span class="nc bnc" id="L2960" title="All 2 branches missed.">			while (ch != '/') {</span>
+<span class="nc bnc" id="L2961" title="All 2 branches missed.">				if (ch == '!') { // Comment</span>
+<span class="nc" id="L2962">					ch = this.readChar();</span>
+<span class="nc bnc" id="L2963" title="All 2 branches missed.">					if (ch != '-') {</span>
+<span class="nc" id="L2964">						throw this.expectedInput(&quot;Comment or Element&quot;);</span>
+					}
+<span class="nc" id="L2966">					ch = this.readChar();</span>
+<span class="nc bnc" id="L2967" title="All 2 branches missed.">					if (ch != '-') {</span>
+<span class="nc" id="L2968">						throw this.expectedInput(&quot;Comment or Element&quot;);</span>
+					}
+<span class="nc" id="L2970">					this.skipComment();</span>
+<span class="nc" id="L2971">				} else { // Not Comment</span>
+<span class="nc" id="L2972">					this.unreadChar(ch);</span>
+<span class="nc" id="L2973">					XMLElement child = this.createAnotherElement();</span>
+					// Here goes the recursion.
+<span class="nc" id="L2975">					this.scanElement(child);</span>
+<span class="nc" id="L2976">					elt.addChild(child);</span>
+				}
+<span class="nc" id="L2978">				ch = this.scanWhitespace();</span>
+<span class="nc bnc" id="L2979" title="All 2 branches missed.">				if (ch != '&lt;') {</span>
+<span class="nc" id="L2980">					throw this.expectedInput(&quot;&lt;&quot;);</span>
+				}
+<span class="nc" id="L2982">				ch = this.readChar();</span>
+			}
+<span class="nc" id="L2984">			this.unreadChar(ch);</span>
+<span class="nc" id="L2985">		} else {</span>
+
+			// PCDATA
+
+<span class="nc bnc" id="L2989" title="All 2 branches missed.">			if (this.ignoreWhitespace) {</span>
+<span class="nc" id="L2990">				elt.setContent(buf.toString().trim());</span>
+<span class="nc" id="L2991">			} else {</span>
+<span class="nc" id="L2992">				elt.setContent(buf.toString());</span>
+			}
+		}
+
+		//
+
+<span class="nc" id="L2998">		ch = this.readChar();</span>
+<span class="nc bnc" id="L2999" title="All 2 branches missed.">		if (ch != '/') {</span>
+<span class="nc" id="L3000">			throw this.expectedInput(&quot;/&quot;);</span>
+		}
+<span class="nc" id="L3002">		this.unreadChar(this.scanWhitespace());</span>
+<span class="nc bnc" id="L3003" title="All 2 branches missed.">		if (!this.checkLiteral(name)) {</span>
+<span class="nc" id="L3004">			throw this.expectedInput(name);</span>
+		}
+<span class="nc bnc" id="L3006" title="All 2 branches missed.">		if (this.scanWhitespace() != '&gt;') {</span>
+<span class="nc" id="L3007">			throw this.expectedInput(&quot;&gt;&quot;);</span>
+		}
+<span class="nc" id="L3009">		elt.completeElement();</span>
+<span class="nc" id="L3010">	}</span>
+
+	/**
+	 * Resolves an entity. The name of the entity is read from the reader. The
+	 * value of the entity is appended to &lt;code&gt;buf&lt;/code&gt;.
+	 * 
+	 * @param buf
+	 *            Where to put the entity value.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;The first &amp;amp; has already been read.
+	 *            &lt;li&gt;&lt;code&gt;buf != null&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected void resolveEntity(StringBuffer buf) throws IOException {
+<span class="nc" id="L3031">		char ch = '\0';</span>
+<span class="nc" id="L3032">		StringBuffer keyBuf = new StringBuffer();</span>
+<span class="nc" id="L3033">		for (;;) {</span>
+<span class="nc" id="L3034">			ch = this.readChar();</span>
+<span class="nc bnc" id="L3035" title="All 2 branches missed.">			if (ch == ';') {</span>
+<span class="nc" id="L3036">				break;</span>
+			}
+<span class="nc" id="L3038">			keyBuf.append(ch);</span>
+		}
+<span class="nc" id="L3040">		String key = keyBuf.toString();</span>
+<span class="nc bnc" id="L3041" title="All 2 branches missed.">		if (key.charAt(0) == '#') {</span>
+			try {
+<span class="nc bnc" id="L3043" title="All 2 branches missed.">				if (key.charAt(1) == 'x') {</span>
+<span class="nc" id="L3044">					ch = (char) Integer.parseInt(key.substring(2), 16);</span>
+<span class="nc" id="L3045">				} else {</span>
+<span class="nc" id="L3046">					ch = (char) Integer.parseInt(key.substring(1), 10);</span>
+				}
+<span class="nc" id="L3048">			} catch (NumberFormatException e) {</span>
+<span class="nc" id="L3049">				throw this.unknownEntity(key);</span>
+			}
+<span class="nc" id="L3051">			buf.append(ch);</span>
+<span class="nc" id="L3052">		} else {</span>
+<span class="nc" id="L3053">			char[] value = (char[]) this.entities.get(key);</span>
+<span class="nc bnc" id="L3054" title="All 2 branches missed.">			if (value == null) {</span>
+<span class="nc" id="L3055">				throw this.unknownEntity(key);</span>
+			}
+<span class="nc" id="L3057">			buf.append(value);</span>
+		}
+<span class="nc" id="L3059">	}</span>
+
+	/**
+	 * Pushes a character back to the read-back buffer.
+	 * 
+	 * @param ch
+	 *            The character to push back.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;The read-back buffer is empty.
+	 *            &lt;li&gt;&lt;code&gt;ch != '\0'&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected void unreadChar(char ch) {
+<span class="fc" id="L3079">		this.charReadTooMuch = ch;</span>
+<span class="fc" id="L3080">	}</span>
+
+	/**
+	 * Creates a parse exception for when an invalid valueset is given to a
+	 * method.
+	 * 
+	 * @param name
+	 *            The name of the entity.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected XMLParseException invalidValueSet(String name) {
+<span class="nc" id="L3100">		String msg = &quot;Invalid value set (entity name = \&quot;&quot; + name + &quot;\&quot;)&quot;;</span>
+<span class="nc" id="L3101">		return new XMLParseException(this.getName(), this.parserLineNr, msg);</span>
+	}
+
+	/**
+	 * Creates a parse exception for when an invalid value is given to a method.
+	 * 
+	 * @param name
+	 *            The name of the entity.
+	 * @param value
+	 *            The value of the entity.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;value != null&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected XMLParseException invalidValue(String name, String value) {
+<span class="nc" id="L3124">		String msg = &quot;Attribute \&quot;&quot; + name + &quot;\&quot; does not contain a valid &quot;</span>
+<span class="nc" id="L3125">				+ &quot;value (\&quot;&quot; + value + &quot;\&quot;)&quot;;</span>
+<span class="nc" id="L3126">		return new XMLParseException(this.getName(), this.parserLineNr, msg);</span>
+	}
+
+	/**
+	 * Creates a parse exception for when the end of the data input has been
+	 * reached.
+	 */
+	protected XMLParseException unexpectedEndOfData() {
+<span class="nc" id="L3134">		String msg = &quot;Unexpected end of data reached&quot;;</span>
+<span class="nc" id="L3135">		return new XMLParseException(this.getName(), this.parserLineNr, msg);</span>
+	}
+
+	/**
+	 * Creates a parse exception for when a syntax error occured.
+	 * 
+	 * @param context
+	 *            The context in which the error occured.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;context != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;context.length() &amp;gt; 0&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected XMLParseException syntaxError(String context) {
+<span class="nc" id="L3156">		String msg = &quot;Syntax error while parsing &quot; + context;</span>
+<span class="nc" id="L3157">		return new XMLParseException(this.getName(), this.parserLineNr, msg);</span>
+	}
+
+	/**
+	 * Creates a parse exception for when the next character read is not the
+	 * character that was expected.
+	 * 
+	 * @param charSet
+	 *            The set of characters (in human readable form) that was
+	 *            expected.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;charSet != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;charSet.length() &amp;gt; 0&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected XMLParseException expectedInput(String charSet) {
+<span class="nc" id="L3180">		String msg = &quot;Expected: &quot; + charSet;</span>
+<span class="nc" id="L3181">		return new XMLParseException(this.getName(), this.parserLineNr, msg);</span>
+	}
+
+	/**
+	 * Creates a parse exception for when an entity could not be resolved.
+	 * 
+	 * @param name
+	 *            The name of the entity.
+	 * 
+	 *            &lt;/dl&gt;
+	 *            &lt;dl&gt;
+	 *            &lt;dt&gt;&lt;b&gt;Preconditions:&lt;/b&gt;&lt;/dt&gt;
+	 *            &lt;dd&gt;
+	 *            &lt;ul&gt;
+	 *            &lt;li&gt;&lt;code&gt;name != null&lt;/code&gt;
+	 *            &lt;li&gt;&lt;code&gt;name.length() &amp;gt; 0&lt;/code&gt;
+	 *            &lt;/ul&gt;
+	 *            &lt;/dd&gt;
+	 *            &lt;/dl&gt;
+	 */
+	protected XMLParseException unknownEntity(String name) {
+<span class="nc" id="L3202">		String msg = &quot;Unknown or invalid entity: &amp;&quot; + name + &quot;;&quot;;</span>
+<span class="nc" id="L3203">		return new XMLParseException(this.getName(), this.parserLineNr, msg);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

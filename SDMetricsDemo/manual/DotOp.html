@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Special Operators</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="MathOps.html">Prev</a> - <a href="DefSetExp.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="ExpTerms.html">8.5 Expression Terms</a> > <a href="DefMetExp.html">8.5.2 Metric Expressions</a> > 8.5.2.2 Special Operators
+<hr>
+<h4><a name="DotOp"></a>8.5.2.2 Special Operators</h4>
+
+The following special operators help the navigation between model
+elements.<p>
+
+<b>1. The "dot" operator</b><p>
+
+In an expression term, it is sometimes useful to refer to attribute or
+metric values of related elements. This can be accomplished with the
+dot operator.<p>
+
+For example, to access the name of an operation's owner, we simply
+write "context.name". The left hand side expression "context" refers
+to the owner of the operation, which has to be some model element
+(e.g., a class). For that model element, the right hand side
+expression "name" is evaluated, which yields the value of its
+attribute "name".<p>
+
+In general, evaluating expression <tt>a.b</tt> for a model element
+<i>e</i> works as follows:
+<ul>
+<li>Evaluate metric expression <tt>a</tt> for model element
+<i>e</i>. This yields a second model element, <i>e'</i>.
+<li>Evaluate metric expression <tt>b</tt> for model element
+<i>e'</i>. This is the result of <tt>a.b</tt>.
+<li>If an error occurs during evaluation of expression <tt>a</tt> or
+<tt>b</tt>, or if expression <tt>a</tt> does not yield a model
+element, no error is reported. Instead, an empty string is returned
+as value of <tt>a.b</tt>.
+</ul>
+
+<b>2. The "upto" operator</b><p>
+
+If we want to determine the package in which a class resides, we
+usually access it via its "context" attribute. However, the owner of a
+class need not be a package. For an inner class, for example, the
+"context" attribute yields its containing outer class.<p>
+
+The "upto" operator in the expression "context upto
+(typeof(self)='package')" follows the "context" attribute, across
+several model elements if necessary, until it encounters a model
+element of type package.<p>
+
+In general, evaluation of the expression <tt>a upto b</tt> for a model
+element <i>e</i> works as follows:
+<ol>
+
+<li>Evaluate metric expression <tt>a</tt> for model element
+<i>e</i>. Let <i>e'</i> denote the result of this evaluation.
+
+<li>If <i>e'</i> is not a model element, an empty string is returned
+as value of <tt>a upto b</tt>.
+
+<li>Evaluate condition expression <tt>b</tt> for model element
+<i>e'</i>.
+
+<li>If the result of <tt>b</tt> is true, then <i>e'</i> is returned as
+result of the metric expression <tt>a upto b</tt>.
+
+<li>Otherwise, set <i>e=e'</i> and repeat from step 1.
+</ol>
+
+<b>3. The "topmost" operator</b><p>
+
+Similar to the "upto" operator, the "topmost" operator successively
+evaluates a condition expression for a chain of model
+elements. Whereas the "upto" operator returns the first element that
+fulfills the condition expression, the "topmost" operator returns the
+last element in the chain that fulfills the condition expression.<p>
+
+The "topmost" operator in the expression "context topmost
+(typeof(self)='package')" yields the top-level package that contains
+the element.<p>
+
+In general, evaluation of the expression <tt>a topmost b</tt> for a
+model element <i>e</i> works as follows: 
+
+<ol>
+<li>Set <i>result</i> to be the empty string.
+
+<li>Evaluate metric expression <tt>a</tt> for model element
+<i>e</i>. Let <i>e'</i> denote the result of this evaluation.
+
+<li>If <i>e'</i> is not a model element, return <i>result</i> as value
+of <tt>a upto b</tt>.
+
+<li>Evaluate condition expression <tt>b</tt> for model element
+<i>e'</i>.
+
+<li>If the result of <tt>b</tt> is true, set <i>result=e'</i>.
+
+<li>Set <i>e=e'</i> and repeat from step 2.
+</ol>
+
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="MathOps.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefMetExp.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="DefSetExp.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.5.2.1 "Mathematical Operators and Functions"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.5.3 "Set Expressions"</td></tr></table>
+
+</body>
+</html>

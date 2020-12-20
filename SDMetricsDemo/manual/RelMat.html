@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - The View 'Relation Matrices'</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="CompExport.html">Prev</a> - <a href="GraphStruct.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > 4.10 The View 'Relation Matrices'
+<hr>
+<h2><a name="RelMat"></a>4.10 The View 'Relation Matrices'</h2>
+
+The relation matrices view shows relations between individual design elements.
+For example, the relation matrix in Figure&nbsp;17 shows the
+inheritance relationships from child classes (rows) to parent classes
+(columns).<p>
+
+<img src="images/relmat.png" alt="Relation matrix example"><br>
+<b>Figure 17:&nbsp;Relation matrix</b><p>
+
+The rows of a relationship matrix show the source design elements
+from which the relationship originates, the columns contain the target
+design elements of the relation. The table cells indicate the presence
+or number of relationships between the respective source and target
+design element.<p>
+
+The dropdown list above the table shows the available relation matrices. 
+Select the relation matrix for display from this list.<p>
+
+Relation matrices can become quite large. Use the vertical and
+horizontal scroll bars of the table to see more columns and rows, as
+needed. The left hand column showing the source element names always
+remains visible. To adjust its width, drag the separator bar between
+the two table sides to a suitable position. The column header shows
+the names of the target elements. To increase or decrease the height
+of the column header, use the <img src="images/plus.gif" alt="higher
+button"> and <img src="images/minus.gif" alt="lower button"> buttons
+in the upper right corner of the table. You can adjust the width of
+the table columns with the <img src="images/wider.gif" alt="wider
+button"> and <img src="images/narrow.gif" alt="narrower button">
+buttons.<p>
+
+The "Show full definition" button above the matrix opens the
+measurement catalog with a detailed definition of the currently selected matrix
+(see <a href="MetCat.html">Section&nbsp;4.13 "The View 'Catalog'"</a>).<p>
+
+<a href="LOMatrices.html">Appendix&nbsp;D: "List of Matrices"</a> describes the relation matrices that SDMetrics
+calculates. Note that the relation matrices view will only show relation
+matrices that are not empty. A matrix is empty if
+<ul>
+<li>the model does not contain at least one source design element and one
+target design element (zero rows or columns), or</li>
+<li>there are no relationships from source design elements to target design
+elements (all table cells are empty).</li>
+</ul>  
+
+<p>You can define and display additional relation matrices of
+your own, the procedure is described in <a href="DefRelMat.html">Section&nbsp;8.4 "Definition of Relation Matrices"</a>.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="CompExport.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="MainWind.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="GraphStruct.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.9.5 "Exporting Metric Deltas"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.11 "The View 'Graph Structures'"</td></tr></table>
+
+</body>
+</html>

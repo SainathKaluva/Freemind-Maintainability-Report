@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Package Rules</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Rules_parameter.html">Prev</a> - <a href="Rules_association.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LORules.html">C: List of Design Rules</a> > C.7 Package Rules
+<hr>
+<h2><a name="Rules_package"></a>C.7 Package Rules</h2>
+<a name="Rules_package_Unnamed"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Unnamed</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Package has no name. <ul><li>See rule <a href="Rules_class.html#Rules_class_Unnamed">Unnamed</a> for classes.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_package_Capitalization"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Capitalization</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Naming">Naming</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 3-low</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Package name has upper case letters. A common naming convention is that package names use all lower case letters. <ul><li>Suggested in [<a href="References.html#References_RVR04">RVR04</a>].</ul>
+</td></tr></table><hr><p>
+<a name="Rules_package_Keyword"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Keyword</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Naming">Naming</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: design</td></tr><tr><td colspan="2">Package name is a Java or C++ keyword. <ul><li>See rule <a href="Rules_operation.html#Rules_operation_Keyword">Keyword</a> for operations.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_package_EmptyPackage"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>EmptyPackage</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The package has no contents.<p> Add model elements to the package, or delete it from the design. 
+</td></tr></table><hr><p>
+<a name="Rules_package_DupClsName"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DupClsName</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Naming">Naming</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The package has two or more classes or interfaces with identical names.<p> This will cause problems during code generation. Rename the classes or interfaces so that the names are unique. <ul><li>Value returned: name of the duplicate class/interface.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_package_DepCycle"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DepCycle</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The package has circular dependencies to other packages.<p> Cycles in the package dependency graph should be avoided. The packages participating in the cycle cannot be tested, reused, or released independently. The more packages participate in the cycle, the worse the problem is. Other design guidelines such as the Stable-Dependencies Principle (see rule <a href="Rules_package.html#Rules_package_SDP1">SDP1</a>) are also invariably violated.<p> Revise the design to eliminate the cycle. <ul><li>See also: Dependency Inversion Principle [<a href="References.html#References_Mar03">Mar03</a>]. <li>See <a href="Metrics_package.html#Metrics_package_DepPack">DepPack</a> for what constitutes dependencies between packages. <li>You can view the package dependency graph and its cycles in the  Graph Structures View. <li>Value returned: number of packages in the cycle. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_package_SDP1"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>SDP1</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Package violates the Stable-Dependencies Principle (SDP).<p>  The package depends on another package, <i>P</i> that is less stable than itself (as measured by metric <a href="Metrics_package.html#Metrics_package_I">I</a>). Package <i>P</i> is less stable and therefore more liable to change than this package. A change to <i>P</i> may ripple to this package. This is undesirable because this package is more stable and therefore harder to change.<p>  Therefore, the Stable-Dependencies Principle says that dependencies should run in the direction of stabilities.  <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>]. <li>See <a href="Metrics_package.html#Metrics_package_DepPack">DepPack</a> for what constitutes dependencies between packages. <li>Value returned: name of the depended package that is less stable. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_package_SDP2"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>SDP2</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Package violates the Stable-Dependencies Principle (SDP).<p>  The package depends on another package that is less abstract than itself.<p>  The Stable-Abstractions-Principle (SAP) says that a package should be as abstract (as measured by metric <a href="Metrics_package.html#Metrics_package_A">A</a>) as it is stable (as measured by metric <a href="Metrics_package.html#Metrics_package_I">I</a>). The Stable-Dependencies Principle (SDP) says that dependencies should run in the direction of stabilities.<p>  Therefore, dependencies should run in the direction of abstraction: a package should be more abstract than the packages it depends on.  <ul><li>Suggested in [<a href="References.html#References_Mar03">Mar03</a>]. <li>See <a href="Metrics_package.html#Metrics_package_DepPack">DepPack</a> for what constitutes dependencies between packages. <li>Value returned: name of the depended package that is less abstract. </ul>  
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Rules_parameter.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LORules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Rules_association.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;C.6 "Parameter Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;C.8 "Association Rules"</td></tr></table>
+
+</body>
+</html>

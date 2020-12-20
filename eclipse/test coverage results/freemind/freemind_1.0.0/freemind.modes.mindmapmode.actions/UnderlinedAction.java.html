@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>UnderlinedAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">UnderlinedAction.java</span></div><h1>UnderlinedAction.java</h1><pre class="source lang-java linenums">/*
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2004 Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ * 
+ * See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 
+ * Created on 25.08.2004
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import javax.swing.Action;
+import javax.swing.JMenuItem;
+
+import freemind.controller.MenuItemSelectedListener;
+import freemind.controller.actions.generated.instance.UnderlinedNodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+public class UnderlinedAction extends NodeGeneralAction implements
+		NodeActorXml, MenuItemSelectedListener {
+	private final MindMapController modeController;
+
+	/**
+	 */
+	public UnderlinedAction(MindMapController modeController) {
+<span class="nc" id="L45">		super(modeController, &quot;underlined&quot;, &quot;images/Underline24.gif&quot;);</span>
+<span class="nc" id="L46">		this.modeController = modeController;</span>
+<span class="nc" id="L47">		addActor(this);</span>
+<span class="nc" id="L48">	}</span>
+
+	public void act(XmlAction action) {
+<span class="nc" id="L51">		UnderlinedNodeAction underlinedact = (UnderlinedNodeAction) action;</span>
+<span class="nc" id="L52">		NodeAdapter node = getNodeFromID(underlinedact.getNode());</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (node.isUnderlined() != underlinedact.getUnderlined()) {</span>
+<span class="nc" id="L54">			node.setUnderlined(underlinedact.getUnderlined());</span>
+<span class="nc" id="L55">			this.modeController.nodeChanged(node);</span>
+		}
+<span class="nc" id="L57">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L60">		return UnderlinedNodeAction.class;</span>
+	}
+
+	public ActionPair apply(MindMap model, MindMapNode selected) {
+		// every node is set to the inverse of the focussed node.
+<span class="nc" id="L65">		boolean underlined = modeController.getSelected().isUnderlined();</span>
+<span class="nc" id="L66">		return getActionPair(selected, underlined);</span>
+	}
+
+	private ActionPair getActionPair(MindMapNode selected, boolean underlined) {
+<span class="nc" id="L70">		UnderlinedNodeAction underlinedAction = toggleUnderlined(selected,</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">				!underlined);</span>
+<span class="nc" id="L72">		UnderlinedNodeAction undoUnderlinedAction = toggleUnderlined(selected,</span>
+<span class="nc" id="L73">				underlined);</span>
+<span class="nc" id="L74">		return new ActionPair(underlinedAction, undoUnderlinedAction);</span>
+	}
+
+	private UnderlinedNodeAction toggleUnderlined(MindMapNode selected,
+			boolean underlined) {
+<span class="nc" id="L79">		UnderlinedNodeAction underlinedAction = new UnderlinedNodeAction();</span>
+<span class="nc" id="L80">		underlinedAction.setNode(getNodeID(selected));</span>
+<span class="nc" id="L81">		underlinedAction.setUnderlined(underlined);</span>
+<span class="nc" id="L82">		return underlinedAction;</span>
+	}
+
+	public void setUnderlined(MindMapNode node, boolean underlined) {
+<span class="nc" id="L86">		execute(getActionPair(node, underlined));</span>
+<span class="nc" id="L87">	}</span>
+
+	public boolean isSelected(JMenuItem item, Action action) {
+<span class="nc" id="L90">		return modeController.getSelected().isUnderlined();</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,58 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Controlnode Rules</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Rules_action.html">Prev</a> - <a href="Rules_objectnode.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LORules.html">C: List of Design Rules</a> > C.21 Controlnode Rules
+<hr>
+<h2><a name="Rules_controlnode"></a>C.21 Controlnode Rules</h2>
+<a name="Rules_controlnode_IllegalInitial"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalInitial</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The initial node has incoming edges our outgoing object flows.<p> Check the initial node to make sure it has no incoming edges, and that  all outgoing edges are control flows. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of incoming edges and outgoing object flows. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_IllegalFinal"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalFinal</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Final nodes must not have any outgoing edges. Check the node and remove the outgoing edges. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of outgoing edges of the final node. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_IllegalJoin1"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalJoin1</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Join nodes must have exactly one outgoing edge. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of outgoing edges of the join node. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_IllegalJoin2"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalJoin2</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Outgoing edge of join is the wrong type.<p> If all of the join node's incoming edges are control flows, the outgoing edge must be a control flow. If there is at least one incoming object flow, the outgoing edge must be an object flow. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_IllegalFork1"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalFork1</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Fork nodes must have exactly one incoming edge. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of incoming edges of the fork node. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_MixedEdgeTypes"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>MixedEdgeTypes</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Edges from or to decision, merge, or fork nodes must be of the same type.<p> The incoming and outgoing edges of a decision, merge, or fork node must either be all control flows or all object flows. A mixture of control and object flows attached to one such node is not allowed.  <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_ForkOut"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>ForkOut</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Fork nodes should have two or more outgoing edges. Otherwise, there is no fork. Check the node and add the missing outgoing edges. <ul> <li>Value returned: the number of outgoing edges of the fork node.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_IllegalDecision"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalDecision</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Decision nodes must have exactly one incoming edge. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of incoming edges of the decision node. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_DecisionOut"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DecisionOut</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Decision nodes should have two or more outgoing edges, each with a guard.<p> Otherwise, there is no decision. Check the node and add the missing edges and/or guards. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of outgoing edges of the node, and the number of guards on these edges. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_IllegalMerge"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IllegalMerge</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Merge nodes must have exactly one outgoing edge. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of outgoing edges of the merge node. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_NumIncoming"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NumIncoming</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Merge and join nodes should have two or more incoming edges. Otherwise, there is nothing to merge/join. Check the node and add the missing incoming edges. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the number of incoming edges of the node. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_controlnode_IsolatedNode"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>IsolatedNode</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The control node has neither incoming nor outgoing edges. <ul><li>See rule <a href="Rules_action.html#Rules_action_IsolatedAction">IsolatedAction</a> for actions.</ul>
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Rules_action.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LORules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Rules_objectnode.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;C.20 "Action Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;C.22 "Objectnode Rules"</td></tr></table>
+
+</body>
+</html>

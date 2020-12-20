@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Subelements</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ValueSet.html">Prev</a> - <a href="DefRules.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefSets.html">8.2 Definition of Sets</a> > 8.2.2 Subelements
+<hr>
+<h3><a name="SubElementSet"></a>8.2.2 Subelements</h3>
+
+Similar to the <tt>subelements</tt> procedure for metrics (see
+<a href="SubElements.html">Section&nbsp;8.1.8 "Subelements"</a>), the <tt>subelements</tt> procedure for sets allows
+for a simple way to define a set of all elements that a given model
+element contains.<p>
+
+For example, to define the set of all actors in a model, we simply
+write:
+
+<pre>
+&lt;set name="ActorSet" domain="model"&gt; 
+  &lt;description&gt;The set of actors defined in the model.&lt;/description&gt;
+  &lt;subelements target="actor"/&gt;
+&lt;/set&gt;
+</pre>
+
+The <tt>subelements</tt> procedure for sets takes the following, optional,
+attributes:
+
+<ul>
+
+<li>the filter attributes target, targetcondition, element, eltype,
+condition, and scope (see <a href="SetProjection.html">Section&nbsp;8.2.1 "Projection"</a>),
+
+<li>summation attributes set (see <a href="SetSetExpr.html">Section&nbsp;8.2.1.2 "Attribute "set""</a>), exclude_self (see
+<a href="ExcludeSelf.html">Section&nbsp;8.2.1.3 "Attribute "exclude_self""</a>), and valueset (see <a href="ValueSet.html">Section&nbsp;8.2.1.4 "Attribute "valueset""</a>).
+
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ValueSet.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefSets.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="DefRules.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.2.1.4 "Attribute "valueset""</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.3 "Definition of Design Rules"</td></tr></table>
+
+</body>
+</html>

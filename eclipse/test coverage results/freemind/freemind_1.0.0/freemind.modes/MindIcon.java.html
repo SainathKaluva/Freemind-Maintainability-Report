@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindIcon.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">MindIcon.java</span></div><h1>MindIcon.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+
+package freemind.modes;
+
+import java.io.File;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.KeyStroke;
+
+import freemind.main.Resources;
+import freemind.main.Tools;
+
+/**
+ * This class represents a MindIcon than can be applied to a node or a whole
+ * branch.
+ */
+public class MindIcon implements Comparable, IconInformation {
+	public static final String PROPERTY_STRING_ICONS_LIST = &quot;icons.list&quot;;
+	private String name;
+	private String description;
+<span class="nc" id="L45">	private int number = UNKNOWN;</span>
+	/**
+	 * Stores the once created ImageIcon.
+	 */
+	private ImageIcon associatedIcon;
+	private static Vector mAllIconNames;
+	private static ImageIcon iconNotFound;
+	/**
+	 * Set of all created icons. Name -&gt; MindIcon
+	 */
+<span class="nc" id="L55">	private static HashMap createdIcons = new HashMap();</span>
+	private static final int UNKNOWN = -1;
+	public static final int LAST = UNKNOWN;
+<span class="nc" id="L58">	static int nextNumber = UNKNOWN - 1;</span>
+<span class="nc" id="L59">	private JComponent component = null;</span>
+
+<span class="nc" id="L61">	private MindIcon(String name) {</span>
+<span class="nc" id="L62">		setName(name);</span>
+<span class="nc" id="L63">		associatedIcon = null;</span>
+<span class="nc" id="L64">	}</span>
+
+	/**
+     */
+<span class="nc" id="L68">	private MindIcon(String name, ImageIcon icon) {</span>
+<span class="nc" id="L69">		setName(name);</span>
+<span class="nc" id="L70">		associatedIcon = icon;</span>
+<span class="nc" id="L71">	}</span>
+
+	public String toString() {
+<span class="nc" id="L74">		return &quot;Icon_name: &quot; + name;</span>
+	}
+
+	/**
+	 * Get the value of name.
+	 * 
+	 * @return Value of name.
+	 */
+	public String getName() {
+		// DanPolansky: it's essential that we do not return null
+		// for saving of the map.
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		return name == null ? &quot;notfound&quot; : name;</span>
+	}
+
+	/**
+	 * Set the value of name.
+	 * 
+	 * @param name
+	 *            Value to assign to name.
+	 */
+	public void setName(String name) {
+
+<span class="nc" id="L96">		this.name = name;</span>
+<span class="nc" id="L97">		return;</span>
+
+		/* here, we must check, whether the name is allowed. */
+
+		// DanPolansky: I suggest to avoid any checking. If the icon with the
+		// name
+		// does not exist, let's keep the name and save it again anyway. Let us
+		// imagine the set of icons expanding and changing in the future.
+
+		// Vector allIconNames = getAllIconNames();
+		// for(int i = 0; i &lt; allIconNames.size(); ++i) {
+		// if(((String) allIconNames.get(i)).equals(v)) {
+		// //System.out.println(&quot;Icon name: &quot; + v);
+		// this.name = v;
+		// return;
+		// }
+		// }
+		// throw new IllegalArgumentException(&quot;'&quot;+v+&quot;' is not a known icon.&quot;);
+		// DanPolansky: we want to parse the file though. Not existent icon is
+		// not
+		// that a big tragedy.
+	}
+
+	public String getDescription() {
+<span class="nc" id="L121">		String resource = new String(&quot;icon_&quot; + getName());</span>
+<span class="nc" id="L122">		return Resources.getInstance().getResourceString(resource, resource);</span>
+	}
+
+	public String getIconFileName() {
+<span class="nc" id="L126">		return getIconsPath() + getIconBaseFileName();</span>
+	}
+
+	public String getIconBaseFileName() {
+<span class="nc" id="L130">		return getName() + &quot;.png&quot;;</span>
+	}
+
+	public static String getIconsPath() {
+<span class="nc" id="L134">		return &quot;images/icons/&quot;;</span>
+	}
+
+	public ImageIcon getIcon() {
+		// We need the frame to be able to obtain the resource URL of the icon.
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (iconNotFound == null) {</span>
+<span class="nc" id="L140">			iconNotFound = new ImageIcon(Resources.getInstance().getResource(</span>
+<span class="nc" id="L141">					&quot;images/IconNotFound.png&quot;));</span>
+		}
+
+<span class="nc bnc" id="L144" title="All 2 branches missed.">		if (associatedIcon != null)</span>
+<span class="nc" id="L145">			return associatedIcon;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">		if (name != null) {</span>
+<span class="nc" id="L147">			URL imageURL = Resources.getInstance().getResource(</span>
+<span class="nc" id="L148">					getIconFileName());</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if (imageURL == null) { // As standard icon not found, try user's</span>
+				try {
+<span class="nc" id="L151">					final File file = new File(Resources.getInstance()</span>
+<span class="nc" id="L152">							.getFreemindDirectory(), &quot;icons/&quot; + getName()</span>
+<span class="nc" id="L153">							+ &quot;.png&quot;);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">					if (file.canRead()) {</span>
+<span class="nc" id="L155">						imageURL = Tools.fileToUrl(file);</span>
+					}
+<span class="nc" id="L157">				} catch (Exception e) {</span>
+				}
+			}
+<span class="nc bnc" id="L160" title="All 2 branches missed.">			ImageIcon icon = imageURL == null ? iconNotFound : new ImageIcon(</span>
+<span class="nc" id="L161">					imageURL);</span>
+<span class="nc" id="L162">			setIcon(icon);</span>
+<span class="nc" id="L163">			return icon;</span>
+		} else {
+<span class="nc" id="L165">			setIcon(iconNotFound);</span>
+<span class="nc" id="L166">			return iconNotFound;</span>
+		}
+	}
+
+	/**
+	 * Set the value of icon.
+	 * 
+	 * @param _associatedIcon
+	 *            Value to assign to icon.
+	 */
+	protected void setIcon(ImageIcon _associatedIcon) {
+<span class="nc" id="L177">		this.associatedIcon = _associatedIcon;</span>
+<span class="nc" id="L178">	}</span>
+
+	public static Vector getAllIconNames() {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">		if (mAllIconNames != null)</span>
+<span class="nc" id="L182">			return mAllIconNames;</span>
+<span class="nc" id="L183">		Vector mAllIconNames = new Vector();</span>
+<span class="nc" id="L184">		String icons = Resources.getInstance().getProperty(</span>
+<span class="nc" id="L185">				PROPERTY_STRING_ICONS_LIST);</span>
+<span class="nc" id="L186">		StringTokenizer tokenizer = new StringTokenizer(icons, &quot;;&quot;);</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">		while (tokenizer.hasMoreTokens()) {</span>
+<span class="nc" id="L188">			mAllIconNames.add(tokenizer.nextToken());</span>
+		}
+<span class="nc" id="L190">		return mAllIconNames;</span>
+	}
+
+	public static MindIcon factory(String iconName) {
+<span class="nc bnc" id="L194" title="All 2 branches missed.">		if (createdIcons.containsKey(iconName)) {</span>
+<span class="nc" id="L195">			return (MindIcon) createdIcons.get(iconName);</span>
+		}
+<span class="nc" id="L197">		MindIcon icon = new MindIcon(iconName);</span>
+<span class="nc" id="L198">		createdIcons.put(iconName, icon);</span>
+<span class="nc" id="L199">		return icon;</span>
+	}
+
+	/**
+     */
+	public static MindIcon factory(String iconName, ImageIcon icon) {
+<span class="nc bnc" id="L205" title="All 2 branches missed.">		if (createdIcons.containsKey(iconName)) {</span>
+<span class="nc" id="L206">			return (MindIcon) createdIcons.get(iconName);</span>
+		}
+<span class="nc" id="L208">		MindIcon mindIcon = new MindIcon(iconName, icon);</span>
+<span class="nc" id="L209">		getAllIconNames().add(iconName);</span>
+<span class="nc" id="L210">		createdIcons.put(iconName, mindIcon);</span>
+<span class="nc" id="L211">		return mindIcon;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 */
+	public int compareTo(Object o) {
+<span class="nc bnc" id="L220" title="All 2 branches missed.">		if (o instanceof MindIcon) {</span>
+<span class="nc" id="L221">			MindIcon icon = (MindIcon) o;</span>
+<span class="nc" id="L222">			int i1 = getNumber();</span>
+<span class="nc" id="L223">			int i2 = icon.getNumber();</span>
+<span class="nc bnc" id="L224" title="All 4 branches missed.">			return i1 &lt; i2 ? -1 : i1 == i2 ? 0 : +1;</span>
+		}
+<span class="nc" id="L226">		throw new ClassCastException();</span>
+	}
+
+	private int getNumber() {
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (number == UNKNOWN) {</span>
+<span class="nc" id="L231">			number = getAllIconNames().indexOf(name);</span>
+		}
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		if (number == UNKNOWN) {</span>
+<span class="nc" id="L234">			number = nextNumber--;</span>
+		}
+<span class="nc" id="L236">		return number;</span>
+	}
+
+	/**
+     */
+	public JComponent getRendererComponent() {
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		if (component == null) {</span>
+<span class="nc" id="L243">			component = new JLabel(getIcon());</span>
+		}
+<span class="nc" id="L245">		return component;</span>
+	}
+
+	public String getKeystrokeResourceName() {
+<span class="nc" id="L249">		return &quot;keystroke_icon_&quot; + name;</span>
+	}
+
+	public KeyStroke getKeyStroke() {
+<span class="nc" id="L253">		return null;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

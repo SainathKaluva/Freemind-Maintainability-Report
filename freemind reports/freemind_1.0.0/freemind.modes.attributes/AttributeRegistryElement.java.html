@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributeRegistryElement.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.attributes</a> &gt; <span class="el_source">AttributeRegistryElement.java</span></div><h1>AttributeRegistryElement.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 18.06.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.modes.attributes;
+
+import freemind.controller.filter.util.SortedComboBoxModel;
+import freemind.main.XMLElement;
+import freemind.modes.XMLElementAdapter;
+
+/**
+ * @author Dimitri Polivaev 18.06.2005
+ */
+public class AttributeRegistryElement {
+<span class="nc" id="L34">	private class RegisteredAttributeValues extends SortedComboBoxModel {</span>
+
+		public AttributeRegistry getRegistry() {
+<span class="nc" id="L37">			return registry;</span>
+		}
+
+		public String getKey() {
+<span class="nc" id="L41">			return key;</span>
+		}
+
+		public void add(Object element) {
+<span class="nc" id="L45">			registry.getAttributeController().performRegistryAttributeValue(</span>
+<span class="nc" id="L46">					getKey(), element.toString());</span>
+<span class="nc" id="L47">		}</span>
+
+		public void _add(Object element) {
+<span class="nc" id="L50">			super.add(element);</span>
+<span class="nc" id="L51">		}</span>
+
+		public void remove(Object element) {
+<span class="nc" id="L54">			registry.getAttributeController().performRemoveAttributeValue(</span>
+<span class="nc" id="L55">					getKey(), element.toString());</span>
+
+<span class="nc" id="L57">		}</span>
+
+		public void _remove(Object element) {
+<span class="nc" id="L60">			super.remove(element);</span>
+<span class="nc" id="L61">		}</span>
+
+		public void replace(Object oldO, Object newO) {
+<span class="nc" id="L64">			registry.getAttributeController().performReplaceAttributeValue(</span>
+<span class="nc" id="L65">					getKey(), oldO.toString(), newO.toString());</span>
+<span class="nc" id="L66">		}</span>
+
+		public void _replace(Object oldO, Object newO) {
+<span class="nc" id="L69">			super.replace(oldO, newO);</span>
+<span class="nc" id="L70">		}</span>
+	}
+
+	private String key;
+	private RegisteredAttributeValues values;
+	private AttributeRegistry registry;
+	private boolean isVisible;
+	private boolean isRestricted;
+	private Boolean visibilityModel;
+	private Boolean restrictionModel;
+
+	public AttributeRegistryElement(AttributeRegistry registry, String key) {
+<span class="nc" id="L82">		super();</span>
+<span class="nc" id="L83">		this.key = key;</span>
+<span class="nc" id="L84">		this.registry = registry;</span>
+<span class="nc" id="L85">		values = new RegisteredAttributeValues();</span>
+<span class="nc" id="L86">		isVisible = false;</span>
+<span class="nc" id="L87">		visibilityModel = new Boolean(isVisible);</span>
+<span class="nc" id="L88">		isRestricted = false;</span>
+<span class="nc" id="L89">		restrictionModel = new Boolean(isRestricted);</span>
+<span class="nc" id="L90">	}</span>
+
+	public boolean isVisible() {
+<span class="nc" id="L93">		return isVisible;</span>
+	}
+
+	public SortedComboBoxModel getValues() {
+<span class="nc" id="L97">		return values;</span>
+	}
+
+	public void addValue(String s) {
+<span class="nc" id="L101">		values._add(s);</span>
+<span class="nc" id="L102">		registry.fireAttributesChanged();</span>
+<span class="nc" id="L103">	}</span>
+
+	public void removeAllValues() {
+<span class="nc" id="L106">		values.clear();</span>
+<span class="nc" id="L107">		registry.fireAttributesChanged();</span>
+<span class="nc" id="L108">	}</span>
+
+	public void removeValue(String s) {
+<span class="nc" id="L111">		values._remove(s);</span>
+<span class="nc" id="L112">		registry.fireAttributesChanged();</span>
+<span class="nc" id="L113">	}</span>
+
+	public boolean isRestricted() {
+<span class="nc" id="L116">		return isRestricted;</span>
+	}
+
+	public Comparable getKey() {
+<span class="nc" id="L120">		return key;</span>
+	}
+
+	public void setKey(String key) {
+<span class="nc" id="L124">		this.key = key;</span>
+<span class="nc" id="L125">	}</span>
+
+	/**
+     */
+	public XMLElement save() {
+<span class="nc" id="L130">		XMLElement element = new XMLElement();</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (isVisible()) {</span>
+<span class="nc" id="L132">			element.setAttribute(&quot;VISIBLE&quot;, &quot;true&quot;);</span>
+		}
+<span class="nc bnc" id="L134" title="All 2 branches missed.">		if (isRestricted()) {</span>
+<span class="nc" id="L135">			element.setAttribute(&quot;RESTRICTED&quot;, &quot;true&quot;);</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">			for (int i = 0; i &lt; values.getSize(); i++) {</span>
+<span class="nc" id="L137">				XMLElement value = new XMLElement();</span>
+<span class="nc" id="L138">				value.setName(XMLElementAdapter.XML_NODE_REGISTERED_ATTRIBUTE_VALUE);</span>
+<span class="nc" id="L139">				value.setAttribute(&quot;VALUE&quot;, values.getElementAt(i).toString());</span>
+<span class="nc" id="L140">				element.addChild(value);</span>
+			}
+		}
+<span class="nc" id="L143">		element.setName(XMLElementAdapter.XML_NODE_REGISTERED_ATTRIBUTE_NAME);</span>
+<span class="nc" id="L144">		element.setAttribute(&quot;NAME&quot;, key.toString());</span>
+<span class="nc" id="L145">		return element;</span>
+	}
+
+	public void setVisibility(boolean isVisible) {
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (this.isVisible != isVisible) {</span>
+<span class="nc" id="L150">			this.isVisible = isVisible;</span>
+<span class="nc" id="L151">			visibilityModel = Boolean.valueOf(isVisible);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (isVisible)</span>
+<span class="nc" id="L153">				registry.incrementVisibleElementsNumber();</span>
+			else
+<span class="nc" id="L155">				registry.decrementVisibleElementsNumber();</span>
+<span class="nc" id="L156">			registry.fireAttributeLayoutChanged();</span>
+		}
+<span class="nc" id="L158">	}</span>
+
+	public void setRestriction(boolean isRestricted) {
+<span class="nc" id="L161">		this.isRestricted = isRestricted;</span>
+<span class="nc" id="L162">		restrictionModel = Boolean.valueOf(isRestricted);</span>
+<span class="nc" id="L163">		registry.fireAttributesChanged();</span>
+<span class="nc" id="L164">	}</span>
+
+	Boolean getRestriction() {
+<span class="nc" id="L167">		return restrictionModel;</span>
+	}
+
+	void setRestrictionModel(Boolean restrictionModel) {
+<span class="nc" id="L171">		this.restrictionModel = restrictionModel;</span>
+<span class="nc" id="L172">	}</span>
+
+	Boolean getVisibilityModel() {
+<span class="nc" id="L175">		return visibilityModel;</span>
+	}
+
+	void setVisibilityModel(Boolean visibilityModel) {
+<span class="nc" id="L179">		this.visibilityModel = visibilityModel;</span>
+<span class="nc" id="L180">	}</span>
+
+	public void replaceValue(String oldValue, String newValue) {
+<span class="nc" id="L183">		values._replace(oldValue, newValue);</span>
+<span class="nc" id="L184">		registry.fireAttributesChanged();</span>
+<span class="nc" id="L185">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

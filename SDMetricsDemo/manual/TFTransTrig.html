@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - XMI Transformations and Triggers</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="TFFormat.html">Prev</a> - <a href="TrigAttrval.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetaTrans.html">7 SDMetrics Metamodel and XMI Transformation Files</a> > <a href="TransFile.html">7.2 XMI Transformation Files</a> > 7.2.2 XMI Transformations and Triggers
+<hr>
+<h3><a name="TFTransTrig"></a>7.2.2 XMI Transformations and Triggers</h3>
+
+To illustrate how to define XMI transformations and triggers, we
+consider again the example of "operation" metamodel elements in
+<a href="MetaModel.html">Section&nbsp;7.1 "SDMetrics Metamodel"</a>. An operation model element has four attributes: an
+<tt>id</tt>, a <tt>name</tt>, a <tt>context</tt> (operation owner),
+and a <tt>visibility</tt>.<p>
+
+Below is the representation of an operation as expressed in an XMI 1.0
+file. The places that contain information we are interested in are set
+in boldface:
+
+<pre>
+&lt;<b>Foundation.Core.Operation xmi.id="xmi.1632"</b>&gt;  
+                          &lt;!-- 1. operation id  --&gt;
+  &lt;<b>Foundation.Core.ModelElement.name</b>&gt;<b>printStackTrace</b>
+                                     &lt;!-- 2. operation name  --&gt;
+  &lt;/Foundation.Core.ModelElement.name&gt;
+  &lt;<b>Foundation.Core.ModelElement.visibility xmi.value="public"</b>/&gt;
+                                     &lt;!-- 3. operation visibility  --&gt;
+  &lt;Foundation.Core.ModelElement.isSpecification xmi.value="false"/&gt;
+  &lt;Foundation.Core.Feature.ownerScope xmi.value="instance"/&gt;
+  &lt;Foundation.Core.BehavioralFeature.isQuery xmi.value="false"/&gt;
+  &lt;Foundation.Core.Operation.isAbstract xmi.value="false"/&gt;
+  &lt;<b>Foundation.Core.Feature.owner</b>&gt;
+    &lt;Foundation.Core.Classifier <b>xmi.idref="xmi.1605"</b>/&gt;
+                            &lt;!-- 4. operation context  --&gt;
+  &lt;/Foundation.Core.Feature.owner&gt;
+  ...
+&lt;/Foundation.Core.Operation&gt;
+</pre>
+
+The following XMI transformation describes how the required information
+is retrieved from an XMI 1.0 document:<p>
+
+<pre>
+&lt;xmitransformation modelelement=&quot;operation&quot;
+                   xmipattern=&quot;Foundation.Core.Operation&quot; recurse=&quot;true&quot;&gt;
+  &lt;trigger name=&quot;id&quot; type=&quot;attrval&quot; attr=&quot;xmi.id&quot; /&gt;
+  &lt;trigger name=&quot;name&quot; type=&quot;ctext&quot; src=&quot;Foundation.Core.ModelElement.name&quot; /&gt;
+  &lt;trigger name=&quot;visibility&quot; type=&quot;cattrval&quot;
+           src=&quot;Foundation.Core.ModelElement.visibility&quot; attr=&quot;xmi.value&quot;/&gt;
+  &lt;trigger name=&quot;context&quot; type=&quot;gcattrval&quot;
+           src=&quot;Foundation.Core.Feature.owner&quot; attr=&quot;xmi.idref&quot;/&gt;
+&lt;/xmitransformation&gt;
+</pre>
+
+The XMI transformation is enclosed within the
+<tt>xmitransformation</tt> tags. The opening tag takes the following attributes:
+<ul>
+<li>attribute <tt>modelelement</tt> (required): the SDMetrics
+metamodel element for which this transformation is defined. In our
+case, it's the operation.
+
+<li>attribute <tt>xmipattern</tt> (required): the XMI element that
+represents our UML element. In XMI 1.0, operations are
+specified with the XMI element &quot;Foundation.Core.Operation&quot;
+
+<li>attribute <tt>recurse</tt> (optional): is set to true if the
+model element can serve as context for subelements. In our case,
+operations can have parameters as subelements, so we set the attribute
+to true (the XMI transformation for parameters is taken care of in a
+separate XMI transformation).
+
+<li>attribute <tt>condition</tt> (optional): specify a condition for
+the attributes of the XMI element that must be fulfilled for this XMI
+transformation to become effective. Conditional XMI transformations
+will be discussed in <a href="CondXMITrans.html">Section&nbsp;7.2.3.6 "Conditional XMI Transformations"</a>.
+
+</ul>
+
+Each trigger in our transformation describes how to retrieve the
+information for one SDMetrics metamodel attribute. Each trigger has
+two required attributes:
+
+<ul>
+
+<li>attribute <tt>type</tt>: indicates how the trigger retrieves
+information from the XMI file. The <tt>type</tt> can be one of the
+following: attrval, ctext, cattrval, gcattrval, constant, ignore,
+and xmi2assoc.
+<li>attribute <tt>name</tt>: the name of the SDMetrics metamodel
+attribute to which this trigger pertains. In the above example, each
+trigger refers to exactly one attribute of the operation metamodel
+element: id, name, visibility, context.
+
+</ul>
+
+The meaning of the remaining attributes is dependent on the trigger
+type. We describe each trigger type in following.
+
+<hr>
+<a href="TrigAttrval.html">7.2.2.1&nbsp;Trigger Type "attrval"</a><br>
+<a href="TrigCtext.html">7.2.2.2&nbsp;Trigger Type "ctext"</a><br>
+<a href="TrigCattrval.html">7.2.2.3&nbsp;Trigger Type "cattrval"</a><br>
+<a href="TrigGcattrval.html">7.2.2.4&nbsp;Trigger Type "gcattrval"</a><br>
+<a href="TrigConstant.html">7.2.2.5&nbsp;Trigger Type "constant"</a><br>
+<a href="TrigIgnore.html">7.2.2.6&nbsp;Trigger Type "ignore"</a><br>
+<a href="TrigXmi2assoc.html">7.2.2.7&nbsp;Trigger Type "xmi2assoc"</a><br>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="TFFormat.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="TransFile.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="TrigAttrval.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;7.2.1 "XMI Transformation File Format"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;7.2.2.1 "Trigger Type "attrval""</td></tr></table>
+
+</body>
+</html>

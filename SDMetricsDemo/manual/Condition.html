@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Filter Attributes "condition" and "targetcondition"</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Element.html">Prev</a> - <a href="Scope.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > <a href="Projection.html">8.1.1 Projection</a> > 8.1.1.5 Filter Attributes "condition" and "targetcondition"
+<hr>
+<h4><a name="Condition"></a>8.1.1.5 Filter Attributes "condition" and "targetcondition"</h4>
+
+Besides filtering elements of a certain type, you can filter for
+elements that satisfy a certain condition. Assume we have defined a
+multi-valued attribute 'ownedoperations' for classes, which contains
+the operations of the class.
+
+<pre>
+&lt;metric name="NumPublicOps" domain="class"&gt; 
+  &lt;description&gt;The number of public operations in the class.&lt;/description&gt;
+  &lt;projection relset="ownedoperations" condition="visibility='public'" /&gt;
+&lt;/metric&gt;
+</pre>
+
+The condition expression "visibility='public'" is evaluated for each
+element in the set, only operations that fulfill this condition are
+counted.  The admissible operations for condition expressions are
+described in <a href="DefCondExp.html">Section&nbsp;8.5.4 "Condition Expressions"</a>.<p>
+
+If you combine the "condition" attribute with the "element" and
+"eltype" attributes, the expression will be evaluated for the model
+elements returned by those attributes, e.g.,
+
+<pre>
+&lt;metric name="AbstractDep" domain="package"&gt; 
+  &lt;description&gt;
+     The number of abstract classes the class depends on.
+  &lt;/description&gt;
+  &lt;projection relation="depclient" target="dependency" element="depsupplier" 
+    eltype="class" condition="abstract='true'"/&gt;
+&lt;/metric&gt;
+</pre>
+
+With attribute "targetcondition" you can specify a condition that is
+always evaluated for the element returned by the "target" attribute,
+even if the "element" and "eltype" attributes are used. The following
+example assumes that "stereotypename" is an attribute or metric that
+yields the name of the stereotype of a model element:
+
+<pre>
+&lt;metric name="Realize" domain="package"&gt; 
+  &lt;description&gt;The number of classes the class realizes.&lt;/description&gt;
+  &lt;projection relation="depclient" target="dependency" 
+    targetcondition="stereotypename='realize'" element="depsupplier" 
+	eltype="class" /&gt;
+&lt;/metric&gt;
+</pre>
+
+This metric only counts dependencies with stereotype
+&lt;&lt;realize&gt;&gt; that have a class as supplier.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Element.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Projection.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Scope.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.1.4 "Filter Attributes "element" and "eltype""</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.1.1.6 "Filter Attribute "scope""</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - XMI Transformation File Format</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="TransFile.html">Prev</a> - <a href="TFTransTrig.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetaTrans.html">7 SDMetrics Metamodel and XMI Transformation Files</a> > <a href="TransFile.html">7.2 XMI Transformation Files</a> > 7.2.1 XMI Transformation File Format
+<hr>
+<h3><a name="TFFormat"></a>7.2.1 XMI Transformation File Format</h3>
+
+An XMI transformation file is an XML file of the following format (see
+<a href="ProjFileFormats.html">Appendix&nbsp;E: "Project File Format Definitions"</a> for a formal definition):
+
+<pre>
+&lt;xmitransformations version="2.0" &gt;
+  &lt;xmitransformation ...xmitransformation attributes... /&gt;
+    &lt;trigger ...trigger attributes... /&gt;
+    &lt;trigger ...trigger attributes... /&gt;
+    ...
+  &lt;/xmitransformation&gt;
+  &lt;xmitransformation ...xmitransformation attributes... /&gt;
+   &lt;trigger ...trigger attributes... /&gt;
+   ...
+  &lt;/xmitransformation&gt;
+  ...
+&lt;/xmitransformations&gt;
+</pre>
+
+The transformation file defines a list of <tt>xmitransformation</tt> elements,
+each of which has a list of triggers. Each <tt>xmitransformation</tt> element
+provides XMI information for one SDMetrics metamodel element, each
+trigger provides XMI information for one attribute of the metamodel
+element.<p>
+
+The root element <tt>xmitransformations</tt> encloses the list of XMI
+transformations. The "version" attribute (required) indicates the
+version number of the oldest version of SDMetrics with which the XMI
+transformation file can be used.<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="TransFile.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="TransFile.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="TFTransTrig.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;7.2 "XMI Transformation Files"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;7.2.2 "XMI Transformations and Triggers"</td></tr></table>
+
+</body>
+</html>

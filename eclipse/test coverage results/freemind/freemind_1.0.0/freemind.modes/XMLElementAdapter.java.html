@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>XMLElementAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">XMLElementAdapter.java</span></div><h1>XMLElementAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+package freemind.modes;
+
+import java.awt.Font;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Vector;
+
+import freemind.extensions.PermanentNodeHook;
+import freemind.extensions.PermanentNodeHookSubstituteUnknown;
+import freemind.main.FreeMindMain;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.attributes.Attribute;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.modes.attributes.AttributeTableLayoutModel;
+
+public abstract class XMLElementAdapter extends XMLElement {
+
+	// Logging:
+	protected static java.util.logging.Logger logger;
+
+<span class="nc" id="L41">	private Object userObject = null;</span>
+	protected FreeMindMain frame;
+<span class="nc" id="L43">	private NodeAdapter mapChild = null;</span>
+<span class="nc" id="L44">	private HashMap nodeAttributes = new HashMap();</span>
+
+	// Font attributes
+
+	private String fontName;
+<span class="nc" id="L49">	private int fontStyle = 0;</span>
+<span class="nc" id="L50">	private int fontSize = 0;</span>
+
+	// Icon attributes
+
+	private String iconName;
+
+	// arrow link attributes:
+	protected Vector mArrowLinkAdapters;
+	protected HashMap /* id -&gt; target */mIdToTarget;
+	public static final String XML_NODE_TEXT = &quot;TEXT&quot;;
+	public static final String XML_NODE = &quot;node&quot;;
+	public static final String XML_NODE_ATTRIBUTE = &quot;attribute&quot;;
+	public static final String XML_NODE_ATTRIBUTE_LAYOUT = &quot;attribute_layout&quot;;
+	public static final String XML_NODE_ATTRIBUTE_REGISTRY = &quot;attribute_registry&quot;;
+	public static final String XML_NODE_REGISTERED_ATTRIBUTE_NAME = &quot;attribute_name&quot;;
+	public static final String XML_NODE_REGISTERED_ATTRIBUTE_VALUE = &quot;attribute_value&quot;;
+	// public static final String XML_NODE_CLASS_PREFIX = XML_NODE+&quot;_&quot;;
+	public static final String XML_NODE_CLASS = &quot;AA_NODE_CLASS&quot;;
+	public static final String XML_NODE_ADDITIONAL_INFO = &quot;ADDITIONAL_INFO&quot;;
+	public static final String XML_NODE_ENCRYPTED_CONTENT = &quot;ENCRYPTED_CONTENT&quot;;
+	public static final String XML_NODE_HISTORY_CREATED_AT = &quot;CREATED&quot;;
+	public static final String XML_NODE_HISTORY_LAST_MODIFIED_AT = &quot;MODIFIED&quot;;
+
+	public static final String XML_NODE_XHTML_TYPE_TAG = &quot;TYPE&quot;;
+	public static final String XML_NODE_XHTML_TYPE_NODE = &quot;NODE&quot;;
+	public static final String XML_NODE_XHTML_TYPE_NOTE = &quot;NOTE&quot;;
+
+	private String attributeName;
+
+	private String attributeValue;
+
+<span class="nc" id="L81">	private int attributeNameWidth = AttributeTableLayoutModel.DEFAULT_COLUMN_WIDTH;</span>
+
+<span class="nc" id="L83">	private int attributeValueWidth = AttributeTableLayoutModel.DEFAULT_COLUMN_WIDTH;</span>
+
+	protected final ModeController mModeController;
+
+	// Overhead methods
+
+	public XMLElementAdapter(ModeController modeController) {
+<span class="nc" id="L90">		this(modeController, new Vector(), new HashMap());</span>
+<span class="nc" id="L91">	}</span>
+
+<span class="nc" id="L93">	protected XMLElementAdapter(ModeController modeController,</span>
+			Vector arrowLinkAdapters, HashMap IDToTarget) {
+<span class="nc" id="L95">		this.mModeController = modeController;</span>
+<span class="nc" id="L96">		this.frame = modeController.getFrame();</span>
+<span class="nc" id="L97">		this.mArrowLinkAdapters = arrowLinkAdapters;</span>
+<span class="nc" id="L98">		this.mIdToTarget = IDToTarget;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L100">			logger = frame.getLogger(this.getClass().getName());</span>
+		}
+<span class="nc" id="L102">	}</span>
+
+	/** abstract method to create elements of my type (factory). */
+	abstract protected XMLElement createAnotherElement();
+
+	abstract protected NodeAdapter createNodeAdapter(FreeMindMain frame,
+			String nodeClass);
+
+	abstract protected EdgeAdapter createEdgeAdapter(NodeAdapter node,
+			FreeMindMain frame);
+
+	abstract protected CloudAdapter createCloudAdapter(NodeAdapter node,
+			FreeMindMain frame);
+
+	abstract protected ArrowLinkAdapter createArrowLinkAdapter(
+			NodeAdapter source, NodeAdapter target, FreeMindMain frame);
+
+	abstract protected ArrowLinkTarget createArrowLinkTarget(
+			NodeAdapter source, NodeAdapter target, FreeMindMain frame);
+
+	abstract protected NodeAdapter createEncryptedNode(String additionalInfo);
+
+	protected FreeMindMain getFrame() {
+<span class="nc" id="L125">		return frame;</span>
+	}
+
+	public Object getUserObject() {
+<span class="nc" id="L129">		return userObject;</span>
+	}
+
+	protected void setUserObject(Object obj) {
+<span class="nc" id="L133">		userObject = obj;</span>
+<span class="nc" id="L134">	}</span>
+
+	public NodeAdapter getMapChild() {
+<span class="nc" id="L137">		return mapChild;</span>
+	}
+
+	// Real parsing methods
+
+	public void setName(String name) {
+<span class="nc" id="L143">		super.setName(name);</span>
+		// Create user object based on name
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (name.equals(XML_NODE)) {</span>
+<span class="nc" id="L146">			userObject = createNodeAdapter(frame, null);</span>
+<span class="nc" id="L147">			nodeAttributes.clear();</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">		} else if (name.equals(&quot;edge&quot;)) {</span>
+<span class="nc" id="L149">			userObject = createEdgeAdapter(null, frame);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		} else if (name.equals(&quot;cloud&quot;)) {</span>
+<span class="nc" id="L151">			userObject = createCloudAdapter(null, frame);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">		} else if (name.equals(&quot;arrowlink&quot;)) {</span>
+<span class="nc" id="L153">			userObject = createArrowLinkAdapter(null, null, frame);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		} else if (name.equals(&quot;linktarget&quot;)) {</span>
+<span class="nc" id="L155">			userObject = createArrowLinkTarget(null, null, frame);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		} else if (name.equals(&quot;font&quot;)) {</span>
+<span class="nc" id="L157">			userObject = null;</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">		} else if (name.equals(XML_NODE_ATTRIBUTE)) {</span>
+<span class="nc" id="L159">			userObject = null;</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		} else if (name.equals(XML_NODE_ATTRIBUTE_LAYOUT)) {</span>
+<span class="nc" id="L161">			userObject = null;</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">		} else if (name.equals(&quot;map&quot;)) {</span>
+<span class="nc" id="L163">			userObject = null;</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		} else if (name.equals(XML_NODE_ATTRIBUTE_REGISTRY)) {</span>
+<span class="nc" id="L165">			userObject = null;</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		} else if (name.equals(XML_NODE_REGISTERED_ATTRIBUTE_NAME)) {</span>
+<span class="nc" id="L167">			userObject = null;</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		} else if (name.equals(XML_NODE_REGISTERED_ATTRIBUTE_VALUE)) {</span>
+<span class="nc" id="L169">			userObject = null;</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">		} else if (name.equals(&quot;icon&quot;)) {</span>
+<span class="nc" id="L171">			userObject = null;</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">		} else if (name.equals(&quot;hook&quot;)) {</span>
+			// we gather the xml element and send it to the hook after
+			// completion.
+<span class="nc" id="L175">			userObject = new XMLElement();</span>
+<span class="nc" id="L176">		} else {</span>
+<span class="nc" id="L177">			userObject = new XMLElement(); // for childs of hooks</span>
+		}
+<span class="nc" id="L179">	}</span>
+
+	public void addChild(XMLElement child) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (getName().equals(&quot;map&quot;)) {</span>
+<span class="nc" id="L183">			mapChild = (NodeAdapter) child.getUserObject();</span>
+<span class="nc" id="L184">			return;</span>
+		}
+<span class="nc bnc" id="L186" title="All 2 branches missed.">		if (userObject instanceof XMLElement) {</span>
+			// ((XMLElement) userObject).addChild(child);
+<span class="nc" id="L188">			super.addChild(child);</span>
+<span class="nc" id="L189">			return;</span>
+		}
+<span class="nc bnc" id="L191" title="All 2 branches missed.">		if (userObject instanceof NodeAdapter) {</span>
+<span class="nc" id="L192">			NodeAdapter node = (NodeAdapter) userObject;</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">			if (child.getUserObject() instanceof NodeAdapter) {</span>
+<span class="nc" id="L194">				node.insert((NodeAdapter) child.getUserObject(), -1);</span>
+<span class="nc" id="L195">			} // to the end without preferable... (PN)</span>
+				// node.getRealChildCount()); }
+<span class="nc bnc" id="L197" title="All 2 branches missed.">			else if (child.getUserObject() instanceof EdgeAdapter) {</span>
+<span class="nc" id="L198">				EdgeAdapter edge = (EdgeAdapter) child.getUserObject();</span>
+<span class="nc" id="L199">				edge.setTarget(node);</span>
+<span class="nc" id="L200">				node.setEdge(edge);</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">			} else if (child.getUserObject() instanceof CloudAdapter) {</span>
+<span class="nc" id="L202">				CloudAdapter cloud = (CloudAdapter) child.getUserObject();</span>
+<span class="nc" id="L203">				cloud.setTarget(node);</span>
+<span class="nc" id="L204">				node.setCloud(cloud);</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			} else if (child.getUserObject() instanceof ArrowLinkTarget) {</span>
+				// ArrowLinkTarget is derived from ArrowLinkAdapter, so it must
+				// be checked first.
+<span class="nc" id="L208">				ArrowLinkTarget arrowLinkTarget = (ArrowLinkTarget) child</span>
+<span class="nc" id="L209">						.getUserObject();</span>
+<span class="nc" id="L210">				arrowLinkTarget.setTarget(node);</span>
+<span class="nc" id="L211">				mArrowLinkAdapters.add(arrowLinkTarget);</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">			} else if (child.getUserObject() instanceof ArrowLinkAdapter) {</span>
+<span class="nc" id="L213">				ArrowLinkAdapter arrowLink = (ArrowLinkAdapter) child</span>
+<span class="nc" id="L214">						.getUserObject();</span>
+<span class="nc" id="L215">				arrowLink.setSource(node);</span>
+				// annotate this link: (later processed by caller.).
+				// System.out.println(&quot;arrowLink=&quot;+arrowLink);
+<span class="nc" id="L218">				mArrowLinkAdapters.add(arrowLink);</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">			} else if (child.getName().equals(&quot;font&quot;)) {</span>
+<span class="nc" id="L220">				node.setFont((Font) child.getUserObject());</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">			} else if (child.getName().equals(XML_NODE_ATTRIBUTE)) {</span>
+<span class="nc" id="L222">				node.createAttributeTableModel();</span>
+<span class="nc" id="L223">				node.getAttributes().addRowNoUndo(</span>
+<span class="nc" id="L224">						(Attribute) child.getUserObject());</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">			} else if (child.getName().equals(XML_NODE_ATTRIBUTE_LAYOUT)) {</span>
+<span class="nc" id="L226">				node.createAttributeTableModel();</span>
+<span class="nc" id="L227">				AttributeTableLayoutModel layout = node.getAttributes()</span>
+<span class="nc" id="L228">						.getLayout();</span>
+<span class="nc" id="L229">				layout.setColumnWidth(0,</span>
+<span class="nc" id="L230">						((XMLElementAdapter) child).attributeNameWidth);</span>
+<span class="nc" id="L231">				layout.setColumnWidth(1,</span>
+<span class="nc" id="L232">						((XMLElementAdapter) child).attributeValueWidth);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">			} else if (child.getName().equals(&quot;icon&quot;)) {</span>
+<span class="nc" id="L234">				node.addIcon((MindIcon) child.getUserObject(), MindIcon.LAST);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">			} else if (child.getName().equals(XML_NODE_XHTML_CONTENT_TAG)) {</span>
+<span class="nc" id="L236">				String xmlText = ((XMLElement) child).getContent();</span>
+<span class="nc" id="L237">				Object typeAttribute = child</span>
+<span class="nc" id="L238">						.getAttribute(XML_NODE_XHTML_TYPE_TAG);</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">				if (typeAttribute == null</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">						|| XML_NODE_XHTML_TYPE_NODE.equals(typeAttribute)) {</span>
+					// output:
+<span class="nc" id="L242">					logger.finest(&quot;Setting node html content to:&quot; + xmlText);</span>
+<span class="nc" id="L243">					node.setXmlText(xmlText);</span>
+<span class="nc" id="L244">				} else {</span>
+<span class="nc" id="L245">					logger.finest(&quot;Setting note html content to:&quot; + xmlText);</span>
+<span class="nc" id="L246">					node.setXmlNoteText(xmlText);</span>
+				}
+<span class="nc bnc" id="L248" title="All 2 branches missed.">			} else if (child.getName().equals(&quot;hook&quot;)) {</span>
+<span class="nc" id="L249">				XMLElement xml = (XMLElement) child/* .getUserObject() */;</span>
+<span class="nc" id="L250">				String loadName = (String) xml.getAttribute(&quot;NAME&quot;);</span>
+<span class="nc" id="L251">				PermanentNodeHook hook = null;</span>
+				try {
+					// loadName=loadName.replace('/', File.separatorChar);
+					/*
+					 * The next code snippet is an exception. Normally, hooks
+					 * have to be created via the ModeController. DO NOT COPY.
+					 */
+<span class="nc" id="L258">					hook = (PermanentNodeHook) mModeController.getHookFactory()</span>
+<span class="nc" id="L259">							.createNodeHook(loadName);</span>
+					// this is a bad hack. Don't make use of this data unless
+					// you know exactly what you are doing.
+<span class="nc" id="L262">					hook.setNode(node);</span>
+<span class="nc" id="L263">				} catch (Exception e) {</span>
+<span class="nc" id="L264">					freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L265">					hook = new PermanentNodeHookSubstituteUnknown(loadName);</span>
+				}
+<span class="nc" id="L267">				hook.loadFrom(xml);</span>
+<span class="nc" id="L268">				node.addHook(hook);</span>
+			}
+<span class="nc" id="L270">			return;</span>
+		}
+<span class="nc bnc" id="L272" title="All 2 branches missed.">		if (child instanceof XMLElementAdapter</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">				&amp;&amp; getName().equals(XML_NODE_REGISTERED_ATTRIBUTE_NAME)</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">				&amp;&amp; child.getName().equals(XML_NODE_REGISTERED_ATTRIBUTE_VALUE)) {</span>
+<span class="nc" id="L275">			Attribute attribute = new Attribute(attributeName,</span>
+<span class="nc" id="L276">					((XMLElementAdapter) child).attributeValue);</span>
+<span class="nc" id="L277">			AttributeRegistry r = getMap().getRegistry().getAttributes();</span>
+<span class="nc" id="L278">			r.registry(attribute);</span>
+		}
+<span class="nc" id="L280">	}</span>
+
+	public void setAttribute(String name, Object value) {
+		// We take advantage of precondition that value != null.
+<span class="nc" id="L284">		String sValue = value.toString();</span>
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		if (ignoreCase) {</span>
+<span class="nc" id="L286">			name = name.toUpperCase();</span>
+		}
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		if (userObject instanceof XMLElement) {</span>
+			// ((XMLElement) userObject).setAttribute(name, value);
+<span class="nc" id="L290">			super.setAttribute(name, value); // and to myself, as I am also an</span>
+												// xml element.
+<span class="nc" id="L292">			return;</span>
+		}
+
+<span class="nc bnc" id="L295" title="All 2 branches missed.">		if (userObject instanceof NodeAdapter) {</span>
+			//
+<span class="nc" id="L297">			NodeAdapter node = (NodeAdapter) userObject;</span>
+<span class="nc" id="L298">			userObject = setNodeAttribute(name, sValue, node);</span>
+<span class="nc" id="L299">			nodeAttributes.put(name, sValue);</span>
+<span class="nc" id="L300">			return;</span>
+		}
+
+<span class="nc bnc" id="L303" title="All 2 branches missed.">		if (userObject instanceof EdgeAdapter) {</span>
+<span class="nc" id="L304">			EdgeAdapter edge = (EdgeAdapter) userObject;</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (name.equals(&quot;STYLE&quot;)) {</span>
+<span class="nc" id="L306">				edge.setStyle(sValue);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			} else if (name.equals(&quot;COLOR&quot;)) {</span>
+<span class="nc" id="L308">				edge.setColor(Tools.xmlToColor(sValue));</span>
+<span class="nc bnc" id="L309" title="All 2 branches missed.">			} else if (name.equals(&quot;WIDTH&quot;)) {</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">				if (sValue.equals(EdgeAdapter.EDGE_WIDTH_THIN_STRING)) {</span>
+<span class="nc" id="L311">					edge.setWidth(EdgeAdapter.WIDTH_THIN);</span>
+<span class="nc" id="L312">				} else {</span>
+<span class="nc" id="L313">					edge.setWidth(Integer.parseInt(sValue));</span>
+				}
+			}
+<span class="nc" id="L316">			return;</span>
+		}
+
+<span class="nc bnc" id="L319" title="All 2 branches missed.">		if (userObject instanceof CloudAdapter) {</span>
+<span class="nc" id="L320">			CloudAdapter cloud = (CloudAdapter) userObject;</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">			if (name.equals(&quot;STYLE&quot;)) {</span>
+<span class="nc" id="L322">				cloud.setStyle(sValue);</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			} else if (name.equals(&quot;COLOR&quot;)) {</span>
+<span class="nc" id="L324">				cloud.setColor(Tools.xmlToColor(sValue));</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">			} else if (name.equals(&quot;WIDTH&quot;)) {</span>
+<span class="nc" id="L326">				cloud.setWidth(Integer.parseInt(sValue));</span>
+			}
+<span class="nc" id="L328">			return;</span>
+		}
+
+<span class="nc bnc" id="L331" title="All 2 branches missed.">		if (userObject instanceof ArrowLinkAdapter) {</span>
+<span class="nc" id="L332">			ArrowLinkAdapter arrowLink = (ArrowLinkAdapter) userObject;</span>
+<span class="nc bnc" id="L333" title="All 2 branches missed.">			if (name.equals(&quot;STYLE&quot;)) {</span>
+<span class="nc" id="L334">				arrowLink.setStyle(sValue);</span>
+<span class="nc bnc" id="L335" title="All 2 branches missed.">			} else if (name.equals(&quot;ID&quot;)) {</span>
+<span class="nc" id="L336">				arrowLink.setUniqueId(sValue);</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">			} else if (name.equals(&quot;COLOR&quot;)) {</span>
+<span class="nc" id="L338">				arrowLink.setColor(Tools.xmlToColor(sValue));</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">			} else if (name.equals(&quot;DESTINATION&quot;)) {</span>
+<span class="nc" id="L340">				arrowLink.setDestinationLabel(sValue);</span>
+<span class="nc bnc" id="L341" title="All 2 branches missed.">			} else if (name.equals(&quot;REFERENCETEXT&quot;)) {</span>
+<span class="nc" id="L342">				arrowLink.setReferenceText((sValue));</span>
+<span class="nc bnc" id="L343" title="All 2 branches missed.">			} else if (name.equals(&quot;STARTINCLINATION&quot;)) {</span>
+<span class="nc" id="L344">				arrowLink.setStartInclination(Tools.xmlToPoint(sValue));</span>
+<span class="nc bnc" id="L345" title="All 2 branches missed.">			} else if (name.equals(&quot;ENDINCLINATION&quot;)) {</span>
+<span class="nc" id="L346">				arrowLink.setEndInclination(Tools.xmlToPoint(sValue));</span>
+<span class="nc bnc" id="L347" title="All 2 branches missed.">			} else if (name.equals(&quot;STARTARROW&quot;)) {</span>
+<span class="nc" id="L348">				arrowLink.setStartArrow(sValue);</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">			} else if (name.equals(&quot;ENDARROW&quot;)) {</span>
+<span class="nc" id="L350">				arrowLink.setEndArrow(sValue);</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">			} else if (name.equals(&quot;WIDTH&quot;)) {</span>
+<span class="nc" id="L352">				arrowLink.setWidth(Integer.parseInt(sValue));</span>
+			}
+<span class="nc bnc" id="L354" title="All 2 branches missed.">			if (userObject instanceof ArrowLinkTarget) {</span>
+<span class="nc" id="L355">				ArrowLinkTarget arrowLinkTarget = (ArrowLinkTarget) userObject;</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">				if (name.equals(&quot;SOURCE&quot;)) {</span>
+<span class="nc" id="L357">					arrowLinkTarget.setSourceLabel(sValue);</span>
+				}
+			}
+<span class="nc" id="L360">			return;</span>
+		}
+
+<span class="nc bnc" id="L363" title="All 2 branches missed.">		if (getName().equals(&quot;font&quot;)) {</span>
+<span class="nc bnc" id="L364" title="All 2 branches missed.">			if (name.equals(&quot;SIZE&quot;)) {</span>
+<span class="nc" id="L365">				fontSize = Integer.parseInt(sValue);</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			} else if (name.equals(&quot;NAME&quot;)) {</span>
+<span class="nc" id="L367">				fontName = sValue;</span>
+<span class="nc" id="L368">			}</span>
+
+			// Styling
+<span class="nc bnc" id="L371" title="All 2 branches missed.">			else if (sValue.equals(&quot;true&quot;)) {</span>
+<span class="nc bnc" id="L372" title="All 2 branches missed.">				if (name.equals(&quot;BOLD&quot;)) {</span>
+<span class="nc" id="L373">					fontStyle += Font.BOLD;</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">				} else if (name.equals(&quot;ITALIC&quot;)) {</span>
+<span class="nc" id="L375">					fontStyle += Font.ITALIC;</span>
+				}
+			}
+		}
+		/* icons */
+<span class="nc bnc" id="L380" title="All 2 branches missed.">		if (getName().equals(&quot;icon&quot;)) {</span>
+<span class="nc bnc" id="L381" title="All 2 branches missed.">			if (name.equals(&quot;BUILTIN&quot;)) {</span>
+<span class="nc" id="L382">				iconName = sValue;</span>
+			}
+<span class="nc" id="L384">		}</span>
+		/* attributes */
+<span class="nc bnc" id="L386" title="All 2 branches missed.">		else if (getName().equals(XML_NODE_ATTRIBUTE)) {</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">			if (name.equals(&quot;NAME&quot;)) {</span>
+<span class="nc" id="L388">				attributeName = sValue;</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">			} else if (name.equals(&quot;VALUE&quot;)) {</span>
+<span class="nc" id="L390">				attributeValue = sValue;</span>
+			}
+<span class="nc bnc" id="L392" title="All 2 branches missed.">		} else if (getName().equals(XML_NODE_ATTRIBUTE_LAYOUT)) {</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">			if (name.equals(&quot;NAME_WIDTH&quot;)) {</span>
+<span class="nc" id="L394">				attributeNameWidth = Integer.parseInt(sValue);</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">			} else if (name.equals(&quot;VALUE_WIDTH&quot;)) {</span>
+<span class="nc" id="L396">				attributeValueWidth = Integer.parseInt(sValue);</span>
+			}
+<span class="nc bnc" id="L398" title="All 2 branches missed.">		} else if (getName().equals(XML_NODE_ATTRIBUTE_REGISTRY)) {</span>
+<span class="nc bnc" id="L399" title="All 2 branches missed.">			if (name.equals(&quot;RESTRICTED&quot;)) {</span>
+<span class="nc" id="L400">				getMap().getRegistry().getAttributes().setRestricted(true);</span>
+			}
+<span class="nc bnc" id="L402" title="All 2 branches missed.">			if (name.equals(&quot;SHOW_ATTRIBUTES&quot;)) {</span>
+<span class="nc" id="L403">				mModeController.getController().setAttributeViewType(getMap(),</span>
+<span class="nc" id="L404">						sValue);</span>
+			}
+<span class="nc bnc" id="L406" title="All 2 branches missed.">			if (name.equals(&quot;FONT_SIZE&quot;)) {</span>
+				try {
+<span class="nc" id="L408">					int size = Integer.parseInt(sValue);</span>
+<span class="nc" id="L409">					getMap().getRegistry().getAttributes().setFontSize(size);</span>
+<span class="nc" id="L410">				} catch (NumberFormatException ex) {</span>
+				}
+			}
+<span class="nc bnc" id="L413" title="All 2 branches missed.">		} else if (getName().equals(XML_NODE_REGISTERED_ATTRIBUTE_NAME)) {</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">			if (name.equals(&quot;NAME&quot;)) {</span>
+<span class="nc" id="L415">				attributeName = sValue;</span>
+<span class="nc" id="L416">				getMap().getRegistry().getAttributes().registry(attributeName);</span>
+<span class="nc" id="L417">			} else {</span>
+<span class="nc" id="L418">				super.setAttribute(name, sValue);</span>
+			}
+<span class="nc bnc" id="L420" title="All 2 branches missed.">		} else if (getName().equals(XML_NODE_REGISTERED_ATTRIBUTE_VALUE)) {</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">			if (name.equals(&quot;VALUE&quot;)) {</span>
+<span class="nc" id="L422">				attributeValue = sValue;</span>
+			}
+		}
+<span class="nc" id="L425">	}</span>
+
+	private NodeAdapter setNodeAttribute(String name, String sValue,
+			NodeAdapter node) {
+<span class="nc bnc" id="L429" title="All 2 branches missed.">		if (name.equals(XML_NODE_TEXT)) {</span>
+<span class="nc" id="L430">			logger.finest(&quot;Setting node text content to:&quot; + sValue);</span>
+<span class="nc" id="L431">			node.setUserObject(sValue);</span>
+<span class="nc bnc" id="L432" title="All 2 branches missed.">		} else if (name.equals(XML_NODE_ENCRYPTED_CONTENT)) {</span>
+			// we change the node implementation to EncryptedMindMapNode.
+<span class="nc" id="L434">			node = createEncryptedNode(sValue);</span>
+<span class="nc bnc" id="L435" title="All 2 branches missed.">		} else if (name.equals(XML_NODE_HISTORY_CREATED_AT)) {</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">			if (node.getHistoryInformation() == null) {</span>
+<span class="nc" id="L437">				node.setHistoryInformation(new HistoryInformation());</span>
+			}
+<span class="nc" id="L439">			node.getHistoryInformation().setCreatedAt(Tools.xmlToDate(sValue));</span>
+<span class="nc bnc" id="L440" title="All 2 branches missed.">		} else if (name.equals(XML_NODE_HISTORY_LAST_MODIFIED_AT)) {</span>
+<span class="nc bnc" id="L441" title="All 2 branches missed.">			if (node.getHistoryInformation() == null) {</span>
+<span class="nc" id="L442">				node.setHistoryInformation(new HistoryInformation());</span>
+			}
+<span class="nc" id="L444">			node.getHistoryInformation().setLastModifiedAt(</span>
+<span class="nc" id="L445">					Tools.xmlToDate(sValue));</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">		} else if (name.equals(&quot;FOLDED&quot;)) {</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">			if (sValue.equals(&quot;true&quot;)) {</span>
+<span class="nc" id="L448">				node.setFolded(true);</span>
+			}
+<span class="nc bnc" id="L450" title="All 2 branches missed.">		} else if (name.equals(&quot;POSITION&quot;)) {</span>
+			// fc, 17.12.2003: Remove the left/right bug.
+<span class="nc" id="L452">			node.setLeft(sValue.equals(&quot;left&quot;));</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">		} else if (name.equals(&quot;COLOR&quot;)) {</span>
+<span class="nc bnc" id="L454" title="All 2 branches missed.">			if (sValue.length() == 7) {</span>
+<span class="nc" id="L455">				node.setColor(Tools.xmlToColor(sValue));</span>
+			}
+<span class="nc bnc" id="L457" title="All 2 branches missed.">		} else if (name.equals(&quot;BACKGROUND_COLOR&quot;)) {</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">			if (sValue.length() == 7) {</span>
+<span class="nc" id="L459">				node.setBackgroundColor(Tools.xmlToColor(sValue));</span>
+			}
+<span class="nc bnc" id="L461" title="All 2 branches missed.">		} else if (name.equals(&quot;LINK&quot;)) {</span>
+<span class="nc" id="L462">			node.setLink(sValue);</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">		} else if (name.equals(&quot;STYLE&quot;)) {</span>
+<span class="nc" id="L464">			node.setStyle(sValue);</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">		} else if (name.equals(&quot;ID&quot;)) {</span>
+			// do not set label but annotate in list:
+			// System.out.println(&quot;(sValue, node) = &quot; + sValue + &quot;, &quot;+ node);
+<span class="nc" id="L468">			mIdToTarget.put(sValue, node);</span>
+<span class="nc bnc" id="L469" title="All 2 branches missed.">		} else if (name.equals(&quot;VSHIFT&quot;)) {</span>
+<span class="nc" id="L470">			node.setShiftY(Integer.parseInt(sValue));</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">		} else if (name.equals(&quot;VGAP&quot;)) {</span>
+<span class="nc" id="L472">			node.setVGap(Integer.parseInt(sValue));</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">		} else if (name.equals(&quot;HGAP&quot;)) {</span>
+<span class="nc" id="L474">			node.setHGap(Integer.parseInt(sValue));</span>
+		}
+<span class="nc" id="L476">		return node;</span>
+	}
+
+	/**
+	 * Sets all attributes that were formely applied to the current userObject
+	 * to a given (new) node. Thus, the instance of a node can be changed after
+	 * the creation. (At the moment, relevant for encrypted nodes).
+	 */
+	protected void copyAttributesToNode(NodeAdapter node) {
+		// reactivate all settings from nodeAttributes:
+<span class="nc bnc" id="L486" title="All 2 branches missed.">		for (Iterator i = nodeAttributes.keySet().iterator(); i.hasNext();) {</span>
+<span class="nc" id="L487">			String key = (String) i.next();</span>
+			// to avoid self reference:
+<span class="nc" id="L489">			setNodeAttribute(key, (String) nodeAttributes.get(key), node);</span>
+		}
+<span class="nc" id="L491">	}</span>
+
+	protected void completeElement() {
+<span class="nc bnc" id="L494" title="All 2 branches missed.">		if (getName().equals(XML_NODE)) {</span>
+			// unify map child behaviour:
+<span class="nc bnc" id="L496" title="All 2 branches missed.">			if (mapChild == null) {</span>
+<span class="nc" id="L497">				mapChild = (NodeAdapter) userObject;</span>
+			}
+<span class="nc" id="L499">			return;</span>
+		}
+<span class="nc bnc" id="L501" title="All 2 branches missed.">		if (getName().equals(&quot;font&quot;)) {</span>
+<span class="nc" id="L502">			userObject = mModeController.getController().getFontThroughMap(</span>
+<span class="nc" id="L503">					new Font(fontName, fontStyle, fontSize));</span>
+<span class="nc" id="L504">			return;</span>
+		}
+		/* icons */
+<span class="nc bnc" id="L507" title="All 2 branches missed.">		if (getName().equals(&quot;icon&quot;)) {</span>
+<span class="nc" id="L508">			userObject = MindIcon.factory(iconName);</span>
+<span class="nc" id="L509">			return;</span>
+		}
+		/* attributes */
+<span class="nc bnc" id="L512" title="All 2 branches missed.">		if (getName().equals(XML_NODE_ATTRIBUTE)) {</span>
+<span class="nc" id="L513">			userObject = new Attribute(attributeName, attributeValue);</span>
+<span class="nc" id="L514">			return;</span>
+		}
+<span class="nc bnc" id="L516" title="All 2 branches missed.">		if (getName().equals(XML_NODE_REGISTERED_ATTRIBUTE_NAME)) {</span>
+<span class="nc bnc" id="L517" title="All 2 branches missed.">			if (null != getAttribute(&quot;VISIBLE&quot;)) {</span>
+<span class="nc" id="L518">				getMap().getRegistry().getAttributes()</span>
+<span class="nc" id="L519">						.getElement(attributeName).setVisibility(true);</span>
+			}
+<span class="nc bnc" id="L521" title="All 2 branches missed.">			if (null != getAttribute(&quot;RESTRICTED&quot;)) {</span>
+<span class="nc" id="L522">				getMap().getRegistry().getAttributes()</span>
+<span class="nc" id="L523">						.getElement(attributeName).setRestriction(true);</span>
+			}
+<span class="nc" id="L525">			return;</span>
+		}
+<span class="nc" id="L527">	}</span>
+
+	/**
+	 * Completes the links within the getMap(). They are registered in the
+	 * registry.
+	 * 
+	 * Case I: Source+Destination are pasted (Ia: cut, Ib: copy) Case II: Source
+	 * is pasted, Destination remains unchanged in the map (IIa: cut, IIb: copy)
+	 * Case III: Destination is pasted, Source remains unchanged in the map
+	 * (IIIa: cut, IIIb: copy)
+	 */
+	public void processUnfinishedLinks(MindMapLinkRegistry registry) {
+		// add labels to the nodes:
+<span class="nc bnc" id="L540" title="All 2 branches missed.">		for (Iterator i1 = mIdToTarget.keySet().iterator(); i1.hasNext();) {</span>
+<span class="nc" id="L541">			String key = (String) i1.next();</span>
+<span class="nc" id="L542">			NodeAdapter target1 = (NodeAdapter) mIdToTarget.get(key);</span>
+			/*
+			 * key is the proposed name for the target, is changed by the
+			 * registry, if already present.
+			 */
+<span class="nc" id="L547">			registry.registerLinkTarget(target1, key);</span>
+		}
+		// complete arrow links with right labels:
+<span class="nc bnc" id="L550" title="All 2 branches missed.">		for (int i = 0; i &lt; mArrowLinkAdapters.size(); ++i) {</span>
+<span class="nc" id="L551">			Object arrowObject = mArrowLinkAdapters.get(i);</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">			if (arrowObject instanceof ArrowLinkTarget) {</span>
+<span class="nc" id="L553">				ArrowLinkTarget linkTarget = (ArrowLinkTarget) arrowObject;</span>
+				// do the same as for ArrowLinkAdapter and start to search for the source.
+<span class="nc" id="L555">				String oldId = linkTarget.getSourceLabel();</span>
+<span class="nc" id="L556">				MindMapNode source = (MindMapNode) registry.getTargetForId(oldId);</span>
+				// find oldId in target list:
+<span class="nc bnc" id="L558" title="All 2 branches missed.">				if (mIdToTarget.containsKey(oldId)) {</span>
+					// link source present in the paste as well and has probably
+					// been renamed (case I), do nothing, as the source does
+					// all.
+<span class="nc" id="L562">					continue;</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">				} else if (source == null) {</span>
+					// link source is in nowhere-land
+<span class="nc" id="L565">					logger.severe(&quot;Cannot find the label &quot; + oldId</span>
+<span class="nc" id="L566">							+ &quot; in the map. The link target &quot; + linkTarget</span>
+<span class="nc" id="L567">							+ &quot; is not restored.&quot;);</span>
+<span class="nc" id="L568">					continue;</span>
+				}
+				// link source remains in the map (case III)
+				// set the source:
+<span class="nc" id="L572">				linkTarget.setSource(source);</span>
+				// here, it is getting more complex: case IIIa: the arrowLink
+				// has to be recreated.
+				// case IIIb: the arrowLink has to be doubled! First,
+				// distinguish between a and b.
+<span class="nc" id="L577">				MindMapNode target = linkTarget.getTarget();</span>
+<span class="nc" id="L578">				String targetCurrentId = registry.getLabel(target);</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">				if (!mIdToTarget.containsKey(targetCurrentId)) {</span>
+					// the id of target has changed, we have case IIIb.
+<span class="nc" id="L581">					MindMapLink link = registry.getLinkForId(linkTarget</span>
+<span class="nc" id="L582">							.getUniqueId());</span>
+<span class="nc bnc" id="L583" title="All 2 branches missed.">					if (link == null) {</span>
+<span class="nc" id="L584">						logger.severe(&quot;Cannot find the label &quot;</span>
+<span class="nc" id="L585">								+ linkTarget.getUniqueId()</span>
+<span class="nc" id="L586">								+ &quot; for the link in the map. The link target &quot;</span>
+<span class="nc" id="L587">								+ linkTarget + &quot; is not restored.&quot;);</span>
+<span class="nc" id="L588">						continue;</span>
+					} else {
+						// double the link.
+<span class="nc" id="L591">						MindMapLink clone = (MindMapLink) link.clone();</span>
+<span class="nc" id="L592">						clone.setTarget(target);</span>
+<span class="nc" id="L593">						((ArrowLinkAdapter) clone)</span>
+<span class="nc" id="L594">								.setDestinationLabel(targetCurrentId);</span>
+						// add the new arrowLink and give it a new id
+<span class="nc" id="L596">						registry.registerLink(clone);</span>
+<span class="nc" id="L597">						linkTarget.setUniqueId(clone.getUniqueId());</span>
+					}
+<span class="nc" id="L599">				} else {</span>
+					// case IIIa: The link must only be re-added:
+					// change from linkTarget to ArrowLinkAdapter and add it:
+<span class="nc" id="L602">					ArrowLinkAdapter linkAdapter = linkTarget.createArrowLinkAdapter(registry);</span>
+<span class="nc" id="L603">					registry.registerLink(linkAdapter);</span>
+				}
+<span class="nc bnc" id="L605" title="All 2 branches missed.">			} else if (arrowObject instanceof ArrowLinkAdapter) {</span>
+<span class="nc" id="L606">				ArrowLinkAdapter arrowLink = (ArrowLinkAdapter) arrowObject;</span>
+				// here, the source is in the paste, and the destination is now
+				// searched:
+<span class="nc" id="L609">				String oldId = arrowLink.getDestinationLabel();</span>
+<span class="nc" id="L610">				NodeAdapter target = null;</span>
+<span class="nc" id="L611">				String newId = null;</span>
+				// find oldId in target list:
+<span class="nc bnc" id="L613" title="All 2 branches missed.">				if (mIdToTarget.containsKey(oldId)) {</span>
+					// link target present in the paste as well and has probably
+					// been renamed (case I)
+<span class="nc" id="L616">					target = (NodeAdapter) mIdToTarget.get(oldId);</span>
+<span class="nc" id="L617">					newId = registry.getLabel(target);</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">				} else if (registry.getTargetForId(oldId) != null) {</span>
+					// link target remains in the map (case II)
+<span class="nc" id="L620">					target = (NodeAdapter) registry.getTargetForId(oldId);</span>
+<span class="nc" id="L621">					newId = oldId;</span>
+<span class="nc" id="L622">				} else {</span>
+					// link target is in nowhere-land
+<span class="nc" id="L624">					logger.severe(&quot;Cannot find the label &quot; + oldId</span>
+<span class="nc" id="L625">							+ &quot; in the map. The link &quot; + arrowLink</span>
+<span class="nc" id="L626">							+ &quot; is not restored.&quot;);</span>
+<span class="nc" id="L627">					continue;</span>
+				}
+				// set the new ID:
+<span class="nc" id="L630">				arrowLink.setDestinationLabel(newId);</span>
+				// set the target:
+<span class="nc" id="L632">				arrowLink.setTarget(target);</span>
+				// add the arrowLink:
+<span class="nc" id="L634">				registry.registerLink(arrowLink);</span>
+			}
+		}
+<span class="nc" id="L637">	}</span>
+
+	protected MindMap getMap() {
+<span class="nc" id="L640">		return mModeController.getMap();</span>
+	}
+
+	public HashMap getIDToTarget() {
+<span class="nc" id="L644">		return mIdToTarget;</span>
+	}
+
+	public void setIDToTarget(HashMap pToTarget) {
+<span class="nc" id="L648">		mIdToTarget = pToTarget;</span>
+<span class="nc" id="L649">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

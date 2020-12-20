@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ApplyPatternAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">ApplyPatternAction.java</span></div><h1>ApplyPatternAction.java</h1><pre class="source lang-java linenums">/*
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2004 Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ * 
+ * See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 
+ * Created on 05.10.2004
+ */
+/*
+ * $Id: ApplyPatternAction.java,v 1.16.10.1 05.10.2004 11:32:42 christianfoltin
+ * Exp $
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
+
+import freemind.controller.actions.generated.instance.Pattern;
+import freemind.controller.actions.generated.instance.PatternEdgeWidth;
+import freemind.main.Tools;
+import freemind.modes.EdgeAdapter;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMapNode;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapController.MindMapControllerPlugin;
+import freemind.modes.mindmapmode.MindMapMapModel;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+
+public class ApplyPatternAction extends NodeGeneralAction implements
+		SingleNodeOperation {
+	public interface ExternalPatternAction extends MindMapControllerPlugin {
+		public void act(MindMapNode node, Pattern pattern);
+	}
+
+	private Pattern mpattern;
+
+	public ApplyPatternAction(MindMapController controller, Pattern pattern) {
+<span class="nc" id="L55">		super(controller, null /* no text */, null /* = no icon */);</span>
+<span class="nc" id="L56">		setName(pattern.getName());</span>
+<span class="nc" id="L57">		this.mpattern = pattern;</span>
+<span class="nc" id="L58">		setSingleNodeOperation(this);</span>
+<span class="nc" id="L59">	}</span>
+
+	public void apply(MindMapMapModel map, MindMapNodeModel node) {
+<span class="nc" id="L62">		applyPattern(node, mpattern);</span>
+<span class="nc" id="L63">	}</span>
+
+	public void applyPattern(MindMapNode node, Pattern pattern) {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (pattern.getPatternNodeText() != null) {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			if (pattern.getPatternNodeText().getValue() != null) {</span>
+<span class="nc" id="L68">				getMindMapController().setNodeText(node,</span>
+<span class="nc" id="L69">						pattern.getPatternNodeText().getValue());</span>
+<span class="nc" id="L70">			} else {</span>
+				// clear text:
+<span class="nc" id="L72">				getMindMapController().setNodeText(node, &quot;&quot;);</span>
+			}
+		}
+<span class="nc bnc" id="L75" title="All 2 branches missed.">		if (pattern.getPatternNodeColor() != null) {</span>
+<span class="nc" id="L76">			getMindMapController().setNodeColor(node,</span>
+<span class="nc" id="L77">					Tools.xmlToColor(pattern.getPatternNodeColor().getValue()));</span>
+		}
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if (pattern.getPatternNodeBackgroundColor() != null) {</span>
+<span class="nc" id="L80">			getMindMapController().setNodeBackgroundColor(</span>
+<span class="nc" id="L81">					node,</span>
+<span class="nc" id="L82">					Tools.xmlToColor(pattern.getPatternNodeBackgroundColor()</span>
+<span class="nc" id="L83">							.getValue()));</span>
+		}
+		// Perhaps already fixed?:
+		// FIXME: fc, 3.1.2004: setting the style to &quot;null&quot; causes strange
+		// behaviour.
+		// see
+		// https://sourceforge.net/tracker/?func=detail&amp;atid=107118&amp;aid=1094623&amp;group_id=7118
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		if (pattern.getPatternNodeStyle() != null) {</span>
+<span class="nc" id="L91">			getMindMapController().setNodeStyle(node,</span>
+<span class="nc" id="L92">					pattern.getPatternNodeStyle().getValue());</span>
+		}
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (pattern.getPatternIcon() != null) {</span>
+<span class="nc" id="L95">			String iconName = pattern.getPatternIcon().getValue();</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (iconName == null) {</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">				while (getMindMapController().removeLastIcon(node) &gt; 0) {</span>
+				}
+<span class="nc" id="L99">			} else {</span>
+				// check if icon is already present:
+<span class="nc" id="L101">				List icons = node.getIcons();</span>
+<span class="nc" id="L102">				boolean found = false;</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">				for (Iterator iterator = icons.iterator(); iterator.hasNext();) {</span>
+<span class="nc" id="L104">					MindIcon icon = (MindIcon) iterator.next();</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">					if (icon.getName() != null</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">							&amp;&amp; icon.getName().equals(iconName)) {</span>
+<span class="nc" id="L107">						found = true;</span>
+<span class="nc" id="L108">						break;</span>
+					}
+				}
+<span class="nc bnc" id="L111" title="All 2 branches missed.">				if (!found) {</span>
+<span class="nc" id="L112">					getMindMapController().addIcon(node,</span>
+<span class="nc" id="L113">							MindIcon.factory(iconName));</span>
+				}
+			}
+		} // fc, 28.9.2003
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (pattern.getPatternNodeFontName() != null) {</span>
+<span class="nc" id="L118">			String nodeFontFamily = pattern.getPatternNodeFontName().getValue();</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">			if (nodeFontFamily == null) {</span>
+<span class="nc" id="L120">				nodeFontFamily = getMindMapController().getController()</span>
+<span class="nc" id="L121">						.getDefaultFontFamilyName();</span>
+			}
+<span class="nc" id="L123">			getMindMapController().setFontFamily(node, nodeFontFamily);</span>
+		}
+<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (pattern.getPatternNodeFontSize() != null) {</span>
+<span class="nc" id="L126">			String nodeFontSize = pattern.getPatternNodeFontSize().getValue();</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">			if (nodeFontSize == null) {</span>
+<span class="nc" id="L128">				nodeFontSize = &quot;&quot;</span>
+<span class="nc" id="L129">						+ getMindMapController().getController()</span>
+<span class="nc" id="L130">								.getDefaultFontSize();</span>
+			}
+<span class="nc" id="L132">			getMindMapController().setFontSize(node,</span>
+<span class="nc" id="L133">					String.valueOf(nodeFontSize));</span>
+		}
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (pattern.getPatternNodeFontItalic() != null) {</span>
+<span class="nc" id="L136">			getMindMapController()</span>
+<span class="nc" id="L137">					.setItalic(</span>
+<span class="nc" id="L138">							node,</span>
+<span class="nc" id="L139">							&quot;true&quot;.equals(pattern.getPatternNodeFontItalic()</span>
+<span class="nc" id="L140">									.getValue()));</span>
+		}
+<span class="nc bnc" id="L142" title="All 2 branches missed.">		if (pattern.getPatternNodeFontBold() != null) {</span>
+<span class="nc" id="L143">			getMindMapController().setBold(node,</span>
+<span class="nc" id="L144">					&quot;true&quot;.equals(pattern.getPatternNodeFontBold().getValue()));</span>
+		}
+
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if (pattern.getPatternEdgeColor() != null) {</span>
+<span class="nc" id="L148">			getMindMapController().setEdgeColor(node,</span>
+<span class="nc" id="L149">					Tools.xmlToColor(pattern.getPatternEdgeColor().getValue()));</span>
+		}
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		if (pattern.getPatternEdgeStyle() != null) {</span>
+<span class="nc" id="L152">			getMindMapController().setEdgeStyle(node,</span>
+<span class="nc" id="L153">					pattern.getPatternEdgeStyle().getValue());</span>
+		}
+<span class="nc" id="L155">		PatternEdgeWidth patternEdgeWidth = pattern.getPatternEdgeWidth();</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">		if (patternEdgeWidth != null) {</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">			if (patternEdgeWidth.getValue() != null) {</span>
+<span class="nc" id="L158">				getMindMapController().setEdgeWidth(node,</span>
+<span class="nc" id="L159">						edgeWidthStringToInt(patternEdgeWidth.getValue()));</span>
+<span class="nc" id="L160">			} else {</span>
+<span class="nc" id="L161">				getMindMapController().setEdgeWidth(node,</span>
+<span class="nc" id="L162">						EdgeAdapter.DEFAULT_WIDTH);</span>
+			}
+		}
+
+<span class="nc bnc" id="L166" title="All 2 branches missed.">		if (pattern.getPatternChild() != null</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">				&amp;&amp; pattern.getPatternChild().getValue() != null) {</span>
+			// find children among all patterns:
+<span class="nc" id="L169">			String searchedPatternName = pattern.getPatternChild().getValue();</span>
+<span class="nc" id="L170">			ApplyPatternAction[] patterns = getMindMapController().patterns;</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">			for (int i = 0; i &lt; patterns.length; i++) {</span>
+<span class="nc" id="L172">				ApplyPatternAction action = patterns[i];</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">				if (action.getPattern().getName().equals(searchedPatternName)) {</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">					for (ListIterator j = node.childrenUnfolded(); j.hasNext();) {</span>
+<span class="nc" id="L175">						NodeAdapter child = (NodeAdapter) j.next();</span>
+<span class="nc" id="L176">						applyPattern(child, action.getPattern());</span>
+					}
+<span class="nc" id="L178">					break;</span>
+				}
+			}
+		}
+<span class="nc" id="L182">		for (Iterator i = getMindMapController().getPlugins().iterator(); i</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L184">			MindMapControllerPlugin action = (MindMapControllerPlugin) i.next();</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">			if (action instanceof ExternalPatternAction) {</span>
+<span class="nc" id="L186">				ExternalPatternAction externalAction = (ExternalPatternAction) action;</span>
+<span class="nc" id="L187">				externalAction.act(node, pattern);</span>
+			}
+		}
+<span class="nc" id="L190">	}</span>
+
+	/**
+     */
+	public static int edgeWidthStringToInt(String value) {
+<span class="nc bnc" id="L195" title="All 2 branches missed.">		if (value == null) {</span>
+<span class="nc" id="L196">			return EdgeAdapter.DEFAULT_WIDTH;</span>
+		}
+<span class="nc bnc" id="L198" title="All 2 branches missed.">		if (value.equals(EdgeAdapter.EDGE_WIDTH_THIN_STRING)) {</span>
+<span class="nc" id="L199">			return EdgeAdapter.WIDTH_THIN;</span>
+		}
+<span class="nc" id="L201">		return Integer.valueOf(value).intValue();</span>
+	}
+
+	/**
+     */
+	public static String edgeWidthIntToString(int value) {
+<span class="nc bnc" id="L207" title="All 2 branches missed.">		if (value == EdgeAdapter.DEFAULT_WIDTH) {</span>
+<span class="nc" id="L208">			return null;</span>
+		}
+<span class="nc bnc" id="L210" title="All 2 branches missed.">		if (value == EdgeAdapter.WIDTH_THIN) {</span>
+<span class="nc" id="L211">			return EdgeAdapter.EDGE_WIDTH_THIN_STRING;</span>
+		}
+<span class="nc" id="L213">		return Integer.toString(value);</span>
+	}
+
+	/**
+	 * @return Returns the pattern.
+	 */
+	public Pattern getPattern() {
+<span class="nc" id="L220">		return mpattern;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

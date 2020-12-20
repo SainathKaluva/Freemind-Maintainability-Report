@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>VerticalRootNodeViewLayout.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">VerticalRootNodeViewLayout.java</span></div><h1>VerticalRootNodeViewLayout.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 05.06.2005
+ *
+ */
+package freemind.view.mindmapview;
+
+import java.awt.Dimension;
+import java.awt.Point;
+
+import freemind.main.Resources;
+import freemind.main.Tools;
+
+/**
+ * Root layout.
+ * @author dimitri 05.06.2005
+ */
+<span class="nc" id="L36">public class VerticalRootNodeViewLayout extends NodeViewLayoutAdapter {</span>
+	private static final String USE_COMMON_OUT_POINT_FOR_ROOT_NODE_STRING = &quot;use_common_out_point_for_root_node&quot;;
+<span class="nc" id="L38">	static boolean USE_COMMON_OUT_POINT_FOR_ROOT_NODE = Resources.getInstance()</span>
+<span class="nc" id="L39">			.getBoolProperty(USE_COMMON_OUT_POINT_FOR_ROOT_NODE_STRING);</span>
+
+<span class="nc" id="L41">	static private VerticalRootNodeViewLayout instance = null;</span>
+
+	protected void layout() {
+<span class="nc" id="L44">		final int rightContentHeight = getChildContentHeight(false);</span>
+<span class="nc" id="L45">		int rightChildVerticalShift = getChildVerticalShift(false);</span>
+<span class="nc" id="L46">		final int leftContentHeight = getChildContentHeight(true);</span>
+<span class="nc" id="L47">		int leftChildVerticalShift = getChildVerticalShift(true);</span>
+<span class="nc" id="L48">		final int childHorizontalShift = getChildHorizontalShift();</span>
+<span class="nc" id="L49">		final int contentHeight = Math.max(rightContentHeight,</span>
+<span class="nc" id="L50">				leftContentHeight);</span>
+<span class="nc" id="L51">		final int x = Math.max(getSpaceAround(), -childHorizontalShift);</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (getView().isContentVisible()) {</span>
+<span class="nc" id="L53">			getContent().setVisible(true);</span>
+<span class="nc" id="L54">			final Dimension contentPreferredSize = getContent()</span>
+<span class="nc" id="L55">					.getPreferredSize();</span>
+<span class="nc" id="L56">			rightChildVerticalShift += (contentPreferredSize.height - rightContentHeight) / 2;</span>
+<span class="nc" id="L57">			leftChildVerticalShift += (contentPreferredSize.height - leftContentHeight) / 2;</span>
+<span class="nc" id="L58">			final int childVerticalShift = Math.min(rightChildVerticalShift,</span>
+<span class="nc" id="L59">					leftChildVerticalShift);</span>
+<span class="nc" id="L60">			final int y = Math.max(getSpaceAround(), -childVerticalShift);</span>
+<span class="nc" id="L61">			getContent().setBounds(x, y, contentPreferredSize.width,</span>
+<span class="nc" id="L62">					contentPreferredSize.height);</span>
+<span class="nc" id="L63">		} else {</span>
+<span class="nc" id="L64">			getContent().setVisible(false);</span>
+<span class="nc" id="L65">			int childVerticalShift = Math.min(rightChildVerticalShift,</span>
+<span class="nc" id="L66">					leftChildVerticalShift);</span>
+<span class="nc" id="L67">			final int y = Math.max(getSpaceAround(), -childVerticalShift);</span>
+<span class="nc" id="L68">			getContent().setBounds(x, y, 0, contentHeight);</span>
+		}
+
+<span class="nc" id="L71">		placeLeftChildren(leftChildVerticalShift);</span>
+<span class="nc" id="L72">		int width1 = getView().getWidth();</span>
+<span class="nc" id="L73">		int height1 = getView().getHeight();</span>
+<span class="nc" id="L74">		placeRightChildren(rightChildVerticalShift);</span>
+<span class="nc" id="L75">		int width2 = getView().getWidth();</span>
+<span class="nc" id="L76">		int height2 = getView().getHeight();</span>
+<span class="nc" id="L77">		getView().setSize(Math.max(width1, width2), Math.max(height1, height2));</span>
+
+<span class="nc" id="L79">	}</span>
+
+	static VerticalRootNodeViewLayout getInstance() {
+<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (instance == null)</span>
+<span class="nc" id="L83">			instance = new VerticalRootNodeViewLayout();</span>
+<span class="nc" id="L84">		return instance;</span>
+	}
+
+	public void layoutNodeMotionListenerView(NodeMotionListenerView view) {
+		// there is no move handle at root.
+<span class="nc" id="L89">	}</span>
+
+	public Point getMainViewOutPoint(NodeView view, NodeView targetView,
+			Point destinationPoint) {
+<span class="nc" id="L93">		final MainView mainView = view.getMainView();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (USE_COMMON_OUT_POINT_FOR_ROOT_NODE) {</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if (targetView.isLeft()) {</span>
+<span class="nc" id="L96">				return mainView.getLeftPoint();</span>
+			} else {
+<span class="nc" id="L98">				return mainView.getRightPoint();</span>
+			}
+		}
+<span class="nc" id="L101">		final Point p = new Point(destinationPoint);</span>
+<span class="nc" id="L102">		Tools.convertPointFromAncestor(view, p, mainView);</span>
+<span class="nc" id="L103">		double nWidth = mainView.getWidth() / 2f;</span>
+<span class="nc" id="L104">		double nHeight = mainView.getHeight() / 2f;</span>
+<span class="nc" id="L105">		final Point centerPoint = new Point((int) nWidth, (int) nHeight);</span>
+		// assume, that destinationPoint is on the right:
+<span class="nc" id="L107">		double angle = Math.atan((p.y - centerPoint.y + 0f)</span>
+<span class="nc" id="L108">				/ (p.x - centerPoint.x + 0f));</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if (p.x &lt; centerPoint.x) {</span>
+<span class="nc" id="L110">			angle += Math.PI;</span>
+		}
+		// now determine point on ellipsis corresponding to that angle:
+<span class="nc" id="L113">		final Point out = new Point(centerPoint.x</span>
+<span class="nc" id="L114">				+ (int) (Math.cos(angle) * nWidth), centerPoint.y</span>
+<span class="nc" id="L115">				+ (int) (Math.sin(angle) * nHeight));</span>
+<span class="nc" id="L116">		return out;</span>
+	}
+
+	public Point getMainViewInPoint(NodeView view) {
+<span class="nc" id="L120">		final Point centerPoint = view.getMainView().getCenterPoint();</span>
+<span class="nc" id="L121">		return centerPoint;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Output</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Percentiles.html">Prev</a> - <a href="Appearance.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="Preferences.html">4.16 Setting Preferences</a> > 4.16.3 Output
+<hr>
+<h3><a name="Output"></a>4.16.3 Output</h3> 
+
+The output preferences settings specify several aspects of SDMetrics' data export
+features. Open the preferences dialog and select the tab sheet "Output":<p>
+
+<img src="images/prefoutput.png" alt="File output options"><br>
+<b>Figure 28:&nbsp;Output Settings</b><p>
+
+<b>File encoding</b><p>
+
+Specifies the character encoding of all non-binary output file formats
+(TXT, CSV, HTML, ODS, XML, SXC and SVG). The dropdown list shows all available
+character encodings for your platform. Default is ISO-8859-1 (also known as Latin-1).
+Choose an alternative encoding if your UML model element names contain characters not
+available in ISO-8859-1.<p>
+
+<b>CSV column separator</b><p>
+
+By default, the CSV (comma separated vector) format uses the comma to delimit the
+values in a row of data. If you require a different delimiter, you can
+enter it here.<p>
+
+<b>Quotes in CSV/text</b><p>
+
+The TXT and CSV output formats use certain characters as column and line delimiter.
+This leads to a conflict if a value to be written itself contains one of these delimiters:
+writing the value "as is" destroys the overall table structure of the output file.<p>
+
+A standard solution to resolve this conflict is to put quotes (") 
+around the values - characters between quotes will not be interpreted as column
+or line delimiters. If the value to be put in quotes itself contains a quote character, that
+quote character is doubled in the output file (the value 5"10 thus becomes "5""10").<p>
+
+SDMetrics offers three strategies to deal with conflicting values in CSV and TXT output
+formats:
+<ul>
+<li><b>Never</b> - values will not be set in quotes, even if they are conflicting
+<li><b>As needed</b> - only conflicting values will be set in quotes
+<li><b>Always</b> - all values will be set in quotes, conflicting or not.
+</ul>
+
+<b>Prompt user before overwriting an existing file</b><p>
+
+With this option enabled, SDMetrics will ask for your permission
+before overwriting existing files when you export data tables or graphs.
+This setting only affects the GUI, not the command line operation
+(which will always overwrite without asking).<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Percentiles.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Preferences.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Appearance.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.16.2 "Percentiles"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.16.4 "Appearance"</td></tr></table>
+
+</body>
+</html>

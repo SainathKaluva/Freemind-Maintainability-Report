@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MarshallerTests.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">MarshallerTests.java</span></div><h1>MarshallerTests.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2007  Christian Foltin, Dimitry Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 15.08.2007
+ */
+/*$Id: MarshallerTests.java,v 1.1.2.1 2008/04/02 20:02:39 christianfoltin Exp $*/
+
+package tests.freemind;
+
+import de.foltin.StringEncoder;
+import freemind.common.XmlBindingTools;
+import freemind.controller.actions.generated.instance.Pattern;
+import freemind.controller.actions.generated.instance.PatternChild;
+import freemind.controller.actions.generated.instance.Place;
+import freemind.controller.actions.generated.instance.Result;
+import freemind.controller.actions.generated.instance.Reversegeocode;
+import freemind.controller.actions.generated.instance.Searchresults;
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="fc" id="L39">public class MarshallerTests extends FreeMindTestBase {</span>
+	/**
+	 * Newlines in Jibx attributes are handled correctly.
+	 */
+	public void testNewLines() {
+<span class="fc" id="L44">		Pattern testPattern = new Pattern();</span>
+<span class="fc" id="L45">		PatternChild patternChild = new PatternChild();</span>
+<span class="fc" id="L46">		String value = &quot;\\ntest\n\\test&lt;&gt;&amp;&quot;;</span>
+<span class="fc" id="L47">		patternChild.setValue(value);</span>
+<span class="fc" id="L48">		assertEquals(value, patternChild.getValue());</span>
+<span class="fc" id="L49">		testPattern.setPatternChild(patternChild);</span>
+<span class="fc" id="L50">		testPattern.setName(&quot;test&quot;);</span>
+<span class="fc" id="L51">		String marshall = XmlBindingTools.getInstance().marshall(testPattern);</span>
+<span class="fc" id="L52">		System.out.println(marshall);</span>
+<span class="fc" id="L53">		Pattern testPatternUnmarshalled = (Pattern) XmlBindingTools</span>
+<span class="fc" id="L54">				.getInstance().unMarshall(marshall);</span>
+<span class="fc" id="L55">		assertEquals(&quot;Newline is correctly marshalled?&quot; + marshall,</span>
+<span class="fc" id="L56">				testPattern.getName(), testPatternUnmarshalled.getName());</span>
+<span class="fc" id="L57">		assertEquals(&quot;Newline is correctly marshalled?&quot; + marshall, testPattern</span>
+<span class="fc" id="L58">				.getPatternChild().getValue(), testPatternUnmarshalled</span>
+<span class="fc" id="L59">				.getPatternChild().getValue());</span>
+<span class="fc" id="L60">	}</span>
+
+	public void testStringEncoder() throws Exception {
+<span class="fc" id="L63">		String input = &quot;\\ntest\n\\test&quot;;</span>
+<span class="fc" id="L64">		String encodedString = StringEncoder.encode(input);</span>
+		// System.out.println(encodedString);
+<span class="fc" id="L66">		assertEquals(&quot;\\\\ntest\\u000a\\\\test&quot;, encodedString);</span>
+<span class="fc" id="L67">		String output = StringEncoder.decode(encodedString);</span>
+<span class="fc" id="L68">		assertEquals(input, output);</span>
+
+<span class="fc" id="L70">	}</span>
+
+	public void testOsmNominatimConversion() throws Exception {
+<span class="fc" id="L73">		Searchresults results = (Searchresults) XmlBindingTools</span>
+<span class="fc" id="L74">				.getInstance()</span>
+<span class="fc" id="L75">				.unMarshall(</span>
+<span class="fc" id="L76">						&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&quot;</span>
+								+ &quot;&lt;searchresults timestamp=\&quot;Tue, 08 Nov 11 22:49:54 -0500\&quot; attribution=\&quot;Data Copyright OpenStreetMap Contributors, Some Rights Reserved. CC-BY-SA 2.0.\&quot; querystring=\&quot;innsbruck\&quot; polygon=\&quot;false\&quot; exclude_place_ids=\&quot;228452,25664166,26135863,25440203\&quot; more_url=\&quot;http://open.mapquestapi.com/nominatim/v1/search?format=xml&amp;amp;exclude_place_ids=228452,25664166,26135863,25440203&amp;amp;accept-language=&amp;amp;q=innsbruck\&quot;&gt;\n&quot;
+								+ &quot;  &lt;place place_id=\&quot;228452\&quot; osm_type=\&quot;node\&quot; osm_id=\&quot;34840064\&quot; place_rank=\&quot;16\&quot; boundingbox=\&quot;47.2554266357,47.2754304504,11.3827679062,11.4027688599\&quot; lat=\&quot;47.2654296\&quot; lon=\&quot;11.3927685\&quot; display_name=\&quot;Innsbruck, Bezirk Innsbruck-Stadt, Innsbruck-Stadt, Tirol, Ã–sterreich, Europe\&quot; class=\&quot;place\&quot; type=\&quot;city\&quot; icon=\&quot;http://open.mapquestapi.com/nominatim/v1/images/mapicons/poi_place_city.p.20.png\&quot;/&gt;\n&quot;
+								+ &quot;  &lt;place place_id=\&quot;25664166\&quot; osm_type=\&quot;way\&quot; osm_id=\&quot;18869490\&quot; place_rank=\&quot;27\&quot; boundingbox=\&quot;43.5348739624023,43.5354156494141,-71.1319198608398,-71.1316146850586\&quot; lat=\&quot;43.5351336524196\&quot; lon=\&quot;-71.1317853486877\&quot; display_name=\&quot;Innsbruck, New Durham, Strafford County, New Hampshire, United States of America\&quot; class=\&quot;highway\&quot; type=\&quot;service\&quot;/&gt;\n&quot;
+								+ &quot;  &lt;place place_id=\&quot;26135863\&quot; osm_type=\&quot;way\&quot; osm_id=\&quot;18777572\&quot; place_rank=\&quot;27\&quot; boundingbox=\&quot;38.6950759887695,38.6965446472168,-91.1586227416992,-91.1520233154297\&quot; lat=\&quot;38.6957456083531\&quot; lon=\&quot;-91.1552550683042\&quot; display_name=\&quot;Innsbruck, Warren, Aspenhoff, Warren County, Missouri, United States of America\&quot; class=\&quot;highway\&quot; type=\&quot;service\&quot;/&gt;\n&quot;
+								+ &quot;  &lt;place place_id=\&quot;25440203\&quot; osm_type=\&quot;way\&quot; osm_id=\&quot;18869491\&quot; place_rank=\&quot;27\&quot; boundingbox=\&quot;43.5335311889648,43.5358810424805,-71.1356735229492,-71.1316146850586\&quot; lat=\&quot;43.5341678362733\&quot; lon=\&quot;-71.1338615946084\&quot; display_name=\&quot;Innsbruck, New Durham, Strafford County, New Hampshire, 03855, United States of America\&quot; class=\&quot;highway\&quot; type=\&quot;service\&quot;/&gt;\n&quot;
+								+ &quot;&lt;/searchresults&gt;&quot;);
+<span class="fc" id="L83">		assertEquals(4, results.sizePlaceList());</span>
+<span class="fc" id="L84">		assertEquals(47.2654296,</span>
+<span class="fc" id="L85">				((Place) results.getListPlaceList().get(0)).getLat(), 0);</span>
+<span class="fc" id="L86">	}</span>
+
+	public void testNominatimReverse() throws Exception {
+<span class="fc" id="L89">		Reversegeocode reverse = (Reversegeocode) XmlBindingTools</span>
+<span class="fc" id="L90">				.getInstance()</span>
+<span class="fc" id="L91">				.unMarshall(</span>
+<span class="fc" id="L92">						&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&quot;</span>
+								+ &quot;&lt;reversegeocode timestamp=\&quot;Wed, 10 Apr 13 17:42:51 +0000\&quot; \n&quot;
+								+ &quot;attribution=\&quot;Data Â© OpenStreetMap contributors, ODbL 1.0. http://www.openstreetmap.org/copyright\&quot; \n&quot;
+								+ &quot;querystring=\&quot;format=xml&amp;amp;lat=52.45177267188509&amp;amp;lon=13.28847885131836&amp;amp;zoom=18&amp;amp;addressdetails=1\&quot;&gt;\n&quot;
+								+ &quot;&lt;result place_id=\&quot;97929939\&quot; \n&quot;
+								+ &quot;osm_type=\&quot;relation\&quot; osm_id=\&quot;32590\&quot; &quot; 
+//								+ &quot;ref=\&quot;Rost- und Silberlaube\&quot; \n&quot;
+								+ &quot;lat=\&quot;52.45222935\&quot; lon=\&quot;13.2890019049798\&quot;&gt;Rost- und Silberlaube, 45, \n&quot;
+								+ &quot;Habelschwerdter Allee, Dahlem, Steglitz-Zehlendorf, Berlin, 14195, Germany, \n&quot;
+								+ &quot;European Union&lt;/result&gt;&lt;/reversegeocode&gt;&quot;);
+<span class="fc" id="L102">		assertNotNull(reverse);</span>
+<span class="fc" id="L103">		Result result = reverse.getResult(0);</span>
+<span class="fc" id="L104">		assertEquals(&quot;correct place&quot;, &quot;97929939&quot;, result</span>
+<span class="fc" id="L105">				.getPlaceId());</span>
+<span class="fc" id="L106">		String content = result.getContent();</span>
+<span class="fc" id="L107">		assertNotNull(content);</span>
+<span class="fc" id="L108">		String exp = &quot;Rost- und Silberlaube, 45,&quot;;</span>
+<span class="fc" id="L109">		assertEquals(&quot;Correct start&quot;, exp, content.substring(0, exp.length()));</span>
+<span class="fc" id="L110">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

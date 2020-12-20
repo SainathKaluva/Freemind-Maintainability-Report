@@ -1,0 +1,124 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Extension References without Inheritance</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ProfOpt1.html">Prev</a> - <a href="ProfOpt3.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="Profiles.html">8.7 Defining Metrics for Profiles</a> > 8.7.5 Extension References without Inheritance
+<hr>
+<h3><a name="ProfOpt2"></a>8.7.5 Extension References without Inheritance</h3>
+
+SysML requirements are often decomposed into sub-requirements that
+partition the containing requirement. The number of sub-requirements
+of a requirement is therefore a potentially useful size measure.<p>
+
+The following XMI serialization of a SysML model contains a requirement
+"ABC" with Id "R2". The requirement is decomposed into two sub-requirements 
+"A" and "B" with Ids "R2.1" and "R2.2", respectively:
+
+<pre>
+&lt;xmi:XMI xmi:version="2.1" ...&gt;
+  &lt;uml:Model name = "Sample" xmi:id = "xmi1"&gt;
+    &lt;packagedElement xmi:type="uml:Package" xmi:id="xmi2" name="Specifications"&gt;
+      &lt;packagedElement xmi:type="uml:Class" xmi:id="xmi3" name="XYZ" /&gt;
+      &lt;packagedElement xmi:type="uml:Class" xmi:id="xmi4" name="ABC"&gt;
+        &lt;nestedClassifier xmi:type="uml:Class" xmi:id="xmi5" name="A" /&gt;
+        &lt;nestedClassifier xmi:type="uml:Class" xmi:id="xmi6" name="B" /&gt;
+      &lt;/packagedElement&gt;
+    &lt;/packagedElement&gt;
+    ...
+  &lt;/uml:Model&gt;
+  &lt;sysml:Requirement base_Class="xmi3" xmi:id="xmi7" 
+    Text="The system shall do XYZ" Id="R1" /&gt;
+  &lt;sysml:Requirement base_Class="xmi4" xmi:id="xmi8" 
+    Text="The system shall do such and such" Id="R2" /&gt;
+  &lt;sysml:Requirement base_Class="xmi5" xmi:id="xmi9" 
+    Text="The system shall do A" Id="R2.1" /&gt;
+  &lt;sysml:Requirement base_Class="xmi6" xmi:id="xmi10" 
+    Text="The system shall do B" Id="R2.2" /&gt;
+&lt;/xmi:XMI&gt;
+</pre>
+
+From the XMI serialization we can see that the SysML uses class nesting to model
+requirement decomposition. The class to represent the decomposed requirement 
+owns the classes representing the sub-requirements as nested classifiers. 
+We could therefore define a metric counting the sub-requirements like so:
+
+<pre>
+&lt;metric name="SubRequirements" domain="class"&gt;
+  &lt;projection relset="nestedclassifiers" target="class" condition="Reqmt!=''" /&gt;
+&lt;/metric&gt;
+</pre>
+
+Defining the metric with the domain "class" has the disadvantage that the 
+metric is calculated for all classes, even those that do not represent 
+requirements at all. A better solution is to define the metric for
+the domain "requirement":
+
+<pre>
+&lt;metric name="SubReqCount" domain="requirement"&gt;
+  &lt;projection relset="base.nestedclassifiers" target="class"
+              condition="Reqmt!=''" /&gt;
+&lt;/metric&gt;
+</pre>
+
+The output of this metric in the metric data tables is not very satisfactory, though:<br>
+<img src="images/prof1.png" alt="Metric output for plain requirement elements"><br>
+<b>Figure 36:&nbsp;Metric output for plain requirement elements</b><p>
+
+Because the requirement elements in the model are unnamed and outside the
+scope of the UML model, we cannot tell from the metric output to which 
+requirement the data belongs.<p>
+
+To improve this situation, SDMetrics' metamodel facility provides
+<i>extension references</i>. If the extending model element contains an extension 
+reference, SDMetrics moves the extending model element into the same namespace
+as the extended model element, and copies the name from the extended element.<p>
+
+To use this feature for our SysML requirements, we change the type of cross-reference
+"base" from "ref" to "extref", thus declaring it an extension reference:
+<pre>
+&lt;modelelement name="requirement"&gt;
+  &lt;attribute name="base" <b>type="extref"</b> /&gt;
+  &lt;attribute name="text" /&gt;
+  &lt;attribute name="reqid" /&gt;
+&lt;/modelelement&gt;
+</pre>
+
+This instructs SDMetrics to move the requirement model elements into 
+the same namespace as the class they extend, and copy the name of the 
+extended class. Each requirement element thus has the same owner and the 
+same name as the class that represents the requirement. 
+With this modification, the extending elements are easier to handle.<p>
+
+One immediate benefit of extension references is that the elements are
+easier to trace in the metric data tables:<br>
+<img src="images/prof2.png" alt="Metric output for requirements with extension reference"><br>
+<b>Figure 37:&nbsp;Metric output for requirements with extension reference</b><p>
+
+Another benefit is that we can simplify some metric and rule definitions. 
+Take for example the metric "ReqCount" defined earlier to count the number 
+of requirements in a package. Because the packages now own the requirement 
+elements, we can define the metric in a more straightforward manner without 
+resorting to 'helper' metrics:
+
+<pre>
+&lt;metric name="ReqCount" domain="package"&gt;
+  &lt;projection relation="context" target="requirement" /&gt;
+&lt;/metric&gt;
+</pre>
+
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ProfOpt1.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="Profiles.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ProfOpt3.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.7.4 "Profile Extensions with Regular Model Elements"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.7.6 "Extension References with Inheritance"</td></tr></table>
+
+</body>
+</html>

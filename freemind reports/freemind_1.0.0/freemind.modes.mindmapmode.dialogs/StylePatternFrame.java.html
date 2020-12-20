@@ -1,0 +1,701 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>StylePatternFrame.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.dialogs</a> &gt; <span class="el_source">StylePatternFrame.java</span></div><h1>StylePatternFrame.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 25.02.2006
+ */
+
+package freemind.modes.mindmapmode.dialogs;
+
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.HeadlessException;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.JPanel;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.layout.FormLayout;
+
+import freemind.common.BooleanProperty;
+import freemind.common.ColorProperty;
+import freemind.common.ComboProperty;
+import freemind.common.FontProperty;
+import freemind.common.IconProperty;
+import freemind.common.NextLineProperty;
+import freemind.common.PropertyBean;
+import freemind.common.PropertyControl;
+import freemind.common.ScriptEditorProperty;
+import freemind.common.SeparatorProperty;
+import freemind.common.StringProperty;
+import freemind.common.TextTranslator;
+import freemind.common.ThreeCheckBoxProperty;
+import freemind.controller.actions.generated.instance.Pattern;
+import freemind.controller.actions.generated.instance.PatternChild;
+import freemind.controller.actions.generated.instance.PatternEdgeColor;
+import freemind.controller.actions.generated.instance.PatternEdgeStyle;
+import freemind.controller.actions.generated.instance.PatternEdgeWidth;
+import freemind.controller.actions.generated.instance.PatternIcon;
+import freemind.controller.actions.generated.instance.PatternNodeBackgroundColor;
+import freemind.controller.actions.generated.instance.PatternNodeColor;
+import freemind.controller.actions.generated.instance.PatternNodeFontBold;
+import freemind.controller.actions.generated.instance.PatternNodeFontItalic;
+import freemind.controller.actions.generated.instance.PatternNodeFontName;
+import freemind.controller.actions.generated.instance.PatternNodeFontSize;
+import freemind.controller.actions.generated.instance.PatternNodeStyle;
+import freemind.controller.actions.generated.instance.PatternNodeText;
+import freemind.controller.actions.generated.instance.PatternPropertyBase;
+import freemind.controller.actions.generated.instance.PatternScript;
+import freemind.main.FreeMind;
+import freemind.modes.EdgeAdapter;
+import freemind.modes.MindIcon;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.ApplyPatternAction;
+import freemind.modes.mindmapmode.actions.IconAction;
+
+/**
+ * @author foltin
+ * 
+ */
+public class StylePatternFrame extends JPanel implements TextTranslator,
+		PropertyChangeListener {
+	public static final class StylePatternFrameType {
+<span class="nc" id="L85">		private StylePatternFrameType() {</span>
+
+<span class="nc" id="L87">		}</span>
+
+<span class="nc" id="L89">		public static StylePatternFrameType WITHOUT_NAME_AND_CHILDS = new StylePatternFrameType();</span>
+
+<span class="nc" id="L91">		public static StylePatternFrameType WITH_NAME_AND_CHILDS = new StylePatternFrameType();</span>
+	}
+
+<span class="nc" id="L94">	private static final String[] EDGE_STYLES = new String[] {</span>
+<span class="nc" id="L95">			EdgeAdapter.EDGESTYLE_LINEAR, EdgeAdapter.EDGESTYLE_BEZIER,</span>
+<span class="nc" id="L96">			EdgeAdapter.EDGESTYLE_SHARP_LINEAR,</span>
+<span class="nc" id="L97">			EdgeAdapter.EDGESTYLE_SHARP_BEZIER };</span>
+
+<span class="nc" id="L99">	private static final String[] EDGE_WIDTHS = new String[] {</span>
+<span class="nc" id="L100">			&quot;EdgeWidth_parent&quot;, &quot;EdgeWidth_thin&quot;, &quot;EdgeWidth_1&quot;, &quot;EdgeWidth_2&quot;,</span>
+<span class="nc" id="L101">			&quot;EdgeWidth_4&quot;, &quot;EdgeWidth_8&quot; };</span>
+
+	private static final String NODE_BACKGROUND_COLOR = &quot;nodebackgroundcolor&quot;;
+
+	private static final String SET_RESOURCE = &quot;set_property_text&quot;;
+
+	private static final String SET_NODE_BACKGROUND_COLOR = SET_RESOURCE;
+
+	private static final String NODE_COLOR = &quot;nodecolor&quot;;
+
+	private static final String SET_NODE_COLOR = SET_RESOURCE;
+
+	private static final String SET_NODE_STYLE = SET_RESOURCE;
+
+	private static final String NODE_STYLE = &quot;nodestyle&quot;;
+
+	private static final String NODE_FONT_NAME = &quot;nodefontname&quot;;
+
+	private static final String SET_NODE_FONT_NAME = SET_RESOURCE;
+
+	private static final String NODE_FONT_SIZE = &quot;nodefontsize&quot;;
+
+	private static final String SET_NODE_FONT_SIZE = SET_RESOURCE;
+
+	private static final String NODE_FONT_BOLD = &quot;nodefontbold&quot;;
+
+	private static final String SET_NODE_FONT_BOLD = SET_RESOURCE;
+
+	private static final String NODE_FONT_ITALIC = &quot;nodefontitalic&quot;;
+
+	private static final String SET_NODE_FONT_ITALIC = SET_RESOURCE;
+
+	private static final String SET_NODE_TEXT = SET_RESOURCE;
+
+	private static final String NODE_TEXT = &quot;nodetext&quot;;
+
+	private static final String SET_EDGE_WIDTH = SET_RESOURCE;
+
+	private static final String EDGE_WIDTH = &quot;edgewidth&quot;;
+
+	private static final String SET_EDGE_STYLE = SET_RESOURCE;
+
+	private static final String EDGE_STYLE = &quot;edgestyle&quot;;
+
+	private static final String SET_EDGE_COLOR = SET_RESOURCE;
+
+	private static final String EDGE_COLOR = &quot;edgecolor&quot;;
+
+	private static final String CLEAR_ALL_SETTERS = &quot;clear_all_setters&quot;;
+
+	private static final String SET_ICON = SET_RESOURCE;
+
+	private static final String ICON = &quot;icon&quot;;
+
+	private static final String NODE_NAME = &quot;patternname&quot;;
+
+	private static final String SET_CHILD_PATTERN = SET_RESOURCE;
+
+	private static final String CHILD_PATTERN = &quot;childpattern&quot;;
+
+	private static final String SET_SCRIPT = &quot;setscript&quot;;
+
+<span class="nc" id="L163">	private static final String SCRIPT = &quot;script&quot;;</span>
+
+	private final TextTranslator mTranslator;
+
+	private Vector mControls;
+
+	private ThreeCheckBoxProperty mSetNodeColor;
+
+	private ColorProperty mNodeColor;
+
+	private ThreeCheckBoxProperty mSetNodeBackgroundColor;
+
+	private ColorProperty mNodeBackgroundColor;
+
+	private ThreeCheckBoxProperty mSetNodeStyle;
+
+	private ComboProperty mNodeStyle;
+
+	private ThreeCheckBoxProperty mSetNodeFontName;
+
+	private FontProperty mNodeFontName;
+
+	private ThreeCheckBoxProperty mSetNodeFontBold;
+
+	private BooleanProperty mNodeFontBold;
+
+	private ThreeCheckBoxProperty mSetNodeFontItalic;
+
+	private BooleanProperty mNodeFontItalic;
+
+	private ThreeCheckBoxProperty mSetNodeFontSize;
+
+	private ComboProperty mNodeFontSize;
+
+	private ThreeCheckBoxProperty mSetNodeText;
+
+	private StringProperty mNodeText;
+
+	private ThreeCheckBoxProperty mSetEdgeWidth;
+
+	private ComboProperty mEdgeWidth;
+
+	private ThreeCheckBoxProperty mSetEdgeStyle;
+
+	private ComboProperty mEdgeStyle;
+
+	private ThreeCheckBoxProperty mSetEdgeColor;
+
+	private ColorProperty mEdgeColor;
+
+	private ThreeCheckBoxProperty mSetIcon;
+
+	private IconProperty mIcon;
+
+	private ThreeCheckBoxProperty mSetChildPattern;
+
+	private ComboProperty mChildPattern;
+
+	private ThreeCheckBoxProperty mSetScriptPattern;
+
+	private ScriptEditorProperty mScriptPattern;
+
+	private StringProperty mName;
+
+	private Vector mIconInformationVector;
+
+	/**
+	 * Denotes pairs property -&gt; ThreeCheckBoxProperty such that the boolean
+	 * property can be set, when the format property is changed.
+	 */
+<span class="nc" id="L233">	private HashMap mPropertyChangePropagation = new HashMap();</span>
+
+	private ThreeCheckBoxProperty mClearSetters;
+
+	private final MindMapController mMindMapController;
+
+	private final StylePatternFrameType mType;
+
+	/**
+	 * @throws HeadlessException
+	 */
+	public StylePatternFrame(TextTranslator pTranslator,
+			MindMapController pMindMapController, StylePatternFrameType pType)
+			throws HeadlessException {
+<span class="nc" id="L247">		super();</span>
+<span class="nc" id="L248">		mTranslator = pTranslator;</span>
+<span class="nc" id="L249">		mMindMapController = pMindMapController;</span>
+<span class="nc" id="L250">		mType = pType;</span>
+<span class="nc" id="L251">	}</span>
+
+	/**
+	 * Creates all controls and adds them to the frame.
+	 */
+	public void init() {
+<span class="nc" id="L257">		CardLayout cardLayout = new CardLayout();</span>
+<span class="nc" id="L258">		JPanel rightStack = new JPanel(cardLayout);</span>
+<span class="nc" id="L259">		String form = &quot;right:max(40dlu;p), 4dlu, 20dlu, 7dlu,right:max(40dlu;p), 4dlu, 80dlu, 7dlu&quot;;</span>
+<span class="nc" id="L260">		FormLayout rightLayout = new FormLayout(form, &quot;&quot;);</span>
+<span class="nc" id="L261">		DefaultFormBuilder rightBuilder = new DefaultFormBuilder(rightLayout);</span>
+<span class="nc" id="L262">		rightBuilder.setDefaultDialogBorder();</span>
+<span class="nc" id="L263">		mControls = getControls();</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		for (Iterator i = mControls.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L265">			PropertyControl control = (PropertyControl) i.next();</span>
+<span class="nc" id="L266">			control.layout(rightBuilder, this);</span>
+		}
+		// add the last one, too
+<span class="nc" id="L269">		rightStack.add(rightBuilder.getPanel(), &quot;testTab&quot;);</span>
+<span class="nc" id="L270">		add(rightStack, BorderLayout.CENTER);</span>
+<span class="nc" id="L271">	}</span>
+
+	public void addListeners() {
+		// add listeners:
+<span class="nc bnc" id="L275" title="All 2 branches missed.">		for (Iterator iter = mControls.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L276">			PropertyControl control = (PropertyControl) iter.next();</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">			if (control instanceof PropertyBean) {</span>
+<span class="nc" id="L278">				PropertyBean bean = (PropertyBean) control;</span>
+<span class="nc" id="L279">				bean.addPropertyChangeListener(this);</span>
+			}
+		}
+<span class="nc" id="L282">		mClearSetters.addPropertyChangeListener(new PropertyChangeListener() {</span>
+
+			public void propertyChange(PropertyChangeEvent pEvt) {
+<span class="nc" id="L285">				for (Iterator iter = mPropertyChangePropagation.keySet()</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">						.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L287">					ThreeCheckBoxProperty booleanProp = (ThreeCheckBoxProperty) iter</span>
+<span class="nc" id="L288">							.next();</span>
+<span class="nc" id="L289">					booleanProp.setValue(mClearSetters.getValue());</span>
+				}
+<span class="nc" id="L291">			}</span>
+		});
+<span class="nc" id="L293">	}</span>
+
+<span class="nc" id="L295">	private String[] sizes = new String[] { &quot;2&quot;, &quot;4&quot;, &quot;6&quot;, &quot;8&quot;, &quot;10&quot;, &quot;12&quot;,</span>
+<span class="nc" id="L296">			&quot;14&quot;, &quot;16&quot;, &quot;18&quot;, &quot;20&quot;, &quot;22&quot;, &quot;24&quot;, &quot;30&quot;, &quot;36&quot;, &quot;48&quot;, &quot;72&quot; };</span>
+
+	private List mPatternList;
+
+	private Vector getControls() {
+<span class="nc" id="L301">		Vector controls = new Vector();</span>
+<span class="nc" id="L302">		controls.add(new SeparatorProperty(&quot;General&quot;));</span>
+<span class="nc" id="L303">		mClearSetters = new ThreeCheckBoxProperty(CLEAR_ALL_SETTERS</span>
+<span class="nc" id="L304">				+ &quot;.tooltip&quot;, CLEAR_ALL_SETTERS);</span>
+<span class="nc" id="L305">		mClearSetters.setValue(ThreeCheckBoxProperty.TRUE_VALUE);</span>
+<span class="nc" id="L306">		controls.add(mClearSetters);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">		if (StylePatternFrameType.WITH_NAME_AND_CHILDS.equals(mType)) {</span>
+<span class="nc" id="L308">			mName = new StringProperty(NODE_NAME + &quot;.tooltip&quot;, NODE_NAME);</span>
+<span class="nc" id="L309">			controls.add(mName);</span>
+			// child pattern
+<span class="nc" id="L311">			mSetChildPattern = new ThreeCheckBoxProperty(SET_CHILD_PATTERN</span>
+<span class="nc" id="L312">					+ &quot;.tooltip&quot;, SET_CHILD_PATTERN);</span>
+<span class="nc" id="L313">			controls.add(mSetChildPattern);</span>
+<span class="nc" id="L314">			Vector childNames = new Vector();</span>
+<span class="nc" id="L315">			mChildPattern = new ComboProperty(CHILD_PATTERN + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L316">					CHILD_PATTERN, childNames, childNames);</span>
+<span class="nc" id="L317">			controls.add(mChildPattern);</span>
+		}
+<span class="nc" id="L319">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L320">		controls.add(new SeparatorProperty(&quot;NodeColors&quot;));</span>
+<span class="nc" id="L321">		mSetNodeColor = new ThreeCheckBoxProperty(SET_NODE_COLOR + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L322">				SET_NODE_COLOR);</span>
+<span class="nc" id="L323">		controls.add(mSetNodeColor);</span>
+<span class="nc" id="L324">		FreeMind fmMain = (FreeMind) mMindMapController.getFrame();</span>
+<span class="nc" id="L325">		mNodeColor = new ColorProperty(NODE_COLOR + &quot;.tooltip&quot;, NODE_COLOR,</span>
+<span class="nc" id="L326">				fmMain.getDefaultProperty(FreeMind.RESOURCES_NODE_TEXT_COLOR),</span>
+<span class="nc" id="L327">				this);</span>
+<span class="nc" id="L328">		controls.add(mNodeColor);</span>
+<span class="nc" id="L329">		mSetNodeBackgroundColor = new ThreeCheckBoxProperty(</span>
+<span class="nc" id="L330">				SET_NODE_BACKGROUND_COLOR + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L331">				SET_NODE_BACKGROUND_COLOR);</span>
+<span class="nc" id="L332">		controls.add(mSetNodeBackgroundColor);</span>
+<span class="nc" id="L333">		mNodeBackgroundColor = new ColorProperty(NODE_BACKGROUND_COLOR</span>
+<span class="nc" id="L334">				+ &quot;.tooltip&quot;, NODE_BACKGROUND_COLOR,</span>
+<span class="nc" id="L335">				fmMain.getDefaultProperty(FreeMind.RESOURCES_BACKGROUND_COLOR),</span>
+<span class="nc" id="L336">				this);</span>
+<span class="nc" id="L337">		controls.add(mNodeBackgroundColor);</span>
+<span class="nc" id="L338">		controls.add(new SeparatorProperty(&quot;NodeStyles&quot;));</span>
+<span class="nc" id="L339">		mSetNodeStyle = new ThreeCheckBoxProperty(SET_NODE_STYLE + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L340">				SET_NODE_STYLE);</span>
+<span class="nc" id="L341">		controls.add(mSetNodeStyle);</span>
+<span class="nc" id="L342">		mNodeStyle = new ComboProperty(NODE_STYLE + &quot;.tooltip&quot;, NODE_STYLE,</span>
+<span class="nc" id="L343">				MindMapNode.NODE_STYLES, this);</span>
+<span class="nc" id="L344">		controls.add(mNodeStyle);</span>
+<span class="nc" id="L345">		mIconInformationVector = new Vector();</span>
+<span class="nc" id="L346">		MindMapController controller = mMindMapController;</span>
+<span class="nc" id="L347">		Vector iconActions = controller.iconActions;</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">		for (Enumeration e = iconActions.elements(); e.hasMoreElements();) {</span>
+<span class="nc" id="L349">			IconAction action = ((IconAction) e.nextElement());</span>
+<span class="nc" id="L350">			MindIcon info = action.getMindIcon();</span>
+<span class="nc" id="L351">			mIconInformationVector.add(info);</span>
+		}
+<span class="nc" id="L353">		mSetIcon = new ThreeCheckBoxProperty(SET_ICON + &quot;.tooltip&quot;, SET_ICON);</span>
+<span class="nc" id="L354">		controls.add(mSetIcon);</span>
+<span class="nc" id="L355">		mIcon = new IconProperty(ICON + &quot;.tooltip&quot;, ICON,</span>
+<span class="nc" id="L356">				mMindMapController.getFrame(), mIconInformationVector);</span>
+<span class="nc" id="L357">		controls.add(mIcon);</span>
+<span class="nc" id="L358">		controls.add(new NextLineProperty());</span>
+<span class="nc" id="L359">		controls.add(new SeparatorProperty(&quot;NodeFont&quot;));</span>
+<span class="nc" id="L360">		mSetNodeFontName = new ThreeCheckBoxProperty(SET_NODE_FONT_NAME</span>
+<span class="nc" id="L361">				+ &quot;.tooltip&quot;, SET_NODE_FONT_NAME);</span>
+<span class="nc" id="L362">		controls.add(mSetNodeFontName);</span>
+<span class="nc" id="L363">		mNodeFontName = new FontProperty(NODE_FONT_NAME + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L364">				NODE_FONT_NAME, this);</span>
+<span class="nc" id="L365">		controls.add(mNodeFontName);</span>
+<span class="nc" id="L366">		mSetNodeFontSize = new ThreeCheckBoxProperty(SET_NODE_FONT_SIZE</span>
+<span class="nc" id="L367">				+ &quot;.tooltip&quot;, SET_NODE_FONT_SIZE);</span>
+<span class="nc" id="L368">		controls.add(mSetNodeFontSize);</span>
+<span class="nc" id="L369">		Vector sizesVector = new Vector();</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">		for (int i = 0; i &lt; sizes.length; i++) {</span>
+<span class="nc" id="L371">			sizesVector.add(sizes[i]);</span>
+		}
+<span class="nc" id="L373">		mNodeFontSize = new IntegerComboProperty(NODE_FONT_SIZE + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L374">				NODE_FONT_SIZE, sizes, sizesVector);</span>
+<span class="nc" id="L375">		controls.add(mNodeFontSize);</span>
+<span class="nc" id="L376">		mSetNodeFontBold = new ThreeCheckBoxProperty(SET_NODE_FONT_BOLD</span>
+<span class="nc" id="L377">				+ &quot;.tooltip&quot;, SET_NODE_FONT_BOLD);</span>
+<span class="nc" id="L378">		controls.add(mSetNodeFontBold);</span>
+<span class="nc" id="L379">		mNodeFontBold = new BooleanProperty(NODE_FONT_BOLD + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L380">				NODE_FONT_BOLD);</span>
+<span class="nc" id="L381">		controls.add(mNodeFontBold);</span>
+<span class="nc" id="L382">		mSetNodeFontItalic = new ThreeCheckBoxProperty(SET_NODE_FONT_ITALIC</span>
+<span class="nc" id="L383">				+ &quot;.tooltip&quot;, SET_NODE_FONT_ITALIC);</span>
+<span class="nc" id="L384">		controls.add(mSetNodeFontItalic);</span>
+<span class="nc" id="L385">		mNodeFontItalic = new BooleanProperty(NODE_FONT_ITALIC + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L386">				NODE_FONT_ITALIC);</span>
+<span class="nc" id="L387">		controls.add(mNodeFontItalic);</span>
+		/* **** */
+<span class="nc" id="L389">		mSetNodeText = new ThreeCheckBoxProperty(SET_NODE_TEXT + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L390">				SET_NODE_TEXT);</span>
+<span class="nc" id="L391">		controls.add(mSetNodeText);</span>
+<span class="nc" id="L392">		mNodeText = new StringProperty(NODE_TEXT + &quot;.tooltip&quot;, NODE_TEXT);</span>
+<span class="nc" id="L393">		controls.add(mNodeText);</span>
+		/* **** */
+<span class="nc" id="L395">		controls.add(new SeparatorProperty(&quot;EdgeControls&quot;));</span>
+<span class="nc" id="L396">		mSetEdgeWidth = new ThreeCheckBoxProperty(SET_EDGE_WIDTH + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L397">				SET_EDGE_WIDTH);</span>
+<span class="nc" id="L398">		controls.add(mSetEdgeWidth);</span>
+<span class="nc" id="L399">		mEdgeWidth = new ComboProperty(EDGE_WIDTH + &quot;.tooltip&quot;, EDGE_WIDTH,</span>
+<span class="nc" id="L400">				EDGE_WIDTHS, this);</span>
+<span class="nc" id="L401">		controls.add(mEdgeWidth);</span>
+		/* **** */
+<span class="nc" id="L403">		mSetEdgeStyle = new ThreeCheckBoxProperty(SET_EDGE_STYLE + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L404">				SET_EDGE_STYLE);</span>
+<span class="nc" id="L405">		controls.add(mSetEdgeStyle);</span>
+<span class="nc" id="L406">		mEdgeStyle = new ComboProperty(EDGE_STYLE + &quot;.tooltip&quot;, EDGE_STYLE,</span>
+<span class="nc" id="L407">				EDGE_STYLES, this);</span>
+<span class="nc" id="L408">		controls.add(mEdgeStyle);</span>
+		/* **** */
+<span class="nc" id="L410">		mSetEdgeColor = new ThreeCheckBoxProperty(SET_EDGE_COLOR + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L411">				SET_EDGE_COLOR);</span>
+<span class="nc" id="L412">		controls.add(mSetEdgeColor);</span>
+<span class="nc" id="L413">		mEdgeColor = new ColorProperty(EDGE_COLOR + &quot;.tooltip&quot;, EDGE_COLOR,</span>
+<span class="nc" id="L414">				fmMain.getDefaultProperty(FreeMind.RESOURCES_EDGE_COLOR), this);</span>
+<span class="nc" id="L415">		controls.add(mEdgeColor);</span>
+		/* **** */
+<span class="nc" id="L417">		controls.add(new SeparatorProperty(&quot;ScriptingControl&quot;));</span>
+<span class="nc" id="L418">		mSetScriptPattern = new ThreeCheckBoxProperty(SET_SCRIPT + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L419">				SET_SCRIPT);</span>
+<span class="nc" id="L420">		controls.add(mSetScriptPattern);</span>
+<span class="nc" id="L421">		mScriptPattern = new ScriptEditorProperty(SCRIPT + &quot;.tooltip&quot;, SCRIPT,</span>
+<span class="nc" id="L422">				mMindMapController);</span>
+<span class="nc" id="L423">		controls.add(mScriptPattern);</span>
+		// fill map;
+<span class="nc" id="L425">		mPropertyChangePropagation.put(mSetNodeColor, mNodeColor);</span>
+<span class="nc" id="L426">		mPropertyChangePropagation.put(mSetNodeBackgroundColor,</span>
+<span class="nc" id="L427">				mNodeBackgroundColor);</span>
+<span class="nc" id="L428">		mPropertyChangePropagation.put(mSetNodeStyle, mNodeStyle);</span>
+<span class="nc" id="L429">		mPropertyChangePropagation.put(mSetNodeFontName, mNodeFontName);</span>
+<span class="nc" id="L430">		mPropertyChangePropagation.put(mSetNodeFontSize, mNodeFontSize);</span>
+<span class="nc" id="L431">		mPropertyChangePropagation.put(mSetNodeFontBold, mNodeFontBold);</span>
+<span class="nc" id="L432">		mPropertyChangePropagation.put(mSetNodeFontItalic, mNodeFontItalic);</span>
+<span class="nc" id="L433">		mPropertyChangePropagation.put(mSetNodeText, mNodeText);</span>
+<span class="nc" id="L434">		mPropertyChangePropagation.put(mSetEdgeColor, mEdgeColor);</span>
+<span class="nc" id="L435">		mPropertyChangePropagation.put(mSetEdgeStyle, mEdgeStyle);</span>
+<span class="nc" id="L436">		mPropertyChangePropagation.put(mSetEdgeWidth, mEdgeWidth);</span>
+<span class="nc" id="L437">		mPropertyChangePropagation.put(mSetIcon, mIcon);</span>
+<span class="nc" id="L438">		mPropertyChangePropagation.put(mSetScriptPattern, mScriptPattern);</span>
+<span class="nc bnc" id="L439" title="All 2 branches missed.">		if (StylePatternFrameType.WITH_NAME_AND_CHILDS.equals(mType)) {</span>
+			// child pattern
+<span class="nc" id="L441">			mPropertyChangePropagation.put(mSetChildPattern, mChildPattern);</span>
+		}
+<span class="nc" id="L443">		return controls;</span>
+	}
+
+	private Vector getPatternNames() {
+<span class="nc" id="L447">		Vector childNames = new Vector();</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">		for (Iterator iter = mPatternList.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L449">			Pattern pattern = (Pattern) iter.next();</span>
+<span class="nc" id="L450">			childNames.add(pattern.getName());</span>
+		}
+<span class="nc" id="L452">		return childNames;</span>
+	}
+
+	public String getText(String pKey) {
+<span class="nc" id="L456">		return mTranslator.getText(&quot;PatternDialog.&quot; + pKey);</span>
+	}
+
+	public void setPattern(Pattern pattern) {
+<span class="nc" id="L460">		FreeMind fmMain = (FreeMind) mMindMapController.getFrame();</span>
+<span class="nc" id="L461">		setPatternControls(pattern.getPatternNodeColor(), mSetNodeColor,</span>
+<span class="nc" id="L462">				mNodeColor,</span>
+<span class="nc" id="L463">				fmMain.getDefaultProperty(FreeMind.RESOURCES_NODE_TEXT_COLOR));</span>
+<span class="nc" id="L464">		setPatternControls(pattern.getPatternNodeBackgroundColor(),</span>
+<span class="nc" id="L465">				mSetNodeBackgroundColor, mNodeBackgroundColor,</span>
+<span class="nc" id="L466">				fmMain.getDefaultProperty(FreeMind.RESOURCES_BACKGROUND_COLOR));</span>
+<span class="nc" id="L467">		setPatternControls(pattern.getPatternNodeStyle(), mSetNodeStyle,</span>
+<span class="nc" id="L468">				mNodeStyle, MindMapNode.STYLE_AS_PARENT);</span>
+<span class="nc" id="L469">		setPatternControls(pattern.getPatternNodeText(), mSetNodeText,</span>
+<span class="nc" id="L470">				mNodeText, &quot;&quot;);</span>
+<span class="nc" id="L471">		setPatternControls(pattern.getPatternEdgeColor(), mSetEdgeColor,</span>
+<span class="nc" id="L472">				mEdgeColor,</span>
+<span class="nc" id="L473">				fmMain.getDefaultProperty(FreeMind.RESOURCES_EDGE_COLOR));</span>
+<span class="nc" id="L474">		setPatternControls(pattern.getPatternEdgeStyle(), mSetEdgeStyle,</span>
+<span class="nc" id="L475">				mEdgeStyle, EDGE_STYLES[0]);</span>
+<span class="nc" id="L476">		setPatternControls(pattern.getPatternEdgeWidth(), mSetEdgeWidth,</span>
+<span class="nc" id="L477">				mEdgeWidth, EDGE_WIDTHS[0], new EdgeWidthTransformer());</span>
+<span class="nc" id="L478">		setPatternControls(pattern.getPatternNodeFontName(), mSetNodeFontName,</span>
+<span class="nc" id="L479">				mNodeFontName, mMindMapController.getController()</span>
+<span class="nc" id="L480">						.getDefaultFontFamilyName());</span>
+<span class="nc" id="L481">		setPatternControls(pattern.getPatternNodeFontSize(), mSetNodeFontSize,</span>
+<span class="nc" id="L482">				mNodeFontSize, sizes[0]);</span>
+<span class="nc" id="L483">		setPatternControls(pattern.getPatternNodeFontBold(), mSetNodeFontBold,</span>
+<span class="nc" id="L484">				mNodeFontBold, BooleanProperty.TRUE_VALUE);</span>
+<span class="nc" id="L485">		setPatternControls(pattern.getPatternNodeFontItalic(),</span>
+<span class="nc" id="L486">				mSetNodeFontItalic, mNodeFontItalic, BooleanProperty.TRUE_VALUE);</span>
+<span class="nc" id="L487">		MindIcon firstInfo = (MindIcon) mIconInformationVector.get(0);</span>
+<span class="nc" id="L488">		setPatternControls(pattern.getPatternIcon(), mSetIcon, mIcon,</span>
+<span class="nc" id="L489">				firstInfo.getName());</span>
+<span class="nc" id="L490">		setPatternControls(pattern.getPatternScript(), mSetScriptPattern,</span>
+<span class="nc" id="L491">				mScriptPattern, &quot;&quot;);</span>
+<span class="nc bnc" id="L492" title="All 2 branches missed.">		if (StylePatternFrameType.WITH_NAME_AND_CHILDS.equals(mType)) {</span>
+<span class="nc" id="L493">			mName.setValue(pattern.getName());</span>
+<span class="nc" id="L494">			setPatternControls(</span>
+<span class="nc" id="L495">					pattern.getPatternChild(),</span>
+<span class="nc" id="L496">					mSetChildPattern,</span>
+<span class="nc" id="L497">					mChildPattern,</span>
+<span class="nc bnc" id="L498" title="All 2 branches missed.">					(mPatternList.size() &gt; 0) ? ((Pattern) mPatternList.get(0))</span>
+<span class="nc" id="L499">							.getName() : null);</span>
+
+		}
+<span class="nc" id="L502">		for (Iterator iter = mPropertyChangePropagation.keySet().iterator(); iter</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L504">			ThreeCheckBoxProperty prop = (ThreeCheckBoxProperty) iter.next();</span>
+<span class="nc" id="L505">			propertyChange(new PropertyChangeEvent(prop, prop.getLabel(), null,</span>
+<span class="nc" id="L506">					prop.getValue()));</span>
+		}
+
+<span class="nc" id="L509">	}</span>
+
+	private interface ValueTransformator {
+		String transform(String value);
+	}
+
+<span class="nc" id="L515">	private final class IdentityTransformer implements ValueTransformator {</span>
+		public String transform(String value) {
+<span class="nc" id="L517">			return value;</span>
+		}
+	}
+
+<span class="nc" id="L521">	private final class EdgeWidthTransformer implements ValueTransformator {</span>
+		public String transform(String value) {
+<span class="nc" id="L523">			return transformEdgeWidth(value);</span>
+		}
+	}
+
+<span class="nc" id="L527">	private final class EdgeWidthBackTransformer implements ValueTransformator {</span>
+		public String transform(String value) {
+<span class="nc" id="L529">			return transformStringToWidth(value);</span>
+		}
+	}
+
+	private void setPatternControls(PatternPropertyBase patternProperty,
+			PropertyBean threeCheckBoxProperty, PropertyBean property,
+			String defaultValue) {
+<span class="nc" id="L536">		setPatternControls(patternProperty, threeCheckBoxProperty, property,</span>
+<span class="nc" id="L537">				defaultValue, new IdentityTransformer());</span>
+<span class="nc" id="L538">	}</span>
+
+	/**
+	 */
+	private void setPatternControls(PatternPropertyBase patternProperty,
+			PropertyBean threeCheckBoxProperty, PropertyBean property,
+			String defaultValue, ValueTransformator transformer) {
+<span class="nc bnc" id="L545" title="All 2 branches missed.">		if (patternProperty == null) {</span>
+			// value is not set:
+<span class="nc" id="L547">			property.setValue(defaultValue);</span>
+<span class="nc" id="L548">			threeCheckBoxProperty</span>
+<span class="nc" id="L549">					.setValue(ThreeCheckBoxProperty.DON_T_TOUCH_VALUE);</span>
+<span class="nc" id="L550">			return;</span>
+		}
+<span class="nc bnc" id="L552" title="All 2 branches missed.">		if (patternProperty.getValue() == null) {</span>
+			// remove prop:
+<span class="nc" id="L554">			property.setValue(defaultValue);</span>
+<span class="nc" id="L555">			threeCheckBoxProperty.setValue(ThreeCheckBoxProperty.FALSE_VALUE);</span>
+<span class="nc" id="L556">			return;</span>
+		}
+<span class="nc" id="L558">		property.setValue(transformer.transform(patternProperty.getValue()));</span>
+<span class="nc" id="L559">		threeCheckBoxProperty.setValue(ThreeCheckBoxProperty.TRUE_VALUE);</span>
+<span class="nc" id="L560">	}</span>
+
+	private String transformEdgeWidth(String pEdgeWidth) {
+<span class="nc bnc" id="L563" title="All 2 branches missed.">		if (pEdgeWidth == null)</span>
+<span class="nc" id="L564">			return null;</span>
+<span class="nc" id="L565">		int edgeWidth = ApplyPatternAction.edgeWidthStringToInt(pEdgeWidth);</span>
+<span class="nc" id="L566">		HashMap transformator = getEdgeWidthTransformation();</span>
+<span class="nc bnc" id="L567" title="All 2 branches missed.">		for (Iterator iter = transformator.keySet().iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L568">			String widthString = (String) iter.next();</span>
+<span class="nc" id="L569">			Integer width = (Integer) transformator.get(widthString);</span>
+<span class="nc bnc" id="L570" title="All 2 branches missed.">			if (edgeWidth == width.intValue()) {</span>
+<span class="nc" id="L571">				return widthString;</span>
+			}
+		}
+		// not found:
+<span class="nc" id="L575">		return null;</span>
+	}
+
+	private String transformStringToWidth(String value) {
+<span class="nc" id="L579">		HashMap transformator = getEdgeWidthTransformation();</span>
+<span class="nc" id="L580">		int intWidth = ((Integer) transformator.get(value)).intValue();</span>
+<span class="nc" id="L581">		return ApplyPatternAction.edgeWidthIntToString(intWidth);</span>
+	}
+
+	private HashMap getEdgeWidthTransformation() {
+<span class="nc" id="L585">		HashMap transformator = new HashMap();</span>
+<span class="nc" id="L586">		transformator</span>
+<span class="nc" id="L587">				.put(EDGE_WIDTHS[0], new Integer(EdgeAdapter.WIDTH_PARENT));</span>
+<span class="nc" id="L588">		transformator.put(EDGE_WIDTHS[1], new Integer(EdgeAdapter.WIDTH_THIN));</span>
+<span class="nc" id="L589">		transformator.put(EDGE_WIDTHS[2], new Integer(1));</span>
+<span class="nc" id="L590">		transformator.put(EDGE_WIDTHS[3], new Integer(2));</span>
+<span class="nc" id="L591">		transformator.put(EDGE_WIDTHS[4], new Integer(4));</span>
+<span class="nc" id="L592">		transformator.put(EDGE_WIDTHS[5], new Integer(8));</span>
+<span class="nc" id="L593">		return transformator;</span>
+	}
+
+	public Pattern getResultPattern() {
+<span class="nc" id="L597">		Pattern pattern = new Pattern();</span>
+<span class="nc" id="L598">		return getResultPattern(pattern);</span>
+	}
+
+	public Pattern getResultPattern(Pattern pattern) {
+<span class="nc" id="L602">		pattern.setPatternNodeColor((PatternNodeColor) getPatternResult(</span>
+<span class="nc" id="L603">				new PatternNodeColor(), mSetNodeColor, mNodeColor));</span>
+<span class="nc" id="L604">		pattern.setPatternNodeBackgroundColor((PatternNodeBackgroundColor) getPatternResult(</span>
+<span class="nc" id="L605">				new PatternNodeBackgroundColor(), mSetNodeBackgroundColor,</span>
+<span class="nc" id="L606">				mNodeBackgroundColor));</span>
+<span class="nc" id="L607">		pattern.setPatternNodeStyle((PatternNodeStyle) getPatternResult(</span>
+<span class="nc" id="L608">				new PatternNodeStyle(), mSetNodeStyle, mNodeStyle));</span>
+<span class="nc" id="L609">		pattern.setPatternNodeText((PatternNodeText) getPatternResult(</span>
+<span class="nc" id="L610">				new PatternNodeText(), mSetNodeText, mNodeText));</span>
+		/* edges */
+<span class="nc" id="L612">		pattern.setPatternEdgeColor((PatternEdgeColor) getPatternResult(</span>
+<span class="nc" id="L613">				new PatternEdgeColor(), mSetEdgeColor, mEdgeColor));</span>
+<span class="nc" id="L614">		pattern.setPatternEdgeStyle((PatternEdgeStyle) getPatternResult(</span>
+<span class="nc" id="L615">				new PatternEdgeStyle(), mSetEdgeStyle, mEdgeStyle));</span>
+<span class="nc" id="L616">		pattern.setPatternEdgeWidth((PatternEdgeWidth) getPatternResult(</span>
+<span class="nc" id="L617">				new PatternEdgeWidth(), mSetEdgeWidth, mEdgeWidth,</span>
+<span class="nc" id="L618">				new EdgeWidthBackTransformer()));</span>
+		/* font */
+<span class="nc" id="L620">		pattern.setPatternNodeFontName((PatternNodeFontName) getPatternResult(</span>
+<span class="nc" id="L621">				new PatternNodeFontName(), mSetNodeFontName, mNodeFontName));</span>
+<span class="nc" id="L622">		pattern.setPatternNodeFontSize((PatternNodeFontSize) getPatternResult(</span>
+<span class="nc" id="L623">				new PatternNodeFontSize(), mSetNodeFontSize, mNodeFontSize));</span>
+<span class="nc" id="L624">		pattern.setPatternNodeFontBold((PatternNodeFontBold) getPatternResult(</span>
+<span class="nc" id="L625">				new PatternNodeFontBold(), mSetNodeFontBold, mNodeFontBold));</span>
+<span class="nc" id="L626">		pattern.setPatternNodeFontItalic((PatternNodeFontItalic) getPatternResult(</span>
+<span class="nc" id="L627">				new PatternNodeFontItalic(), mSetNodeFontItalic,</span>
+<span class="nc" id="L628">				mNodeFontItalic));</span>
+<span class="nc" id="L629">		pattern.setPatternIcon((PatternIcon) getPatternResult(</span>
+<span class="nc" id="L630">				new PatternIcon(), mSetIcon, mIcon));</span>
+<span class="nc" id="L631">		pattern.setPatternScript((PatternScript) getPatternResult(</span>
+<span class="nc" id="L632">				new PatternScript(), mSetScriptPattern, mScriptPattern));</span>
+<span class="nc bnc" id="L633" title="All 2 branches missed.">		if (StylePatternFrameType.WITH_NAME_AND_CHILDS.equals(mType)) {</span>
+<span class="nc" id="L634">			pattern.setName(mName.getValue());</span>
+<span class="nc" id="L635">			pattern.setPatternChild((PatternChild) getPatternResult(</span>
+<span class="nc" id="L636">					new PatternChild(), mSetChildPattern, mChildPattern));</span>
+		}
+<span class="nc" id="L638">		return pattern;</span>
+	}
+
+	private PatternPropertyBase getPatternResult(
+			PatternPropertyBase baseProperty,
+			ThreeCheckBoxProperty threeCheckBoxProperty, PropertyBean property) {
+<span class="nc" id="L644">		ValueTransformator transformer = new IdentityTransformer();</span>
+<span class="nc" id="L645">		return getPatternResult(baseProperty, threeCheckBoxProperty, property,</span>
+<span class="nc" id="L646">				transformer);</span>
+	}
+
+	/**
+	 */
+	private PatternPropertyBase getPatternResult(
+			PatternPropertyBase baseProperty,
+			ThreeCheckBoxProperty threeCheckBoxProperty, PropertyBean property,
+			ValueTransformator transformer) {
+<span class="nc" id="L655">		String checkboxResult = threeCheckBoxProperty.getValue();</span>
+<span class="nc bnc" id="L656" title="All 2 branches missed.">		if (checkboxResult == null) {</span>
+<span class="nc" id="L657">			return null;</span>
+		}
+<span class="nc bnc" id="L659" title="All 2 branches missed.">		if (checkboxResult.equals(ThreeCheckBoxProperty.DON_T_TOUCH_VALUE)) {</span>
+<span class="nc" id="L660">			return null;</span>
+		}
+<span class="nc bnc" id="L662" title="All 2 branches missed.">		if (checkboxResult.equals(ThreeCheckBoxProperty.FALSE_VALUE)) {</span>
+			// remove property:
+<span class="nc" id="L664">			return baseProperty;</span>
+		}
+<span class="nc" id="L666">		baseProperty.setValue(transformer.transform(property.getValue()));</span>
+<span class="nc" id="L667">		return baseProperty;</span>
+	}
+
+	/**
+	 * Used to enable/disable the attribute controls, if the check boxes are
+	 * changed.
+	 */
+	public void propertyChange(PropertyChangeEvent pEvt) {
+		// System.out.println(&quot;Propagation of &quot;+ pEvt.getPropertyName()
+		// + &quot; with value &quot; + pEvt.getNewValue() + &quot; and source &quot; +
+		// pEvt.getSource());
+<span class="nc bnc" id="L678" title="All 2 branches missed.">		if (mPropertyChangePropagation.containsKey(pEvt.getSource())) {</span>
+<span class="nc" id="L679">			ThreeCheckBoxProperty booleanProp = (ThreeCheckBoxProperty) pEvt</span>
+<span class="nc" id="L680">					.getSource();</span>
+			// enable only when set:
+<span class="nc" id="L682">			PropertyControl bean = (PropertyControl) mPropertyChangePropagation</span>
+<span class="nc" id="L683">					.get(booleanProp);</span>
+<span class="nc" id="L684">			bean.setEnabled(ThreeCheckBoxProperty.TRUE_VALUE.equals(booleanProp</span>
+<span class="nc" id="L685">					.getValue()));</span>
+<span class="nc" id="L686">			return;</span>
+		}
+<span class="nc" id="L688">	}</span>
+
+	/**
+	 * For the child pattern box, the list is set here.
+	 * 
+	 */
+	public void setPatternList(List patternList) {
+<span class="nc" id="L695">		this.mPatternList = patternList;</span>
+<span class="nc" id="L696">		Vector childNames = getPatternNames();</span>
+<span class="nc" id="L697">		mChildPattern.updateComboBoxEntries(childNames, childNames);</span>
+<span class="nc" id="L698">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

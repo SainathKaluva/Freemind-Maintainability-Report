@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>HtmlConversionTests.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">tests.freemind</a> &gt; <span class="el_source">HtmlConversionTests.java</span></div><h1>HtmlConversionTests.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2006  Christian Foltin &lt;christianfoltin@users.sourceforge.net&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: HtmlConversionTests.java,v 1.1.2.16 2010/12/04 21:07:23 christianfoltin Exp $*/
+
+package tests.freemind;
+
+import java.io.StringReader;
+
+import com.lightdev.app.shtm.SHTMLPanel;
+
+import freemind.main.HtmlTools;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.mindmapmode.MindMapNodeModel;
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="fc" id="L36">public class HtmlConversionTests extends FreeMindTestBase {</span>
+
+	public void testSetHtml() throws Exception {
+<span class="nc" id="L39">		MindMapNodeModel node = new MindMapNodeModel(getFrame(),</span>
+<span class="nc" id="L40">				new MindMapMock(&quot;&lt;/map&gt;&quot;));</span>
+<span class="nc" id="L41">		node.setText(&quot;test&quot;);</span>
+		// wiped out: &lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&lt;!DOCTYPE html
+		// PUBLIC \&quot;-//W3C//DTD XHTML 1.0 Transitional//EN\&quot;
+		// \&quot;DTD/xhtml1-transitional.dtd\&quot;&gt;\n
+<span class="nc" id="L45">		assertEquals(&quot;no conversion as test is not html.&quot;, null,</span>
+<span class="nc" id="L46">				node.getXmlText()); /*</span>
+									 * former :
+									 * &quot;&lt;html&gt;\n  &lt;head&gt;\n    \n  &lt;/head&gt;\n  &lt;body&gt;\n    test\n  &lt;/body&gt;\n&lt;/html&gt;\n&quot;
+									 */
+<span class="nc" id="L50">		node.setXmlText(&quot;test&quot;);</span>
+
+<span class="nc" id="L52">		assertEquals(&quot;proper conversion&quot;, &quot;test&quot;, node.getText());</span>
+<span class="nc" id="L53">		node.setText(&quot;&lt;html&gt;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L54">		assertEquals(</span>
+<span class="nc" id="L55">				&quot;proper html conversion&quot;,</span>
+<span class="nc" id="L56">				&quot;&lt;html&gt;\n  &lt;head&gt;\n    \n  &lt;/head&gt;\n  &lt;body&gt;\n    &lt;br /&gt;\n  &lt;/body&gt;\n&lt;/html&gt;\n&quot;,</span>
+<span class="nc" id="L57">				node.getXmlText());</span>
+		// must remove the '/' in &lt;br/&gt;.
+<span class="nc" id="L59">		node.setXmlText(&quot;&lt;html&gt;&lt;br/&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L60">		assertEquals(&quot;proper html conversion&quot;, &quot;&lt;html&gt;&lt;br&gt;&lt;/html&gt;&quot;,</span>
+<span class="nc" id="L61">				node.getText());</span>
+<span class="nc" id="L62">		node.setXmlText(&quot;&lt;html&gt;&lt;br /&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L63">		assertEquals(&quot;proper html conversion&quot;, &quot;&lt;html&gt;&lt;br &gt;&lt;/html&gt;&quot;,</span>
+<span class="nc" id="L64">				node.getText());</span>
+
+<span class="nc" id="L66">	}</span>
+
+	public void testEndContentMatcher() throws Exception {
+<span class="fc" id="L69">		matchingTest(&quot;&lt;/&quot; + XMLElement.XML_NODE_XHTML_CONTENT_TAG + &quot;&gt;&quot;);</span>
+<span class="fc" id="L70">		matchingTest(&quot;&lt;/ &quot; + XMLElement.XML_NODE_XHTML_CONTENT_TAG + &quot;&gt;&quot;);</span>
+<span class="fc" id="L71">		matchingTest(&quot;&lt;/ &quot; + XMLElement.XML_NODE_XHTML_CONTENT_TAG + &quot; &gt;&quot;);</span>
+<span class="fc" id="L72">		matchingTest(&quot;&lt; /\n&quot; + XMLElement.XML_NODE_XHTML_CONTENT_TAG + &quot; &gt;&quot;);</span>
+<span class="fc" id="L73">	}</span>
+
+	/**
+     */
+	private void matchingTest(String string) {
+<span class="fc" id="L78">		assertTrue(string</span>
+<span class="fc" id="L79">				.matches(XMLElement.XML_NODE_XHTML_CONTENT_END_TAG_REGEXP));</span>
+<span class="fc" id="L80">	}</span>
+
+	public void testNanoXmlContent() throws Exception {
+<span class="fc" id="L83">		XMLElement element = new XMLElement();</span>
+<span class="fc" id="L84">		element.parseFromReader(new StringReader(&quot;&lt;&quot;</span>
+				+ XMLElement.XML_NODE_XHTML_CONTENT_TAG
+				+ &quot;&gt;&lt;body&gt;a&lt;b&gt;cd&lt;/b&gt;e&lt;/body&gt;&lt;/&quot;
+				+ XMLElement.XML_NODE_XHTML_CONTENT_TAG + &quot;&gt;&quot;));
+<span class="fc" id="L88">		assertEquals(&quot;end &quot; + XMLElement.XML_NODE_XHTML_CONTENT_TAG</span>
+<span class="fc" id="L89">				+ &quot; tag removed&quot;, &quot;&lt;body&gt;a&lt;b&gt;cd&lt;/b&gt;e&lt;/body&gt;&quot;,</span>
+<span class="fc" id="L90">				element.getContent());</span>
+<span class="fc" id="L91">	}</span>
+
+	public void testXHtmlToHtmlConversion() throws Exception {
+<span class="fc" id="L94">		assertEquals(&quot;br removal&quot;, &quot;&lt;br &gt;&quot;,</span>
+<span class="fc" id="L95">				HtmlTools.getInstance().toHtml(&quot;&lt;br /&gt;&quot;));</span>
+<span class="fc" id="L96">		assertEquals(&quot;br removal, not more.&quot;, &quot;&lt;brmore/&gt;&quot;, HtmlTools</span>
+<span class="fc" id="L97">				.getInstance().toHtml(&quot;&lt;brmore/&gt;&quot;));</span>
+<span class="fc" id="L98">	}</span>
+
+	public void testWellFormedXml() throws Exception {
+<span class="fc" id="L101">		assertEquals(true, HtmlTools.getInstance().isWellformedXml(&quot;&lt;a&gt;&lt;/a&gt;&quot;));</span>
+		// assertEquals(true,
+		// HtmlTools.getInstance().isWellformedXml(&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&lt;!DOCTYPE html PUBLIC \&quot;-//W3C//DTD XHTML 1.0 Transitional//EN\&quot; \&quot;DTD/xhtml1-transitional.dtd\&quot;&gt;\n&lt;a&gt;&lt;/a&gt;&quot;));
+<span class="fc" id="L104">		assertEquals(</span>
+<span class="fc" id="L105">				true,</span>
+<span class="fc" id="L106">				HtmlTools.getInstance().isWellformedXml(</span>
+<span class="fc" id="L107">						&quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&lt;a&gt;&lt;/a&gt;&quot;));</span>
+<span class="fc" id="L108">		assertEquals(false,</span>
+<span class="fc" id="L109">				HtmlTools.getInstance().isWellformedXml(&quot;&lt;a&gt;&lt;a&gt;&lt;/a&gt;&quot;));</span>
+
+<span class="fc" id="L111">	}</span>
+
+	public void testBr() throws Exception {
+<span class="fc" id="L114">		String input = &quot;&lt;html&gt;\n&quot; + &quot;  &lt;head&gt;\n&quot; + &quot;    \n&quot; + &quot;  &lt;/head&gt;\n&quot;</span>
+				+ &quot;  &lt;body&gt;\n&quot; + &quot;    &lt;p&gt;\n&quot;
+				+ &quot;      asdfasdf&lt;br /&gt;asdfasdfdasf\n&quot; + &quot;    &lt;/p&gt;\n&quot;
+				+ &quot;    &lt;p&gt;\n&quot; + &quot;      asdasdfas\n&quot; + &quot;    &lt;/p&gt;\n&quot;
+				+ &quot;  &lt;/body&gt;\n&quot; + &quot;&lt;/html&gt;&quot;;
+<span class="fc" id="L119">		String result = HtmlTools.getInstance().toHtml(input);</span>
+<span class="fc" id="L120">		assertFalse(&quot; no &gt; occurs  in &quot; + result, result.matches(&quot;^.*&amp;gt;.*$&quot;));</span>
+<span class="fc" id="L121">	}</span>
+
+	/**
+	 * I suspected, that the toXhtml method inserts some spaces into the output,
+	 * but it doesn't seem to be the case.
+	 * 
+	 * @throws Exception
+	 */
+	public void testSpaceHandling() throws Exception {
+<span class="fc" id="L130">		String input = getInputStringWithManySpaces(HtmlTools.SP);</span>
+<span class="fc" id="L131">		assertEquals(input, HtmlTools.getInstance().toXhtml(input));</span>
+<span class="fc" id="L132">	}</span>
+
+	// public void testSpaceHandlingInShtml() throws Exception {
+	// String input = getInputStringWithManySpaces(&quot; &quot;);
+	// SHTMLPanel panel = SHTMLPanel.createSHTMLPanel();
+	// panel.setCurrentDocumentContent(input);
+	// assertEquals(input, panel.getDocumentText());
+	// panel.setVisible(false);
+	// }
+	/**
+	 * Set the panel to a text, read this text from the panel and set it again.
+	 * Then, setting and getting this text to the panel must give the same.
+	 */
+	public void testSpaceHandlingInShtmlIdempotency() throws Exception {
+<span class="fc" id="L146">		String input = getInputStringWithManySpaces(&quot; &quot;);</span>
+<span class="nc" id="L147">		SHTMLPanel panel = SHTMLPanel.createSHTMLPanel();</span>
+<span class="nc" id="L148">		panel.setCurrentDocumentContent(input);</span>
+		// set the value of the panel itself again.
+<span class="nc" id="L150">		input = panel.getDocumentText();</span>
+<span class="nc" id="L151">		panel.setCurrentDocumentContent(input);</span>
+<span class="nc" id="L152">		assertEquals(</span>
+<span class="nc" id="L153">				&quot;Setting the input to its output should cause the same output.&quot;,</span>
+<span class="nc" id="L154">				input, panel.getDocumentText());</span>
+<span class="nc" id="L155">		panel.setVisible(false);</span>
+<span class="nc" id="L156">	}</span>
+
+	public void testSpaceRemovalInShtml() throws Exception {
+<span class="fc" id="L159">		String input = getInputStringWithManySpaces(HtmlTools.SP);</span>
+<span class="nc" id="L160">		SHTMLPanel panel = SHTMLPanel.createSHTMLPanel();</span>
+<span class="nc" id="L161">		panel.setCurrentDocumentContent(input);</span>
+		// set the value of the panel itself again (twice)
+<span class="nc" id="L163">		input = panel.getDocumentText();</span>
+<span class="nc" id="L164">		panel.setCurrentDocumentContent(input);</span>
+<span class="nc" id="L165">		input = panel.getDocumentText();</span>
+<span class="nc" id="L166">		panel.setCurrentDocumentContent(input);</span>
+<span class="nc" id="L167">		assertEquals(</span>
+<span class="nc" id="L168">				&quot;Setting the input to its output should cause the same output.&quot;,</span>
+<span class="nc" id="L169">				input, panel.getDocumentText());</span>
+<span class="nc" id="L170">		panel.setVisible(false);</span>
+<span class="nc" id="L171">	}</span>
+
+	private String getInputStringWithManySpaces(String pSpaceString) {
+<span class="fc" id="L174">		String body = getHtmlBody(pSpaceString);</span>
+<span class="fc" id="L175">		String input = &quot;&lt;html&gt;\n&quot; + &quot;  &lt;head&gt;\n&quot; + &quot;    \n&quot; + &quot;  &lt;/head&gt;\n&quot;</span>
+<span class="fc" id="L176">				+ &quot;  &lt;body&gt;&quot; + body + &quot;&lt;/body&gt;\n&quot; + &quot;&lt;/html&gt;\n&quot;;</span>
+<span class="fc" id="L177">		return input;</span>
+	}
+
+	private String getHtmlBody(String pSpaceString) {
+<span class="fc" id="L181">		String body = &quot;\n    &lt;p&gt;\n&quot; + &quot;      Using&quot; + pSpaceString + &quot;Filters&quot;</span>
+<span class="fc" id="L182">				+ pSpaceString + &quot;the&quot; + pSpaceString + &quot;current&quot;</span>
+<span class="fc" id="L183">				+ pSpaceString + &quot;mindmap&quot; + pSpaceString + &quot;can&quot;</span>
+<span class="fc" id="L184">				+ pSpaceString + &quot;be&quot; + pSpaceString + &quot;reduced&quot; + pSpaceString</span>
+<span class="fc" id="L185">				+ &quot;to&quot; + pSpaceString + &quot;nodes&quot; + pSpaceString + &quot;satisfying&quot;</span>
+<span class="fc" id="L186">				+ pSpaceString + &quot;certain&quot; + pSpaceString + &quot;criteria.&quot;</span>
+<span class="fc" id="L187">				+ pSpaceString + &quot;For&quot; + pSpaceString + &quot;example,&quot;</span>
+<span class="fc" id="L188">				+ pSpaceString + &quot;if&quot; + pSpaceString + &quot;you&quot; + pSpaceString</span>
+<span class="fc" id="L189">				+ &quot;only&quot; + pSpaceString + &quot;want&quot; + pSpaceString + &quot;to&quot;</span>
+<span class="fc" id="L190">				+ pSpaceString + &quot;see&quot; + pSpaceString + &quot;every&quot; + pSpaceString</span>
+<span class="fc" id="L191">				+ &quot;node&quot; + pSpaceString + &quot;containing&quot; + pSpaceString</span>
+<span class="fc" id="L192">				+ &quot;&amp;quot;TODO&amp;quot;,&quot; + pSpaceString + &quot;then&quot; + pSpaceString</span>
+<span class="fc" id="L193">				+ &quot;you&quot; + pSpaceString + &quot;have&quot; + pSpaceString + &quot;to&quot;</span>
+<span class="fc" id="L194">				+ pSpaceString + &quot;press&quot; + pSpaceString + &quot;on&quot; + pSpaceString</span>
+<span class="fc" id="L195">				+ &quot;the&quot; + pSpaceString + &quot;filter&quot; + pSpaceString + &quot;symbol&quot;</span>
+<span class="fc" id="L196">				+ pSpaceString + &quot;(the&quot; + pSpaceString + &quot;funnel&quot;</span>
+<span class="fc" id="L197">				+ pSpaceString + &quot;beside&quot; + pSpaceString + &quot;the&quot; + pSpaceString</span>
+<span class="fc" id="L198">				+ &quot;zoom&quot; + pSpaceString + &quot;box),&quot; + pSpaceString + &quot;the&quot;</span>
+<span class="fc" id="L199">				+ pSpaceString + &quot;filter&quot; + pSpaceString + &quot;toolbar&quot;</span>
+<span class="fc" id="L200">				+ pSpaceString + &quot;appears,&quot; + pSpaceString + &quot;choose&quot;</span>
+<span class="fc" id="L201">				+ pSpaceString + &quot;&amp;quot;edit&amp;quot;&quot; + pSpaceString + &quot;and&quot;</span>
+<span class="fc" id="L202">				+ pSpaceString + &quot;add&quot; + pSpaceString + &quot;the&quot; + pSpaceString</span>
+<span class="fc" id="L203">				+ &quot;condition&quot; + pSpaceString + &quot;that&quot; + pSpaceString + &quot;the&quot;</span>
+<span class="fc" id="L204">				+ pSpaceString + &quot;node&quot; + pSpaceString + &quot;content&quot;</span>
+<span class="fc" id="L205">				+ pSpaceString + &quot;contains&quot; + pSpaceString</span>
+<span class="fc" id="L206">				+ &quot;&amp;quot;TODO&amp;quot;.&quot; + pSpaceString + &quot;Then&quot; + pSpaceString</span>
+<span class="fc" id="L207">				+ &quot;select&quot; + pSpaceString + &quot;the&quot; + pSpaceString + &quot;filter&quot;</span>
+<span class="fc" id="L208">				+ pSpaceString + &quot;in&quot; + pSpaceString + &quot;the&quot; + pSpaceString</span>
+<span class="fc" id="L209">				+ &quot;filter&quot; + pSpaceString + &quot;toolbar.&quot; + pSpaceString + &quot;Now,&quot;</span>
+<span class="fc" id="L210">				+ pSpaceString + &quot;only&quot; + pSpaceString + &quot;the&quot; + pSpaceString</span>
+<span class="fc" id="L211">				+ &quot;filtered&quot; + pSpaceString + &quot;nodes&quot; + pSpaceString + &quot;and&quot;</span>
+<span class="fc" id="L212">				+ pSpaceString + &quot;its&quot; + pSpaceString + &quot;ancestors&quot;</span>
+<span class="fc" id="L213">				+ pSpaceString + &quot;are&quot; + pSpaceString + &quot;displayed&quot;</span>
+<span class="fc" id="L214">				+ pSpaceString + &quot;unless&quot; + pSpaceString + &quot;you&quot; + pSpaceString</span>
+<span class="fc" id="L215">				+ &quot;choose&quot; + pSpaceString + &quot;&amp;quot;No&quot; + pSpaceString</span>
+<span class="fc" id="L216">				+ &quot;filtering&amp;quot;&quot; + pSpaceString + &quot;in&quot; + pSpaceString</span>
+<span class="fc" id="L217">				+ &quot;the&quot; + pSpaceString + &quot;toolbar.&quot; + pSpaceString + &quot;\n&quot;</span>
+<span class="fc" id="L218">				+ &quot;    &lt;/p&gt;\n&quot; + &quot;    &lt;p&gt;\n&quot; + &quot;      Using&quot; + pSpaceString</span>
+<span class="fc" id="L219">				+ &quot;the&quot; + pSpaceString + &quot;settings&quot; + pSpaceString</span>
+<span class="fc" id="L220">				+ &quot;&amp;quot;Show&quot; + pSpaceString + &quot;ancestors&amp;quot;&quot;</span>
+<span class="fc" id="L221">				+ pSpaceString + &quot;and&quot; + pSpaceString + &quot;&amp;quot;Show&quot;</span>
+<span class="fc" id="L222">				+ pSpaceString + &quot;descendants&amp;quot;&quot; + pSpaceString + &quot;you&quot;</span>
+<span class="fc" id="L223">				+ pSpaceString + &quot;can&quot; + pSpaceString + &quot;influence&quot;</span>
+<span class="fc" id="L224">				+ pSpaceString + &quot;the&quot; + pSpaceString + &quot;apperance&quot;</span>
+<span class="fc" id="L225">				+ pSpaceString + &quot;of&quot; + pSpaceString + &quot;the&quot; + pSpaceString</span>
+<span class="fc" id="L226">				+ &quot;parent&quot; + pSpaceString + &quot;and&quot; + pSpaceString + &quot;child&quot;</span>
+<span class="fc" id="L227">				+ pSpaceString + &quot;nodes&quot; + pSpaceString + &quot;that&quot; + pSpaceString</span>
+<span class="fc" id="L228">				+ &quot;are&quot; + pSpaceString + &quot;connected&quot; + pSpaceString + &quot;with&quot;</span>
+<span class="fc" id="L229">				+ pSpaceString + &quot;the&quot; + pSpaceString + &quot;nodes&quot; + pSpaceString</span>
+<span class="fc" id="L230">				+ &quot;being&quot; + pSpaceString + &quot;filtered.\n&quot; + &quot;    &lt;/p&gt;\n&quot;</span>
+<span class="fc" id="L231">				+ &quot;    &lt;p&gt;\n&quot; + &quot;      There&quot; + pSpaceString + &quot;are&quot;</span>
+<span class="fc" id="L232">				+ pSpaceString + &quot;many&quot; + pSpaceString + &quot;different&quot;</span>
+<span class="fc" id="L233">				+ pSpaceString + &quot;criteria&quot; + pSpaceString + &quot;filters&quot;</span>
+<span class="fc" id="L234">				+ pSpaceString + &quot;can&quot; + pSpaceString + &quot;be&quot; + pSpaceString</span>
+<span class="fc" id="L235">				+ &quot;based&quot; + pSpaceString + &quot;on&quot; + pSpaceString + &quot;such&quot;</span>
+<span class="fc" id="L236">				+ pSpaceString + &quot;as&quot; + pSpaceString + &quot;a&quot; + pSpaceString</span>
+<span class="fc" id="L237">				+ &quot;set&quot; + pSpaceString + &quot;of&quot; + pSpaceString + &quot;selected&quot;</span>
+<span class="fc" id="L238">				+ pSpaceString + &quot;nodes,&quot; + pSpaceString + &quot;a&quot; + pSpaceString</span>
+<span class="fc" id="L239">				+ &quot;specific&quot; + pSpaceString + &quot;icon&quot; + pSpaceString + &quot;and&quot;</span>
+<span class="fc" id="L240">				+ pSpaceString + &quot;some&quot; + pSpaceString + &quot;attributes.\n&quot;</span>
+<span class="fc" id="L241">				+ &quot;    &lt;/p&gt;\n&quot; + &quot;    &lt;p&gt;\n&quot; + &quot;      &quot; + pSpaceString + &quot;\n&quot;</span>
+<span class="fc" id="L242">				+ &quot;    &lt;/p&gt;\n  &quot;;</span>
+<span class="fc" id="L243">		return body;</span>
+	}
+
+	public void testUnicodeHandling() {
+<span class="fc" id="L247">		String input = &quot;if (myOldValue != null &amp;&amp; myText.startsWith(myOldValue) == true) { \nmyText = myText.substring(myOldValue.length() + terminator.length());\n};\n&quot;;</span>
+<span class="fc" id="L248">		String escapedText = HtmlTools.toXMLEscapedText(input);</span>
+<span class="fc" id="L249">		String unicodeToHTMLUnicodeEntity = HtmlTools</span>
+<span class="fc" id="L250">				.unicodeToHTMLUnicodeEntity(escapedText, false);</span>
+<span class="fc" id="L251">		System.out.println(unicodeToHTMLUnicodeEntity);</span>
+<span class="fc" id="L252">		String unescapeHTMLUnicodeEntity = HtmlTools</span>
+<span class="fc" id="L253">				.unescapeHTMLUnicodeEntity(unicodeToHTMLUnicodeEntity);</span>
+<span class="fc" id="L254">		String back = HtmlTools.toXMLUnescapedText(unescapeHTMLUnicodeEntity);</span>
+<span class="fc" id="L255">		System.out.println(back);</span>
+<span class="fc" id="L256">		assertEquals(&quot;unicode conversion&quot;, input, back);</span>
+<span class="fc" id="L257">	}</span>
+
+	public void testHtmlBodyExtraction() {
+<span class="fc" id="L260">		String input = getInputStringWithManySpaces(&quot; &quot;);</span>
+<span class="fc" id="L261">		String expectedOutput = getHtmlBody(&quot; &quot;);</span>
+<span class="fc" id="L262">		assertTrue(HtmlTools.isHtmlNode(input));</span>
+<span class="fc" id="L263">		assertEquals(expectedOutput, HtmlTools.extractHtmlBody(input));</span>
+<span class="fc" id="L264">	}</span>
+
+	public void testIllegalXmlChars() throws Exception {
+<span class="nc" id="L267">		assertEquals(</span>
+<span class="fc" id="L268">				&quot;Wrong chars are gone&quot;,</span>
+<span class="fc" id="L269">				&quot;AB&amp;#32;&amp;#x20;&quot;,</span>
+<span class="nc" id="L270">				Tools.replaceUtf8AndIllegalXmlChars(&quot;&amp;#x1f;A&amp;#0;&amp;#31;&amp;#x0001B;B&amp;#x1;&amp;#32;&amp;#1;&amp;#x20;&quot;));</span>
+<span class="nc" id="L271">	}</span>
+
+	public void testSpaceReplacements() throws Exception {
+<span class="fc" id="L274">		assertEquals(&quot;Space conversion&quot;, &quot; &quot; + HtmlTools.NBSP,</span>
+<span class="fc" id="L275">				HtmlTools.replaceSpacesToNonbreakableSpaces(&quot;  &quot;));</span>
+<span class="fc" id="L276">		assertEquals(&quot;Multiple space conversion&quot;, &quot; &quot; + HtmlTools.NBSP</span>
+				+ HtmlTools.NBSP + HtmlTools.NBSP,
+<span class="fc" id="L278">				HtmlTools.replaceSpacesToNonbreakableSpaces(&quot;    &quot;));</span>
+<span class="fc" id="L279">		assertEquals(&quot;Double space conversion&quot;, &quot; &quot; + HtmlTools.NBSP + &quot;xy &quot;</span>
+				+ HtmlTools.NBSP + HtmlTools.NBSP,
+<span class="fc" id="L281">				HtmlTools.replaceSpacesToNonbreakableSpaces(&quot;  xy   &quot;));</span>
+<span class="fc" id="L282">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

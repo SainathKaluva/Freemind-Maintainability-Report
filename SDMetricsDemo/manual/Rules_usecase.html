@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Usecase Rules</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Rules_actor.html">Prev</a> - <a href="Rules_statemachine.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="LORules.html">C: List of Design Rules</a> > C.15 Usecase Rules
+<hr>
+<h2><a name="Rules_usecase"></a>C.15 Usecase Rules</h2>
+<a name="Rules_usecase_Unused"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Unused</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The use case is not used.<p> The use case is not associated with any actors, or included in or extending other use cases. Such a use case is useless. Associate it with an actor, attach it to another use case, or delete it from the model. <ul><li>Suggested in [<a href="References.html#References_Amb03">Amb03</a>].</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_usecase_DupExPoint"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>DupExPoint</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The use case has two or more extension points of the same name.<p> Rename the extension points so that they all have unique names. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>Value returned: the name of the duplicate extension points.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_usecase_NoName"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NoName</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Completeness">Completeness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The use case has an extension point without a name.<p> Check the extension points of the use case and make sure they all have a name. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_usecase_NaryAssoc"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>NaryAssoc</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The use case participates in an n-ary association.<p> A use case can only participate in binary associations. Replace the n-ary association with several binary associations. <ul><li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_usecase_Unnamed"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Unnamed</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The use case has no name. <ul><li>See rule <a href="Rules_class.html#Rules_class_Unnamed">Unnamed</a> for classes.</ul> 
+</td></tr></table><hr><p>
+<a name="Rules_usecase_CyclicIncludes"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>CyclicIncludes</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Correctness">Correctness</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 1-high</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Use case directly or indirectly includes itself.<p> A use case cannot include use cases that directly or indirectly include it. Remove some include links to break the cycle. <ul> <li>This is a <a href="Glossary.html#Glossary_WFR">WFR</a> of the UML. <li>You can view the graph of 'use case includes' in the graph structures window. <li>Value returned: number of use cases participating in the cycle. </ul> 
+</td></tr></table><hr><p>
+<a name="Rules_usecase_FunctionalDecomp"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>FunctionalDecomp</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 2-med</td><td>Applies to: all areas</td></tr><tr><td colspan="2">Use case both includes and is included in other use cases.<p> Several levels of include relations between use cases indicate a functional decomposition, which should not be part of requirements analysis. <ul><li>Suggested in [<a href="References.html#References_Amb03">Amb03</a>] to avoid more than two levels of include relations; this rule flags more than one level.</ul>
+</td></tr></table><hr><p>
+<a name="Rules_usecase_Extends"/>
+<table width="100%"><tr><td class="mthead" width="34%">Rule: <b>Extends</b></td><td class="mthead" width="66%">Category: <a href="Glossary.html#Glossary_Style">Style</a></td></tr><tr><td><a href="Glossary.html#Glossary_Severity">Severity</a>: 3-low</td><td>Applies to: all areas</td></tr><tr><td colspan="2">The use case is extending another use case.<p> The semantics of the extend relationship between use cases are often misunderstood, and there are no definite criteria when to use "extend" and when to use "include" relationships. The suggestion is to avoid using "extend" relationships in favor of the more intuitive "include". <ul><li>Suggested in [<a href="References.html#References_Amb03">Amb03</a>], [<a href="References.html#References_Oes04">Oes04</a>].</ul> 
+</td></tr></table><hr><p>
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Rules_actor.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="LORules.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="Rules_statemachine.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Appendix&nbsp;C.14 "Actor Rules"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Appendix&nbsp;C.16 "Statemachine Rules"</td></tr></table>
+
+</body>
+</html>

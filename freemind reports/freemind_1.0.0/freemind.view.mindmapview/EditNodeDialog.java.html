@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>EditNodeDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">EditNodeDialog.java</span></div><h1>EditNodeDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 02.05.2004
+ */
+/*$Id: EditNodeDialog.java,v 1.1.4.1.16.20 2009/06/24 20:40:19 christianfoltin Exp $*/
+
+package freemind.view.mindmapview;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
+import com.inet.jortho.SpellChecker;
+
+import freemind.main.Tools;
+import freemind.modes.ModeController;
+
+/**
+ * @author foltin
+ * 
+ */
+public class EditNodeDialog extends EditNodeBase {
+	private KeyEvent firstEvent;
+
+	/** Private variable to hold the last value of the &quot;Enter confirms&quot; state. */
+	private static Tools.BooleanHolder booleanHolderForConfirmState;
+
+	public EditNodeDialog(final NodeView node, final String text,
+			final KeyEvent firstEvent, ModeController controller,
+			EditControl editControl) {
+<span class="nc" id="L64">		super(node, text, controller, editControl);</span>
+<span class="nc" id="L65">		this.firstEvent = firstEvent;</span>
+<span class="nc" id="L66">	}</span>
+
+	class LongNodeDialog extends EditDialog {
+		private static final long serialVersionUID = 6185443281994675732L;
+		private JTextArea textArea;
+
+<span class="nc" id="L72">		LongNodeDialog() {</span>
+<span class="nc" id="L73">			super(EditNodeDialog.this);</span>
+<span class="nc" id="L74">			textArea = new JTextArea(getText());</span>
+<span class="nc" id="L75">			textArea.setLineWrap(true);</span>
+<span class="nc" id="L76">			textArea.setWrapStyleWord(true);</span>
+			// wish from
+			// https://sourceforge.net/forum/message.php?msg_id=5923410
+			// textArea.setTabSize(4);
+			// wrap around words rather than characters
+
+<span class="nc" id="L82">			final JScrollPane editorScrollPane = new JScrollPane(textArea);</span>
+<span class="nc" id="L83">			editorScrollPane</span>
+<span class="nc" id="L84">					.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);</span>
+
+			// int preferredHeight = new
+			// Integer(getFrame().getProperty(&quot;el__default_window_height&quot;)).intValue();
+<span class="nc" id="L88">			int preferredHeight = getNode().getHeight();</span>
+<span class="nc" id="L89">			preferredHeight = Math.max(</span>
+<span class="nc" id="L90">					preferredHeight,</span>
+<span class="nc" id="L91">					Integer.parseInt(getFrame().getProperty(</span>
+<span class="nc" id="L92">							&quot;el__min_default_window_height&quot;)));</span>
+<span class="nc" id="L93">			preferredHeight = Math.min(</span>
+<span class="nc" id="L94">					preferredHeight,</span>
+<span class="nc" id="L95">					Integer.parseInt(getFrame().getProperty(</span>
+<span class="nc" id="L96">							&quot;el__max_default_window_height&quot;)));</span>
+
+<span class="nc" id="L98">			int preferredWidth = getNode().getWidth();</span>
+<span class="nc" id="L99">			preferredWidth = Math.max(</span>
+<span class="nc" id="L100">					preferredWidth,</span>
+<span class="nc" id="L101">					Integer.parseInt(getFrame().getProperty(</span>
+<span class="nc" id="L102">							&quot;el__min_default_window_width&quot;)));</span>
+<span class="nc" id="L103">			preferredWidth = Math.min(</span>
+<span class="nc" id="L104">					preferredWidth,</span>
+<span class="nc" id="L105">					Integer.parseInt(getFrame().getProperty(</span>
+<span class="nc" id="L106">							&quot;el__max_default_window_width&quot;)));</span>
+
+<span class="nc" id="L108">			editorScrollPane.setPreferredSize(new Dimension(preferredWidth,</span>
+<span class="nc" id="L109">					preferredHeight));</span>
+			// textArea.setPreferredSize(new Dimension(500, 160));
+
+<span class="nc" id="L112">			final JPanel panel = new JPanel();</span>
+
+			// String performedAction;
+<span class="nc" id="L115">			final JButton okButton = new JButton();</span>
+<span class="nc" id="L116">			final JButton cancelButton = new JButton();</span>
+<span class="nc" id="L117">			final JButton splitButton = new JButton();</span>
+<span class="nc" id="L118">			final JCheckBox enterConfirms = new JCheckBox(&quot;&quot;,</span>
+<span class="nc" id="L119">					binOptionIsTrue(&quot;el__enter_confirms_by_default&quot;));</span>
+
+<span class="nc" id="L121">			Tools.setLabelAndMnemonic(okButton, getText(&quot;ok&quot;));</span>
+<span class="nc" id="L122">			Tools.setLabelAndMnemonic(cancelButton, getText(&quot;cancel&quot;));</span>
+<span class="nc" id="L123">			Tools.setLabelAndMnemonic(splitButton, getText(&quot;split&quot;));</span>
+<span class="nc" id="L124">			Tools.setLabelAndMnemonic(enterConfirms, getText(&quot;enter_confirms&quot;));</span>
+
+<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (booleanHolderForConfirmState == null) {</span>
+<span class="nc" id="L127">				booleanHolderForConfirmState = new Tools.BooleanHolder();</span>
+<span class="nc" id="L128">				booleanHolderForConfirmState.setValue(enterConfirms</span>
+<span class="nc" id="L129">						.isSelected());</span>
+<span class="nc" id="L130">			} else {</span>
+<span class="nc" id="L131">				enterConfirms.setSelected(booleanHolderForConfirmState</span>
+<span class="nc" id="L132">						.getValue());</span>
+			}
+
+<span class="nc" id="L135">			okButton.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+					// next try to avoid bug 1159: focus jumps to file-menu after closing html-editing-window
+<span class="nc" id="L138">					EventQueue.invokeLater(new Runnable() {</span>
+						public void run() {
+<span class="nc" id="L140">							submit();</span>
+<span class="nc" id="L141">						}</span>
+					});
+<span class="nc" id="L143">				}</span>
+			});
+
+<span class="nc" id="L146">			cancelButton.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L148">					cancel();</span>
+<span class="nc" id="L149">				}</span>
+			});
+
+<span class="nc" id="L152">			splitButton.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L154">					split();</span>
+<span class="nc" id="L155">				}</span>
+			});
+
+<span class="nc" id="L158">			enterConfirms.addActionListener(new ActionListener() {</span>
+				public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L160">					textArea.requestFocus();</span>
+<span class="nc" id="L161">					booleanHolderForConfirmState.setValue(enterConfirms</span>
+<span class="nc" id="L162">							.isSelected());</span>
+<span class="nc" id="L163">				}</span>
+			});
+
+			// On Enter act as if OK button was pressed
+
+<span class="nc" id="L168">			textArea.addKeyListener(new KeyListener() {</span>
+				public void keyPressed(KeyEvent e) {
+					// escape key in long text editor (PN)
+<span class="nc bnc" id="L171" title="All 2 branches missed.">					if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {</span>
+<span class="nc" id="L172">						e.consume();</span>
+<span class="nc" id="L173">						confirmedCancel();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">					} else if (e.getKeyCode() == KeyEvent.VK_ENTER) {</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">						if (enterConfirms.isSelected()</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">								&amp;&amp; (e.getModifiers() &amp; KeyEvent.SHIFT_MASK) != 0) {</span>
+<span class="nc" id="L177">							e.consume();</span>
+<span class="nc" id="L178">							textArea.insert(&quot;\n&quot;, textArea.getCaretPosition());</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">						} else if (enterConfirms.isSelected()</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">								|| ((e.getModifiers() &amp; KeyEvent.ALT_MASK) != 0)) {</span>
+<span class="nc" id="L181">							e.consume();</span>
+<span class="nc" id="L182">							submit();</span>
+<span class="nc" id="L183">						} else {</span>
+<span class="nc" id="L184">							e.consume();</span>
+<span class="nc" id="L185">							textArea.insert(&quot;\n&quot;, textArea.getCaretPosition());</span>
+						}
+					}
+<span class="nc" id="L188">				}</span>
+
+				public void keyTyped(KeyEvent e) {
+<span class="nc" id="L191">				}</span>
+
+				public void keyReleased(KeyEvent e) {
+<span class="nc" id="L194">				}</span>
+			});
+
+<span class="nc" id="L197">			textArea.addMouseListener(new MouseListener() {</span>
+				public void mouseClicked(MouseEvent e) {
+<span class="nc" id="L199">				}</span>
+
+				public void mouseEntered(MouseEvent e) {
+<span class="nc" id="L202">				}</span>
+
+				public void mouseExited(MouseEvent e) {
+<span class="nc" id="L205">				}</span>
+
+				public void mousePressed(MouseEvent e) {
+<span class="nc" id="L208">					conditionallyShowPopup(e);</span>
+<span class="nc" id="L209">				}</span>
+
+				public void mouseReleased(MouseEvent e) {
+<span class="nc" id="L212">					conditionallyShowPopup(e);</span>
+<span class="nc" id="L213">				}</span>
+
+				private void conditionallyShowPopup(MouseEvent e) {
+<span class="nc bnc" id="L216" title="All 2 branches missed.">					if (e.isPopupTrigger()) {</span>
+<span class="nc" id="L217">						JPopupMenu popupMenu = new EditPopupMenu(textArea);</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">						if (checkSpelling) {</span>
+<span class="nc" id="L219">							popupMenu.add(SpellChecker.createCheckerMenu());</span>
+<span class="nc" id="L220">							popupMenu.add(SpellChecker.createLanguagesMenu());</span>
+						}
+<span class="nc" id="L222">						popupMenu.show(e.getComponent(), e.getX(), e.getY());</span>
+<span class="nc" id="L223">						e.consume();</span>
+					}
+<span class="nc" id="L225">				}</span>
+			});
+
+<span class="nc" id="L228">			Font font = getNode().getTextFont();</span>
+<span class="nc" id="L229">			font = Tools.updateFontSize(font, getView().getZoom(),</span>
+<span class="nc" id="L230">					font.getSize());</span>
+<span class="nc" id="L231">			textArea.setFont(font);</span>
+
+<span class="nc" id="L233">			final Color nodeTextColor = getNode().getTextColor();</span>
+<span class="nc" id="L234">			textArea.setForeground(nodeTextColor);</span>
+<span class="nc" id="L235">			final Color nodeTextBackground = getNode().getTextBackground();</span>
+<span class="nc" id="L236">			textArea.setBackground(nodeTextBackground);</span>
+<span class="nc" id="L237">			textArea.setCaretColor(nodeTextColor);</span>
+
+			// panel.setPreferredSize(new Dimension(500, 160));
+			// editorScrollPane.setPreferredSize(new Dimension(500, 160));
+
+<span class="nc" id="L242">			JPanel buttonPane = new JPanel();</span>
+<span class="nc" id="L243">			buttonPane.add(enterConfirms);</span>
+<span class="nc" id="L244">			buttonPane.add(okButton);</span>
+<span class="nc" id="L245">			buttonPane.add(cancelButton);</span>
+<span class="nc" id="L246">			buttonPane.add(splitButton);</span>
+<span class="nc" id="L247">			buttonPane.setMaximumSize(new Dimension(1000, 20));</span>
+
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (getFrame().getProperty(&quot;el__buttons_position&quot;).equals(&quot;above&quot;)) {</span>
+<span class="nc" id="L250">				panel.add(buttonPane);</span>
+<span class="nc" id="L251">				panel.add(editorScrollPane);</span>
+<span class="nc" id="L252">			} else {</span>
+<span class="nc" id="L253">				panel.add(editorScrollPane);</span>
+<span class="nc" id="L254">				panel.add(buttonPane);</span>
+			}
+
+<span class="nc" id="L257">			panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));</span>
+<span class="nc" id="L258">			setContentPane(panel);</span>
+
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (firstEvent instanceof KeyEvent) {</span>
+<span class="nc" id="L261">				redispatchKeyEvents(textArea, firstEvent);</span>
+<span class="nc" id="L262">			} // 1st key event defined</span>
+			else {
+<span class="nc" id="L264">				textArea.setCaretPosition(getText().length());</span>
+			}
+
+<span class="nc bnc" id="L267" title="All 2 branches missed.">			if (checkSpelling) {</span>
+<span class="nc" id="L268">				SpellChecker.register(textArea, false, true, true, true);</span>
+			}
+<span class="nc" id="L270">		}</span>
+
+		public void show() {
+<span class="nc" id="L273">			textArea.requestFocus();</span>
+<span class="nc" id="L274">			super.show();</span>
+<span class="nc" id="L275">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see freemind.view.mindmapview.EditNodeBase.Dialog#cancel()
+		 */
+		protected void cancel() {
+<span class="nc" id="L283">			getEditControl().cancel();</span>
+<span class="nc" id="L284">			super.cancel();</span>
+<span class="nc" id="L285">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see freemind.view.mindmapview.EditNodeBase.Dialog#split()
+		 */
+		protected void split() {
+<span class="nc" id="L293">			getEditControl().split(textArea.getText(),</span>
+<span class="nc" id="L294">					textArea.getCaretPosition());</span>
+<span class="nc" id="L295">			super.split();</span>
+<span class="nc" id="L296">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see freemind.view.mindmapview.EditNodeBase.Dialog#submit()
+		 */
+		protected void submit() {
+<span class="nc" id="L304">			getEditControl().ok(textArea.getText());</span>
+<span class="nc" id="L305">			super.submit();</span>
+<span class="nc" id="L306">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see freemind.view.mindmapview.EditNodeBase.Dialog#isChanged()
+		 */
+		protected boolean isChanged() {
+<span class="nc bnc" id="L314" title="All 2 branches missed.">			return !getText().equals(textArea.getText());</span>
+		}
+
+		public Component getMostRecentFocusOwner() {
+<span class="nc bnc" id="L318" title="All 2 branches missed.">			if (isFocused()) {</span>
+<span class="nc" id="L319">				return getFocusOwner();</span>
+			} else {
+<span class="nc" id="L321">				return textArea;</span>
+			}
+		}
+	}
+
+	public void show() {
+<span class="nc" id="L327">		final EditDialog dialog = new LongNodeDialog();</span>
+
+<span class="nc" id="L329">		dialog.pack(); // calculate the size</span>
+
+		// set position
+<span class="nc" id="L332">		getView().scrollNodeToVisible(getNode(), 0);</span>
+<span class="nc" id="L333">		Tools.setDialogLocationRelativeTo(dialog, getNode());</span>
+<span class="nc" id="L334">		dialog.show();</span>
+<span class="nc" id="L335">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

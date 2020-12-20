@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>AttributeManagerDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.attributeactors</a> &gt; <span class="el_source">AttributeManagerDialog.java</span></div><h1>AttributeManagerDialog.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 10.07.2005
+ * Copyright (C) 2005 Dimitri Polivaev
+ */
+package freemind.modes.mindmapmode.attributeactors;
+
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.border.EmptyBorder;
+
+import freemind.controller.Controller;
+import freemind.controller.MapModuleManager.MapModuleChangeObserver;
+import freemind.controller.filter.util.SortedListModel;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MapRegistry;
+import freemind.modes.Mode;
+import freemind.modes.attributes.AttributeRegistry;
+import freemind.view.MapModule;
+
+/**
+ * @author Dimitri Polivaev 10.07.2005
+ */
+public class AttributeManagerDialog extends JDialog implements
+		MapModuleChangeObserver {
+	private JTable view;
+	private MapRegistry registry;
+	private AttributeRegistry model;
+<span class="nc" id="L66">	private static final String[] fontSizes = { &quot;6&quot;, &quot;8&quot;, &quot;10&quot;, &quot;12&quot;, &quot;14&quot;,</span>
+<span class="nc" id="L67">			&quot;16&quot;, &quot;18&quot;, &quot;20&quot;, &quot;24&quot; };</span>
+	private JComboBox size;
+<span class="nc" id="L69">	private ImportAttributesDialog importDialog = null;</span>
+	private Controller c;
+<span class="nc" id="L71">	static final Icon editButtonImage = new ImageIcon(Resources.getInstance()</span>
+<span class="nc" id="L72">			.getResource(&quot;images/edit12.png&quot;));</span>
+
+	private class ApplyAction extends AbstractAction {
+<span class="nc" id="L75">		ApplyAction() {</span>
+<span class="nc" id="L76">			super();</span>
+<span class="nc" id="L77">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L78">					.getResourceString(&quot;apply&quot;));</span>
+<span class="nc" id="L79">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L89">			applyChanges();</span>
+<span class="nc" id="L90">		}</span>
+
+	}
+
+	private void applyChanges() {
+<span class="nc" id="L95">		Object size = this.size.getSelectedItem();</span>
+<span class="nc" id="L96">		int iSize = Integer.parseInt(size.toString());</span>
+<span class="nc" id="L97">		model.getAttributeController().performSetFontSize(model, iSize);</span>
+<span class="nc" id="L98">		model.applyChanges();</span>
+<span class="nc" id="L99">	}</span>
+
+	private void resetChanges() {
+<span class="nc" id="L102">		int iSize = model.getFontSize();</span>
+<span class="nc" id="L103">		size.setSelectedItem(Integer.toString(iSize));</span>
+<span class="nc" id="L104">		model.resetChanges();</span>
+<span class="nc" id="L105">	}</span>
+
+	private class OKAction extends AbstractAction {
+<span class="nc" id="L108">		OKAction() {</span>
+<span class="nc" id="L109">			super();</span>
+<span class="nc" id="L110">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L111">					.getResourceString(&quot;ok&quot;));</span>
+<span class="nc" id="L112">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L122">			applyChanges();</span>
+<span class="nc" id="L123">			setVisible(false);</span>
+<span class="nc" id="L124">		}</span>
+	}
+
+	private class CancelAction extends AbstractAction {
+<span class="nc" id="L128">		CancelAction() {</span>
+<span class="nc" id="L129">			super();</span>
+<span class="nc" id="L130">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L131">					.getResourceString(&quot;cancel&quot;));</span>
+<span class="nc" id="L132">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L142">			resetChanges();</span>
+<span class="nc" id="L143">			setVisible(false);</span>
+<span class="nc" id="L144">		}</span>
+	}
+
+	private class ImportAction extends AbstractAction {
+<span class="nc" id="L148">		ImportAction() {</span>
+<span class="nc" id="L149">			Tools.setLabelAndMnemonic(this, Resources.getInstance()</span>
+<span class="nc" id="L150">					.getResourceString(&quot;attributes_import&quot;));</span>
+<span class="nc" id="L151">		}</span>
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent
+		 * )
+		 */
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">			if (importDialog == null) {</span>
+<span class="nc" id="L162">				importDialog = new ImportAttributesDialog(c,</span>
+<span class="nc" id="L163">						AttributeManagerDialog.this);</span>
+			}
+<span class="nc" id="L165">			importDialog.show();</span>
+<span class="nc" id="L166">		}</span>
+	}
+
+	// private class RefreshAction extends AbstractAction{
+	// RefreshAction(){
+	// super(Resources.getInstance().getResourceString(&quot;attributes_refresh&quot;));
+	// }
+	// /* (non-Javadoc)
+	// * @see
+	// java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	// */
+	// public void actionPerformed(ActionEvent e) {
+	// registry.refresh();
+	// }
+	// }
+
+	class EditListAction extends AbstractAction {
+<span class="nc" id="L183">		public EditListAction() {</span>
+<span class="nc" id="L184">			super(&quot;&quot;, editButtonImage);</span>
+<span class="nc" id="L185">		}</span>
+
+<span class="nc" id="L187">		private int row = 0;</span>
+		private SortedListModel listBoxModel;
+		private String title;
+		private String labelText;
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L193">			ListDialog.showDialog((Component) e.getSource(),</span>
+<span class="nc" id="L194">					AttributeManagerDialog.this, labelText, title,</span>
+<span class="nc" id="L195">					listBoxModel, &quot;xxxxxxxxxxxxxxxxxxxxx&quot;);</span>
+<span class="nc" id="L196">		}</span>
+
+		public int getRow() {
+<span class="nc" id="L199">			return row;</span>
+		}
+
+		public void setRow(int row) {
+<span class="nc" id="L203">			this.row = row;</span>
+<span class="nc" id="L204">		}</span>
+
+		public void setListBoxModel(String title, String labelText,
+				SortedListModel listBoxModel) {
+<span class="nc" id="L208">			this.title = title;</span>
+<span class="nc" id="L209">			this.labelText = labelText;</span>
+<span class="nc" id="L210">			this.listBoxModel = listBoxModel;</span>
+<span class="nc" id="L211">		}</span>
+	}
+
+<span class="nc" id="L214">	private class ClosingListener extends WindowAdapter {</span>
+
+		public void windowClosing(WindowEvent e) {
+<span class="nc" id="L217">			resetChanges();</span>
+<span class="nc" id="L218">			super.windowClosing(e);</span>
+<span class="nc" id="L219">			setVisible(false);</span>
+<span class="nc" id="L220">		}</span>
+
+	}
+
+	public AttributeManagerDialog(Controller c) {
+<span class="nc" id="L225">		super(c.getJFrame(), Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L226">				&quot;attributes_dialog_title&quot;), true);</span>
+<span class="nc" id="L227">		this.c = c;</span>
+<span class="nc" id="L228">		view = new AttributeRegistryTable(new EditListAction());</span>
+<span class="nc" id="L229">		registry = c.getMap().getRegistry();</span>
+<span class="nc" id="L230">		model = registry.getAttributes();</span>
+<span class="nc" id="L231">		view.setModel(model.getTableModel());</span>
+<span class="nc" id="L232">		view.getSelectionModel().setSelectionMode(</span>
+<span class="nc" id="L233">				ListSelectionModel.SINGLE_SELECTION);</span>
+<span class="nc" id="L234">		view.getTableHeader().setReorderingAllowed(false);</span>
+
+<span class="nc" id="L236">		JScrollPane scrollPane = new JScrollPane(view);</span>
+<span class="nc" id="L237">		getContentPane().add(scrollPane, BorderLayout.CENTER);</span>
+
+<span class="nc" id="L239">		final Box southButtons = Box.createHorizontalBox();</span>
+<span class="nc" id="L240">		southButtons.setBorder(new EmptyBorder(5, 5, 5, 5));</span>
+
+<span class="nc" id="L242">		getContentPane().add(southButtons, BorderLayout.SOUTH);</span>
+<span class="nc" id="L243">		southButtons.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L244">		JButton ok = new JButton(new OKAction());</span>
+<span class="nc" id="L245">		southButtons.add(ok);</span>
+<span class="nc" id="L246">		southButtons.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L247">		JButton apply = new JButton(new ApplyAction());</span>
+<span class="nc" id="L248">		southButtons.add(apply);</span>
+<span class="nc" id="L249">		southButtons.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L250">		JButton cancel = new JButton(new CancelAction());</span>
+<span class="nc" id="L251">		southButtons.add(cancel);</span>
+<span class="nc" id="L252">		southButtons.add(Box.createHorizontalGlue());</span>
+		// JButton refresh = new JButton(new RefreshAction());
+		// southButtons.add(refresh);
+		// southButtons.add(Box.createHorizontalGlue());
+<span class="nc" id="L256">		size = new JComboBox(fontSizes);</span>
+<span class="nc" id="L257">		size.addItemListener(new ItemListener() {</span>
+			public void itemStateChanged(ItemEvent e) {
+<span class="nc" id="L259">				model.setAttributeLayoutChanged();</span>
+<span class="nc" id="L260">			}</span>
+
+		});
+<span class="nc" id="L263">		size.setToolTipText(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L264">				&quot;attribute_font_size_tooltip&quot;));</span>
+<span class="nc" id="L265">		southButtons.add(size);</span>
+<span class="nc" id="L266">		southButtons.add(Box.createHorizontalGlue());</span>
+<span class="nc" id="L267">		JButton importBtn = new JButton(new ImportAction());</span>
+<span class="nc" id="L268">		importBtn.setToolTipText(Resources.getInstance().getResourceString(</span>
+<span class="nc" id="L269">				&quot;attributes_import_tooltip&quot;));</span>
+<span class="nc" id="L270">		southButtons.add(importBtn);</span>
+<span class="nc" id="L271">		southButtons.add(Box.createHorizontalGlue());</span>
+
+<span class="nc" id="L273">		Tools.addEscapeActionToDialog(this);</span>
+<span class="nc" id="L274">		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L275">		addWindowListener(new ClosingListener());</span>
+<span class="nc" id="L276">		c.getMapModuleManager().addListener(this);</span>
+
+<span class="nc" id="L278">		addComponentListener(new ComponentAdapter() {</span>
+
+			public void componentShown(ComponentEvent e) {
+<span class="nc" id="L281">				size.setSelectedItem(Integer.toString(model.getFontSize()));</span>
+<span class="nc" id="L282">			}</span>
+		});
+<span class="nc" id="L284">	}</span>
+
+	public boolean isMapModuleChangeAllowed(MapModule oldMapModule,
+			Mode oldMode, MapModule newMapModule, Mode newMode) {
+<span class="nc bnc" id="L288" title="All 2 branches missed.">		return !isVisible();</span>
+	}
+
+	public void beforeMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+<span class="nc" id="L293">	}</span>
+
+	public void afterMapModuleChange(MapModule oldMapModule, Mode oldMode,
+			MapModule newMapModule, Mode newMode) {
+<span class="nc bnc" id="L297" title="All 2 branches missed.">		if (newMapModule != null) {</span>
+<span class="nc" id="L298">			registry = newMapModule.getModel().getRegistry();</span>
+<span class="nc" id="L299">			model = registry.getAttributes();</span>
+<span class="nc" id="L300">			view.setModel(registry.getAttributes().getTableModel());</span>
+		}
+<span class="nc" id="L302">	}</span>
+
+	public void numberOfOpenMapInformation(int number, int pIndex) {
+<span class="nc" id="L305">	}</span>
+
+	public void afterMapClose(MapModule pOldMapModule, Mode pOldMode) {
+<span class="nc" id="L308">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

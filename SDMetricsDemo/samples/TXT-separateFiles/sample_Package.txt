@@ -1,0 +1,11 @@
+Name	NumCls	NumCls_tc	NumOpsCls	NumInterf	R	H	Ca	Ce	I	A	D	DN	Nesting	ConnComp	Dep_Out	Dep_In	DepPack	MsgSent_Outside	MsgRecv_Outside	MsgSent_within	Diags
+SDMetrics.com.sdmetrics.app	7	7	75	1	9	1.25	7	12	0.6315789	0.25	-0.083736375	0.11842108	3	2	0	0	2	0	0	0	0
+SDMetrics.com.sdmetrics.metrics	52	52	224	0	167	3.2307692	8	11	0.57894737	0.09615385	-0.2297382	0.32489878	3	4	0	0	2	0	0	0	0
+SDMetrics.com.sdmetrics.model	10	10	95	0	56	5.7	51	7	0.12068965	0.0	-0.6217665	0.87931037	3	1	0	0	2	0	0	0	0
+SDMetrics.com.sdmetrics.cmdline	2	2	14	0	1	1.0	0	5	1.0	0.0	0.0	0.0	3	1	0	0	3	0	0	0	0
+SDMetrics.com.sdmetrics.output	11	11	99	0	17	1.6363636	1	3	0.75	0.09090909	-0.112494275	0.15909088	3	1	0	0	1	0	0	0	0
+SDMetrics.com.sdmetrics.math	5	5	63	0	27	5.6	17	0	0.0	0.0	-0.707107	1.0	3	4	0	0	0	0	0	0	0
+SDMetrics.com.sdmetrics.util	3	3	6	0	0	0.33333334	4	0	0.0	0.0	-0.707107	1.0	3	3	0	0	0	0	0	0	0
+SDMetrics.com.sdmetrics	1	91	1	0	0	1.0	0	0	1.0	0.0	0.0	0.0	2	1	0	0	0	0	0	0	0
+SDMetrics.com	0	91	0	0	0	0.0	0	0	1.0	1.0	0.707107	1.0	1	0	0	0	0	0	0	0	0
+SDMetrics	0	91	0	0	0	0.0	0	0	1.0	1.0	0.707107	1.0	0	0	0	0	0	0	0	0	0

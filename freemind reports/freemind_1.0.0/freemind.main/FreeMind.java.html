@@ -1,0 +1,1474 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FreeMind.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.main</a> &gt; <span class="el_source">FreeMind.java</span></div><h1>FreeMind.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: FreeMind.java,v 1.32.14.28.2.147 2011/01/09 21:03:13 christianfoltin Exp $*/
+
+package freemind.main;
+
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.Insets;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
+import java.net.Authenticator;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.Socket;
+import java.net.URL;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Properties;
+import java.util.ResourceBundle;
+import java.util.StringTokenizer;
+import java.util.Vector;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
+import javax.swing.ImageIcon;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
+import com.inet.jortho.SpellChecker;
+
+import freemind.controller.Controller;
+import freemind.controller.LastStateStorageManagement;
+import freemind.controller.MenuBar;
+import freemind.controller.actions.generated.instance.MindmapLastStateStorage;
+import freemind.main.FreeMindStarter.ProxyAuthenticator;
+import freemind.modes.ModeController;
+import freemind.preferences.FreemindPropertyListener;
+import freemind.view.MapModule;
+import freemind.view.mindmapview.MapView;
+
+public class FreeMind extends JFrame implements FreeMindMain {
+
+	public static final String J_SPLIT_PANE_SPLIT_TYPE = &quot;JSplitPane.SPLIT_TYPE&quot;;
+
+	public static final String VERTICAL_SPLIT_BELOW = &quot;vertical_split_below&quot;;
+	
+	public static final String HORIZONTAL_SPLIT_RIGHT = &quot;horizontal_split_right&quot;;
+	
+	public static final String LOG_FILE_NAME = &quot;log&quot;;
+
+	private static final String PORT_FILE = &quot;portFile&quot;;
+
+	private static final String FREE_MIND_PROGRESS_LOAD_MAPS = &quot;FreeMind.progress.loadMaps&quot;;
+
+	private static final String FREE_MIND_PROGRESS_LOAD_MAPS_NAME = &quot;FreeMind.progress.loadNamedMaps&quot;;
+
+	private static final String SPLIT_PANE_POSITION = &quot;split_pane_position&quot;;
+
+	private static final String SPLIT_PANE_LAST_POSITION = &quot;split_pane_last_position&quot;;
+
+	public static final String RESOURCE_LOOKANDFEEL = &quot;lookandfeel&quot;;
+
+	public static final String RESOURCES_SELECTION_METHOD = &quot;selection_method&quot;;
+
+	public static final String RESOURCES_NODE_STYLE = &quot;standardnodestyle&quot;;
+
+	public static final String RESOURCES_ROOT_NODE_STYLE = &quot;standardrootnodestyle&quot;;
+
+	public static final String RESOURCES_NODE_TEXT_COLOR = &quot;standardnodetextcolor&quot;;
+
+	public static final String RESOURCES_SELECTED_NODE_COLOR = &quot;standardselectednodecolor&quot;;
+
+	public static final String RESOURCES_SELECTED_NODE_RECTANGLE_COLOR = &quot;standardselectednoderectanglecolor&quot;;
+
+	public static final String RESOURCE_DRAW_RECTANGLE_FOR_SELECTION = &quot;standarddrawrectangleforselection&quot;;
+
+	public static final String RESOURCES_EDGE_COLOR = &quot;standardedgecolor&quot;;
+
+	public static final String RESOURCES_EDGE_STYLE = &quot;standardedgestyle&quot;;
+
+	public static final String RESOURCES_CLOUD_COLOR = &quot;standardcloudcolor&quot;;
+
+	public static final String RESOURCES_LINK_COLOR = &quot;standardlinkcolor&quot;;
+
+	public static final String RESOURCES_BACKGROUND_COLOR = &quot;standardbackgroundcolor&quot;;
+
+	public static final String RESOURCE_PRINT_ON_WHITE_BACKGROUND = &quot;printonwhitebackground&quot;;
+
+	public static final String RESOURCES_WHEEL_VELOCITY = &quot;wheel_velocity&quot;;
+
+	public static final String RESOURCES_USE_TABBED_PANE = &quot;use_tabbed_pane&quot;;
+
+	public static final String RESOURCES_USE_SPLIT_PANE = &quot;use_split_pane&quot;;
+
+	public static final String RESOURCES_DELETE_NODES_WITHOUT_QUESTION = &quot;delete_nodes_without_question&quot;;
+
+	public static final String RESOURCES_RELOAD_FILES_WITHOUT_QUESTION = &quot;reload_files_without_question&quot;;
+
+<span class="nc" id="L155">	private Logger logger = null;</span>
+
+<span class="nc" id="L157">	protected static final VersionInformation VERSION = new VersionInformation(&quot;1.0.0&quot;);</span>
+
+	public static final String XML_VERSION = &quot;1.0.1&quot;;
+
+	public static final String RESOURCES_REMIND_USE_RICH_TEXT_IN_NEW_LONG_NODES = &quot;remind_use_rich_text_in_new_long_nodes&quot;;
+
+	public static final String RESOURCES_EXECUTE_SCRIPTS_WITHOUT_ASKING = &quot;resources_execute_scripts_without_asking&quot;;
+
+	public static final String RESOURCES_EXECUTE_SCRIPTS_WITHOUT_FILE_RESTRICTION = &quot;resources_execute_scripts_without_file_restriction&quot;;
+
+	public static final String RESOURCES_EXECUTE_SCRIPTS_WITHOUT_NETWORK_RESTRICTION = &quot;resources_execute_scripts_without_network_restriction&quot;;
+
+	public static final String RESOURCES_EXECUTE_SCRIPTS_WITHOUT_EXEC_RESTRICTION = &quot;resources_execute_scripts_without_exec_restriction&quot;;
+
+	public static final String RESOURCES_SCRIPT_USER_KEY_NAME_FOR_SIGNING = &quot;resources_script_user_key_name_for_signing&quot;;
+
+	public static final String RESOURCES_CONVERT_TO_CURRENT_VERSION = &quot;resources_convert_to_current_version&quot;;
+
+	public static final String RESOURCES_CUT_NODES_WITHOUT_QUESTION = &quot;resources_cut_nodes_without_question&quot;;
+
+	public static final String RESOURCES_DON_T_SHOW_NOTE_ICONS = &quot;resources_don_t_show_note_icons&quot;;
+
+	public static final String RESOURCES_REMOVE_NOTES_WITHOUT_QUESTION = &quot;resources_remove_notes_without_question&quot;;
+
+	public static final String RESOURCES_SAVE_FOLDING_STATE = &quot;resources_save_folding_state&quot;;
+
+	public static final String RESOURCES_SIGNED_SCRIPT_ARE_TRUSTED = &quot;resources_signed_script_are_trusted&quot;;
+
+	public static final String RESOURCES_USE_DEFAULT_FONT_FOR_NOTES_TOO = &quot;resources_use_default_font_for_notes_too&quot;;
+
+	public static final String RESOURCES_USE_MARGIN_TOP_ZERO_FOR_NOTES = &quot;resources_use_margin_top_zero_for_notes&quot;;
+
+	public static final String RESOURCES_DON_T_SHOW_CLONE_ICONS = &quot;resources_don_t_show_clone_icons&quot;;
+
+	public static final String RESOURCES_DON_T_OPEN_PORT = &quot;resources_don_t_open_port&quot;;
+
+	public static final String KEYSTROKE_MOVE_MAP_LEFT = &quot;keystroke_MoveMapLeft&quot;;
+
+	public static final String KEYSTROKE_MOVE_MAP_RIGHT = &quot;keystroke_MoveMapRight&quot;;
+
+	public static final String KEYSTROKE_PREVIOUS_MAP = &quot;keystroke_previousMap&quot;;
+
+	public static final String KEYSTROKE_NEXT_MAP = &quot;keystroke_nextMap&quot;;
+
+	public static final String RESOURCES_SEARCH_IN_NOTES_TOO = &quot;resources_search_in_notes_too&quot;;
+
+	public static final String RESOURCES_DON_T_SHOW_NOTE_TOOLTIPS = &quot;resources_don_t_show_note_tooltips&quot;;
+
+	public static final String RESOURCES_SEARCH_FOR_NODE_TEXT_WITHOUT_QUESTION = &quot;resources_search_for_node_text_without_question&quot;;
+	
+	public static final String RESOURCES_COMPLETE_CLONING = &quot;complete_cloning&quot;;
+
+	public static final String RESOURCES_CLONE_TYPE_COMPLETE_CLONE = &quot;COMPLETE_CLONE&quot;;
+
+	public static final String TOOLTIP_DISPLAY_TIME = &quot;tooltip_display_time&quot;;
+
+	public static final String PROXY_PORT = &quot;proxy.port&quot;;
+
+	public static final String PROXY_HOST = &quot;proxy.host&quot;;
+
+	public static final String PROXY_PASSWORD = &quot;proxy.password&quot;;
+
+	public static final String PROXY_USER = &quot;proxy.user&quot;;
+
+	public static final String PROXY_IS_AUTHENTICATED = &quot;proxy.is_authenticated&quot;;
+
+	public static final String PROXY_USE_SETTINGS = &quot;proxy.use_settings&quot;;
+
+	public static final String RESOURCES_DISPLAY_FOLDING_BUTTONS = &quot;resources_display_folding_buttons&quot;;
+
+
+	// public static final String defaultPropsURL = &quot;freemind.properties&quot;;
+	// public static Properties defaultProps;
+	public static Properties props;
+
+	private static Properties defProps;
+
+	private MenuBar menuBar;
+
+	private JLabel status;
+
+	private Map filetypes; // Hopefully obsolete. Used to store applications
+
+	// used to open different file types
+
+	private File autoPropertiesFile;
+
+	private File patternsFile;
+
+	Controller controller;// the one and only controller
+
+	private FreeMindCommon mFreeMindCommon;
+
+	private static FileHandler mFileHandler;
+<span class="nc" id="L251">	private static boolean mFileHandlerError = false;</span>
+
+<span class="nc" id="L253">	private JScrollPane mScrollPane = null;</span>
+
+	private JSplitPane mSplitPane;
+
+<span class="nc" id="L257">	private JComponent mContentComponent = null;</span>
+
+<span class="nc" id="L259">	private JTabbedPane mTabbedPane = null;</span>
+
+	private ImageIcon mWindowIcon;
+
+<span class="nc" id="L263">	private boolean mStartupDone = false;</span>
+
+<span class="nc" id="L265">	private List mStartupDoneListeners = new Vector();</span>
+
+<span class="nc" id="L267">	private EditServer mEditServer = null;</span>
+
+<span class="nc" id="L269">	private Vector mLoggerList = new Vector();</span>
+
+<span class="nc" id="L271">	private static LogFileLogHandler sLogFileHandler;</span>
+
+	public FreeMind(Properties pDefaultPreferences,
+			Properties pUserPreferences, File pAutoPropertiesFile) {
+<span class="nc" id="L275">		super(&quot;FreeMind&quot;);</span>
+		// Focus searcher
+<span class="nc" id="L277">		System.setSecurityManager(new FreeMindSecurityManager());</span>
+<span class="nc" id="L278">		defProps = pDefaultPreferences;</span>
+<span class="nc" id="L279">		props = pUserPreferences;</span>
+<span class="nc" id="L280">		autoPropertiesFile = pAutoPropertiesFile;</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L282">			logger = getLogger(FreeMind.class.getName());</span>
+<span class="nc" id="L283">			StringBuffer info = new StringBuffer();</span>
+<span class="nc" id="L284">			info.append(&quot;freemind_version = &quot;);</span>
+<span class="nc" id="L285">			info.append(VERSION);</span>
+<span class="nc" id="L286">			info.append(&quot;; freemind_xml_version = &quot;);</span>
+<span class="nc" id="L287">			info.append(XML_VERSION);</span>
+			try {
+<span class="nc" id="L289">				String propsLoc = &quot;version.properties&quot;;</span>
+<span class="nc" id="L290">				URL versionUrl = this.getClass().getClassLoader()</span>
+<span class="nc" id="L291">						.getResource(propsLoc);</span>
+<span class="nc" id="L292">				Properties buildNumberPros = new Properties();</span>
+<span class="nc" id="L293">				InputStream stream = versionUrl.openStream();</span>
+<span class="nc" id="L294">				buildNumberPros.load(stream);</span>
+<span class="nc" id="L295">				info.append(&quot;\nBuild: &quot;</span>
+<span class="nc" id="L296">						+ buildNumberPros.getProperty(&quot;build.number&quot;) + &quot;\n&quot;);</span>
+<span class="nc" id="L297">				stream.close();</span>
+<span class="nc" id="L298">			} catch (Exception e) {</span>
+<span class="nc" id="L299">				info.append(&quot;Problems reading build number file: &quot; + e);</span>
+			}
+<span class="nc" id="L301">			info.append(&quot;\njava_version = &quot;);</span>
+<span class="nc" id="L302">			info.append(System.getProperty(&quot;java.version&quot;));</span>
+<span class="nc" id="L303">			info.append(&quot;; os_name = &quot;);</span>
+<span class="nc" id="L304">			info.append(System.getProperty(&quot;os.name&quot;));</span>
+<span class="nc" id="L305">			info.append(&quot;; os_version = &quot;);</span>
+<span class="nc" id="L306">			info.append(System.getProperty(&quot;os.version&quot;));</span>
+<span class="nc" id="L307">			logger.info(info.toString());</span>
+		}
+<span class="nc" id="L309">		mFreeMindCommon = new FreeMindCommon(this);</span>
+<span class="nc" id="L310">		Resources.createInstance(this);</span>
+<span class="nc" id="L311">	}</span>
+
+	void init(FeedBack feedback) {
+		/* This is only for apple but does not harm for the others. */
+<span class="nc" id="L315">		System.setProperty(&quot;apple.laf.useScreenMenuBar&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L316">		patternsFile = new File(getFreemindDirectory(),</span>
+<span class="nc" id="L317">				getDefaultProperty(&quot;patternsfile&quot;));</span>
+
+<span class="nc" id="L319">		feedback.increase(&quot;FreeMind.progress.updateLookAndFeel&quot;, null);</span>
+
+<span class="nc" id="L321">		updateLookAndFeel();</span>
+<span class="nc" id="L322">		feedback.increase(&quot;FreeMind.progress.createController&quot;, null);</span>
+
+<span class="nc" id="L324">		setIconImage(mWindowIcon.getImage());</span>
+		// Layout everything
+<span class="nc" id="L326">		getContentPane().setLayout(new BorderLayout());</span>
+
+<span class="nc" id="L328">		controller = new Controller(this);</span>
+<span class="nc" id="L329">		controller.init();</span>
+<span class="nc" id="L330">		feedback.increase(&quot;FreeMind.progress.settingPreferences&quot;, null);</span>
+		// add a listener for the controller, resource bundle:
+<span class="nc" id="L332">		Controller.addPropertyChangeListener(new FreemindPropertyListener() {</span>
+
+			public void propertyChanged(String propertyName, String newValue,
+					String oldValue) {
+<span class="nc bnc" id="L336" title="All 2 branches missed.">				if (propertyName.equals(FreeMindCommon.RESOURCE_LANGUAGE)) {</span>
+					// re-read resources:
+<span class="nc" id="L338">					mFreeMindCommon.clearLanguageResources();</span>
+<span class="nc" id="L339">					getResources();</span>
+				}
+<span class="nc" id="L341">			}</span>
+		});
+		// fc, disabled with purpose (see java look and feel styleguides).
+		// http://java.sun.com/products/jlf/ed2/book/index.html
+		// // add a listener for the controller, look and feel:
+		// Controller.addPropertyChangeListener(new FreemindPropertyListener() {
+		//
+		// public void propertyChanged(String propertyName, String newValue,
+		// String oldValue) {
+		// if (propertyName.equals(RESOURCE_LOOKANDFEEL)) {
+		// updateLookAndFeel();
+		// }
+		// }
+		// });
+		
+<span class="nc" id="L356">		controller.optionAntialiasAction</span>
+<span class="nc" id="L357">				.changeAntialias(getProperty(FreeMindCommon.RESOURCE_ANTIALIAS));</span>
+
+<span class="nc" id="L359">		setupSpellChecking();</span>
+<span class="nc" id="L360">		setupProxy();</span>
+<span class="nc" id="L361">		feedback.increase(&quot;FreeMind.progress.propageteLookAndFeel&quot;, null);</span>
+<span class="nc" id="L362">		SwingUtilities.updateComponentTreeUI(this); // Propagate LookAndFeel to</span>
+
+<span class="nc" id="L364">		feedback.increase(&quot;FreeMind.progress.buildScreen&quot;, null);</span>
+<span class="nc" id="L365">		setScreenBounds();</span>
+
+		// JComponents
+
+<span class="nc" id="L369">		feedback.increase(&quot;FreeMind.progress.createInitialMode&quot;, null);</span>
+<span class="nc" id="L370">		controller.createNewMode(getProperty(&quot;initial_mode&quot;));</span>
+//		EventQueue eventQueue = Toolkit.getDefaultToolkit()
+//				.getSystemEventQueue();
+//		eventQueue.push(new MyEventQueue());
+<span class="nc" id="L374">	}// Constructor</span>
+
+	/**
+	 * 
+	 */
+	private void updateLookAndFeel() {
+		// set Look&amp;Feel
+		try {
+<span class="nc" id="L382">			String lookAndFeel = props.getProperty(RESOURCE_LOOKANDFEEL);</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">			if (lookAndFeel.equals(&quot;windows&quot;)) {</span>
+				UIManager
+<span class="nc" id="L385">						.setLookAndFeel(&quot;com.sun.java.swing.plaf.windows.WindowsLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L386" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;motif&quot;)) {</span>
+				UIManager
+<span class="nc" id="L388">						.setLookAndFeel(&quot;com.sun.java.swing.plaf.motif.MotifLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;mac&quot;)) {</span>
+				// Only available on macOS
+<span class="nc" id="L391">				UIManager.setLookAndFeel(&quot;javax.swing.plaf.mac.MacLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;metal&quot;)) {</span>
+				UIManager
+<span class="nc" id="L394">						.setLookAndFeel(&quot;javax.swing.plaf.metal.MetalLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L395" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;gtk&quot;)) {</span>
+				UIManager
+<span class="nc" id="L397">						.setLookAndFeel(&quot;com.sun.java.swing.plaf.gtk.GTKLookAndFeel&quot;);</span>
+<span class="nc bnc" id="L398" title="All 2 branches missed.">			} else if (lookAndFeel.equals(&quot;nothing&quot;)) {</span>
+<span class="nc bnc" id="L399" title="All 2 branches missed.">			} else if (lookAndFeel.indexOf('.') != -1) { // string contains a</span>
+				// dot
+<span class="nc" id="L401">				UIManager.setLookAndFeel(lookAndFeel);</span>
+				// we assume class name
+<span class="nc" id="L403">			} else {</span>
+				// default.
+<span class="nc" id="L405">				logger.info(&quot;Default (System) Look &amp; Feel: &quot;</span>
+<span class="nc" id="L406">						+ UIManager.getSystemLookAndFeelClassName());</span>
+<span class="nc" id="L407">				UIManager.setLookAndFeel(UIManager</span>
+<span class="nc" id="L408">						.getSystemLookAndFeelClassName());</span>
+			}
+<span class="nc" id="L410">		} catch (Exception ex) {</span>
+<span class="nc" id="L411">			System.err.println(&quot;Unable to set Look &amp; Feel.&quot;);</span>
+		}
+<span class="nc" id="L413">		mFreeMindCommon.loadUIProperties(defProps);</span>
+<span class="nc" id="L414">	}</span>
+
+	public boolean isApplet() {
+<span class="nc" id="L417">		return false;</span>
+	}
+
+	public File getPatternsFile() {
+<span class="nc" id="L421">		return patternsFile;</span>
+	}
+
+	public VersionInformation getFreemindVersion() {
+<span class="nc" id="L425">		return VERSION;</span>
+	}
+
+	// maintain this methods to keep the last state/size of the window (PN)
+	public int getWinHeight() {
+<span class="nc" id="L430">		return getHeight();</span>
+	}
+
+	public int getWinWidth() {
+<span class="nc" id="L434">		return getWidth();</span>
+	}
+
+	public int getWinX() {
+<span class="nc" id="L438">		return getX();</span>
+	}
+
+	public int getWinY() {
+<span class="nc" id="L442">		return getY();</span>
+	}
+
+	public int getWinState() {
+<span class="nc" id="L446">		return getExtendedState();</span>
+	}
+
+	public URL getResource(String name) {
+<span class="nc" id="L450">		return this.getClass().getClassLoader().getResource(name);</span>
+	}
+
+	public String getProperty(String key) {
+<span class="nc" id="L454">		return props.getProperty(key);</span>
+	}
+
+	public int getIntProperty(String key, int defaultValue) {
+		try {
+<span class="nc" id="L459">			return Integer.parseInt(getProperty(key));</span>
+<span class="nc" id="L460">		} catch (NumberFormatException nfe) {</span>
+<span class="nc" id="L461">			return defaultValue;</span>
+		}
+	}
+
+	public Properties getProperties() {
+<span class="nc" id="L466">		return props;</span>
+	}
+
+	public void setProperty(String key, String value) {
+<span class="nc" id="L470">		props.setProperty(key, value);</span>
+<span class="nc" id="L471">	}</span>
+
+	public String getDefaultProperty(String key) {
+<span class="nc" id="L474">		return defProps.getProperty(key);</span>
+	}
+
+	public void setDefaultProperty(String key, String value) {
+<span class="nc" id="L478">		defProps.setProperty(key, value);</span>
+<span class="nc" id="L479">	}</span>
+
+	public String getFreemindDirectory() {
+<span class="nc" id="L482">		return System.getProperty(&quot;user.home&quot;) + File.separator</span>
+<span class="nc" id="L483">				+ getProperty(&quot;properties_folder&quot;);</span>
+	}
+
+	public void saveProperties(boolean pIsShutdown) {
+		try {
+<span class="nc" id="L488">			OutputStream out = new FileOutputStream(autoPropertiesFile);</span>
+<span class="nc" id="L489">			final OutputStreamWriter outputStreamWriter = new OutputStreamWriter(</span>
+<span class="nc" id="L490">					out, &quot;8859_1&quot;);</span>
+<span class="nc" id="L491">			outputStreamWriter.write(&quot;#FreeMind &quot;);</span>
+<span class="nc" id="L492">			outputStreamWriter.write(VERSION.toString());</span>
+<span class="nc" id="L493">			outputStreamWriter.write('\n');</span>
+<span class="nc" id="L494">			outputStreamWriter.flush();</span>
+			//to save as few props as possible.
+<span class="nc" id="L496">			Properties toBeStored = Tools.copyChangedProperties(props, defProps);</span>
+<span class="nc" id="L497">			toBeStored.store(out, null);</span>
+<span class="nc" id="L498">			out.close();</span>
+<span class="nc" id="L499">		} catch (Exception ex) {</span>
+<span class="nc" id="L500">			Resources.getInstance().logException(ex);</span>
+		}
+<span class="nc" id="L502">		getController().getFilterController().saveConditions();</span>
+<span class="nc bnc" id="L503" title="All 4 branches missed.">		if (pIsShutdown &amp;&amp; mEditServer != null) {</span>
+<span class="nc" id="L504">			mEditServer.stopServer();</span>
+		}
+<span class="nc" id="L506">	}</span>
+
+	public MapView getView() {
+<span class="nc" id="L509">		return controller.getView();</span>
+	}
+
+	public Controller getController() {
+<span class="nc" id="L513">		return controller;</span>
+	}
+
+	public void setView(MapView view) {
+<span class="nc" id="L517">		mScrollPane.setViewportView(view);</span>
+<span class="nc" id="L518">	}</span>
+
+	public MenuBar getFreeMindMenuBar() {
+<span class="nc" id="L521">		return menuBar;</span>
+	}
+
+	public void out(String msg) {
+		// TODO: Automatically remove old messages after a certain time.
+<span class="nc bnc" id="L526" title="All 2 branches missed.">		if (status != null) {</span>
+<span class="nc" id="L527">			status.setText(msg);</span>
+			// logger.info(msg);
+		}
+<span class="nc" id="L530">	}</span>
+
+	public void err(String msg) {
+<span class="nc bnc" id="L533" title="All 2 branches missed.">		if (status != null) {</span>
+<span class="nc" id="L534">			status.setText(msg);</span>
+		}
+		// logger.info(msg);
+<span class="nc" id="L537">	}</span>
+
+	/**
+	 * Open url in WWW browser. This method hides some differences between
+	 * operating systems.
+	 */
+	public void openDocument(URL url) throws Exception {
+		// build string for default browser:
+<span class="nc" id="L545">		String correctedUrl = new String(url.toExternalForm());</span>
+<span class="nc bnc" id="L546" title="All 2 branches missed.">		if (url.getProtocol().equals(&quot;file&quot;)) {</span>
+<span class="nc" id="L547">			correctedUrl = correctedUrl.replace('\\', '/').replaceAll(&quot; &quot;,</span>
+<span class="nc" id="L548">					&quot;%20&quot;);</span>
+			// ^ This is more of a heuristic than a &quot;logical&quot; code
+			// and due to a java bug:
+			// http://forum.java.sun.com/thread.jsp?forum=31&amp;thread=363990
+		}
+		// Originally, this method determined external application, with which
+		// the document
+		// should be opened. Which application should open which document type
+		// was
+		// configured in FreeMind properties file. As a result, FreeMind tried
+		// to solve the
+		// problem (of determining application for a file type), which should
+		// better be
+		// solved somewhere else. Indeed, on Windows, this problem is perfectly
+		// solved by
+		// Explorer. On KDE, this problem is solved by Konqueror default
+		// browser. In
+		// general, most WWW browsers have to solve this problem.
+
+		// As a result, the only thing we do here, is to open URL in WWW
+		// browser.
+
+<span class="nc" id="L570">		String osName = System.getProperty(&quot;os.name&quot;);</span>
+<span class="nc" id="L571">		String urlString = url.toString();</span>
+
+<span class="nc bnc" id="L573" title="All 2 branches missed.">		if (osName.substring(0, 3).equals(&quot;Win&quot;)) {</span>
+<span class="nc" id="L574">			String propertyString = new String(</span>
+<span class="nc" id="L575">					&quot;default_browser_command_windows&quot;);</span>
+<span class="nc bnc" id="L576" title="All 4 branches missed.">			if (osName.indexOf(&quot;9&quot;) != -1 || osName.indexOf(&quot;Me&quot;) != -1) {</span>
+<span class="nc" id="L577">				propertyString += &quot;_9x&quot;;</span>
+<span class="nc" id="L578">			} else {</span>
+<span class="nc" id="L579">				propertyString += &quot;_nt&quot;;</span>
+			}
+
+<span class="nc" id="L582">			String browser_command = new String();</span>
+<span class="nc" id="L583">			String command = new String();</span>
+			// Here we introduce &quot; around the parameter of explorer
+			// command. This is not because of possible spaces in this
+			// parameter - it is because of &quot;=&quot; character, which causes
+			// problems. My understanding of MSDOS is not so good, but at
+			// least I can say, that &quot;=&quot; is used in general for the purpose
+			// of variable assignment.
+			// String[] call = { browser_command, &quot;\&quot;&quot;+url.toString()+&quot;\&quot;&quot; };
+			try {
+				// This is working fine on Windows 2000 and NT as well
+				// Below is a piece of code showing how to run executables
+				// directly
+				// without asking. However, we don't want to do that. Explorer
+				// will run
+				// executable, but ask before it actually runs it.
+				//
+				// Imagine you download a package of maps containing also nasty
+				// executable. Let's say there is a map &quot;index.mm&quot;. This map
+				// contains a
+				// link to that nasty executable, but the name of the link
+				// appearing to the
+				// user does not indicate at all that clicking the link leads to
+				// execution
+				// of a programm. This executable is located on your local
+				// computer, so
+				// asking before executing remote executable does not solve the
+				// problem. You click the link and there you are running evil
+				// executable.
+
+				// build string for default browser:
+				// ask for property about browser: fc, 26.11.2003.
+<span class="nc" id="L614">				Object[] messageArguments = { urlString };</span>
+<span class="nc" id="L615">				MessageFormat formatter = new MessageFormat(</span>
+<span class="nc" id="L616">						getProperty(propertyString));</span>
+<span class="nc" id="L617">				browser_command = formatter.format(messageArguments);</span>
+
+<span class="nc bnc" id="L619" title="All 2 branches missed.">				if (url.getProtocol().equals(&quot;file&quot;)) {</span>
+<span class="nc" id="L620">					final File file = Tools.urlToFile(url);</span>
+<span class="nc bnc" id="L621" title="All 2 branches missed.">					if (!Tools.isBelowJava6()) {</span>
+<span class="nc" id="L622">						Class desktopClass = Class.forName(&quot;java.awt.Desktop&quot;);</span>
+<span class="nc" id="L623">						Method getDesktopMethod = desktopClass.getMethod(</span>
+<span class="nc" id="L624">								&quot;getDesktop&quot;, new Class[] {});</span>
+<span class="nc" id="L625">						Object desktopObject = getDesktopMethod.invoke(null,</span>
+<span class="nc" id="L626">								new Object[] {});</span>
+<span class="nc" id="L627">						Method openMethod = desktopObject.getClass().getMethod(</span>
+<span class="nc" id="L628">								&quot;open&quot;, new Class[] { File.class });</span>
+<span class="nc" id="L629">						logger.info(&quot;Opening file &quot; + file);</span>
+<span class="nc" id="L630">						openMethod.invoke(desktopObject, new Object[] { file });</span>
+<span class="nc" id="L631">						return;</span>
+					}
+					// command = &quot;rundll32 url.dll,FileProtocolHandler &quot;+
+					// Tools.urlGetFile(url);
+					// bug fix by Dan:
+<span class="nc" id="L636">					command = &quot;cmd /C rundll32 url.dll,FileProtocolHandler &quot;</span>
+<span class="nc" id="L637">							+ urlString;</span>
+					// see
+					// http://rsb.info.nih.gov/ij/developer/source/ij/plugin/BrowserLauncher.java.html
+<span class="nc" id="L640">					if (System.getProperty(&quot;os.name&quot;)</span>
+<span class="nc bnc" id="L641" title="All 2 branches missed.">							.startsWith(&quot;Windows 2000&quot;))</span>
+<span class="nc" id="L642">						command = &quot;cmd /C rundll32 shell32.dll,ShellExec_RunDLL &quot;</span>
+<span class="nc" id="L643">								+ urlString;</span>
+<span class="nc bnc" id="L644" title="All 2 branches missed.">				} else if (urlString.startsWith(&quot;mailto:&quot;)) {</span>
+<span class="nc" id="L645">					command = &quot;cmd /C rundll32 url.dll,FileProtocolHandler &quot;</span>
+<span class="nc" id="L646">							+ urlString;</span>
+<span class="nc" id="L647">				} else {</span>
+<span class="nc" id="L648">					command = browser_command;</span>
+				}
+<span class="nc" id="L650">				logger.info(&quot;Starting browser with &quot; + command);</span>
+				// Runtime.getRuntime().exec(command);
+<span class="nc" id="L652">				execWindows(command);</span>
+<span class="nc" id="L653">			} catch (IOException x) {</span>
+<span class="nc" id="L654">				controller</span>
+<span class="nc" id="L655">						.errorMessage(&quot;Could not invoke browser.\n\nFreemind excecuted the following statement on a command line:\n\&quot;&quot;</span>
+<span class="nc" id="L656">								+ command</span>
+<span class="nc" id="L657">								+ &quot;\&quot;.\n\nYou may look at the user or default property called '&quot;</span>
+<span class="nc" id="L658">								+ propertyString + &quot;'.&quot;);</span>
+<span class="nc" id="L659">				System.err.println(&quot;Caught: &quot; + x);</span>
+			}
+<span class="nc bnc" id="L661" title="All 2 branches missed.">		} else if (osName.startsWith(&quot;Mac OS&quot;)) {</span>
+
+			// logger.info(&quot;Opening URL &quot;+urlString);
+<span class="nc" id="L664">			String browser_command = new String();</span>
+			try {
+				// ask for property about browser: fc, 26.11.2003.
+<span class="nc" id="L667">				Object[] messageArguments = { correctedUrl, urlString };</span>
+<span class="nc bnc" id="L668" title="All 2 branches missed.">				if (&quot;file&quot;.equals(url.getProtocol())) {</span>
+					// Bug in the apple's open function. For files, a pure
+					// filename must be given.
+<span class="nc" id="L671">					final File file = Tools.urlToFile(url);</span>
+<span class="nc" id="L672">					String[] command = {</span>
+<span class="nc" id="L673">							getProperty(&quot;default_browser_command_mac_open&quot;),</span>
+<span class="nc" id="L674">							&quot;file:&quot; + file.getAbsolutePath() };</span>
+<span class="nc" id="L675">					logger.info(&quot;Starting command: &quot;</span>
+<span class="nc" id="L676">							+ Arrays.deepToString(command));</span>
+<span class="nc" id="L677">					Runtime.getRuntime().exec(command, null, null);</span>
+<span class="nc" id="L678">				} else {</span>
+<span class="nc" id="L679">					MessageFormat formatter = new MessageFormat(</span>
+<span class="nc" id="L680">							getProperty(&quot;default_browser_command_mac&quot;));</span>
+<span class="nc" id="L681">					browser_command = formatter.format(messageArguments);</span>
+<span class="nc" id="L682">					logger.info(&quot;Starting command: &quot; + browser_command);</span>
+<span class="nc" id="L683">					Runtime.getRuntime().exec(browser_command);</span>
+				}
+<span class="nc" id="L685">			} catch (IOException ex2) {</span>
+<span class="nc" id="L686">				controller</span>
+<span class="nc" id="L687">						.errorMessage(&quot;Could not invoke browser.\n\nFreemind excecuted the following statement on a command line:\n\&quot;&quot;</span>
+<span class="nc" id="L688">								+ browser_command</span>
+<span class="nc" id="L689">								+ &quot;\&quot;.\n\nYou may look at the user or default property called 'default_browser_command_mac'.&quot;);</span>
+<span class="nc" id="L690">				System.err.println(&quot;Caught: &quot; + ex2);</span>
+			}
+<span class="nc" id="L692">		} else {</span>
+			// There is no '&quot;' character around url.toString (compare to Windows
+			// code
+			// above). Putting '&quot;' around does not work on Linux - instead, the
+			// '&quot;'
+			// becomes part of URL, which is malformed, as a result.
+
+<span class="nc" id="L699">			String browser_command = new String();</span>
+			try {
+				// ask for property about browser: fc, 26.11.2003.
+<span class="nc" id="L702">				Object[] messageArguments = { correctedUrl, urlString };</span>
+<span class="nc" id="L703">				MessageFormat formatter = new MessageFormat(</span>
+<span class="nc" id="L704">						getProperty(&quot;default_browser_command_other_os&quot;));</span>
+<span class="nc" id="L705">				browser_command = formatter.format(messageArguments);</span>
+<span class="nc" id="L706">				logger.info(&quot;Starting command: &quot; + browser_command);</span>
+<span class="nc" id="L707">				Runtime.getRuntime().exec(browser_command);</span>
+<span class="nc" id="L708">			} catch (IOException ex2) {</span>
+<span class="nc" id="L709">				controller</span>
+<span class="nc" id="L710">						.errorMessage(&quot;Could not invoke browser.\n\nFreemind excecuted the following statement on a command line:\n\&quot;&quot;</span>
+<span class="nc" id="L711">								+ browser_command</span>
+<span class="nc" id="L712">								+ &quot;\&quot;.\n\nYou may look at the user or default property called 'default_browser_command_other_os'.&quot;);</span>
+<span class="nc" id="L713">				System.err.println(&quot;Caught: &quot; + ex2);</span>
+			}
+		}
+<span class="nc" id="L716">	}</span>
+
+	/**
+	 * @param cmd
+	 *            precondition: the command can be split by spaces and the last
+	 *            argument is the only one that contains unicode chars.
+	 *            Moreover, we are under Windows. THIS METHOD DOESN'T SEEM TO
+	 *            WORK for UNICODE ARGUMENTS.
+	 * @throws IOException
+	 */
+	private void execWindows(String pCommand) throws IOException {
+		// taken and adapted from
+		// http://stackoverflow.com/questions/1876507/java-runtime-exec-on-windows-fails-with-unicode-in-arguments
+<span class="nc" id="L729">		StringTokenizer st = new StringTokenizer(pCommand, &quot; &quot;);</span>
+<span class="nc" id="L730">		String[] cmd = new String[st.countTokens()];</span>
+<span class="nc" id="L731">		int i = 0;</span>
+<span class="nc bnc" id="L732" title="All 2 branches missed.">		while (st.hasMoreTokens()) {</span>
+<span class="nc" id="L733">			cmd[i++] = st.nextToken();</span>
+		}
+<span class="nc" id="L735">		Map newEnv = new HashMap();</span>
+<span class="nc" id="L736">		newEnv.putAll(System.getenv());</span>
+		// exchange last argument by environment
+<span class="nc" id="L738">		String envName = &quot;JENV_1&quot;;</span>
+<span class="nc" id="L739">		newEnv.put(envName, cmd[cmd.length - 1]);</span>
+<span class="nc" id="L740">		cmd[cmd.length - 1] = &quot;%&quot; + envName + &quot;%&quot;;</span>
+
+<span class="nc" id="L742">		logger.info(&quot;Starting command array &quot;</span>
+<span class="nc" id="L743">				+ Arrays.toString(cmd)</span>
+<span class="nc" id="L744">				+ &quot;, and env for &quot;</span>
+<span class="nc" id="L745">				+ envName</span>
+<span class="nc" id="L746">				+ &quot; = &quot;</span>
+<span class="nc" id="L747">				+ HtmlTools.unicodeToHTMLUnicodeEntity(</span>
+<span class="nc" id="L748">						(String) newEnv.get(envName), true));</span>
+<span class="nc" id="L749">		ProcessBuilder pb = new ProcessBuilder(cmd);</span>
+<span class="nc" id="L750">		Map env = pb.environment();</span>
+<span class="nc" id="L751">		env.putAll(newEnv);</span>
+<span class="nc" id="L752">		final Process p = pb.start();</span>
+<span class="nc" id="L753">	}</span>
+
+	private String transpose(String input, char findChar, String replaceString) {
+<span class="nc" id="L756">		String res = new String();</span>
+<span class="nc bnc" id="L757" title="All 2 branches missed.">		for (int i = 0; i &lt; input.length(); ++i) {</span>
+<span class="nc" id="L758">			char d = input.charAt(i);</span>
+<span class="nc bnc" id="L759" title="All 2 branches missed.">			if (d == findChar)</span>
+<span class="nc" id="L760">				res += replaceString;</span>
+			else
+<span class="nc" id="L762">				res += d;</span>
+		}
+<span class="nc" id="L764">		return res;</span>
+	}
+
+	public void setWaitingCursor(boolean waiting) {
+<span class="nc bnc" id="L768" title="All 2 branches missed.">		if (waiting) {</span>
+<span class="nc" id="L769">			getRootPane().getGlassPane().setCursor(</span>
+<span class="nc" id="L770">					Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));</span>
+<span class="nc" id="L771">			getRootPane().getGlassPane().setVisible(true);</span>
+<span class="nc" id="L772">		} else {</span>
+<span class="nc" id="L773">			getRootPane().getGlassPane().setCursor(</span>
+<span class="nc" id="L774">					Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));</span>
+<span class="nc" id="L775">			getRootPane().getGlassPane().setVisible(false);</span>
+		}
+<span class="nc" id="L777">	}</span>
+
+	private String getProgramForFile(String type) {
+<span class="nc bnc" id="L780" title="All 2 branches missed.">		if (filetypes == null) {</span>
+<span class="nc" id="L781">			filetypes = new HashMap();</span>
+<span class="nc" id="L782">			String raw = getProperty(&quot;filetypes&quot;);</span>
+<span class="nc bnc" id="L783" title="All 4 branches missed.">			if (raw == null || raw.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L784">				return &quot;&quot;;</span>
+			}
+<span class="nc" id="L786">			StringTokenizer tokens = new StringTokenizer(raw, &quot;,&quot;);</span>
+<span class="nc bnc" id="L787" title="All 2 branches missed.">			while (tokens.hasMoreTokens()) {</span>
+<span class="nc" id="L788">				StringTokenizer pair = new StringTokenizer(tokens.nextToken(),</span>
+<span class="nc" id="L789">						&quot;:&quot;);</span>
+<span class="nc" id="L790">				String key = pair.nextToken().trim().toLowerCase();</span>
+<span class="nc" id="L791">				String value = pair.nextToken().trim();</span>
+<span class="nc" id="L792">				filetypes.put(key, value);</span>
+			}
+		}
+<span class="nc" id="L795">		return (String) filetypes.get(type.trim().toLowerCase());</span>
+	}
+
+	/** Returns the ResourceBundle with the current language */
+	public ResourceBundle getResources() {
+<span class="nc" id="L800">		return mFreeMindCommon.getResources();</span>
+	}
+
+	public String getResourceString(String resource) {
+<span class="nc" id="L804">		return mFreeMindCommon.getResourceString(resource);</span>
+	}
+
+	public String getResourceString(String key, String pDefault) {
+<span class="nc" id="L808">		return mFreeMindCommon.getResourceString(key, pDefault);</span>
+	}
+
+	public Logger getLogger(String forClass) {
+<span class="nc" id="L812">		Logger loggerForClass = java.util.logging.Logger.getLogger(forClass);</span>
+<span class="nc" id="L813">		mLoggerList.add(loggerForClass);</span>
+<span class="nc bnc" id="L814" title="All 4 branches missed.">		if (mFileHandler == null &amp;&amp; !mFileHandlerError) {</span>
+			// initialize handlers using an old System.err:
+<span class="nc" id="L816">			final Logger parentLogger = loggerForClass.getParent();</span>
+<span class="nc" id="L817">			final Handler[] handlers = parentLogger.getHandlers();</span>
+<span class="nc bnc" id="L818" title="All 2 branches missed.">			for (int i = 0; i &lt; handlers.length; i++) {</span>
+<span class="nc" id="L819">				final Handler handler = handlers[i];</span>
+<span class="nc bnc" id="L820" title="All 2 branches missed.">				if (handler instanceof ConsoleHandler) {</span>
+<span class="nc" id="L821">					parentLogger.removeHandler(handler);</span>
+				}
+			}
+
+			try {
+<span class="nc" id="L826">				mFileHandler = new FileHandler(getFreemindDirectory()</span>
+<span class="nc" id="L827">						+ File.separator + LOG_FILE_NAME, 1400000, 5, false);</span>
+<span class="nc" id="L828">				mFileHandler.setFormatter(new StdFormatter());</span>
+<span class="nc" id="L829">				mFileHandler.setLevel(Level.INFO);</span>
+<span class="nc" id="L830">				parentLogger.addHandler(mFileHandler);</span>
+
+<span class="nc" id="L832">				final ConsoleHandler stdConsoleHandler = new ConsoleHandler();</span>
+<span class="nc" id="L833">				stdConsoleHandler.setFormatter(new StdFormatter());</span>
+<span class="nc" id="L834">				stdConsoleHandler.setLevel(Level.WARNING);</span>
+<span class="nc" id="L835">				parentLogger.addHandler(stdConsoleHandler);</span>
+
+<span class="nc" id="L837">				sLogFileHandler = new LogFileLogHandler();</span>
+<span class="nc" id="L838">				sLogFileHandler.setFormatter(new SimpleFormatter());</span>
+<span class="nc" id="L839">				sLogFileHandler.setLevel(Level.INFO);</span>
+
+				LoggingOutputStream los;
+<span class="nc" id="L842">				Logger logger = Logger.getLogger(StdFormatter.STDOUT.getName());</span>
+<span class="nc" id="L843">				los = new LoggingOutputStream(logger, StdFormatter.STDOUT);</span>
+<span class="nc" id="L844">				System.setOut(new PrintStream(los, true));</span>
+
+<span class="nc" id="L846">				logger = Logger.getLogger(StdFormatter.STDERR.getName());</span>
+<span class="nc" id="L847">				los = new LoggingOutputStream(logger, StdFormatter.STDERR);</span>
+<span class="nc" id="L848">				System.setErr(new PrintStream(los, true));</span>
+
+<span class="nc" id="L850">			} catch (Exception e) {</span>
+<span class="nc" id="L851">				System.err.println(&quot;Error creating logging File Handler&quot;);</span>
+<span class="nc" id="L852">				e.printStackTrace();</span>
+<span class="nc" id="L853">				mFileHandlerError = true;</span>
+				// to avoid infinite recursion.
+				// freemind.main.Resources.getInstance().logExecption(e);
+			}
+	        if (false) {
+				// Obtain a reference to the logger
+				Logger focusLog = Logger.getLogger(&quot;java.awt.focus.Component&quot;);
+				// The logger should log all messages
+				focusLog.setLevel(Level.ALL);
+				// Create a new handler
+				ConsoleHandler handler = new ConsoleHandler();
+				// The handler must handle all messages
+				handler.setLevel(Level.ALL);
+				// Add the handler to the logger
+				focusLog.addHandler(handler);
+			}
+		}
+<span class="nc bnc" id="L870" title="All 2 branches missed.">		if (sLogFileHandler != null) {</span>
+<span class="nc" id="L871">			loggerForClass.addHandler(sLogFileHandler);</span>
+		}
+<span class="nc" id="L873">		return loggerForClass;</span>
+	}
+
+	public static void main(final String[] args,
+			Properties pDefaultPreferences, Properties pUserPreferences,
+			File pAutoPropertiesFile) {
+<span class="nc" id="L879">		final FreeMind frame = new FreeMind(pDefaultPreferences,</span>
+<span class="nc" id="L880">				pUserPreferences, pAutoPropertiesFile);</span>
+<span class="nc" id="L881">		IFreeMindSplash splash = null;</span>
+<span class="nc" id="L882">		frame.checkForAnotherInstance(args);</span>
+<span class="nc" id="L883">		frame.initServer();</span>
+		final FeedBack feedBack;
+		// change here, if you don't like the splash
+		if (true) {
+<span class="nc" id="L887">			splash = new FreeMindSplashModern(frame);</span>
+<span class="nc" id="L888">			splash.setVisible(true);</span>
+<span class="nc" id="L889">			feedBack = splash.getFeedBack();</span>
+<span class="nc" id="L890">			frame.mWindowIcon = splash.getWindowIcon();</span>
+		} else {
+			feedBack = new FeedBack() {
+				int value = 0;
+
+				public int getActualValue() {
+					return value;
+				}
+
+				public void increase(String messageId,
+						Object[] pMessageParameters) {
+					progress(getActualValue() + 1, messageId,
+							pMessageParameters);
+				}
+
+				public void progress(int act, String messageId,
+						Object[] pMessageParameters) {
+					frame.logger.info(&quot;Beginnig task:&quot; + messageId);
+				}
+
+				public void setMaximumValue(int max) {
+				}
+			};
+			frame.mWindowIcon = new ImageIcon(
+					frame.getResource(&quot;images/FreeMindWindowIcon.png&quot;));
+		}
+<span class="nc" id="L916">		feedBack.setMaximumValue(10 + frame.getMaximumNumberOfMapsToLoad(args));</span>
+<span class="nc" id="L917">		frame.init(feedBack);</span>
+
+<span class="nc" id="L919">		feedBack.increase(&quot;FreeMind.progress.startCreateController&quot;, null);</span>
+<span class="nc" id="L920">		final ModeController ctrl = frame.createModeController(args);</span>
+
+<span class="nc" id="L922">		feedBack.increase(FREE_MIND_PROGRESS_LOAD_MAPS, null);</span>
+		// This could be improved.
+<span class="nc" id="L924">		frame.loadMaps(args, ctrl, feedBack);</span>
+
+<span class="nc" id="L926">		Tools.waitForEventQueue();</span>
+<span class="nc" id="L927">		feedBack.increase(&quot;FreeMind.progress.endStartup&quot;, null);</span>
+		// focus fix after startup.
+<span class="nc" id="L929">		frame.addWindowFocusListener(new WindowFocusListener() {</span>
+
+			public void windowLostFocus(WindowEvent e) {
+<span class="nc" id="L932">			}</span>
+
+			public void windowGainedFocus(WindowEvent e) {
+<span class="nc" id="L935">				frame.getController().obtainFocusForSelected();</span>
+<span class="nc" id="L936">				frame.removeWindowFocusListener(this);</span>
+<span class="nc" id="L937">			}</span>
+		});
+<span class="nc" id="L939">		frame.setVisible(true);</span>
+<span class="nc bnc" id="L940" title="All 2 branches missed.">		if (splash != null) {</span>
+<span class="nc" id="L941">			splash.setVisible(false);</span>
+		}
+<span class="nc" id="L943">		frame.fireStartupDone();</span>
+<span class="nc" id="L944">	}</span>
+
+	private void setupSpellChecking() {
+<span class="nc" id="L947">		boolean checkSpelling =</span>
+//			Resources.getInstance().getBoolProperty(FreeMindCommon.CHECK_SPELLING);
+<span class="nc" id="L949">			Tools.safeEquals(&quot;true&quot;, props.getProperty(FreeMindCommon.CHECK_SPELLING));</span>
+<span class="nc bnc" id="L950" title="All 2 branches missed.">		if (checkSpelling) {</span>
+			try {
+				// TODO filter languages in dictionaries.properties like this:
+//				String[] languages = &quot;en,de,es,fr,it,nl,pl,ru,ar&quot;.split(&quot;,&quot;);
+//				for (int i = 0; i &lt; languages.length; i++) {
+//					System.out.println(new File(&quot;dictionary_&quot; + languages[i] + &quot;.ortho&quot;).exists());
+//				}
+<span class="nc" id="L957">				String decodedPath = Tools.getFreeMindBasePath();</span>
+<span class="nc" id="L958">				URL url = null;</span>
+<span class="nc bnc" id="L959" title="All 2 branches missed.">				if (new File (decodedPath).exists()) {</span>
+<span class="nc" id="L960">					url = new URL(&quot;file&quot;, null, decodedPath);</span>
+				}
+<span class="nc" id="L962">				SpellChecker.registerDictionaries(url, Locale.getDefault().getLanguage());</span>
+<span class="nc" id="L963">			} catch (MalformedURLException e) {</span>
+<span class="nc" id="L964">				freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L965">			} catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L966">				freemind.main.Resources.getInstance().logException(e);</span>
+				
+			}
+		}
+<span class="nc" id="L970">	}</span>
+
+	private void setupProxy() {
+		// proxy settings
+<span class="nc bnc" id="L974" title="All 2 branches missed.">		if(&quot;true&quot;.equals(props.getProperty(PROXY_USE_SETTINGS))) {</span>
+<span class="nc bnc" id="L975" title="All 2 branches missed.">			if (&quot;true&quot;.equals(props.getProperty(PROXY_IS_AUTHENTICATED))) {</span>
+<span class="nc" id="L976">				Authenticator.setDefault(new ProxyAuthenticator(props</span>
+<span class="nc" id="L977">						.getProperty(PROXY_USER), Tools.decompress(props</span>
+<span class="nc" id="L978">						.getProperty(PROXY_PASSWORD))));</span>
+			}
+<span class="nc" id="L980">			System.setProperty(&quot;http.proxyHost&quot;, props.getProperty(PROXY_HOST));</span>
+<span class="nc" id="L981">			System.setProperty(&quot;http.proxyPort&quot;, props.getProperty(PROXY_PORT));</span>
+		}
+<span class="nc" id="L983">	}</span>
+
+
+<span class="nc" id="L986">	private class MyEventQueue extends EventQueue {</span>
+        public void postEvent(AWTEvent theEvent) {
+<span class="nc" id="L988">            logger.info(&quot;Event Posted: &quot; + theEvent);</span>
+<span class="nc" id="L989">            super.postEvent(theEvent);</span>
+<span class="nc" id="L990">        }</span>
+    }
+
+	private void initServer() {
+<span class="nc" id="L994">		String portFile = getPortFile();</span>
+<span class="nc bnc" id="L995" title="All 2 branches missed.">		if (portFile == null) {</span>
+<span class="nc" id="L996">			return;</span>
+		}
+<span class="nc" id="L998">		mEditServer = new EditServer(portFile, this);</span>
+<span class="nc" id="L999">		mEditServer.start();</span>
+<span class="nc" id="L1000">	}</span>
+
+	private void checkForAnotherInstance(String[] pArgs) {
+<span class="nc" id="L1003">		String portFile = getPortFile();</span>
+<span class="nc bnc" id="L1004" title="All 2 branches missed.">		if (portFile == null) {</span>
+<span class="nc" id="L1005">			return;</span>
+		}
+		// {{{ Try connecting to another running FreeMind instance
+<span class="nc bnc" id="L1008" title="All 4 branches missed.">		if (portFile != null &amp;&amp; new File(portFile).exists()) {</span>
+			try {
+<span class="nc" id="L1010">				BufferedReader in = new BufferedReader(new FileReader(portFile));</span>
+<span class="nc" id="L1011">				String check = in.readLine();</span>
+<span class="nc bnc" id="L1012" title="All 2 branches missed.">				if (!check.equals(&quot;b&quot;))</span>
+<span class="nc" id="L1013">					throw new Exception(&quot;Wrong port file format&quot;);</span>
+
+<span class="nc" id="L1015">				int port = Integer.parseInt(in.readLine());</span>
+<span class="nc" id="L1016">				int key = Integer.parseInt(in.readLine());</span>
+
+<span class="nc" id="L1018">				Socket socket = new Socket(InetAddress.getByName(&quot;127.0.0.1&quot;),</span>
+<span class="nc" id="L1019">						port);</span>
+<span class="nc" id="L1020">				DataOutputStream out = new DataOutputStream(</span>
+<span class="nc" id="L1021">						socket.getOutputStream());</span>
+<span class="nc" id="L1022">				out.writeInt(key);</span>
+
+				String script;
+				// Put url to open here
+<span class="nc" id="L1026">				script = Tools.arrayToUrls(pArgs);</span>
+<span class="nc" id="L1027">				out.writeUTF(script);</span>
+
+<span class="nc" id="L1029">				logger.info(&quot;Waiting for server&quot;);</span>
+				// block until its closed
+				try {
+<span class="nc" id="L1032">					socket.getInputStream().read();</span>
+<span class="nc" id="L1033">				} catch (Exception e) {</span>
+				}
+
+<span class="nc" id="L1036">				in.close();</span>
+<span class="nc" id="L1037">				out.close();</span>
+
+<span class="nc" id="L1039">				System.exit(0);</span>
+<span class="nc" id="L1040">			} catch (Exception e) {</span>
+				// ok, this one seems to confuse newbies
+				// endlessly, so log it as NOTICE, not
+				// ERROR
+<span class="nc" id="L1044">				logger.info(&quot;An error occurred&quot;</span>
+						+ &quot; while connecting to the FreeMind server instance.&quot;
+						+ &quot; This probably means that&quot;
+						+ &quot; FreeMind crashed and/or exited abnormally&quot;
+						+ &quot; the last time it was run.&quot; + &quot; If you don't&quot;
+<span class="nc" id="L1049">						+ &quot; know what this means, don't worry. Exception: &quot;+e );</span>
+			}
+		}
+
+<span class="nc" id="L1053">	}</span>
+
+	/**
+	 * @return null, if no port should be opened.
+	 */
+	private String getPortFile() {
+<span class="nc bnc" id="L1059" title="All 2 branches missed.">		if (mEditServer == null</span>
+<span class="nc" id="L1060">				&amp;&amp; Resources.getInstance().getBoolProperty(</span>
+<span class="nc bnc" id="L1061" title="All 2 branches missed.">						RESOURCES_DON_T_OPEN_PORT)) {</span>
+<span class="nc" id="L1062">			return null;</span>
+		}
+<span class="nc" id="L1064">		return getFreemindDirectory() + File.separator + getProperty(PORT_FILE);</span>
+	}
+
+	private void fireStartupDone() {
+<span class="nc" id="L1068">		mStartupDone = true;</span>
+<span class="nc bnc" id="L1069" title="All 2 branches missed.">		for (Iterator it = mStartupDoneListeners.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L1070">			StartupDoneListener listener = (StartupDoneListener) it.next();</span>
+<span class="nc" id="L1071">			listener.startupDone();</span>
+		}
+<span class="nc" id="L1073">	}</span>
+
+	private void setScreenBounds() {
+		// Create the MenuBar
+<span class="nc" id="L1077">		menuBar = new MenuBar(controller);</span>
+<span class="nc" id="L1078">		setJMenuBar(menuBar);</span>
+
+		// Create the scroll pane
+<span class="nc" id="L1081">		mScrollPane = new MapView.ScrollPane();</span>
+<span class="nc bnc" id="L1082" title="All 2 branches missed.">		if (Resources.getInstance().getBoolProperty(&quot;no_scrollbar&quot;)) {</span>
+<span class="nc" id="L1083">			mScrollPane</span>
+<span class="nc" id="L1084">					.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);</span>
+<span class="nc" id="L1085">			mScrollPane</span>
+<span class="nc" id="L1086">					.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);</span>
+<span class="nc" id="L1087">		} else {</span>
+<span class="nc" id="L1088">			mScrollPane</span>
+<span class="nc" id="L1089">					.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);</span>
+<span class="nc" id="L1090">			mScrollPane</span>
+<span class="nc" id="L1091">					.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);</span>
+
+		}
+<span class="nc" id="L1094">		status = new JLabel(&quot;!&quot;);</span>
+<span class="nc" id="L1095">		status.setPreferredSize(status.getPreferredSize());</span>
+<span class="nc" id="L1096">		status.setText(&quot;&quot;);</span>
+<span class="nc" id="L1097">		mContentComponent = mScrollPane;</span>
+
+<span class="nc" id="L1099">		boolean shouldUseTabbedPane = Resources.getInstance().getBoolProperty(</span>
+<span class="nc" id="L1100">				RESOURCES_USE_TABBED_PANE);</span>
+
+<span class="nc bnc" id="L1102" title="All 2 branches missed.">		if (shouldUseTabbedPane) {</span>
+			// tabbed panes eat control up. This is corrected here.
+			InputMap map;
+<span class="nc" id="L1105">			map = (InputMap) UIManager.get(&quot;TabbedPane.ancestorInputMap&quot;);</span>
+<span class="nc" id="L1106">			KeyStroke keyStrokeCtrlUp = KeyStroke.getKeyStroke(KeyEvent.VK_UP,</span>
+<span class="nc" id="L1107">					InputEvent.CTRL_DOWN_MASK);</span>
+<span class="nc" id="L1108">			map.remove(keyStrokeCtrlUp);</span>
+<span class="nc" id="L1109">			mTabbedPane = new JTabbedPane();</span>
+<span class="nc" id="L1110">			mTabbedPane.setFocusable(false);</span>
+<span class="nc" id="L1111">			controller.addTabbedPane(mTabbedPane);</span>
+<span class="nc" id="L1112">			getContentPane().add(mTabbedPane, BorderLayout.CENTER);</span>
+<span class="nc" id="L1113">		} else {</span>
+			// don't use tabbed panes.
+<span class="nc" id="L1115">			getContentPane().add(mContentComponent, BorderLayout.CENTER);</span>
+		}
+<span class="nc" id="L1117">		getContentPane().add(status, BorderLayout.SOUTH);</span>
+
+		// Disable the default close button, instead use windowListener
+<span class="nc" id="L1120">		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);</span>
+
+<span class="nc" id="L1122">		addWindowListener(new WindowAdapter() {</span>
+			public void windowClosing(WindowEvent e) {
+<span class="nc" id="L1124">				controller.quit</span>
+<span class="nc" id="L1125">						.actionPerformed(new ActionEvent(this, 0, &quot;quit&quot;));</span>
+<span class="nc" id="L1126">			}</span>
+
+			/*
+			 * fc, 14.3.2008: Completely removed, as it damaged the focus if for
+			 * example the note window was active.
+			 */
+			// public void windowActivated(WindowEvent e) {
+			// // This doesn't work the first time, it's called too early to
+			// // get Focus
+			// logger.info(&quot;windowActivated&quot;);
+			// if ((getView() != null) &amp;&amp; (getView().getSelected() != null)) {
+			// getView().getSelected().requestFocus();
+			// }
+			// }
+		});
+
+<span class="nc bnc" id="L1142" title="All 2 branches missed.">		if (Tools.safeEquals(getProperty(&quot;toolbarVisible&quot;), &quot;false&quot;)) {</span>
+<span class="nc" id="L1143">			controller.setToolbarVisible(false);</span>
+		}
+
+<span class="nc bnc" id="L1146" title="All 2 branches missed.">		if (Tools.safeEquals(getProperty(&quot;leftToolbarVisible&quot;), &quot;false&quot;)) {</span>
+<span class="nc" id="L1147">			controller.setLeftToolbarVisible(false);</span>
+		}
+
+		// first define the final layout of the screen:
+<span class="nc" id="L1151">		setFocusTraversalKeysEnabled(false);</span>
+<span class="nc" id="L1152">		pack();</span>
+		// and now, determine size, position and state.
+		// set the default size (PN)
+<span class="nc" id="L1155">		int win_width = getIntProperty(&quot;appwindow_width&quot;, 0);</span>
+<span class="nc" id="L1156">		int win_height = getIntProperty(&quot;appwindow_height&quot;, 0);</span>
+<span class="nc" id="L1157">		int win_x = getIntProperty(&quot;appwindow_x&quot;, 0);</span>
+<span class="nc" id="L1158">		int win_y = getIntProperty(&quot;appwindow_y&quot;, 0);</span>
+<span class="nc bnc" id="L1159" title="All 2 branches missed.">		win_width = (win_width &gt; 0) ? win_width : 640;</span>
+<span class="nc bnc" id="L1160" title="All 2 branches missed.">		win_height = (win_height &gt; 0) ? win_height : 440;</span>
+<span class="nc" id="L1161">		final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();</span>
+<span class="nc" id="L1162">		final Insets screenInsets = defaultToolkit</span>
+<span class="nc" id="L1163">				.getScreenInsets(getGraphicsConfiguration());</span>
+<span class="nc" id="L1164">		Dimension screenSize = defaultToolkit.getScreenSize();</span>
+<span class="nc" id="L1165">		final int screenWidth = screenSize.width - screenInsets.left</span>
+<span class="nc" id="L1166">				- screenInsets.right;</span>
+<span class="nc" id="L1167">		win_width = Math.min(win_width, screenWidth);</span>
+<span class="nc" id="L1168">		final int screenHeight = screenSize.height - screenInsets.top</span>
+<span class="nc" id="L1169">				- screenInsets.bottom;</span>
+<span class="nc" id="L1170">		win_height = Math.min(win_height, screenHeight);</span>
+<span class="nc" id="L1171">		win_x = Math.max(screenInsets.left, win_x);</span>
+<span class="nc" id="L1172">		win_x = Math.min(screenWidth + screenInsets.left - win_width, win_x);</span>
+<span class="nc" id="L1173">		win_y = Math.max(screenInsets.top, win_y);</span>
+<span class="nc" id="L1174">		win_y = Math.min(screenWidth + screenInsets.top - win_height, win_y);</span>
+<span class="nc" id="L1175">		setBounds(win_x, win_y, win_width, win_height);</span>
+		// set the default state (normal/maximized) (PN)
+		// (note: this must be done later when partucular
+		// initalizations of the windows are ready,
+		// perhaps after setVisible is it enough... :-?
+<span class="nc" id="L1180">		int win_state = Integer.parseInt(FreeMind.props.getProperty(</span>
+<span class="nc" id="L1181">				&quot;appwindow_state&quot;, &quot;0&quot;));</span>
+<span class="nc bnc" id="L1182" title="All 2 branches missed.">		win_state = ((win_state &amp; ICONIFIED) != 0) ? NORMAL : win_state;</span>
+<span class="nc" id="L1183">		setExtendedState(win_state);</span>
+<span class="nc" id="L1184">	}</span>
+
+	private ModeController createModeController(final String[] args) {
+<span class="nc" id="L1187">		ModeController ctrl = controller.getModeController();</span>
+		// try to load mac module:
+		try {
+<span class="nc" id="L1190">			Class macClass = Class.forName(&quot;accessories.plugins.MacChanges&quot;);</span>
+			// lazy programming. the mac class has exactly one
+			// constructor
+			// with a modeController.
+<span class="nc" id="L1194">			macClass.getConstructors()[0].newInstance(new Object[] { this });</span>
+<span class="nc" id="L1195">		} catch (Exception e1) {</span>
+			// freemind.main.Resources.getInstance().logExecption(e1);
+		}
+<span class="nc" id="L1198">		return ctrl;</span>
+	}
+
+	private int getMaximumNumberOfMapsToLoad(String[] args) {
+<span class="nc" id="L1202">		LastStateStorageManagement management = getLastStateStorageManagement();</span>
+<span class="nc" id="L1203">		int[] values = { args.length, management.getLastOpenList().size(), 1 };</span>
+<span class="nc" id="L1204">		int ret = 0;</span>
+<span class="nc bnc" id="L1205" title="All 2 branches missed.">		for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="nc" id="L1206">			ret = Math.max(ret, values[i]);</span>
+		}
+<span class="nc" id="L1208">		return ret;</span>
+	}
+
+	private void loadMaps(final String[] args, ModeController pModeController,
+			FeedBack pFeedBack) {
+<span class="nc" id="L1213">		boolean fileLoaded = false;</span>
+<span class="nc bnc" id="L1214" title="All 2 branches missed.">		for (int i = 0; i &lt; args.length; i++) {</span>
+			// JOptionPane.showMessageDialog(null,i+&quot;:&quot;+args[i]);
+<span class="nc" id="L1216">			String fileArgument = args[i];</span>
+<span class="nc" id="L1217">			pFeedBack.increase(FREE_MIND_PROGRESS_LOAD_MAPS_NAME,</span>
+<span class="nc" id="L1218">					new Object[] { fileArgument.replaceAll(&quot;.*/&quot;, &quot;&quot;) });</span>
+<span class="nc" id="L1219">			if (fileArgument.toLowerCase().endsWith(</span>
+<span class="nc bnc" id="L1220" title="All 2 branches missed.">					freemind.main.FreeMindCommon.FREEMIND_FILE_EXTENSION)) {</span>
+
+<span class="nc bnc" id="L1222" title="All 2 branches missed.">				if (!Tools.isAbsolutePath(fileArgument)) {</span>
+<span class="nc" id="L1223">					fileArgument = System.getProperty(&quot;user.dir&quot;)</span>
+<span class="nc" id="L1224">							+ System.getProperty(&quot;file.separator&quot;)</span>
+<span class="nc" id="L1225">							+ fileArgument;</span>
+				}
+				// fin = ;
+				try {
+<span class="nc" id="L1229">					pModeController.load(new File(fileArgument));</span>
+<span class="nc" id="L1230">					fileLoaded = true;</span>
+					// logger.info(&quot;Attempting to load: &quot; +
+					// args[i]);
+<span class="nc" id="L1233">				} catch (Exception ex) {</span>
+<span class="nc" id="L1234">					System.err.println(&quot;File &quot; + fileArgument</span>
+<span class="nc" id="L1235">							+ &quot; not found error&quot;);</span>
+					// System.exit(1);
+				}
+			}
+		}
+<span class="nc bnc" id="L1240" title="All 2 branches missed.">		if (!fileLoaded) {</span>
+<span class="nc" id="L1241">			fileLoaded = processLoadEventFromStartupPhase();</span>
+		}
+<span class="nc bnc" id="L1243" title="All 2 branches missed.">		if (!fileLoaded</span>
+<span class="nc bnc" id="L1244" title="All 2 branches missed.">				&amp;&amp; Tools.isPreferenceTrue(getProperty(FreeMindCommon.LOAD_LAST_MAPS_AND_LAYOUT))) {</span>
+<span class="nc" id="L1245">			int index = 0;</span>
+<span class="nc" id="L1246">			MapModule mapToFocus = null;</span>
+<span class="nc" id="L1247">			LastStateStorageManagement management = getLastStateStorageManagement();</span>
+<span class="nc" id="L1248">			for (Iterator it = management.getLastOpenList().iterator(); it</span>
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L1250">				MindmapLastStateStorage store = (MindmapLastStateStorage) it</span>
+<span class="nc" id="L1251">						.next();</span>
+<span class="nc" id="L1252">				String restorable = store.getRestorableName();</span>
+<span class="nc" id="L1253">				pFeedBack.increase(FREE_MIND_PROGRESS_LOAD_MAPS_NAME,</span>
+<span class="nc" id="L1254">						new Object[] { restorable.replaceAll(&quot;.*/&quot;, &quot;&quot;) });</span>
+				try {
+<span class="nc bnc" id="L1256" title="All 2 branches missed.">					if (controller.getLastOpenedList().open(restorable)) {</span>
+<span class="nc bnc" id="L1257" title="All 2 branches missed.">						if (index == management.getLastFocussedTab()) {</span>
+<span class="nc" id="L1258">							mapToFocus = controller.getMapModule();</span>
+						}
+					}
+<span class="nc" id="L1261">					fileLoaded = true;</span>
+<span class="nc" id="L1262">				} catch (Exception e) {</span>
+<span class="nc" id="L1263">					freemind.main.Resources.getInstance().logException(e);</span>
+				}
+<span class="nc" id="L1265">				index++;</span>
+			}
+<span class="nc bnc" id="L1267" title="All 2 branches missed.">			if (mapToFocus != null) {</span>
+<span class="nc" id="L1268">				controller.getMapModuleManager().changeToMapModule(</span>
+<span class="nc" id="L1269">						mapToFocus.getDisplayName());</span>
+			}
+		}
+<span class="nc bnc" id="L1272" title="All 2 branches missed.">		if (!fileLoaded) {</span>
+<span class="nc" id="L1273">			String restoreable = getProperty(FreeMindCommon.ON_START_IF_NOT_SPECIFIED);</span>
+			if (Tools
+<span class="nc bnc" id="L1275" title="All 2 branches missed.">					.isPreferenceTrue(getProperty(FreeMindCommon.LOAD_LAST_MAP))</span>
+<span class="nc bnc" id="L1276" title="All 4 branches missed.">					&amp;&amp; restoreable != null &amp;&amp; restoreable.length() &gt; 0) {</span>
+<span class="nc" id="L1277">				pFeedBack.increase(FREE_MIND_PROGRESS_LOAD_MAPS_NAME,</span>
+<span class="nc" id="L1278">						new Object[] { restoreable.replaceAll(&quot;.*/&quot;, &quot;&quot;) });</span>
+				try {
+<span class="nc" id="L1280">					controller.getLastOpenedList().open(restoreable);</span>
+<span class="nc" id="L1281">					controller.getModeController().getView().moveToRoot();</span>
+<span class="nc" id="L1282">					fileLoaded = true;</span>
+<span class="nc" id="L1283">				} catch (Exception e) {</span>
+<span class="nc" id="L1284">					freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L1285">					out(&quot;An error occured on opening the file: &quot; + restoreable</span>
+<span class="nc" id="L1286">							+ &quot;.&quot;);</span>
+				}
+			}
+		}
+<span class="nc bnc" id="L1290" title="All 2 branches missed.">		if (!fileLoaded</span>
+<span class="nc bnc" id="L1291" title="All 2 branches missed.">				&amp;&amp; Tools.isPreferenceTrue(getProperty(FreeMindCommon.LOAD_NEW_MAP))) {</span>
+			/*
+			 * nothing loaded so far. Perhaps, we should display a new map...
+			 * According to Summary: On first start FreeMind should show new map
+			 * to newbies
+			 * https://sourceforge.net/tracker/?func=detail&amp;atid=107118
+			 * &amp;aid=1752516&amp;group_id=7118
+			 */
+<span class="nc" id="L1299">			pModeController.newMap();</span>
+<span class="nc" id="L1300">			pFeedBack.increase(FREE_MIND_PROGRESS_LOAD_MAPS, null);</span>
+		}
+<span class="nc" id="L1302">	}</span>
+
+	private LastStateStorageManagement getLastStateStorageManagement() {
+<span class="nc" id="L1305">		String lastStateMapXml = getProperty(FreeMindCommon.MINDMAP_LAST_STATE_MAP_STORAGE);</span>
+<span class="nc" id="L1306">		LastStateStorageManagement management = new LastStateStorageManagement(</span>
+<span class="nc" id="L1307">				lastStateMapXml);</span>
+<span class="nc" id="L1308">		return management;</span>
+	}
+
+	/**
+	 * Iterates over the load events from the startup phase
+	 * &lt;p&gt;
+	 * More than one file can be opened during startup. The filenames are stored
+	 * in numbered properties, i.e.
+	 * &lt;ul&gt;
+	 * loadEventDuringStartup0=/Users/alex/Desktop/test1.mm
+	 * loadEventDuringStartup1=/Users/alex/Desktop/test2.mm
+	 * &lt;/ul&gt;
+	 * 
+	 * @return true if at least one file has been loaded
+	 */
+	private boolean processLoadEventFromStartupPhase() {
+<span class="nc" id="L1324">		boolean atLeastOneFileHasBeenLoaded = false;</span>
+<span class="nc" id="L1325">		int count = 0;</span>
+<span class="nc" id="L1326">		while (true) {</span>
+<span class="nc" id="L1327">			String propertyKey = FreeMindCommon.LOAD_EVENT_DURING_STARTUP</span>
+<span class="nc" id="L1328">					+ count;</span>
+<span class="nc bnc" id="L1329" title="All 2 branches missed.">			if (getProperty(propertyKey) == null) {</span>
+<span class="nc" id="L1330">				break;</span>
+			} else {
+<span class="nc bnc" id="L1332" title="All 2 branches missed.">				if (processLoadEventFromStartupPhase(propertyKey))</span>
+<span class="nc" id="L1333">					atLeastOneFileHasBeenLoaded = true;</span>
+<span class="nc" id="L1334">				++count;</span>
+			}
+		}
+<span class="nc" id="L1337">		return atLeastOneFileHasBeenLoaded;</span>
+	}
+
+	private boolean processLoadEventFromStartupPhase(String propertyKey) {
+<span class="nc" id="L1341">		String filename = getProperty(propertyKey);</span>
+		try {
+<span class="nc bnc" id="L1343" title="All 2 branches missed.">			if (logger.isLoggable(Level.INFO)) {</span>
+<span class="nc" id="L1344">				logger.info(&quot;Loading &quot; + filename);</span>
+			}
+<span class="nc" id="L1346">			controller.getModeController().load(</span>
+<span class="nc" id="L1347">					Tools.fileToUrl(new File(filename)));</span>
+			// remove temporary property because we do not want to store in a
+			// file and survive restart
+<span class="nc" id="L1350">			getProperties().remove(propertyKey);</span>
+<span class="nc" id="L1351">			return true;</span>
+<span class="nc" id="L1352">		} catch (Exception e) {</span>
+<span class="nc" id="L1353">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L1354">			out(&quot;An error occured on opening the file: &quot; + filename + &quot;.&quot;);</span>
+<span class="nc" id="L1355">			return false;</span>
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see freemind.main.FreeMindMain#getJFrame()
+	 */
+	public JFrame getJFrame() {
+<span class="nc" id="L1365">		return this;</span>
+	}
+
+	public ClassLoader getFreeMindClassLoader() {
+<span class="nc" id="L1369">		return mFreeMindCommon.getFreeMindClassLoader();</span>
+	}
+
+	public String getFreemindBaseDir() {
+<span class="nc" id="L1373">		return mFreeMindCommon.getFreemindBaseDir();</span>
+	}
+
+	public String getAdjustableProperty(String label) {
+<span class="nc" id="L1377">		return mFreeMindCommon.getAdjustableProperty(label);</span>
+	}
+
+	public JSplitPane insertComponentIntoSplitPane(JComponent pMindMapComponent) {
+<span class="nc bnc" id="L1381" title="All 2 branches missed.">		if (mSplitPane != null) {</span>
+			// already present:
+<span class="nc" id="L1383">			return mSplitPane;</span>
+		}
+<span class="nc" id="L1385">		removeContentComponent();</span>
+<span class="nc" id="L1386">		int splitType = JSplitPane.VERTICAL_SPLIT;</span>
+<span class="nc" id="L1387">		String splitProperty = getProperty(J_SPLIT_PANE_SPLIT_TYPE);</span>
+<span class="nc bnc" id="L1388" title="All 2 branches missed.">		if(Tools.safeEquals(splitProperty, HORIZONTAL_SPLIT_RIGHT)) {</span>
+<span class="nc" id="L1389">			splitType = JSplitPane.HORIZONTAL_SPLIT;</span>
+<span class="nc bnc" id="L1390" title="All 2 branches missed.">		} else if(Tools.safeEquals(splitProperty, VERTICAL_SPLIT_BELOW)) {</span>
+			// default
+		} else {
+<span class="nc" id="L1393">			logger.warning(&quot;Split type not known: &quot; + splitProperty);</span>
+		}
+<span class="nc" id="L1395">		mSplitPane = new JSplitPane(splitType, mScrollPane, pMindMapComponent);</span>
+<span class="nc" id="L1396">		mSplitPane.setContinuousLayout(true);</span>
+<span class="nc" id="L1397">		mSplitPane.setOneTouchExpandable(false);</span>
+		/*
+		 * This means that the mind map area gets all the space that results
+		 * from resizing the window.
+		 */
+<span class="nc" id="L1402">		mSplitPane.setResizeWeight(1.0d);</span>
+		// split panes eat F8 and F6. This is corrected here.
+<span class="nc" id="L1404">		Tools.correctJSplitPaneKeyMap();</span>
+<span class="nc" id="L1405">		mContentComponent = mSplitPane;</span>
+<span class="nc" id="L1406">		setContentComponent();</span>
+		// set divider position:
+<span class="nc" id="L1408">		int splitPanePosition = getIntProperty(SPLIT_PANE_POSITION, -1);</span>
+<span class="nc" id="L1409">		int lastSplitPanePosition = getIntProperty(SPLIT_PANE_LAST_POSITION, -1);</span>
+<span class="nc bnc" id="L1410" title="All 4 branches missed.">		if (splitPanePosition != -1 &amp;&amp; lastSplitPanePosition != -1) {</span>
+<span class="nc" id="L1411">			mSplitPane.setDividerLocation(splitPanePosition);</span>
+<span class="nc" id="L1412">			mSplitPane.setLastDividerLocation(lastSplitPanePosition);</span>
+		}
+<span class="nc" id="L1414">		return mSplitPane;</span>
+	}
+
+	public void removeSplitPane() {
+<span class="nc bnc" id="L1418" title="All 2 branches missed.">		if (mSplitPane != null) {</span>
+<span class="nc" id="L1419">			setProperty(SPLIT_PANE_POSITION,</span>
+<span class="nc" id="L1420">					&quot;&quot; + mSplitPane.getDividerLocation());</span>
+<span class="nc" id="L1421">			setProperty(SPLIT_PANE_LAST_POSITION,</span>
+<span class="nc" id="L1422">					&quot;&quot; + mSplitPane.getLastDividerLocation());</span>
+<span class="nc" id="L1423">			removeContentComponent();</span>
+<span class="nc" id="L1424">			mContentComponent = mScrollPane;</span>
+<span class="nc" id="L1425">			setContentComponent();</span>
+<span class="nc" id="L1426">			mSplitPane = null;</span>
+		}
+<span class="nc" id="L1428">	}</span>
+
+	private void removeContentComponent() {
+<span class="nc bnc" id="L1431" title="All 2 branches missed.">		if (mTabbedPane != null) {</span>
+<span class="nc bnc" id="L1432" title="All 2 branches missed.">			if (mTabbedPane.getSelectedIndex() &gt;= 0) {</span>
+<span class="nc" id="L1433">				mTabbedPane.setComponentAt(mTabbedPane.getSelectedIndex(),</span>
+<span class="nc" id="L1434">						new JPanel());</span>
+			}
+<span class="nc" id="L1436">		} else {</span>
+<span class="nc" id="L1437">			getContentPane().remove(mContentComponent);</span>
+<span class="nc" id="L1438">			getRootPane().revalidate();</span>
+		}
+
+<span class="nc" id="L1441">	}</span>
+
+	private void setContentComponent() {
+<span class="nc bnc" id="L1444" title="All 2 branches missed.">		if (mTabbedPane != null) {</span>
+<span class="nc bnc" id="L1445" title="All 2 branches missed.">			if (mTabbedPane.getSelectedIndex() &gt;= 0) {</span>
+<span class="nc" id="L1446">				mTabbedPane.setComponentAt(mTabbedPane.getSelectedIndex(),</span>
+<span class="nc" id="L1447">						mContentComponent);</span>
+			}
+<span class="nc" id="L1449">		} else {</span>
+<span class="nc" id="L1450">			getContentPane().add(mContentComponent, BorderLayout.CENTER);</span>
+<span class="nc" id="L1451">			getRootPane().revalidate();</span>
+		}
+<span class="nc" id="L1453">	}</span>
+
+	public JScrollPane getScrollPane() {
+<span class="nc" id="L1456">		return mScrollPane;</span>
+	}
+
+	public JComponent getContentComponent() {
+<span class="nc" id="L1460">		return mContentComponent;</span>
+	}
+
+	public void registerStartupDoneListener(
+			StartupDoneListener pStartupDoneListener) {
+<span class="nc bnc" id="L1465" title="All 2 branches missed.">		if (!mStartupDone)</span>
+<span class="nc" id="L1466">			mStartupDoneListeners.add(pStartupDoneListener);</span>
+<span class="nc" id="L1467">	}</span>
+
+	public List getLoggerList() {
+<span class="nc" id="L1470">		return Collections.unmodifiableList(mLoggerList);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

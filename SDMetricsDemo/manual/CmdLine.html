@@ -1,0 +1,212 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Running SDMetrics from the Command Line</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="Behavior.html">Prev</a> - <a href="DesignMsmt.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > 5 Running SDMetrics from the Command Line
+<hr>
+<h1><a name="CmdLine"></a>5 Running SDMetrics from the Command Line</h1>
+
+You can run SDMetrics from the command line or shell scripts. This
+is useful to integrate SDMetrics in automated processes.<p>
+
+The SDMetrics command line syntax is:
+<pre>
+java com.sdmetrics.SDMetrics  -xmi xmifile [-proj projfile]  [-customPF pfsetname]
+           [-meta mmfile] [-trans transformationfile] [-metrics metricsfile]
+           [-filter filterstring]* [-nonmatching] [-ignore]
+           [-compare 2ndxmifile] [-mapping mapfile] [-relative]
+           [-gHisto] [-gCumDist] [-gKiviat] [-gFormat format]
+             [-gHTMLPerDiag] [-gHTMLPerType] [-gHTMLForAll]
+             [-gUseFrames] [-gWidth width] [-gHeight height]
+           [-model] [-stats] [-relmat] [-rules [-rulefilter filter]] 
+           [-nometrics] [-s] [-one] [-f format] basename
+</pre>
+
+
+The arguments in square brackets [] are optional. When followed by an
+asterisk (*), the bracket contents can be repeated an arbitrary number
+of times, otherwise, at most one occurrence is allowed.
+The meaning of the arguments is as follows.<p> 
+
+<b>Project file settings:</b>
+
+<ul>
+<li><tt>xmi xmifile</tt>: XMI file for the design to be analyzed.
+<li><tt>proj projfile</tt>: name of a project settings file
+created via the GUI.<br>
+SDMetrics reads the project settings file and processes the project files
+as specified in there.
+<li><tt>customPF pfsetname</tt>: specifies the name of the project files
+set to use for the analysis. If not specified, SDMetrics will automatically
+determine a project file set to use</li>
+<li><tt>meta mmfile</tt>: file containing the SDMetrics
+metamodel.<br> If you do not specify a metamodel definition file, the
+metamodel of the project file set is used.
+<li><tt>trans transformationfile</tt>: file containing the XMI
+transformations to be used to read the XMI file.<br>
+If you do not specify a transformation file, the transformation
+file of the project file set is used.
+<li><tt>metrics metricsfile</tt>: file containing the definition of
+the metrics.<br> If you do not specify a metrics definition file, the
+metrics definition of the project file set are used.
+</ul>
+<b>Filter Settings:</b>
+
+<ul>
+<li><tt>filter filterstring</tt>: adds filter <tt>filterstring</tt>
+to the list of element filters to apply.
+<li><tt>nonmatching</tt>: When set, SDMetrics rejects elements that
+match none of the filters. The default (switch not set) is to reject
+elements that match at least one of the filter strings.
+<li><tt>ignore</tt>: When set, links to rejected elements are not
+considered during metric calculation. The default (switch not set) is
+to consider links to rejected elements.
+</ul>
+
+<b>Design comparison settings:</b>
+<ul>
+<li><tt>compare 2ndxmifile</tt>: perform a design comparison with the
+design specified via the <tt>-xmifile</tt> or <tt>-proj</tt> switch,
+and output the metric deltas. Note that <tt>2ndxmifile</tt> contains
+the second or newer design.
+<li><tt>mapping mapfile</tt>: file with element mappings to use for
+the design comparison.
+<li><tt>relative</tt>: Show deltas as relative percentages in output.
+</ul>
+
+
+<b>Output file settings:</b>
+<ul>
+<li><tt>basename</tt>: Base name of the file(s) the output will be
+written to.
+<li><tt>model</tt>: additionally create a set of tables containing the
+UML model. Files will have suffix "MODEL" appended to the
+base name.</li>
+<li><tt>stats</tt>: additionally create a set of tables containing the
+descriptive statistics. Files will have suffix "SD" appended to
+the base name.</li>
+<li><tt>relmat</tt>: additionally create a set of tables containing
+the relation matrices. Files will have suffix "RM" appended to
+the base name.</li>
+<li><tt>rules</tt>: additionally create a set of tables containing
+the design rule violations. Files will have suffix "RULES" appended
+to the base name.
+<ul><li><tt>rulefilter filter</tt> an optional rule filter string
+specifying the rules to apply.</li></ul></li>
+<li><tt>nometrics</tt>: suppress export of metric data. Metric data
+tables are always created by default, unless you set this switch.</li>
+<li><tt>s</tt>: sanitized output; when set, model element names are
+not written to the output files (metric data tables only).</li>
+<li><tt>one</tt>: one file; when set, each set of tables is written to
+one file, otherwise each data table is written to a separate
+file.</li>
+<li><tt>f format</tt>: format of the output file(s). Admissible
+formats:<br>
+<tt>txt</tt>: Tab-separated text tables.
+This is the default if no format is specified.<br>
+<tt>csv</tt>: Comma-separated text tables.<br>
+<tt>html</tt>: HTML files containing the data in HTML tables.<br>
+<tt>ods</tt>: OpenDocument spreadsheet files for OpenOffice/LibreOffice.<br>
+<tt>xml</tt>: XML spreadsheet files for Microsoft Excel XP.<br>
+<tt>sxc</tt>: Spreadsheet files for OpenOffice.org 1.0 and later.<br>
+</ul>
+
+<b>Graph export settings:</b>
+<ul>
+
+<li><tt>gHisto</tt>: additionally export metric histograms. Files will
+have suffix "HISTO" appended to the base name.
+<li><tt>gCumDist</tt>: additionally export cumulative distribution
+graphs for metrics. Files will have suffix "CUMDIST" appended to the
+base name.
+<li><tt>gKiviat</tt>: additionally export kiviat diagrams for model
+elements. Files will have suffix "KIVIAT" appended to the base name.
+<li><tt>gFormat format</tt>: format for the graphs to generate: SVG (default), PNG, or JPG
+<li><tt>gHTMLPerDiag</tt>: create one HTML page for each individual graph
+<li><tt>gHTMLPerType</tt>: create one HTML page for each element type
+<li><tt>gHTMLForAll</tt>: create one HTML page for all graphs
+<li><tt>gUseFrames</tt>: use frames for HTML graph pages
+<li><tt>gWidth width</tt>: width of the graphs in pixels (default: 640)
+<li><tt>gHeight height</tt> height of the graphs in pixels (default: 400)
+</ul>
+
+<b>Examples</b>:
+<ul>
+<li><tt>java com.sdmetrics.SDMetrics -proj mypsettings.txt -s -f html
+outfile</tt><br> Reads the project files and filter settings from file
+<tt>mypsettings.txt</tt> and writes the sanitized output to separate
+HTML files.
+
+<li><tt>java com.sdmetrics.SDMetrics -xmi myDesign.xmi data</tt><br> Reads
+XMI file <tt>myDesign.xmi</tt> with standard XMI transformations,
+metamodel, and metrics, and writes the output in separate text files
+with tab-separated tables (output files start with name
+<tt>data</tt>).
+
+<li><tt>java com.sdmetrics.SDMetrics -xmi myDesign.xmi -rules
+-rulefilter design -format html data</tt><br> 
+
+Reads XMI file <tt>myDesign.xmi</tt> with standard XMI
+transformations, metamodel, and metrics, writes the metric data to
+separate HTML files (output files start with name <tt>data</tt>),
+checks the design rules and writes the design rule violations to
+separate HTML files (output files start with name <tt>dataRULES</tt>).
+
+<li><tt>java com.sdmetrics.SDMetrics -xmi myDesign.xmi -metrics
+myMetrics.xml -filter #.java -filter #.javax -nometrics -stats -one -f
+sxc dstats</tt><br>
+
+Reads XMI file <tt>myDesign.xmi</tt> with standard XMI transformations
+and metamodel, calculates metrics defined in <tt>myMetrics.xml</tt>,
+filters elements defined in the java and javax packages, and writes the
+descriptive statistics for the metrics to an OpenOffice.org Calc
+workbook file named <tt>dstats.sxc</tt>.<br> (Note: on some platforms,
+the # character may have a special meaning and needs to be protected
+from the shell, usually by preceding it with a backslash or enclosing
+the filter name in quotes).
+
+<li><tt>java com.sdmetrics.SDMetrics -xmi myDesign.xmi -filter
+MyModel.MyPackage -nonmatching -model -one -f csv myDes</tt><br> 
+
+Reads XMI file <tt>myDesign.xmi</tt> with standard XMI transformation
+and metamodel, filters all elements outside package
+<tt>MyPackage</tt>, and writes the metric data to file
+<tt>myDes.csv</tt>, and dumps the model to file
+<tt>myDesMODEL.csv</tt>.<br>
+
+<li><tt>java com.sdmetrics.SDMetrics -xmi myOldDesign.xmi -compare
+myNewDesign.xmi -mappings MyMappings.txt -stats -one -f xml
+deltas</tt><br>
+
+Reads XMI files <tt>myOldDesign.xmi</tt> and <tt>myNewDesign.xmi</tt>,
+calculates the metric deltas using the element mappings from file
+<tt>MyMappings.txt</tt>, and writes the metric deltas and comparison
+of descriptive statistics to files <tt>deltas.xml</tt> and
+<tt>deltasDS.xml</tt>, respectively.
+
+<li><tt>java com.sdmetrics.SDMetrics -xmi myDesign.xmi -one -f xml -gHisto
+-CumDist -gFormat PNG -gHTMLforall -gUseFrames myDes</tt><br>
+
+Reads XMI file <tt>myDesign.xmi</tt>, writes the metric data to file
+<tt>myDes.xml</tt>, creates a set of PNG files with histograms
+(myDesHISTO_*.png) and cumulative distributions (myDesCUMDIST_*.png)
+for all metrics, and creates a set of HTML pages with frames that show
+the graphs (myDesHISTO_index.html, myDesCUMDIST_index.html plus
+additional HTML navigation pages).
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="Behavior.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="index.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="DesignMsmt.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.16.5 "Behavior"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;6 "Design Measurement"</td></tr></table>
+
+</body>
+</html>

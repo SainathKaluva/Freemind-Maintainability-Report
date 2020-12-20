@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ScriptEditorProperty.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.common</a> &gt; <span class="el_source">ScriptEditorProperty.java</span></div><h1>ScriptEditorProperty.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 25.02.2006
+ */
+/*$Id: ScriptEditorProperty.java,v 1.1.2.6 2008/07/04 20:44:02 christianfoltin Exp $*/
+package freemind.common;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Iterator;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPopupMenu;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+
+import freemind.main.HtmlTools;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.MindMapController.MindMapControllerPlugin;
+
+public class ScriptEditorProperty extends PropertyBean implements
+		PropertyControl, ActionListener {
+
+	public interface ScriptEditorStarter extends MindMapControllerPlugin {
+		String startEditor(String scriptInput);
+	}
+
+	String description;
+
+	String label;
+
+	String script;
+
+	JButton mButton;
+<span class="nc" id="L53">	final JPopupMenu menu = new JPopupMenu();</span>
+
+	private final MindMapController mMindMapController;
+
+<span class="nc" id="L57">	private static java.util.logging.Logger logger = null;</span>
+
+	/**
+	 */
+	public ScriptEditorProperty(String description, String label,
+			MindMapController pMindMapController) {
+<span class="nc" id="L63">		super();</span>
+<span class="nc" id="L64">		this.description = description;</span>
+<span class="nc" id="L65">		this.label = label;</span>
+<span class="nc" id="L66">		mMindMapController = pMindMapController;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L68">			logger = mMindMapController.getFrame().getLogger(</span>
+<span class="nc" id="L69">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L71">		mButton = new JButton();</span>
+<span class="nc" id="L72">		mButton.addActionListener(this);</span>
+<span class="nc" id="L73">		script = &quot;&quot;;</span>
+<span class="nc" id="L74">	}</span>
+
+	public String getDescription() {
+<span class="nc" id="L77">		return description;</span>
+	}
+
+	public String getLabel() {
+<span class="nc" id="L81">		return label;</span>
+	}
+
+	public void setValue(String value) {
+<span class="nc" id="L85">		setScriptValue(value);</span>
+<span class="nc" id="L86">	}</span>
+
+	public String getValue() {
+<span class="nc" id="L89">		return HtmlTools.unicodeToHTMLUnicodeEntity(HtmlTools</span>
+<span class="nc" id="L90">				.toXMLEscapedText(script), false);</span>
+	}
+
+	public void layout(DefaultFormBuilder builder, TextTranslator pTranslator) {
+<span class="nc" id="L94">		JLabel label = builder.append(pTranslator.getText(getLabel()), mButton);</span>
+<span class="nc" id="L95">		label.setToolTipText(pTranslator.getText(getDescription()));</span>
+<span class="nc" id="L96">	}</span>
+
+	public void actionPerformed(ActionEvent arg0) {
+		// search for plugin that handles the script editor.
+<span class="nc" id="L100">		for (Iterator iter = mMindMapController.getPlugins().iterator(); iter</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">				.hasNext();) {</span>
+<span class="nc" id="L102">			MindMapControllerPlugin plugin = (MindMapControllerPlugin) iter</span>
+<span class="nc" id="L103">					.next();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">			if (plugin instanceof ScriptEditorStarter) {</span>
+<span class="nc" id="L105">				ScriptEditorStarter starter = (ScriptEditorStarter) plugin;</span>
+<span class="nc" id="L106">				String resultScript = starter.startEditor(script);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (resultScript != null) {</span>
+<span class="nc" id="L108">					script = resultScript;</span>
+<span class="nc" id="L109">					firePropertyChangeEvent();</span>
+				}
+			}
+		}
+<span class="nc" id="L113">	}</span>
+
+	/**
+	 */
+	private void setScriptValue(String result) {
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if (result == null) {</span>
+<span class="nc" id="L119">			result = &quot;&quot;;</span>
+		}
+<span class="nc" id="L121">		script = HtmlTools.toXMLUnescapedText(HtmlTools</span>
+<span class="nc" id="L122">				.unescapeHTMLUnicodeEntity(result));</span>
+<span class="nc" id="L123">		logger.fine(&quot;Setting script to &quot; + script);</span>
+<span class="nc" id="L124">		mButton.setText(script);</span>
+<span class="nc" id="L125">	}</span>
+
+	// /**
+	// */
+	// private Color getColorValue() {
+	// return color;
+	// }
+
+	public void setEnabled(boolean pEnabled) {
+<span class="nc" id="L134">		mButton.setEnabled(pEnabled);</span>
+<span class="nc" id="L135">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

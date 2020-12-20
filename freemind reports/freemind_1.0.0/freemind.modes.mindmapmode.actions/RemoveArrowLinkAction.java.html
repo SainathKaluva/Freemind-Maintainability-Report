@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>RemoveArrowLinkAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">RemoveArrowLinkAction.java</span></div><h1>RemoveArrowLinkAction.java</h1><pre class="source lang-java linenums">/*
+ * FreeMind - A Program for creating and viewing Mindmaps Copyright (C)
+ * 2000-2004 Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ * 
+ * See COPYING for Details
+ * 
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+ * Place - Suite 330, Boston, MA 02111-1307, USA.
+ * 
+ * Created on 08.10.2004
+ */
+/*
+ * $Id: RemoveArrowLinkAction.java,v 1.16.10.1 08.10.2004 07:51:02
+ * christianfoltin Exp $
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.event.ActionEvent;
+
+import freemind.controller.actions.generated.instance.AddArrowLinkXmlAction;
+import freemind.controller.actions.generated.instance.RemoveArrowLinkXmlAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Tools;
+import freemind.modes.MindMapArrowLink;
+import freemind.modes.MindMapLink;
+import freemind.modes.MindMapLinkRegistry;
+import freemind.modes.mindmapmode.MindMapArrowLinkModel;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+
+public class RemoveArrowLinkAction extends FreemindAction implements ActorXml {
+
+	private MindMapArrowLinkModel mArrowLink;
+
+	private final MindMapController controller;
+
+	/**
+	 * can be null can be null.
+	 */
+	public RemoveArrowLinkAction(MindMapController controller,
+			MindMapArrowLinkModel arrowLink) {
+<span class="nc" id="L55">		super(&quot;remove_arrow_link&quot;, &quot;images/edittrash.png&quot;, controller);</span>
+<span class="nc" id="L56">		this.controller = controller;</span>
+<span class="nc" id="L57">		setArrowLink(arrowLink);</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		if (arrowLink == null) {</span>
+<span class="nc" id="L59">			addActor(this);</span>
+		}
+<span class="nc" id="L61">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L64">		removeReference(mArrowLink);</span>
+<span class="nc" id="L65">	}</span>
+
+	public void removeReference(MindMapLink arrowLink) {
+<span class="nc" id="L68">		controller.doTransaction((String) getValue(NAME), getActionPair(arrowLink));</span>
+<span class="nc" id="L69">	}</span>
+
+	/**
+     */
+	private ActionPair getActionPair(MindMapLink arrowLink) {
+<span class="nc" id="L74">		return new ActionPair(</span>
+<span class="nc" id="L75">				createRemoveArrowLinkXmlAction(arrowLink.getUniqueId()),</span>
+<span class="nc" id="L76">				createAddArrowLinkXmlAction(arrowLink));</span>
+	}
+
+	/**
+	 * @return Returns the arrowLink.
+	 */
+	public MindMapArrowLinkModel getArrowLink() {
+<span class="nc" id="L83">		return mArrowLink;</span>
+	}
+
+	/**
+	 * The arrowLink to set.
+	 */
+	public void setArrowLink(MindMapArrowLinkModel arrowLink) {
+<span class="nc" id="L90">		this.mArrowLink = arrowLink;</span>
+<span class="nc" id="L91">	}</span>
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L94" title="All 2 branches missed.">		if (action instanceof RemoveArrowLinkXmlAction) {</span>
+<span class="nc" id="L95">			RemoveArrowLinkXmlAction removeAction = (RemoveArrowLinkXmlAction) action;</span>
+<span class="nc" id="L96">			MindMapLink arrowLink = getLinkRegistry().getLinkForId(</span>
+<span class="nc" id="L97">					removeAction.getId());</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">			if (arrowLink == null) {</span>
+				// strange: link not found:
+<span class="nc" id="L100">				throw new IllegalArgumentException(&quot;Unknown link to id &quot;</span>
+<span class="nc" id="L101">						+ removeAction.getId() + &quot; should be deleted.&quot;);</span>
+			}
+<span class="nc" id="L103">			getLinkRegistry().deregisterLink(arrowLink);</span>
+<span class="nc" id="L104">			controller.nodeChanged(arrowLink.getSource());</span>
+<span class="nc" id="L105">			controller.nodeChanged(arrowLink.getTarget());</span>
+		}
+<span class="nc" id="L107">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L110">		return RemoveArrowLinkXmlAction.class;</span>
+	}
+
+	/**
+     */
+	private MindMapLinkRegistry getLinkRegistry() {
+<span class="nc" id="L116">		return controller.getMap().getLinkRegistry();</span>
+	}
+
+	public RemoveArrowLinkXmlAction createRemoveArrowLinkXmlAction(String id) {
+<span class="nc" id="L120">		RemoveArrowLinkXmlAction action = new RemoveArrowLinkXmlAction();</span>
+<span class="nc" id="L121">		action.setId(id);</span>
+<span class="nc" id="L122">		return action;</span>
+	}
+
+	public AddArrowLinkXmlAction createAddArrowLinkXmlAction(MindMapLink link) {
+<span class="nc" id="L126">		AddArrowLinkXmlAction action = new AddArrowLinkXmlAction();</span>
+<span class="nc" id="L127">		action.setNode(link.getSource().getObjectId(controller));</span>
+<span class="nc" id="L128">		action.setDestination(link.getTarget().getObjectId(controller));</span>
+<span class="nc" id="L129">		action.setNewId(link.getUniqueId());</span>
+<span class="nc" id="L130">		action.setColor(Tools.colorToXml(link.getColor()));</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">		if (link instanceof MindMapArrowLink) {</span>
+<span class="nc" id="L132">			MindMapArrowLink arrowLink = (MindMapArrowLink) link;</span>
+<span class="nc" id="L133">			action.setEndArrow(arrowLink.getEndArrow());</span>
+<span class="nc" id="L134">			action.setEndInclination(Tools.PointToXml(arrowLink</span>
+<span class="nc" id="L135">					.getEndInclination()));</span>
+<span class="nc" id="L136">			action.setStartArrow(arrowLink.getStartArrow());</span>
+<span class="nc" id="L137">			action.setStartInclination(Tools.PointToXml(arrowLink</span>
+<span class="nc" id="L138">					.getStartInclination()));</span>
+		}
+<span class="nc" id="L140">		return action;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

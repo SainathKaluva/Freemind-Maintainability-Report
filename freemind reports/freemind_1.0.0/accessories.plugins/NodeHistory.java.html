@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeHistory.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins</a> &gt; <span class="el_source">NodeHistory.java</span></div><h1>NodeHistory.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 28.03.2004
+ *
+ */
+package accessories.plugins;
+
+import java.awt.EventQueue;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Vector;
+
+import javax.swing.Action;
+import javax.swing.JMenuItem;
+
+import freemind.controller.Controller;
+import freemind.controller.MenuItemEnabledListener;
+import freemind.extensions.HookRegistration;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.ModeController.NodeSelectionListener;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.NodeHookAction;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+import freemind.view.MapModule;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * 
+ */
+public class NodeHistory extends MindMapNodeHookAdapter {
+
+	/** Of NodeHolder */
+<span class="nc" id="L54">	private static Vector sNodeVector = new Vector();</span>
+
+<span class="nc" id="L56">	private static int sCurrentPosition = 0;</span>
+
+<span class="nc" id="L58">	private static boolean sPreventRegistration = false;</span>
+
+	private static class NodeHolder {
+		public String mNodeId;
+
+		public String mMapModuleName;
+
+<span class="nc" id="L65">		public NodeHolder(MindMapNode pNode,</span>
+				MindMapController pMindMapController) {
+<span class="nc" id="L67">			mNodeId = pNode.getObjectId(pMindMapController);</span>
+<span class="nc" id="L68">			MapModule mapModule = pMindMapController.getMapModule();</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">			if (mapModule == null) {</span>
+<span class="nc" id="L70">				throw new IllegalArgumentException(</span>
+<span class="nc" id="L71">						&quot;MapModule not present to controller &quot;</span>
+<span class="nc" id="L72">								+ pMindMapController);</span>
+			}
+<span class="nc" id="L74">			mMapModuleName = mapModule.toString();</span>
+<span class="nc" id="L75">		}</span>
+
+		/** @return null, if node not found. */
+		public MindMapNode getNode(Controller pController) {
+<span class="nc" id="L79">			ModeController modeController = getModeController(pController);</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">			if (modeController != null) {</span>
+<span class="nc" id="L81">				return modeController.getNodeFromID(mNodeId);</span>
+			}
+<span class="nc" id="L83">			return null;</span>
+		}
+
+		private ModeController getModeController(Controller pController) {
+<span class="nc" id="L87">			ModeController modeController = null;</span>
+<span class="nc" id="L88">			MapModule mapModule = getMapModule(pController);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">			if (mapModule != null) {</span>
+<span class="nc" id="L90">				modeController = mapModule.getModeController();</span>
+			}
+<span class="nc" id="L92">			return modeController;</span>
+		}
+
+		private MapModule getMapModule(Controller pController) {
+<span class="nc" id="L96">			MapModule mapModule = null;</span>
+<span class="nc" id="L97">			Map mapModules = pController.getMapModuleManager().getMapModules();</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">			for (Iterator iter = mapModules.keySet().iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L99">				String mapModuleName = (String) iter.next();</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">				if (mapModuleName != null</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">						&amp;&amp; mapModuleName.equals(mMapModuleName)) {</span>
+<span class="nc" id="L102">					mapModule = (MapModule) mapModules.get(mapModuleName);</span>
+<span class="nc" id="L103">					break;</span>
+				}
+			}
+<span class="nc" id="L106">			return mapModule;</span>
+		}
+
+		public boolean isIdentical(MindMapNode pNode,
+				MindMapController pMindMapController) {
+<span class="nc" id="L111">			String id = pNode.getObjectId(pMindMapController);</span>
+<span class="nc" id="L112">			MapModule mapModule = pMindMapController.getMapModule();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">			if (mapModule != null) {</span>
+<span class="nc" id="L114">				return id.equals(mNodeId);</span>
+			}
+<span class="nc" id="L116">			return false;</span>
+		}
+
+	}
+
+	public static class Registration implements HookRegistration,
+			NodeSelectionListener, MenuItemEnabledListener {
+
+		private final MindMapController controller;
+
+		private final MindMap mMap;
+
+		private final java.util.logging.Logger logger;
+
+<span class="nc" id="L130">		public Registration(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L131">			this.controller = (MindMapController) controller;</span>
+<span class="nc" id="L132">			mMap = map;</span>
+<span class="nc" id="L133">			logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L134">		}</span>
+
+		public void register() {
+<span class="nc" id="L137">			controller.registerNodeSelectionListener(this, false);</span>
+<span class="nc" id="L138">		}</span>
+
+		public void deRegister() {
+<span class="nc" id="L141">			controller.deregisterNodeSelectionListener(this);</span>
+<span class="nc" id="L142">		}</span>
+
+		public void onLostFocusNode(NodeView pNode) {
+<span class="nc" id="L145">		}</span>
+
+		public void onFocusNode(NodeView pNode) {
+			/*******************************************************************
+			 * don't denote positions, if somebody navigates through them. *
+			 */
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			if (!NodeHistory.sPreventRegistration) {</span>
+				// no duplicates:
+<span class="nc bnc" id="L153" title="All 2 branches missed.">				if (sCurrentPosition &gt; 0</span>
+<span class="nc" id="L154">						&amp;&amp; ((NodeHolder) sNodeVector.get(sCurrentPosition - 1))</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">								.isIdentical(pNode.getModel(), controller)) {</span>
+					// logger.info(&quot;Avoid duplicate &quot; + pNode + &quot; at &quot; +
+					// sCurrentPosition);
+<span class="nc" id="L158">					return;</span>
+				}
+<span class="nc bnc" id="L160" title="All 2 branches missed.">				if (sCurrentPosition != sNodeVector.size()) {</span>
+					/***********************************************************
+					 * * we change the selected in the middle of our vector.
+					 * Thus we remove all the coming nodes:
+					 **********************************************************/
+<span class="nc bnc" id="L165" title="All 2 branches missed.">					for (int i = sNodeVector.size() - 1; i &gt;= sCurrentPosition; --i) {</span>
+<span class="nc" id="L166">						sNodeVector.removeElementAt(i);</span>
+					}
+				}
+				// logger.info(&quot;Adding &quot; + pNode + &quot; at &quot; + sCurrentPosition);
+<span class="nc" id="L170">				sNodeVector.add(new NodeHolder(pNode.getModel(), controller));</span>
+<span class="nc" id="L171">				sCurrentPosition++;</span>
+				// only the last 100 nodes
+<span class="nc bnc" id="L173" title="All 2 branches missed.">				while (sNodeVector.size() &gt; 100) {</span>
+<span class="nc" id="L174">					sNodeVector.removeElementAt(0);</span>
+<span class="nc" id="L175">					sCurrentPosition--;</span>
+				}
+			}
+<span class="nc" id="L178">		}</span>
+
+		public void onSaveNode(MindMapNode pNode) {
+<span class="nc" id="L181">		}</span>
+
+		public void onUpdateNodeHook(MindMapNode pNode) {
+<span class="nc" id="L184">		}</span>
+
+		public boolean isEnabled(JMenuItem pItem, Action pAction) {
+<span class="nc" id="L187">			String hookName = ((NodeHookAction) pAction).getHookName();</span>
+<span class="nc" id="L188">			if (&quot;accessories/plugins/NodeHistoryBack.properties&quot;</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">					.equals(hookName)) {</span>
+				// back is only enabled if there are already some nodes to go
+				// back ;-)
+<span class="nc bnc" id="L192" title="All 2 branches missed.">				return sCurrentPosition &gt; 1;</span>
+			} else {
+<span class="nc bnc" id="L194" title="All 2 branches missed.">				return sCurrentPosition &lt; sNodeVector.size();</span>
+			}
+		}
+
+		/* (non-Javadoc)
+		 * @see freemind.modes.ModeController.NodeSelectionListener#onSelectionChange(freemind.modes.MindMapNode, boolean)
+		 */
+		public void onSelectionChange(NodeView pNode, boolean pIsSelected) {
+<span class="nc" id="L202">		}</span>
+
+	}
+
+	/**
+	 * 
+	 */
+	public NodeHistory() {
+<span class="nc" id="L210">		super();</span>
+<span class="nc" id="L211">	}</span>
+
+	public void invoke(MindMapNode node) {
+<span class="nc" id="L214">		super.invoke(node);</span>
+<span class="nc" id="L215">		final Registration registration = (Registration) getPluginBaseClass();</span>
+<span class="nc" id="L216">		final MindMapController modeController = getMindMapController();</span>
+<span class="nc" id="L217">		String direction = getResourceString(&quot;direction&quot;);</span>
+		// logger.info(&quot;Direction: &quot; + direction);
+<span class="nc bnc" id="L219" title="All 2 branches missed.">		if (&quot;back&quot;.equals(direction)) {</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">			if (sCurrentPosition &gt; 1) {</span>
+<span class="nc" id="L221">				--sCurrentPosition;</span>
+<span class="nc" id="L222">			} else {</span>
+<span class="nc" id="L223">				return;</span>
+			}
+		} else {
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			if (sCurrentPosition &lt; sNodeVector.size()) {</span>
+<span class="nc" id="L227">				++sCurrentPosition;</span>
+<span class="nc" id="L228">			} else {</span>
+<span class="nc" id="L229">				return;</span>
+			}
+
+		}
+<span class="nc bnc" id="L233" title="All 2 branches missed.">		if (sCurrentPosition == 0)</span>
+<span class="nc" id="L234">			return;</span>
+		// printVector();
+<span class="nc" id="L236">		NodeHolder nodeHolder = (NodeHolder) sNodeVector</span>
+<span class="nc" id="L237">				.get(sCurrentPosition - 1);</span>
+<span class="nc" id="L238">		final Controller mainController = getController().getController();</span>
+<span class="nc" id="L239">		final MindMapNode toBeSelected = (nodeHolder).getNode(mainController);</span>
+<span class="nc" id="L240">		boolean changeModule = false;</span>
+<span class="nc" id="L241">		MapModule newModule = null;</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">		if (nodeHolder.getModeController(mainController) != getMindMapController()) {</span>
+<span class="nc" id="L243">			changeModule = true;</span>
+<span class="nc" id="L244">			newModule = nodeHolder.getMapModule(mainController);</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">			if (newModule == null) {</span>
+				// the map was apparently closed, we try with the next node.
+<span class="nc" id="L247">				invoke(node);</span>
+<span class="nc" id="L248">				return;</span>
+			}
+		}
+<span class="nc" id="L251">		final boolean fChangeModule = changeModule;</span>
+<span class="nc" id="L252">		final MapModule fNewModule = newModule;</span>
+<span class="nc" id="L253">		logger.finest(&quot;Selecting &quot; + toBeSelected + &quot; at pos &quot;</span>
+<span class="nc" id="L254">				+ sCurrentPosition);</span>
+<span class="nc" id="L255">		sPreventRegistration = true;</span>
+		/***********************************************************************
+		 * as the selection is restored after invoke, we make this trick to
+		 * change it.
+		 **********************************************************************/
+<span class="nc" id="L260">		EventQueue.invokeLater(new Runnable() {</span>
+			public void run() {
+<span class="nc" id="L262">				ModeController c = modeController;</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">				if (fChangeModule) {</span>
+<span class="nc" id="L264">					boolean res = mainController.getMapModuleManager()</span>
+<span class="nc" id="L265">							.changeToMapModule(fNewModule.toString());</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">					if (!res) {</span>
+<span class="nc" id="L267">						logger.warning(&quot;Can't change to map module &quot;</span>
+<span class="nc" id="L268">								+ fNewModule);</span>
+<span class="nc" id="L269">						sPreventRegistration = false;</span>
+<span class="nc" id="L270">						return;</span>
+					}
+<span class="nc" id="L272">					c = fNewModule.getModeController();</span>
+				}
+<span class="nc bnc" id="L274" title="All 2 branches missed.">				if (!toBeSelected.isRoot()) {</span>
+<span class="nc" id="L275">					c.setFolded(toBeSelected.getParentNode(), false);</span>
+				}
+<span class="nc" id="L277">				NodeView nodeView = c.getNodeView(toBeSelected);</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">				if (nodeView != null) {</span>
+<span class="nc" id="L279">					c.select(nodeView);</span>
+<span class="nc" id="L280">					sPreventRegistration = false;</span>
+				}
+<span class="nc" id="L282">			}</span>
+		});
+<span class="nc" id="L284">	}</span>
+
+	private void printVector() {
+<span class="nc" id="L287">		StringBuffer sb = new StringBuffer(&quot;\n&quot;);</span>
+<span class="nc" id="L288">		int i = 0;</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">		for (Iterator iter = sNodeVector.iterator(); iter.hasNext();) {</span>
+<span class="nc" id="L290">			NodeHolder holder = (NodeHolder) iter.next();</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			sb.append(((sCurrentPosition - 1 == i) ? &quot;==&gt;&quot; : &quot;   &quot;)</span>
+<span class="nc" id="L292">					+ &quot;Node pos &quot; + i + &quot; is &quot;</span>
+<span class="nc" id="L293">					+ holder.getNode(getMindMapController().getController()));</span>
+<span class="nc" id="L294">			sb.append(&quot;\n&quot;);</span>
+<span class="nc" id="L295">			i++;</span>
+		}
+<span class="nc" id="L297">		logger.info(sb.toString() + &quot;\n&quot;);</span>
+<span class="nc" id="L298">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

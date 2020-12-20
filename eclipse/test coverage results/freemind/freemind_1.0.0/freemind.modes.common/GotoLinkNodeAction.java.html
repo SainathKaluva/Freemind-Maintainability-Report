@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>GotoLinkNodeAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.common</a> &gt; <span class="el_source">GotoLinkNodeAction.java</span></div><h1>GotoLinkNodeAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 16.10.2004
+ */
+
+
+package freemind.modes.common;
+
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+
+/** Follow a graphical link (AKA connector) action. */
+public class GotoLinkNodeAction extends AbstractAction {
+	MindMapNode source;
+
+	private final ModeController controller;
+
+	public GotoLinkNodeAction(ModeController controller, MindMapNode source) {
+<span class="nc" id="L42">		super(controller.getText(&quot;goto_link_node_action&quot;), new ImageIcon(</span>
+<span class="nc" id="L43">				controller.getResource(&quot;images/Link.png&quot;)));</span>
+<span class="nc" id="L44">		this.controller = controller;</span>
+		// only display a reasonable part of the string. the rest is available
+		// via the short description (tooltip).
+<span class="nc" id="L47">		this.source = source;</span>
+		// source is for the controllerAdapter == null,
+<span class="nc bnc" id="L49" title="All 2 branches missed.">		if (source != null) {</span>
+<span class="nc" id="L50">			String adaptedText = source.getShortText(controller);</span>
+<span class="nc" id="L51">			putValue(Action.NAME, controller.getText(&quot;follow_graphical_link&quot;)</span>
+<span class="nc" id="L52">					+ adaptedText);</span>
+<span class="nc" id="L53">			putValue(Action.SHORT_DESCRIPTION, source.toString());</span>
+		}
+<span class="nc" id="L55">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L58">		controller.centerNode(source);</span>
+<span class="nc" id="L59">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>SharpBezierEdgeView.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.view.mindmapview</a> &gt; <span class="el_source">SharpBezierEdgeView.java</span></div><h1>SharpBezierEdgeView.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: SharpBezierEdgeView.java,v 1.5.34.6 2007/10/25 15:32:59 dpolivaev Exp $*/
+
+package freemind.view.mindmapview;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.CubicCurve2D;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Point2D;
+
+import freemind.main.Tools;
+
+/**
+ * This class represents a sharp Edge of a MindMap.
+ */
+public class SharpBezierEdgeView extends EdgeView {
+
+<span class="nc" id="L36">	CubicCurve2D.Float line1 = new CubicCurve2D.Float();</span>
+<span class="nc" id="L37">	CubicCurve2D.Float line2 = new CubicCurve2D.Float();</span>
+<span class="nc" id="L38">	GeneralPath graph = new GeneralPath();</span>
+	Point2D.Float one, two;
+	private int deltaX;
+	private int deltaY;
+
+	private static final float XCTRL = 12;// the distance between endpoint and
+											// controlpoint
+
+	public SharpBezierEdgeView() {
+<span class="nc" id="L47">		super();</span>
+<span class="nc" id="L48">	}</span>
+
+	private void update() {
+<span class="nc" id="L51">		float zoom = getMap().getZoom();</span>
+<span class="nc" id="L52">		float xctrlRelative = XCTRL * zoom;</span>
+		// YCTRL could be implemented but then we had to check whether target is
+		// above or below source.
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if (getTarget().isLeft()) {</span>
+<span class="nc" id="L56">			one = new Point2D.Float(start.x - xctrlRelative, start.y);</span>
+<span class="nc" id="L57">			two = new Point2D.Float(end.x + xctrlRelative, end.y);</span>
+<span class="nc" id="L58">		} else {</span>
+<span class="nc" id="L59">			one = new Point2D.Float(start.x + xctrlRelative, start.y);</span>
+<span class="nc" id="L60">			two = new Point2D.Float(end.x - xctrlRelative, end.y);</span>
+		}
+<span class="nc" id="L62">		float w = (getWidth() / 2f + 1) * zoom;</span>
+<span class="nc" id="L63">		float w2 = w / 2;</span>
+<span class="nc" id="L64">		line1.setCurve(start.x - deltaX, start.y - deltaY, one.x - deltaX,</span>
+<span class="nc" id="L65">				one.y - deltaY, two.x, two.y - w2, end.x, end.y);</span>
+<span class="nc" id="L66">		line2.setCurve(end.x, end.y, two.x, two.y + w2, one.x + deltaX, one.y</span>
+<span class="nc" id="L67">				+ deltaY, start.x + deltaX, start.y + deltaY);</span>
+<span class="nc" id="L68">		graph.reset();</span>
+<span class="nc" id="L69">		graph.append(line1, true);</span>
+<span class="nc" id="L70">		graph.append(line2, true);</span>
+<span class="nc" id="L71">		graph.closePath();</span>
+<span class="nc" id="L72">	}</span>
+
+	protected void paint(Graphics2D g) {
+<span class="nc" id="L75">		update();</span>
+<span class="nc" id="L76">		g.setColor(getColor());</span>
+<span class="nc" id="L77">		g.setPaint(getColor());</span>
+<span class="nc" id="L78">		g.setStroke(DEF_STROKE);</span>
+<span class="nc" id="L79">		g.fill(graph);</span>
+<span class="nc" id="L80">		g.draw(graph);</span>
+<span class="nc" id="L81">	}</span>
+
+	public Color getColor() {
+<span class="nc" id="L84">		return getModel().getColor();</span>
+	}
+
+	protected void createStart() {
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (source.isRoot()) {</span>
+<span class="nc" id="L89">			start = source.getMainViewOutPoint(getTarget(), end);</span>
+<span class="nc" id="L90">			final MainView mainView = source.getMainView();</span>
+<span class="nc" id="L91">			final double w = mainView.getWidth() / 2;</span>
+<span class="nc" id="L92">			final double x0 = start.x - w;</span>
+<span class="nc" id="L93">			final double w2 = w * w;</span>
+<span class="nc" id="L94">			final double x02 = x0 * x0;</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">			if (w2 == x02) {</span>
+<span class="nc" id="L96">				final int delta = getMap().getZoomed(getWidth() / 2 + 1);</span>
+<span class="nc" id="L97">				deltaX = 0;</span>
+<span class="nc" id="L98">				deltaY = delta;</span>
+<span class="nc" id="L99">			} else {</span>
+<span class="nc" id="L100">				final double delta = getMap().getZoom() * (getWidth() / 2 + 1);</span>
+<span class="nc" id="L101">				final int h = mainView.getHeight() / 2;</span>
+<span class="nc" id="L102">				final int y0 = start.y - h;</span>
+<span class="nc" id="L103">				final double k = h / w * x0 / Math.sqrt(w2 - x02);</span>
+<span class="nc" id="L104">				final double dx = delta / Math.sqrt(1 + k * k);</span>
+<span class="nc" id="L105">				deltaX = (int) dx;</span>
+<span class="nc" id="L106">				deltaY = (int) (k * dx);</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">				if (y0 &gt; 0) {</span>
+<span class="nc" id="L108">					deltaY = -deltaY;</span>
+				}
+			}
+<span class="nc" id="L111">			Tools.convertPointToAncestor(mainView, start, source);</span>
+<span class="nc" id="L112">		} else {</span>
+<span class="nc" id="L113">			final int delta = getMap().getZoomed(getWidth() / 2 + 1);</span>
+<span class="nc" id="L114">			super.createStart();</span>
+<span class="nc" id="L115">			deltaX = 0;</span>
+<span class="nc" id="L116">			deltaY = delta;</span>
+		}
+<span class="nc" id="L118">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Viewing Cycles</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="GraphStruct.html">Prev</a> - <a href="CCompView.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MainWind.html">4 The SDMetrics User Interface</a> > <a href="GraphStruct.html">4.11 The View 'Graph Structures'</a> > 4.11.1 Viewing Cycles
+<hr>
+<h3><a name="CycleView"></a>4.11.1 Viewing Cycles</h3>
+
+Figure&nbsp;18 shows the register tab for viewing cycles in graphs.<p>
+
+<img src="images/graphcycle.png" alt="Graph Structures View - Cycles"><br>
+<b>Figure 18:&nbsp;Graph Structures View - Cycles</b><p>
+
+There is one graph for each design rule that checks for cycles. From
+the dropdown list at the top, you can select the design rule for which
+you want to show the cycles. Click the "Show full definition" button to
+open the definition of the rule in the measurement catalog (<a href="MetCat.html">Section&nbsp;4.13 "The View 'Catalog'"</a>).<p>
+
+The tree below initially shows all model elements that depend on at
+least one other model element. The type of model elements and nature
+of the dependencies are defined by the selected design rule.
+Expand the model elements to the see on which other elements they depend.
+The icon next to each model element indicates its cycle status:
+
+<ul>
+<li>Red icon: The element has dependencies and is part of one or more cycles.
+<li>Yellow icon: The element has dependencies but is not part of any cycle.
+<li>White icon: The element has no dependencies.
+</ul>
+
+By expanding the elements with red icons, you can quickly trace the cycles
+present in the design. Note that the dependency tree is always shown, even 
+if there are no cycles at all.<p>
+
+Use the "Reverse direction" button in the upper right corner
+to switch to a new tree that reverses the direction of the
+dependencies. Expanding a model element <i>e</i> shows all model elements that depend
+on&nbsp;<i>e</i>.<p>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="GraphStruct.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="GraphStruct.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="CCompView.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;4.11 "The View 'Graph Structures'"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;4.11.2 "Viewing Connected Components"</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FontFamilyAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">FontFamilyAction.java</span></div><h1>FontFamilyAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 27.08.2004
+ */
+
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.Font;
+
+import freemind.controller.actions.generated.instance.FontNodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Tools;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.NodeAdapter;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+/**
+ * @author foltin
+ * 
+ */
+public class FontFamilyAction extends NodeGeneralAction implements NodeActorXml {
+	/** This action is used for all fonts, which have to be set first. */
+	private String actionFont;
+
+	/**
+     */
+	public FontFamilyAction(MindMapController modeController) {
+<span class="nc" id="L48">		super(modeController, &quot;font_family&quot;, null, (NodeActorXml) null);</span>
+<span class="nc" id="L49">		addActor(this);</span>
+		// default value:
+<span class="nc" id="L51">		actionFont = modeController.getFrame().getProperty(&quot;defaultfont&quot;);</span>
+<span class="nc" id="L52">	}</span>
+
+	public void actionPerformed(String font) {
+<span class="nc" id="L55">		this.actionFont = font;</span>
+<span class="nc" id="L56">		super.actionPerformed(null);</span>
+<span class="nc" id="L57">	}</span>
+
+	public ActionPair apply(MindMap model, MindMapNode selected) {
+<span class="nc" id="L60">		return getActionPair(selected, actionFont);</span>
+	}
+
+	public Class getDoActionClass() {
+<span class="nc" id="L64">		return FontNodeAction.class;</span>
+	}
+
+	/**
+     */
+	public void setFontFamily(MindMapNode node, String fontFamilyValue) {
+<span class="nc" id="L70">		modeController.doTransaction(</span>
+<span class="nc" id="L71">				(String) getValue(NAME), getActionPair(node, fontFamilyValue));</span>
+<span class="nc" id="L72">	}</span>
+
+	private ActionPair getActionPair(MindMapNode node, String fontFamilyValue) {
+<span class="nc" id="L75">		FontNodeAction fontFamilyAction = createFontNodeAction(node,</span>
+<span class="nc" id="L76">				fontFamilyValue);</span>
+<span class="nc" id="L77">		FontNodeAction undoFontFamilyAction = createFontNodeAction(node,</span>
+<span class="nc" id="L78">				node.getFontFamilyName());</span>
+<span class="nc" id="L79">		return new ActionPair(fontFamilyAction, undoFontFamilyAction);</span>
+	}
+
+	private FontNodeAction createFontNodeAction(MindMapNode node,
+			String fontValue) {
+<span class="nc" id="L84">		FontNodeAction fontFamilyAction = new FontNodeAction();</span>
+<span class="nc" id="L85">		fontFamilyAction.setNode(getNodeID(node));</span>
+<span class="nc" id="L86">		fontFamilyAction.setFont(fontValue);</span>
+<span class="nc" id="L87">		return fontFamilyAction;</span>
+
+	}
+
+	/**
+     *
+     */
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">		if (action instanceof FontNodeAction) {</span>
+<span class="nc" id="L97">			FontNodeAction fontFamilyAction = (FontNodeAction) action;</span>
+<span class="nc" id="L98">			MindMapNode node = getNodeFromID(fontFamilyAction.getNode());</span>
+<span class="nc" id="L99">			String fontFamily = fontFamilyAction.getFont();</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			if (!Tools.safeEquals(node.getFontFamilyName(), fontFamily)) {</span>
+<span class="nc" id="L101">				((NodeAdapter) node).establishOwnFont();</span>
+<span class="nc" id="L102">				node.setFont(modeController.getController().getFontThroughMap(</span>
+<span class="nc" id="L103">						new Font(fontFamily, node.getFont().getStyle(), node</span>
+<span class="nc" id="L104">								.getFont().getSize())));</span>
+<span class="nc" id="L105">				modeController.nodeChanged(node);</span>
+			}
+		}
+<span class="nc" id="L108">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

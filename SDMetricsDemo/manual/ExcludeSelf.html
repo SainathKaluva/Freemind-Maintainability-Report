@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Attribute "exclude_self"</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="SetSetExpr.html">Prev</a> - <a href="ValueSet.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefSets.html">8.2 Definition of Sets</a> > <a href="SetProjection.html">8.2.1 Projection</a> > 8.2.1.3 Attribute "exclude_self"
+<hr>
+<h4><a name="ExcludeSelf"></a>8.2.1.3 Attribute "exclude_self"</h4>
+
+The attribute <tt>exclude_self</tt> can take the values "true" or
+"false" (default).<p>
+
+When <tt>exclude_self</tt> is set to true, the element for which the
+set is calculated is not included in the result set. For example,
+assume we want to determine, for a state in a state diagram, the set
+of states that can be reached from that state:
+
+<pre>
+&lt;set name="Reachable_States" domain="state"&gt; 
+  &lt;description&gt;The set of reachable states.&lt;/description&gt;
+  &lt;projection relation="transsource" target="transition"
+              element="transtarget" eltype="state"
+              recurse="true" <b>exclude_self="true"</b> /&gt;
+&lt;/set&gt;
+</pre>
+
+By setting <tt>exclude_self</tt> to true, the state for which the set
+is calculated is not included in the result set, even if the
+state-transition graph has loops back to the state.
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="SetSetExpr.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="SetProjection.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="ValueSet.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.2.1.2 "Attribute "set""</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.2.1.4 "Attribute "valueset""</td></tr></table>
+
+</body>
+</html>

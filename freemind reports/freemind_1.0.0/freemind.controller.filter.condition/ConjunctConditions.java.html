@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ConjunctConditions.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter.condition</a> &gt; <span class="el_source">ConjunctConditions.java</span></div><h1>ConjunctConditions.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 08.05.2005
+ *
+ */
+package freemind.controller.filter.condition;
+
+import java.util.Vector;
+
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+
+import freemind.controller.Controller;
+import freemind.controller.filter.FilterController;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.MindMapNode;
+
+/**
+ * @author dimitri 08.05.2005
+ */
+public class ConjunctConditions implements Condition {
+
+	static final String NAME = &quot;conjunct_condition&quot;;
+	private Object[] conditions;
+
+	/**
+     *
+     */
+<span class="nc" id="L49">	public ConjunctConditions(Object[] conditions) {</span>
+<span class="nc" id="L50">		this.conditions = conditions;</span>
+<span class="nc" id="L51">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.condition.Condition#checkNode(freemind.modes
+	 * .MindMapNode)
+	 */
+	public boolean checkNode(Controller c, MindMapNode node) {
+		int i;
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		for (i = 0; i &lt; conditions.length; i++) {</span>
+<span class="nc" id="L63">			Condition cond = (Condition) conditions[i];</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (!cond.checkNode(c, node))</span>
+<span class="nc" id="L65">				return false;</span>
+		}
+<span class="nc" id="L67">		return true;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.filter.condition.Condition#getListCellRendererComponent
+	 * ()
+	 */
+	public JComponent getListCellRendererComponent() {
+<span class="nc" id="L78">		JCondition component = new JCondition();</span>
+<span class="nc" id="L79">		component.add(new JLabel(&quot;(&quot;));</span>
+<span class="nc" id="L80">		Condition cond = (Condition) conditions[0];</span>
+<span class="nc" id="L81">		JComponent rendererComponent = cond.getListCellRendererComponent();</span>
+<span class="nc" id="L82">		rendererComponent.setOpaque(false);</span>
+<span class="nc" id="L83">		component.add(rendererComponent);</span>
+		int i;
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		for (i = 1; i &lt; conditions.length; i++) {</span>
+<span class="nc" id="L86">			final String and = Tools.removeMnemonic(Resources.getInstance()</span>
+<span class="nc" id="L87">					.getResourceString(&quot;filter_and&quot;));</span>
+<span class="nc" id="L88">			String text = ' ' + and + ' ';</span>
+<span class="nc" id="L89">			component.add(new JLabel(text));</span>
+<span class="nc" id="L90">			cond = (Condition) conditions[i];</span>
+<span class="nc" id="L91">			rendererComponent = cond.getListCellRendererComponent();</span>
+<span class="nc" id="L92">			rendererComponent.setOpaque(false);</span>
+<span class="nc" id="L93">			component.add(rendererComponent);</span>
+		}
+<span class="nc" id="L95">		component.add(new JLabel(&quot;)&quot;));</span>
+<span class="nc" id="L96">		return component;</span>
+	}
+
+	public void save(XMLElement element) {
+<span class="nc" id="L100">		XMLElement child = new XMLElement();</span>
+<span class="nc" id="L101">		child.setName(NAME);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		for (int i = 0; i &lt; conditions.length; i++) {</span>
+<span class="nc" id="L103">			Condition cond = (Condition) conditions[i];</span>
+<span class="nc" id="L104">			cond.save(child);</span>
+		}
+<span class="nc" id="L106">		element.addChild(child);</span>
+<span class="nc" id="L107">	}</span>
+
+	static Condition load(XMLElement element) {
+<span class="nc" id="L110">		final Vector children = element.getChildren();</span>
+<span class="nc" id="L111">		Object[] conditions = new Object[children.size()];</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		for (int i = 0; i &lt; conditions.length; i++) {</span>
+<span class="nc" id="L113">			Condition cond = FilterController.getConditionFactory()</span>
+<span class="nc" id="L114">					.loadCondition((XMLElement) children.get(i));</span>
+<span class="nc" id="L115">			conditions[i] = cond;</span>
+		}
+<span class="nc" id="L117">		return new ConjunctConditions(conditions);</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

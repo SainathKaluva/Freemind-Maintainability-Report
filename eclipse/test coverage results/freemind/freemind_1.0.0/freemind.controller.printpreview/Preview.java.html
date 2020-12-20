@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>Preview.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.printpreview</a> &gt; <span class="el_source">Preview.java</span></div><h1>Preview.java</h1><pre class="source lang-java linenums">/*
+ *  Preview Dialog - A Preview Dialog for your Swing Applications
+ *
+ *  Copyright (C) 2003 Jens Kaiser.
+ *
+ *  Written by: 2003 Jens Kaiser &lt;jens.kaiser@web.de&gt;
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Library General Public License
+ *  as published by the Free Software Foundation; either version 2 of
+ *  the License, or (at your option) any later version.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Library General Public
+ *  License along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+package freemind.controller.printpreview;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+
+import javax.swing.JComponent;
+
+import freemind.view.mindmapview.MapView;
+
+class Preview extends JComponent {
+	private final static int DEFAULT_PREVIEW_SIZE = 300;
+	private final static double MINIMUM_ZOOM_FACTOR = 0.1;
+<span class="nc" id="L38">	private BufferedImage previewPageImage = null;</span>
+	private Graphics2D imageGraphics;
+
+<span class="nc" id="L41">	public Preview(MapView view, double zoom) {</span>
+<span class="nc" id="L42">		this.view = view;</span>
+<span class="nc" id="L43">		PageFormat format = getPageFormat();</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if (zoom == 0.0) {</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">			if (format.getOrientation() == PageFormat.PORTRAIT)</span>
+<span class="nc" id="L46">				this.zoom = DEFAULT_PREVIEW_SIZE / format.getHeight();</span>
+			else
+<span class="nc" id="L48">				this.zoom = DEFAULT_PREVIEW_SIZE / format.getWidth();</span>
+<span class="nc" id="L49">		} else</span>
+<span class="nc" id="L50">			this.zoom = zoom;</span>
+<span class="nc" id="L51">		resize();</span>
+<span class="nc" id="L52">	}</span>
+
+	protected void paintPaper(Graphics g, PageFormat format) {
+<span class="nc" id="L55">		g.setColor(Color.white);</span>
+<span class="nc" id="L56">		g.fillRect(0, 0, getPageWidth(format), getPageHeight(format));</span>
+<span class="nc" id="L57">		g.setColor(Color.black);</span>
+<span class="nc" id="L58">		g.drawRect(0, 0, getPageWidth(format) - 1, getPageHeight(format) - 1);</span>
+<span class="nc" id="L59">	}</span>
+
+	public void paint(Graphics g) {
+<span class="nc" id="L62">		Graphics2D g2d = (Graphics2D) g;</span>
+<span class="nc" id="L63">		PageFormat format = getPageFormat();</span>
+<span class="nc" id="L64">		paintPaper(g, format);</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">		if (previewPageImage == null) {</span>
+<span class="nc" id="L66">			previewPageImage = (BufferedImage) createImage(</span>
+<span class="nc" id="L67">					getPageWidth(format) - 1, getPageHeight(format) - 1);</span>
+<span class="nc" id="L68">			imageGraphics = previewPageImage.createGraphics();</span>
+<span class="nc" id="L69">			imageGraphics.scale(zoom, zoom);</span>
+<span class="nc bnc" id="L70" title="All 4 branches missed.">			while (Printable.NO_SUCH_PAGE == view.print(imageGraphics, format,</span>
+<span class="nc" id="L71">					index) &amp;&amp; index &gt; 0) {</span>
+<span class="nc" id="L72">				index -= 1;</span>
+			}
+		}
+<span class="nc" id="L75">		g2d.drawImage(previewPageImage, 0, 0, this);</span>
+<span class="nc" id="L76">	}</span>
+
+	private int getPageHeight(PageFormat format) {
+<span class="nc" id="L79">		return (int) (format.getHeight() * zoom);</span>
+	}
+
+	private int getPageWidth(PageFormat format) {
+<span class="nc" id="L83">		return (int) (format.getWidth() * zoom);</span>
+	}
+
+	public void moveIndex(int indexStep) {
+<span class="nc" id="L87">		int newIndex = index + indexStep;</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if (newIndex &gt;= 0) {</span>
+<span class="nc" id="L89">			index = newIndex;</span>
+<span class="nc" id="L90">			previewPageImage = null;</span>
+		}
+<span class="nc" id="L92">	}</span>
+
+	public void changeZoom(double zoom) {
+<span class="nc" id="L95">		this.zoom = Math.max(MINIMUM_ZOOM_FACTOR, this.zoom + zoom);</span>
+<span class="nc" id="L96">		resize();</span>
+<span class="nc" id="L97">	}</span>
+
+	public void resize() {
+<span class="nc" id="L100">		int size = (int) Math.max(getPageFormat().getWidth() * zoom,</span>
+<span class="nc" id="L101">				getPageFormat().getHeight() * zoom);</span>
+<span class="nc" id="L102">		setPreferredSize(new Dimension(size, size));</span>
+<span class="nc" id="L103">		previewPageImage = null;</span>
+<span class="nc" id="L104">		revalidate();</span>
+<span class="nc" id="L105">	}</span>
+
+	private PageFormat getPageFormat() {
+<span class="nc" id="L108">		return view.getController().getPageFormat();</span>
+	}
+
+	public Dimension getMinimumSize() {
+<span class="nc" id="L112">		return getPreferredSize();</span>
+	}
+
+	protected MapView view;
+<span class="nc" id="L116">	protected int index = 0;</span>
+<span class="nc" id="L117">	protected double zoom = 0.0;</span>
+
+	public int getPageIndex() {
+<span class="nc" id="L120">		return index;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,344 @@
+
+C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin>java -jar simian-2.5.3.jar "**/*.java"
+Similarity Analyser 2.5.3 - http://www.harukizaemon.com/simian
+Copyright (c) 2003-2017 Simon Harris.  All rights reserved.
+Simian is not free unless used solely for non-commercial or evaluation purposes.
+{failOnDuplication=true, ignoreCharacterCase=true, ignoreCurlyBraces=true, ignoreIdentifierCase=true, ignoreModifiers=true, ignoreStringCase=true, threshold=6}
+Found 6 duplicate lines in the following files:
+ Between lines 81 and 86 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\ComboProperty.java
+ Between lines 72 and 77 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\ComboProperty.java
+Found 6 duplicate lines in the following files:
+ Between lines 2550 and 2555 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\XMLElement.java
+ Between lines 2519 and 2524 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\XMLElement.java
+Found 6 duplicate lines in the following files:
+ Between lines 191 and 196 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\ConditionFactory.java
+ Between lines 170 and 175 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\ConditionFactory.java
+Found 6 duplicate lines in the following files:
+ Between lines 40 and 47 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\UnregistryAttributeValueActor.java
+ Between lines 41 and 48 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\RegistryAttributeValueActor.java
+Found 6 duplicate lines in the following files:
+ Between lines 47 and 54 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\AddLocalLinkAction.java
+ Between lines 66 and 73 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\AddArrowLinkAction.java
+Found 6 duplicate lines in the following files:
+ Between lines 51 and 59 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\NodeCompareCondition.java
+ Between lines 69 and 78 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\AttributeCompareCondition.java
+Found 6 duplicate lines in the following files:
+ Between lines 60 and 67 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\AttributeExistsCondition.java
+ Between lines 72 and 79 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\AttributeCompareCondition.java
+Found 6 duplicate lines in the following files:
+ Between lines 50 and 55 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\RightNodeViewLayout.java
+ Between lines 49 and 54 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\LeftNodeViewLayout.java
+Found 6 duplicate lines in the following files:
+ Between lines 2390 and 2395 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\XMLElement.java
+ Between lines 2369 and 2374 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\XMLElement.java
+Found 6 duplicate lines in the following files:
+ Between lines 626 and 632 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\MapView.java
+ Between lines 604 and 610 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\MapView.java
+Found 6 duplicate lines in the following files:
+ Between lines 68 and 75 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\DeleteChildAction.java
+ Between lines 68 and 74 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\CutAction.java
+Found 6 duplicate lines in the following files:
+ Between lines 58 and 66 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\IconNotContainedCondition.java
+ Between lines 61 and 69 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\IconContainedCondition.java
+Found 6 duplicate lines in the following files:
+ Between lines 367 and 373 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\ImportAttributesDialog.java
+ Between lines 355 and 361 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\ImportAttributesDialog.java
+Found 6 duplicate lines in the following files:
+ Between lines 54 and 65 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\ToggleFoldedAction.java
+ Between lines 49 and 60 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\common\CommonToggleFoldedAction.java
+Found 6 duplicate lines in the following files:
+ Between lines 57 and 68 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\NumberProperty.java
+ Between lines 65 and 75 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\FontProperty.java
+ Between lines 58 and 68 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\BooleanProperty.java
+Found 6 duplicate lines in the following files:
+ Between lines 279 and 285 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\AssignAttributeDialog.java
+ Between lines 238 and 245 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\AssignAttributeDialog.java
+ Between lines 183 and 190 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\AssignAttributeDialog.java
+Found 6 duplicate lines in the following files:
+ Between lines 43 and 61 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\attributes\AttributeRegistryComboBoxColumnModel.java
+ Between lines 33 and 51 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\util\SortedComboBoxModel.java
+Found 6 duplicate lines in the following files:
+ Between lines 96 and 105 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\ThreeCheckBoxProperty.java
+ Between lines 63 and 72 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\BooleanProperty.java
+Found 6 duplicate lines in the following files:
+ Between lines 43 and 57 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\AttributeNotExistsCondition.java
+ Between lines 43 and 57 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\AttributeExistsCondition.java
+Found 6 duplicate lines in the following files:
+ Between lines 243 and 251 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\EditAction.java
+ Between lines 214 and 222 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\EditAction.java
+ Between lines 187 and 195 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\EditAction.java
+Found 6 duplicate lines in the following files:
+ Between lines 1538 and 1545 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\XMLElement.java
+ Between lines 1393 and 1400 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\XMLElement.java
+Found 6 duplicate lines in the following files:
+ Between lines 137 and 145 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMindApplet.java
+ Between lines 457 and 465 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMind.java
+Found 6 duplicate lines in the following files:
+ Between lines 1711 and 1718 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\Controller.java
+ Between lines 1690 and 1697 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\Controller.java
+ Between lines 1669 and 1676 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\Controller.java
+Found 6 duplicate lines in the following files:
+ Between lines 1398 and 1403 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapController.java
+ Between lines 335 and 340 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\FilterComposerDialog.java
+Found 6 duplicate lines in the following files:
+ Between lines 345 and 353 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeViewLayoutAdapter.java
+ Between lines 294 and 302 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeViewLayoutAdapter.java
+Found 6 duplicate lines in the following files:
+ Between lines 57 and 62 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\NodeContainsCondition.java
+ Between lines 59 and 64 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\IgnoreCaseNodeContainsCondition.java
+Found 6 duplicate lines in the following files:
+ Between lines 87 and 92 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\schememode\SchemeNodeModel.java
+ Between lines 59 and 64 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\schememode\SchemeNodeModel.java
+Found 6 duplicate lines in the following files:
+ Between lines 469 and 475 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\MapAdapter.java
+ Between lines 413 and 419 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\MapAdapter.java
+ Between lines 385 and 391 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\MapAdapter.java
+Found 7 duplicate lines in the following files:
+ Between lines 1328 and 1335 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\XMLElement.java
+ Between lines 1472 and 1479 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\XMLElement.java
+Found 7 duplicate lines in the following files:
+ Between lines 377 and 385 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\HtmlTools.java
+ Between lines 662 and 670 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\HtmlTools.java
+Found 7 duplicate lines in the following files:
+ Between lines 63 and 71 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\AttributeExistsCondition.java
+ Between lines 63 and 71 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\AttributeNotExistsCondition.java
+Found 7 duplicate lines in the following files:
+ Between lines 44 and 56 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\browsemode\BrowseMode.java
+ Between lines 62 and 74 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapMode.java
+Found 7 duplicate lines in the following files:
+ Between lines 72 and 80 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\LeftNodeViewLayout.java
+ Between lines 74 and 82 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\RightNodeViewLayout.java
+Found 7 duplicate lines in the following files:
+ Between lines 681 and 688 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMind.java
+ Between lines 705 and 711 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMind.java
+Found 7 duplicate lines in the following files:
+ Between lines 1359 and 1371 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMind.java
+ Between lines 384 and 396 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMindApplet.java
+Found 7 duplicate lines in the following files:
+ Between lines 274 and 281 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeViewLayoutAdapter.java
+ Between lines 327 and 334 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeViewLayoutAdapter.java
+Found 7 duplicate lines in the following files:
+ Between lines 58 and 71 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\BooleanProperty.java
+ Between lines 57 and 71 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\NumberProperty.java
+Found 7 duplicate lines in the following files:
+ Between lines 46 and 54 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\IgnoreCaseNodeContainsCondition.java
+ Between lines 45 and 53 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\NodeContainsCondition.java
+Found 8 duplicate lines in the following files:
+ Between lines 668 and 678 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeView.java
+ Between lines 634 and 644 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeView.java
+Found 8 duplicate lines in the following files:
+ Between lines 1808 and 1816 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapController.java
+ Between lines 137 and 145 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\filemode\FileController.java
+ Between lines 171 and 179 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\browsemode\BrowseController.java
+Found 8 duplicate lines in the following files:
+ Between lines 110 and 123 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\RemoveIconAction.java
+ Between lines 100 and 113 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\RemoveAllIconsAction.java
+Found 8 duplicate lines in the following files:
+ Between lines 231 and 241 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\EditAction.java
+ Between lines 176 and 185 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\EditAction.java
+Found 8 duplicate lines in the following files:
+ Between lines 337 and 345 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeViewLayoutAdapter.java
+ Between lines 283 and 293 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeViewLayoutAdapter.java
+Found 8 duplicate lines in the following files:
+ Between lines 1393 and 1401 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeView.java
+ Between lines 1380 and 1388 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeView.java
+Found 8 duplicate lines in the following files:
+ Between lines 129 and 136 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\MainView.java
+ Between lines 56 and 63 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\attributeview\AttributeTableCellRenderer.java
+Found 9 duplicate lines in the following files:
+ Between lines 77 and 85 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\ConjunctConditions.java
+ Between lines 77 and 85 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\DisjunctConditions.java
+Found 9 duplicate lines in the following files:
+ Between lines 251 and 261 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\AssignAttributeDialog.java
+ Between lines 300 and 310 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\AssignAttributeDialog.java
+Found 9 duplicate lines in the following files:
+ Between lines 144 and 156 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\EditNodeDialog.java
+ Between lines 83 and 95 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\EditNodeWYSIWYG.java
+Found 9 duplicate lines in the following files:
+ Between lines 767 and 775 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMind.java
+ Between lines 206 and 214 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMindApplet.java
+Found 9 duplicate lines in the following files:
+ Between lines 198 and 216 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\EditNodeDialog.java
+ Between lines 312 and 330 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\EditNodeTextField.java
+Found 9 duplicate lines in the following files:
+ Between lines 50 and 59 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\BubbleMainView.java
+ Between lines 35 and 45 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\ForkMainView.java
+Found 9 duplicate lines in the following files:
+ Between lines 746 and 756 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeView.java
+ Between lines 772 and 782 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeView.java
+Found 10 duplicate lines in the following files:
+ Between lines 671 and 689 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\HtmlTools.java
+ Between lines 387 and 401 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\HtmlTools.java
+Found 11 duplicate lines in the following files:
+ Between lines 171 and 183 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\browsemode\BrowseController.java
+ Between lines 1808 and 1820 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapController.java
+Found 11 duplicate lines in the following files:
+ Between lines 90 and 104 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\BubbleMainView.java
+ Between lines 95 and 109 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\RootMainView.java
+Found 11 duplicate lines in the following files:
+ Between lines 274 and 292 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\ArrowLinkView.java
+ Between lines 176 and 194 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\CloudView.java
+Found 11 duplicate lines in the following files:
+ Between lines 492 and 502 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\HtmlTools.java
+ Between lines 535 and 545 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\HtmlTools.java
+ Between lines 100 and 110 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapHTMLWriter.java
+Found 11 duplicate lines in the following files:
+ Between lines 298 and 309 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeViewLayoutAdapter.java
+ Between lines 349 and 360 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\view\mindmapview\NodeViewLayoutAdapter.java
+Found 12 duplicate lines in the following files:
+ Between lines 236 and 251 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\AssignAttributeDialog.java
+ Between lines 181 and 196 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\attributeactors\AssignAttributeDialog.java
+Found 12 duplicate lines in the following files:
+ Between lines 90 and 106 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\IconNotContainedCondition.java
+ Between lines 100 and 117 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\IconContainedCondition.java
+Found 13 duplicate lines in the following files:
+ Between lines 141 and 160 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\common\OptionalDontShowMeAgainDialog.java
+ Between lines 146 and 165 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\common\actions\FindAction.java
+Found 13 duplicate lines in the following files:
+ Between lines 1297 and 1310 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapController.java
+ Between lines 1334 and 1347 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapController.java
+Found 13 duplicate lines in the following files:
+ Between lines 113 and 129 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\NodeHookAction.java
+ Between lines 178 and 194 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\NodeHookAction.java
+Found 14 duplicate lines in the following files:
+ Between lines 204 and 222 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\EditAction.java
+ Between lines 177 and 195 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\actions\EditAction.java
+Found 18 duplicate lines in the following files:
+ Between lines 640 and 660 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\HtmlTools.java
+ Between lines 355 and 375 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\HtmlTools.java
+Found 18 duplicate lines in the following files:
+ Between lines 333 and 353 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMindApplet.java
+ Between lines 383 and 403 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\main\FreeMind.java
+Found 21 duplicate lines in the following files:
+ Between lines 2039 and 2082 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapController.java
+ Between lines 78 and 121 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\viewmodes\ViewControllerAdapter.java
+Found 21 duplicate lines in the following files:
+ Between lines 282 and 302 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapHTMLWriter.java
+ Between lines 309 and 329 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\modes\mindmapmode\MindMapHTMLWriter.java
+Found 21 duplicate lines in the following files:
+ Between lines 89 and 115 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\ConjunctConditions.java
+ Between lines 89 and 115 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\filter\condition\DisjunctConditions.java
+Found 24 duplicate lines in the following files:
+ Between lines 49 and 89 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\NodeMouseMotionListener.java
+ Between lines 47 and 87 in C:\Users\edu\OneDrive\Academic BTH Backup Very Imp\Software Metrics\SM-A2\Source codes\1.0.1\freemind 1.0.1\freemind\bin\freemind src\controller\NodeMotionListener.java
+Found 1241 duplicate lines in 139 blocks in 66 files
+Processed a total of 33122 significant (74728 raw) lines in 370 files
+Processing time: 0.992sec
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ArrayListTransferHandler.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.dialogs</a> &gt; <span class="el_source">ArrayListTransferHandler.java</span></div><h1>ArrayListTransferHandler.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2006  Christian Foltin &lt;christianfoltin@users.sourceforge.net&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: ArrayListTransferHandler.java,v 1.1.4.2 2006/04/09 13:34:38 dpolivaev Exp $*/
+package accessories.plugins.dialogs;
+
+/*
+ * Fc, 8.4.06:
+ * ArrayListTransferHandler.java was adapted from Sun Tutorial Examples.
+ * License unknown.
+ * We take it on &quot;As is&quot; basis.
+ */
+
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import javax.swing.JComponent;
+import javax.swing.JList;
+import javax.swing.TransferHandler;
+
+import accessories.plugins.dialogs.ManagePatternsPopupDialog.PatternListModel;
+
+public class ArrayListTransferHandler extends TransferHandler {
+	DataFlavor localArrayListFlavor;
+<span class="nc" id="L43">	String localArrayListType = DataFlavor.javaJVMLocalObjectMimeType</span>
+			+ &quot;;class=java.util.ArrayList&quot;;
+<span class="nc" id="L45">	JList source = null;</span>
+<span class="nc" id="L46">	int[] indices = null;</span>
+<span class="nc" id="L47">	int addIndex = -1; // Location where items were added</span>
+<span class="nc" id="L48">	int addCount = 0; // Number of items added</span>
+
+<span class="nc" id="L50">	public ArrayListTransferHandler() {</span>
+		try {
+<span class="nc" id="L52">			localArrayListFlavor = new DataFlavor(localArrayListType);</span>
+<span class="nc" id="L53">		} catch (ClassNotFoundException e) {</span>
+<span class="nc" id="L54">			System.out</span>
+<span class="nc" id="L55">					.println(&quot;ArrayListTransferHandler: unable to create data flavor&quot;);</span>
+		}
+<span class="nc" id="L57">	}</span>
+
+	public boolean importData(JComponent c, Transferable t) {
+<span class="nc" id="L60">		JList target = null;</span>
+<span class="nc" id="L61">		ArrayList alist = null;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (!canImport(c, t.getTransferDataFlavors())) {</span>
+<span class="nc" id="L63">			return false;</span>
+		}
+		try {
+<span class="nc" id="L66">			target = (JList) c;</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			if (hasLocalArrayListFlavor(t.getTransferDataFlavors())) {</span>
+<span class="nc" id="L68">				alist = (ArrayList) t.getTransferData(localArrayListFlavor);</span>
+<span class="nc" id="L69">			} else {</span>
+<span class="nc" id="L70">				return false;</span>
+			}
+<span class="nc" id="L72">		} catch (UnsupportedFlavorException ufe) {</span>
+<span class="nc" id="L73">			System.out.println(&quot;importData: unsupported data flavor&quot;);</span>
+<span class="nc" id="L74">			return false;</span>
+<span class="nc" id="L75">		} catch (IOException ioe) {</span>
+<span class="nc" id="L76">			System.out.println(&quot;importData: I/O exception&quot;);</span>
+<span class="nc" id="L77">			return false;</span>
+		}
+
+		// At this point we use the same code to retrieve the data
+		// locally or serially.
+
+		// We'll drop at the current selected index.
+<span class="nc" id="L84">		int index = target.getSelectedIndex();</span>
+
+		// Prevent the user from dropping data back on itself.
+		// For example, if the user is moving items #4,#5,#6 and #7 and
+		// attempts to insert the items after item #5, this would
+		// be problematic when removing the original items.
+		// This is interpreted as dropping the same data on itself
+		// and has no effect.
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (source.equals(target)) {</span>
+<span class="nc bnc" id="L93" title="All 4 branches missed.">			if (indices != null &amp;&amp; index &gt;= indices[0] - 1</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">					&amp;&amp; index &lt;= indices[indices.length - 1]) {</span>
+<span class="nc" id="L95">				indices = null;</span>
+<span class="nc" id="L96">				return true;</span>
+			}
+		}
+
+<span class="nc" id="L100">		PatternListModel listModel = (PatternListModel) target.getModel();</span>
+<span class="nc" id="L101">		int max = listModel.getSize();</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">		if (index &lt; 0) {</span>
+<span class="nc" id="L103">			index = max;</span>
+<span class="nc" id="L104">		} else {</span>
+<span class="nc" id="L105">			index++;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">			if (index &gt; max) {</span>
+<span class="nc" id="L107">				index = max;</span>
+			}
+		}
+<span class="nc" id="L110">		addIndex = index;</span>
+<span class="nc" id="L111">		addCount = alist.size();</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		for (int i = 0; i &lt; alist.size(); i++) {</span>
+<span class="nc" id="L113">			listModel.add(index++, alist.get(i));</span>
+		}
+<span class="nc" id="L115">		return true;</span>
+	}
+
+	protected void exportDone(JComponent c, Transferable data, int action) {
+<span class="nc bnc" id="L119" title="All 4 branches missed.">		if ((action == MOVE) &amp;&amp; (indices != null)) {</span>
+<span class="nc" id="L120">			PatternListModel model = (PatternListModel) source.getModel();</span>
+
+			// If we are moving items around in the same list, we
+			// need to adjust the indices accordingly since those
+			// after the insertion point have moved.
+<span class="nc bnc" id="L125" title="All 2 branches missed.">			if (addCount &gt; 0) {</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">				for (int i = 0; i &lt; indices.length; i++) {</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">					if (indices[i] &gt; addIndex) {</span>
+<span class="nc" id="L128">						indices[i] += addCount;</span>
+					}
+				}
+			}
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			for (int i = indices.length - 1; i &gt;= 0; i--)</span>
+<span class="nc" id="L133">				model.remove(indices[i]);</span>
+		}
+<span class="nc" id="L135">		indices = null;</span>
+<span class="nc" id="L136">		addIndex = -1;</span>
+<span class="nc" id="L137">		addCount = 0;</span>
+<span class="nc" id="L138">	}</span>
+
+	private boolean hasLocalArrayListFlavor(DataFlavor[] flavors) {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">		if (localArrayListFlavor == null) {</span>
+<span class="nc" id="L142">			return false;</span>
+		}
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		for (int i = 0; i &lt; flavors.length; i++) {</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (flavors[i].equals(localArrayListFlavor)) {</span>
+<span class="nc" id="L147">				return true;</span>
+			}
+		}
+<span class="nc" id="L150">		return false;</span>
+	}
+
+	public boolean canImport(JComponent c, DataFlavor[] flavors) {
+<span class="nc bnc" id="L154" title="All 2 branches missed.">		if (hasLocalArrayListFlavor(flavors)) {</span>
+<span class="nc" id="L155">			return true;</span>
+		}
+<span class="nc" id="L157">		return false;</span>
+	}
+
+	protected Transferable createTransferable(JComponent c) {
+<span class="nc bnc" id="L161" title="All 2 branches missed.">		if (c instanceof JList) {</span>
+<span class="nc" id="L162">			source = (JList) c;</span>
+<span class="nc" id="L163">			indices = source.getSelectedIndices();</span>
+<span class="nc" id="L164">			Object[] values = source.getSelectedValues();</span>
+<span class="nc bnc" id="L165" title="All 4 branches missed.">			if (values == null || values.length == 0) {</span>
+<span class="nc" id="L166">				return null;</span>
+			}
+<span class="nc" id="L168">			ArrayList alist = new ArrayList(values.length);</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">			for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="nc" id="L170">				Object o = values[i];</span>
+<span class="nc" id="L171">				String str = o.toString();</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">				if (str == null)</span>
+<span class="nc" id="L173">					str = &quot;&quot;;</span>
+<span class="nc" id="L174">				alist.add(str);</span>
+			}
+<span class="nc" id="L176">			return new ArrayListTransferable(alist);</span>
+		}
+<span class="nc" id="L178">		return null;</span>
+	}
+
+	public int getSourceActions(JComponent c) {
+<span class="nc" id="L182">		return COPY_OR_MOVE;</span>
+	}
+
+	public class ArrayListTransferable implements Transferable {
+		ArrayList data;
+
+<span class="nc" id="L188">		public ArrayListTransferable(ArrayList alist) {</span>
+<span class="nc" id="L189">			data = alist;</span>
+<span class="nc" id="L190">		}</span>
+
+		public Object getTransferData(DataFlavor flavor)
+				throws UnsupportedFlavorException {
+<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (!isDataFlavorSupported(flavor)) {</span>
+<span class="nc" id="L195">				throw new UnsupportedFlavorException(flavor);</span>
+			}
+<span class="nc" id="L197">			return data;</span>
+		}
+
+		public DataFlavor[] getTransferDataFlavors() {
+<span class="nc" id="L201">			return new DataFlavor[] { localArrayListFlavor };</span>
+		}
+
+		public boolean isDataFlavorSupported(DataFlavor flavor) {
+<span class="nc bnc" id="L205" title="All 2 branches missed.">			if (localArrayListFlavor.equals(flavor)) {</span>
+<span class="nc" id="L206">				return true;</span>
+			}
+<span class="nc" id="L208">			return false;</span>
+		}
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

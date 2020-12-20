@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ExportDialog.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.util.xslt</a> &gt; <span class="el_source">ExportDialog.java</span></div><h1>ExportDialog.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/* MyTest.java */
+
+package accessories.plugins.util.xslt;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
+import accessories.plugins.util.window.WindowClosingAdapter;
+import freemind.main.ExampleFileFilter;
+import freemind.modes.FreeMindFileDialog;
+import freemind.modes.ModeController;
+
+public class ExportDialog extends JFrame {
+	private static final String ACCESSORIES_PLUGINS_UTIL_XSLT_EXPORT_DIALOG_STORE_TARGET = &quot;accessories.plugins.util.xslt.ExportDialog.store.target&quot;; //$NON-NLS-1$
+	private static final String ACCESSORIES_PLUGINS_UTIL_XSLT_EXPORT_DIALOG_STORE_XSLT = &quot;accessories.plugins.util.xslt.ExportDialog.store.xslt&quot;; //$NON-NLS-1$
+
+	class ExportListener implements ActionListener {
+<span class="nc" id="L51">		private ExportDialog parent = null;</span>
+<span class="nc" id="L52">		boolean exitSystem = true;</span>
+<span class="nc" id="L53">		private boolean cancel = false;</span>
+<span class="nc" id="L54">		XmlExporter xe = null;</span>
+
+<span class="nc" id="L56">		public ExportListener(ExportDialog m) {</span>
+<span class="nc" id="L57">			parent = m;</span>
+<span class="nc" id="L58">		}</span>
+
+<span class="nc" id="L60">		public ExportListener(ExportDialog m, boolean pCancel) {</span>
+<span class="nc" id="L61">			parent = m;</span>
+<span class="nc" id="L62">			cancel = pCancel;</span>
+<span class="nc" id="L63">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			if (!cancel) {</span>
+				// System.out.println(&quot;voila, export methode&quot;);
+<span class="nc" id="L68">				xe = new XmlExporter();</span>
+				try {
+<span class="nc" id="L70">					xe.transForm(parent.xmlFile,</span>
+<span class="nc" id="L71">							new File(parent.fieldXsltFileName.getText()), new File(</span>
+<span class="nc" id="L72">									parent.fieldTargetFileName.getText()));</span>
+<span class="nc" id="L73">				} catch (FileNotFoundException e1) {</span>
+<span class="nc" id="L74">					freemind.main.Resources.getInstance().logException(e1);</span>
+				}
+			}
+			// store values in preferences:
+<span class="nc" id="L78">			mController.getFrame().setProperty(</span>
+<span class="nc" id="L79">					ACCESSORIES_PLUGINS_UTIL_XSLT_EXPORT_DIALOG_STORE_XSLT,</span>
+<span class="nc" id="L80">					fieldXsltFileName.getText());</span>
+<span class="nc" id="L81">			mController.getFrame().setProperty(</span>
+<span class="nc" id="L82">					ACCESSORIES_PLUGINS_UTIL_XSLT_EXPORT_DIALOG_STORE_TARGET,</span>
+<span class="nc" id="L83">					fieldTargetFileName.getText());</span>
+<span class="nc" id="L84">			parent.setVisible(false);</span>
+<span class="nc" id="L85">			parent.dispose();</span>
+			/*
+			 * if (exitSystem) { System.exit(0); }
+			 */
+<span class="nc" id="L89">		}</span>
+
+	}
+
+<span class="nc" id="L93">	protected JTextField fieldXsltFileName = null;</span>
+<span class="nc" id="L94">	protected JTextField fieldTargetFileName = null;</span>
+<span class="nc" id="L95">	protected File xmlFile = null;</span>
+	private final ModeController mController;
+
+	public ExportDialog(File nxmlFile, ModeController pController) {
+
+<span class="nc" id="L100">		super(pController.getFrame().getResourceString(&quot;ExportDialog.2&quot;)); //$NON-NLS-1$</span>
+<span class="nc" id="L101">		xmlFile = nxmlFile;</span>
+<span class="nc" id="L102">		mController = pController;</span>
+
+<span class="nc" id="L104">		setBackground(Color.lightGray);</span>
+<span class="nc" id="L105">		this.addWindowListener(new WindowClosingAdapter(false));</span>
+		// set layout and add components
+<span class="nc" id="L107">		GridBagLayout gbl = new GridBagLayout();</span>
+		GridBagConstraints gbc;
+<span class="nc" id="L109">		getContentPane().setLayout(gbl);</span>
+
+		// add list
+
+		/*
+		 * List list = new List(); for (int i = 0; i &lt; 20; ++i) {
+		 * list.add(&quot;This is item &quot; + i); } gbc = makegbc(0, 0, 1, 3);
+		 * gbc.weightx = 100; gbc.weighty = 100; gbc.fill =
+		 * GridBagConstraints.BOTH; gbl.setConstraints(list, gbc);
+		 * getContentPane().add(list);
+		 */
+
+		// get last value from preferences:
+<span class="nc" id="L122">		String lastXsltFileName = mController.getFrame().getProperty(</span>
+<span class="nc" id="L123">				ACCESSORIES_PLUGINS_UTIL_XSLT_EXPORT_DIALOG_STORE_XSLT);</span>
+<span class="nc" id="L124">		String lastTargetFileName = mController.getFrame().getProperty(</span>
+<span class="nc" id="L125">				ACCESSORIES_PLUGINS_UTIL_XSLT_EXPORT_DIALOG_STORE_TARGET);</span>
+		// Zwei Labels und zwei Textfelder
+<span class="nc" id="L127">		gbc = makegbc(0, 0, 1, 1);</span>
+<span class="nc" id="L128">		gbc.fill = GridBagConstraints.NONE;</span>
+<span class="nc" id="L129">		JLabel label = new JLabel(getResourceString(&quot;ExportDialog.3&quot;)); //$NON-NLS-1$</span>
+<span class="nc" id="L130">		gbl.setConstraints(label, gbc);</span>
+<span class="nc" id="L131">		getContentPane().add(label);</span>
+		// Textfeld
+<span class="nc" id="L133">		gbc = makegbc(1, 0, 1, 1);</span>
+<span class="nc" id="L134">		gbc.weightx = 300;</span>
+<span class="nc" id="L135">		gbc.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L136">		fieldXsltFileName = new JTextField(lastXsltFileName);</span>
+<span class="nc" id="L137">		fieldXsltFileName.setColumns(20);</span>
+<span class="nc" id="L138">		gbl.setConstraints(fieldXsltFileName, gbc);</span>
+<span class="nc" id="L139">		getContentPane().add(fieldXsltFileName);</span>
+
+<span class="nc" id="L141">		gbc = makegbc(0, 1, 1, 1);</span>
+<span class="nc" id="L142">		gbc.fill = GridBagConstraints.NONE;</span>
+<span class="nc" id="L143">		JLabel labeli = new JLabel(getResourceString(&quot;ExportDialog.4&quot;)); //$NON-NLS-1$</span>
+<span class="nc" id="L144">		gbl.setConstraints(labeli, gbc);</span>
+<span class="nc" id="L145">		getContentPane().add(labeli);</span>
+		// Textfeld
+<span class="nc" id="L147">		gbc = makegbc(1, 1, 1, 1);</span>
+<span class="nc" id="L148">		gbc.weightx = 100;</span>
+<span class="nc" id="L149">		gbc.fill = GridBagConstraints.HORIZONTAL;</span>
+<span class="nc" id="L150">		fieldTargetFileName = new JTextField(lastTargetFileName);</span>
+<span class="nc" id="L151">		fieldTargetFileName.setColumns(20);</span>
+<span class="nc" id="L152">		gbl.setConstraints(fieldTargetFileName, gbc);</span>
+<span class="nc" id="L153">		getContentPane().add(fieldTargetFileName);</span>
+
+		// XSL-Button
+<span class="nc" id="L156">		JButton xslbutton = new JButton(getResourceString(&quot;ExportDialog.5&quot;)); //$NON-NLS-1$</span>
+<span class="nc" id="L157">		gbc = makegbc(2, 0, 1, 1);</span>
+<span class="nc" id="L158">		gbc.fill = GridBagConstraints.NONE;</span>
+		// gbc.anchor = GridBagConstraints.SOUTHEAST;
+<span class="nc" id="L160">		gbl.setConstraints(xslbutton, gbc);</span>
+<span class="nc" id="L161">		xslbutton.addActionListener(new FileChooseListener(0,</span>
+<span class="nc" id="L162">				fieldXsltFileName, xslbutton, xmlFile));</span>
+<span class="nc" id="L163">		getContentPane().add(xslbutton);</span>
+		// export-Button
+<span class="nc" id="L165">		JButton exportbutton = new JButton(getResourceString(&quot;ExportDialog.6&quot;)); //$NON-NLS-1$</span>
+<span class="nc" id="L166">		gbc = makegbc(2, 1, 1, 1);</span>
+<span class="nc" id="L167">		gbc.fill = GridBagConstraints.NONE;</span>
+		// gbc.anchor = GridBagConstraints.SOUTHEAST;
+<span class="nc" id="L169">		exportbutton.addActionListener(new FileChooseListener(1,</span>
+<span class="nc" id="L170">				fieldTargetFileName, exportbutton, xmlFile));</span>
+<span class="nc" id="L171">		gbl.setConstraints(exportbutton, gbc);</span>
+<span class="nc" id="L172">		getContentPane().add(exportbutton);</span>
+
+		// ok-Button
+<span class="nc" id="L175">		JButton button = new JButton(getResourceString(&quot;ExportDialog.7&quot;)); //$NON-NLS-1$</span>
+<span class="nc" id="L176">		gbc = makegbc(2, 2, 1, 1);</span>
+<span class="nc" id="L177">		gbc.fill = GridBagConstraints.NONE;</span>
+		// gbc.anchor = GridBagConstraints.SOUTHEAST;
+<span class="nc" id="L179">		button.addActionListener(new ExportListener(this));</span>
+<span class="nc" id="L180">		gbl.setConstraints(button, gbc);</span>
+<span class="nc" id="L181">		getContentPane().add(button);</span>
+
+		// cancel-Button
+<span class="nc" id="L184">		JButton cbutton = new JButton(getResourceString(&quot;ExportDialog.8&quot;)); //$NON-NLS-1$</span>
+<span class="nc" id="L185">		gbc = makegbc(1, 2, 1, 1);</span>
+<span class="nc" id="L186">		gbc.anchor = gbc.EAST;</span>
+<span class="nc" id="L187">		gbc.fill = GridBagConstraints.NONE;</span>
+		// gbc.anchor = GridBagConstraints.SOUTHEAST;
+<span class="nc" id="L189">		gbl.setConstraints(cbutton, gbc);</span>
+<span class="nc" id="L190">		cbutton.addActionListener(new ExportListener(this, true));</span>
+<span class="nc" id="L191">		getContentPane().add(cbutton);</span>
+
+		// Dialogelemente layouten
+<span class="nc" id="L194">		pack();</span>
+<span class="nc" id="L195">	}</span>
+
+	private GridBagConstraints makegbc(int x, int y, int width, int height) {
+<span class="nc" id="L198">		GridBagConstraints gbc = new GridBagConstraints();</span>
+<span class="nc" id="L199">		gbc.gridx = x;</span>
+<span class="nc" id="L200">		gbc.gridy = y;</span>
+<span class="nc" id="L201">		gbc.gridwidth = width;</span>
+<span class="nc" id="L202">		gbc.gridheight = height;</span>
+<span class="nc" id="L203">		gbc.insets = new Insets(1, 1, 1, 1);</span>
+<span class="nc" id="L204">		gbc.anchor = gbc.WEST;</span>
+<span class="nc" id="L205">		return gbc;</span>
+	}
+
+	private String getResourceString(String pString) {
+<span class="nc" id="L209">		return mController.getFrame().getResourceString(pString);</span>
+	}
+
+	class FileChooseListener implements ActionListener {
+
+<span class="nc" id="L214">		private Component parent = null;</span>
+<span class="nc" id="L215">		private JTextField jtf = null;</span>
+<span class="nc" id="L216">		private int kind = 0;</span>
+<span class="nc" id="L217">		private final String xslch = getResourceString(&quot;ExportDialog.9&quot;); //$NON-NLS-1$</span>
+<span class="nc" id="L218">		private final String expch = getResourceString(&quot;ExportDialog.10&quot;); //$NON-NLS-1$</span>
+<span class="nc" id="L219">		private String WindowTitle = null;</span>
+<span class="nc" id="L220">		private File xf = null;</span>
+
+<span class="nc" id="L222">		private FileChooseListener() {</span>
+<span class="nc" id="L223">		};</span>
+
+<span class="nc" id="L225">		public FileChooseListener(int wit, JTextField jt, Component c,</span>
+<span class="nc" id="L226">				File mmFile) {</span>
+<span class="nc" id="L227">			parent = c;</span>
+<span class="nc" id="L228">			jtf = jt;</span>
+<span class="nc" id="L229">			kind = wit;</span>
+<span class="nc" id="L230">			xf = mmFile;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">			if (kind == 0) {</span>
+<span class="nc" id="L232">				WindowTitle = xslch;</span>
+<span class="nc" id="L233">			} else {</span>
+<span class="nc" id="L234">				WindowTitle = expch;</span>
+			}
+<span class="nc" id="L236">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+
+<span class="nc" id="L240">			ExampleFileFilter filter = null;</span>
+
+<span class="nc bnc" id="L242" title="All 2 branches missed.">			if (kind == 0) {</span>
+<span class="nc" id="L243">				filter = new ExampleFileFilter(</span>
+<span class="nc" id="L244">						new String(&quot;xsl&quot;), getResourceString(&quot;ExportDialog.13&quot;)); //$NON-NLS-1$ //$NON-NLS-2$</span>
+			}
+<span class="nc" id="L246">			FreeMindFileDialog chooser = mController.getFileChooser(filter);</span>
+<span class="nc" id="L247">			chooser.setDialogTitle(WindowTitle);</span>
+			int returnVal;
+<span class="nc bnc" id="L249" title="All 2 branches missed.">			if (kind == 0) {</span>
+<span class="nc" id="L250">				returnVal = chooser.showOpenDialog(parent);</span>
+<span class="nc" id="L251">			} else {</span>
+<span class="nc" id="L252">				returnVal = chooser.showSaveDialog(parent);</span>
+			}
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			if (returnVal == JFileChooser.APPROVE_OPTION) {</span>
+				try {
+<span class="nc bnc" id="L256" title="All 2 branches missed.">					if (kind == 0) {</span>
+<span class="nc" id="L257">						if (!new File(chooser.getSelectedFile()</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">								.getAbsolutePath()).exists()) {</span>
+<span class="nc" id="L259">							Object Message = getResourceString(&quot;ExportDialog.14&quot;); //$NON-NLS-1$</span>
+							JOptionPane
+<span class="nc" id="L261">									.showMessageDialog(</span>
+<span class="nc" id="L262">											null,</span>
+<span class="nc" id="L263">											Message,</span>
+<span class="nc" id="L264">											getResourceString(&quot;ExportDialog.15&quot;), JOptionPane.WARNING_MESSAGE); //$NON-NLS-1$</span>
+<span class="nc" id="L265">						} else {</span>
+							// System.out.println(&quot;File chosen:&quot;+chooser.getSelectedFile().getAbsolutePath());
+<span class="nc" id="L267">							jtf.setText(chooser.getSelectedFile()</span>
+<span class="nc" id="L268">									.getAbsolutePath());</span>
+						}
+					}
+<span class="nc bnc" id="L271" title="All 2 branches missed.">					if (kind == 1) {</span>
+<span class="nc" id="L272">						if (!new File(chooser.getSelectedFile()</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">								.getAbsolutePath()).exists()) {</span>
+<span class="nc" id="L274">							jtf.setText(chooser.getSelectedFile()</span>
+<span class="nc" id="L275">									.getAbsolutePath());</span>
+<span class="nc" id="L276">						} else {</span>
+<span class="nc" id="L277">							int i = JOptionPane</span>
+<span class="nc" id="L278">									.showConfirmDialog(</span>
+<span class="nc" id="L279">											null,</span>
+<span class="nc" id="L280">											getResourceString(&quot;ExportDialog.16&quot;), getResourceString(&quot;ExportDialog.17&quot;), 2); //$NON-NLS-1$ //$NON-NLS-2$</span>
+<span class="nc bnc" id="L281" title="All 2 branches missed.">							if (i == JOptionPane.YES_OPTION) {</span>
+<span class="nc" id="L282">								jtf.setText(chooser.getSelectedFile()</span>
+<span class="nc" id="L283">										.getAbsolutePath());</span>
+							}
+
+							// alert = new
+							// AlertBox(&quot;The Exportfile chosen exists. Do you want to overwrite it. \nPlease Choose another.&quot;);
+							// System.out.println(&quot;File chosen:&quot;+chooser.getSelectedFile().getAbsolutePath());
+						}
+					}
+
+<span class="nc" id="L292">				} catch (Exception ex) {</span>
+<span class="nc" id="L293">					System.out.println(&quot;exeption:&quot; + ex);</span>
+				}
+			}
+<span class="nc" id="L296">		}</span>
+
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

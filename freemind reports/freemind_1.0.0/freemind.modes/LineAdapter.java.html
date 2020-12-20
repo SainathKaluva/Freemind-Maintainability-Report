@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>LineAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes</a> &gt; <span class="el_source">LineAdapter.java</span></div><h1>LineAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2001  Joerg Mueller &lt;joergmueller@bigfoot.com&gt;
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*$Id: LineAdapter.java,v 1.2.18.2.4.4 2007/08/21 19:54:06 christianfoltin Exp $*/
+
+package freemind.modes;
+
+import java.awt.Color;
+
+import freemind.main.FreeMindMain;
+import freemind.main.Tools;
+
+public abstract class LineAdapter implements MindMapLine {
+
+	protected FreeMindMain frame;
+	protected MindMapNode target;
+
+	public static final int DEFAULT_WIDTH = -1;
+<span class="nc" id="L34">	protected int NORMAL_WIDTH = 1;</span>
+
+	// recursive attributes. may be accessed directly by the save() method.
+	protected Color color;
+	protected String style;
+	protected int width;
+
+	//
+	// Constructors
+	//
+<span class="nc" id="L44">	public LineAdapter(MindMapNode target, FreeMindMain frame) {</span>
+<span class="nc" id="L45">		this.frame = frame;</span>
+<span class="nc" id="L46">		this.target = target;</span>
+<span class="nc" id="L47">		width = DEFAULT_WIDTH;</span>
+<span class="nc" id="L48">		updateStandards();</span>
+
+<span class="nc" id="L50">	}</span>
+
+	//
+	// Attributes
+	//
+
+	/**
+     */
+	protected void updateStandards() {
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		if (getStandardColor() == null) {</span>
+<span class="nc" id="L60">			String stdColor = getFrame().getProperty(</span>
+<span class="nc" id="L61">					getStandardColorPropertyString());</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">			if (stdColor != null &amp;&amp; stdColor.length() == 7) {</span>
+<span class="nc" id="L63">				setStandardColor(Tools.xmlToColor(stdColor));</span>
+<span class="nc" id="L64">			} else {</span>
+<span class="nc" id="L65">				setStandardColor(Color.RED);</span>
+			}
+		}
+<span class="nc bnc" id="L68" title="All 2 branches missed.">		if (getStandardStyle() == null) {</span>
+<span class="nc" id="L69">			String stdStyle = getFrame().getProperty(</span>
+<span class="nc" id="L70">					getStandardStylePropertyString());</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			if (stdStyle != null) {</span>
+<span class="nc" id="L72">				setStandardStyle(stdStyle);</span>
+			} else {
+				// setStandardStyle(Style.RED);
+			}
+		}
+<span class="nc" id="L77">	}</span>
+
+	public FreeMindMain getFrame() {
+<span class="nc" id="L80">		return frame;</span>
+	}
+
+	public Color getColor() {
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		if (color == null) {</span>
+<span class="nc" id="L85">			return getStandardColor();</span>
+		}
+<span class="nc" id="L87">		return color;</span>
+	}
+
+	public void setColor(Color color) {
+<span class="nc" id="L91">		this.color = color;</span>
+<span class="nc" id="L92">	}</span>
+
+	public int getWidth() {
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		if (width == DEFAULT_WIDTH)</span>
+<span class="nc" id="L96">			return NORMAL_WIDTH;</span>
+<span class="nc" id="L97">		return width;</span>
+	}
+
+	/**
+	 * Get the width in pixels rather than in width constant (like -1)
+	 */
+	public int getRealWidth() {
+<span class="nc" id="L104">		return getWidth();</span>
+	}
+
+	public void setWidth(int width) {
+<span class="nc" id="L108">		this.width = width;</span>
+<span class="nc" id="L109">	}</span>
+
+	public String getStyle() {
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		if (style == null) {</span>
+<span class="nc" id="L113">			return getStandardStyle();</span>
+		}
+<span class="nc" id="L115">		return style;</span>
+	}
+
+	public void setStyle(String style) {
+<span class="nc" id="L119">		this.style = style;</span>
+<span class="nc" id="L120">	}</span>
+
+	public String toString() {
+<span class="nc" id="L123">		return &quot;&quot;;</span>
+	}
+
+	public void setTarget(MindMapNode target) {
+<span class="nc" id="L127">		this.target = target;</span>
+<span class="nc" id="L128">	}</span>
+
+	// /////////
+	// Private Methods
+	// ///////
+	/**
+	 * I see no reason to hide the node, the line belongs to, to the public,
+	 * but... fc.
+	 */
+	public MindMapNode getTarget() {
+<span class="nc" id="L138">		return target;</span>
+	}
+
+	public Object clone() {
+		try {
+<span class="nc" id="L143">			LineAdapter link = (LineAdapter) super.clone();</span>
+			// color, ...
+<span class="nc bnc" id="L145" title="All 2 branches missed.">			link.color = (color == null) ? null : new Color(color.getRGB());</span>
+<span class="nc" id="L146">			return link;</span>
+<span class="nc" id="L147">		} catch (java.lang.CloneNotSupportedException e) {</span>
+<span class="nc" id="L148">			return null;</span>
+		}
+	}
+
+	/**
+	 * As this color is static but used in at least three different objects
+	 * (edges, clouds and links), the abstract mechanism was chosen. The derived
+	 * classes set and get the static instance variable.
+	 */
+	protected abstract void setStandardColor(Color standardColor);
+
+	/**
+	 * See {@link LineAdapter.setStandardColor}
+	 */
+	protected abstract Color getStandardColor();
+
+	protected abstract void setStandardStyle(String standardStyle);
+
+	protected abstract String getStandardStyle();
+
+	protected abstract String getStandardStylePropertyString();
+
+	protected abstract String getStandardColorPropertyString();
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

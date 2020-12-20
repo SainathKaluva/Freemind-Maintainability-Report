@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Value Filter</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="ConnComp.html">Prev</a> - <a href="SubElements.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="MetricDef.html">8 Defining Custom Design Metrics and Rules</a> > <a href="DefMetrics.html">8.1 Definition of Metrics</a> > 8.1.7 Value Filter
+<hr>
+<h3><a name="FilterValue"></a>8.1.7 Value Filter</h3>
+
+The "filtervalue" procedure evaluates a metric expression for the
+first element in a relation or set, and returns the result of this metric
+expression.<p>
+
+The following example uses the "filtervalue" procedure to access the
+data value of a particular tagged value pair. We assume elements of
+type "taggedvalue" have two metrics "TagName" and "TagData", which
+yield the name and data value of the tagged value, respectively.<p>
+
+<pre>
+&lt;metric name="Author" domain="class"&gt;
+  &lt;description&gt;Author of the class.&lt;/description&gt;
+  &lt;filtervalue relation="context" target="taggedvalue" 
+               condition="tagName='Author'" value="tagData"/&gt; 
+&lt;/metric&gt;
+</pre>
+
+The above metric takes the first tagged value with tag name 'Author'
+that it finds, evaluates the expression specified by the "value"
+attribute for that tagged value, and returns the result of that
+expression as the result of the metric.<p>
+
+The "filtervalue" procedure has the following attributes:
+<ul>
+<li><tt>relation</tt> (optional): name of the relation that contains
+the elements to check.
+<li><tt>relset</tt> (optional): an element set that contains the elements
+to check. Exactly one of the attributes <tt>relation</tt> or
+<tt>relset</tt> must be specified.
+<li>the usual optional filter attributes: target, targetcondition,
+element, eltype, scope, condition (see <a href="Projection.html">Section&nbsp;8.1.1 "Projection"</a>).
+<li><tt>value</tt> (optional): the metric expression to evaluate for
+the first matching element. When omitted, the element itself is
+returned.
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="ConnComp.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="DefMetrics.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="SubElements.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;8.1.6 "Connected Components"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;8.1.8 "Subelements"</td></tr></table>
+
+</body>
+</html>

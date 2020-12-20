@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>CloudAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">CloudAction.java</span></div><h1>CloudAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 06.10.2004
+ */
+
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.Color;
+
+import javax.swing.Action;
+import javax.swing.JMenuItem;
+
+import freemind.controller.MenuItemSelectedListener;
+import freemind.controller.actions.generated.instance.AddCloudXmlAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Tools;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapCloudModel;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+
+/**
+ * @author foltin
+ * 
+ */
+public class CloudAction extends NodeGeneralAction implements NodeActorXml,
+		MenuItemSelectedListener {
+
+	public CloudAction(MindMapController controller) {
+<span class="nc" id="L49">		super(controller, &quot;cloud&quot;, &quot;images/Cloud24.gif&quot;);</span>
+<span class="nc" id="L50">		addActor(this);</span>
+<span class="nc" id="L51">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L54">		return AddCloudXmlAction.class;</span>
+	}
+
+	public ActionPair apply(MindMap model, MindMapNode selected) {
+<span class="nc bnc" id="L58" title="All 2 branches missed.">		ActionPair pair = getActionPair(selected, selected.getCloud() == null);</span>
+<span class="nc" id="L59">		return pair;</span>
+	}
+
+	public void setCloud(MindMapNode node, boolean enable) {
+<span class="nc" id="L63">		modeController.doTransaction(</span>
+<span class="nc" id="L64">				(String) getValue(NAME), getActionPair(node, enable));</span>
+
+<span class="nc" id="L66">	}</span>
+
+	private ActionPair getActionPair(MindMapNode selected, boolean enable) {
+<span class="nc" id="L69">		AddCloudXmlAction cloudAction = createAddCloudXmlAction(selected,</span>
+<span class="nc" id="L70">				enable, null);</span>
+<span class="nc" id="L71">		AddCloudXmlAction undocloudAction = null;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (selected.getCloud() != null) {</span>
+<span class="nc" id="L73">			undocloudAction = createAddCloudXmlAction(selected, true, selected</span>
+<span class="nc" id="L74">					.getCloud().getColor());</span>
+<span class="nc" id="L75">		} else {</span>
+<span class="nc" id="L76">			undocloudAction = createAddCloudXmlAction(selected, false, null);</span>
+
+		}
+<span class="nc" id="L79">		return new ActionPair(cloudAction, undocloudAction);</span>
+	}
+
+	private AddCloudXmlAction createAddCloudXmlAction(MindMapNode selected,
+			boolean enable, Color color) {
+<span class="nc" id="L84">		AddCloudXmlAction nodecloudAction = new AddCloudXmlAction();</span>
+<span class="nc" id="L85">		nodecloudAction.setNode(getNodeID(selected));</span>
+<span class="nc" id="L86">		nodecloudAction.setEnabled(enable);</span>
+<span class="nc" id="L87">		nodecloudAction.setColor(Tools.colorToXml(color));</span>
+<span class="nc" id="L88">		return nodecloudAction;</span>
+	}
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (action instanceof AddCloudXmlAction) {</span>
+<span class="nc" id="L93">			AddCloudXmlAction nodecloudAction = (AddCloudXmlAction) action;</span>
+<span class="nc" id="L94">			MindMapNode node = getNodeFromID(nodecloudAction.getNode());</span>
+<span class="nc bnc" id="L95" title="All 4 branches missed.">			if ((node.getCloud() == null) == nodecloudAction.getEnabled()) {</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">				if (nodecloudAction.getEnabled()) {</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">					if (node.isRoot()) {</span>
+<span class="nc" id="L98">						return;</span>
+					}
+<span class="nc" id="L100">					node.setCloud(new MindMapCloudModel(node,</span>
+<span class="nc" id="L101">							getMindMapController().getFrame()));</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">					if (nodecloudAction.getColor() != null) {</span>
+<span class="nc" id="L103">						Color color = Tools.xmlToColor(nodecloudAction</span>
+<span class="nc" id="L104">								.getColor());</span>
+<span class="nc" id="L105">						((MindMapCloudModel) node.getCloud()).setColor(color);</span>
+					}
+<span class="nc" id="L107">				} else {</span>
+<span class="nc" id="L108">					node.setCloud(null);</span>
+				}
+<span class="nc" id="L110">				modeController.nodeChanged(node);</span>
+			}
+		}
+<span class="nc" id="L113">	}</span>
+
+	public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+<span class="nc bnc" id="L116" title="All 2 branches missed.">		return modeController.getSelected().getCloud() != null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

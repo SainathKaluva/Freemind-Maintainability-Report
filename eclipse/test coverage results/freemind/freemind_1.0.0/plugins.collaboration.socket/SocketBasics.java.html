@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>SocketBasics.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.socket</a> &gt; <span class="el_source">SocketBasics.java</span></div><h1>SocketBasics.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2008  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 28.12.2008
+ */
+
+package plugins.collaboration.socket;
+
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.WindowConstants;
+
+import com.jgoodies.forms.builder.DefaultFormBuilder;
+import com.jgoodies.forms.factories.ButtonBarFactory;
+import com.jgoodies.forms.layout.FormLayout;
+
+import freemind.common.NumberProperty;
+import freemind.common.PropertyBean;
+import freemind.common.PropertyControl;
+import freemind.controller.Controller;
+import freemind.controller.MapModuleManager.MapTitleContributor;
+import freemind.controller.actions.generated.instance.CollaborationUserInformation;
+import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.HookNodeAction;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionFilter.FirstActionFilter;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.hooks.MindMapNodeHookAdapter;
+import freemind.view.MapModule;
+
+public abstract class SocketBasics extends MindMapNodeHookAdapter implements
+		MapTitleContributor, FirstActionFilter {
+
+	/**
+	 * 
+	 */
+	private static final String PLUGINS_COLLABORATION_SOCKET = &quot;plugins/collaboration/socket/&quot;;
+	public final static String MASTER_HOOK_LABEL = PLUGINS_COLLABORATION_SOCKET
+			+ &quot;socket_master_plugin&quot;;
+	public final static String SLAVE_HOOK_LABEL = PLUGINS_COLLABORATION_SOCKET
+			+ &quot;socket_slave_plugin&quot;;
+	public final static String SLAVE_STARTER_LABEL = PLUGINS_COLLABORATION_SOCKET
+			+ &quot;socket_slave_starter_plugin&quot;;
+<span class="nc" id="L79">	protected static final Integer ROLE_MASTER = Integer.valueOf(0);</span>
+<span class="nc" id="L80">	protected static final Integer ROLE_SLAVE = Integer.valueOf(1);</span>
+	private static final String PORT_PROPERTY = &quot;plugins.collaboration.socket.port&quot;;
+	private static final String SOCKET_BASICS_CLASS = &quot;plugins.collaboration.socket.SocketBasics&quot;;
+
+	protected static final String PASSWORD = SOCKET_BASICS_CLASS + &quot;.password&quot;;
+	protected static final String PASSWORD_DESCRIPTION = SOCKET_BASICS_CLASS
+			+ &quot;.password.description&quot;;
+
+	protected static final String PASSWORD_VERIFICATION = SOCKET_BASICS_CLASS
+			+ &quot;.password_verification&quot;;
+	protected static final String PASSWORD_VERIFICATION_DESCRIPTION = SOCKET_BASICS_CLASS
+			+ &quot;.password_verification_description&quot;;
+
+	protected static final String HOST = SOCKET_BASICS_CLASS + &quot;.host&quot;;
+	protected static final String HOST_DESCRIPTION = SOCKET_BASICS_CLASS
+			+ &quot;.host.description&quot;;
+
+	protected static final String PORT = SOCKET_BASICS_CLASS + &quot;.port&quot;;
+	protected static final String PORT_DESCRIPTION = PORT + &quot;.description&quot;;
+
+	protected static final String TITLE = SOCKET_BASICS_CLASS + &quot;.title&quot;;
+	protected static final String UNKNWON_HOST_EXCEPTION_MESSAGE = SOCKET_BASICS_CLASS
+			+ &quot;.unknown_host_exception&quot;;
+	protected static final String CONNECT_EXCEPTION_MESSAGE = SOCKET_BASICS_CLASS
+			+ &quot;.connection_exception&quot;;
+	protected static final String SOCKET_CREATION_EXCEPTION_MESSAGE = SOCKET_BASICS_CLASS
+			+ &quot;.socket_creation_exception&quot;;;
+
+<span class="nc" id="L108">	protected static java.util.logging.Logger logger = null;</span>
+
+	protected String mPassword;
+<span class="nc" id="L111">	protected boolean mFilterEnabled = true;</span>
+	private String mUserName;
+
+	public SocketBasics() {
+<span class="nc" id="L115">		super();</span>
+<span class="nc" id="L116">		mUserName = Tools.getUserName();</span>
+<span class="nc" id="L117">	}</span>
+
+	/**
+	 * @return ROLE_MASTER OR ROLE_SLAVE
+	 */
+	public abstract Integer getRole();
+
+	public void startupMapHook() {
+<span class="nc" id="L125">		super.startupMapHook();</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">		if (logger == null) {</span>
+<span class="nc" id="L127">			logger = freemind.main.Resources.getInstance().getLogger(</span>
+<span class="nc" id="L128">					this.getClass().getName());</span>
+		}
+<span class="nc" id="L130">		getMindMapController().getController()</span>
+<span class="nc" id="L131">				.registerMapTitleContributor(this);</span>
+<span class="nc" id="L132">	}</span>
+
+	public void shutdownMapHook() {
+<span class="nc" id="L135">		Controller controller = getMindMapController().getController();</span>
+<span class="nc" id="L136">		controller.deregisterMapTitleContributor(this);</span>
+<span class="nc" id="L137">		controller.setTitle();</span>
+<span class="nc" id="L138">		super.shutdownMapHook();</span>
+<span class="nc" id="L139">	}</span>
+
+	public static void togglePermanentHook(MindMapController controller,
+			final String hookName) {
+<span class="nc" id="L143">		MindMapNode rootNode = controller.getRootNode();</span>
+<span class="nc" id="L144">		List selecteds = Arrays.asList(new MindMapNode[] { rootNode });</span>
+<span class="nc" id="L145">		controller.addHook(rootNode, selecteds, hookName, null);</span>
+<span class="nc" id="L146">	}</span>
+
+	protected void setPortProperty(final NumberProperty portProperty) {
+<span class="nc" id="L149">		getMindMapController().getFrame().setProperty(PORT_PROPERTY,</span>
+<span class="nc" id="L150">				portProperty.getValue());</span>
+<span class="nc" id="L151">	}</span>
+
+	protected NumberProperty getPortProperty() {
+<span class="nc" id="L154">		final NumberProperty portProperty = new NumberProperty(</span>
+<span class="nc" id="L155">				PORT_DESCRIPTION, PORT, 1024, 32767, 1);</span>
+		// fill values:
+<span class="nc" id="L157">		portProperty.setValue(&quot;&quot;</span>
+<span class="nc" id="L158">				+ getMindMapController().getFrame().getIntProperty(</span>
+<span class="nc" id="L159">						PORT_PROPERTY, 9001));</span>
+<span class="nc" id="L160">		return portProperty;</span>
+	}
+
+<span class="nc" id="L163">	public static abstract class FormDialogValidator {</span>
+		/**
+		 * @return true, if ok should be enabled.
+		 */
+		public abstract boolean isValid();
+	}
+
+	public static class FormDialog extends JDialog implements
+			PropertyChangeListener {
+		private final MindMapController mController2;
+<span class="nc" id="L173">		private boolean mSuccess = false;</span>
+		private JButton mOkButton;
+		private FormDialogValidator mFormDialogValidator;
+
+		public boolean isSuccess() {
+<span class="nc" id="L178">			return mSuccess;</span>
+		}
+
+		public FormDialog(MindMapController pController) {
+<span class="nc" id="L182">			super(pController.getFrame().getJFrame());</span>
+<span class="nc" id="L183">			mController2 = pController;</span>
+<span class="nc" id="L184">		}</span>
+
+		public void setUp(Vector controls) {
+<span class="nc" id="L187">			setUp(controls, new FormDialogValidator() {</span>
+
+				public boolean isValid() {
+<span class="nc" id="L190">					return true;</span>
+				}
+			});
+<span class="nc" id="L193">		}</span>
+
+		public void setUp(Vector controls, FormDialogValidator pValidator) {
+<span class="nc" id="L196">			mFormDialogValidator = pValidator;</span>
+<span class="nc" id="L197">			setModal(true);</span>
+<span class="nc" id="L198">			getContentPane().setLayout(new BorderLayout());</span>
+<span class="nc" id="L199">			FormLayout formLayout = new FormLayout(</span>
+<span class="nc" id="L200">					&quot;right:max(40dlu;p), 4dlu, 80dlu, 7dlu&quot;, &quot;&quot;);</span>
+<span class="nc" id="L201">			DefaultFormBuilder builder = new DefaultFormBuilder(formLayout);</span>
+<span class="nc" id="L202">			builder.setDefaultDialogBorder();</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			for (Iterator it = controls.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L204">				PropertyControl prop = (PropertyControl) it.next();</span>
+<span class="nc" id="L205">				prop.layout(builder, mController2);</span>
+<span class="nc" id="L206">				PropertyBean bean = (PropertyBean) prop;</span>
+<span class="nc" id="L207">				bean.addPropertyChangeListener(this);</span>
+			}
+<span class="nc" id="L209">			getContentPane().add(builder.getPanel(), BorderLayout.CENTER);</span>
+<span class="nc" id="L210">			JButton cancelButton = new JButton(getText(&quot;Cancel&quot;));</span>
+<span class="nc" id="L211">			cancelButton.addActionListener(new ActionListener() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L214">					closeWindow();</span>
+<span class="nc" id="L215">				}</span>
+
+			});
+<span class="nc" id="L218">			mOkButton = new JButton(getText(&quot;OK&quot;));</span>
+<span class="nc" id="L219">			mOkButton.addActionListener(new ActionListener() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L222">					mSuccess = true;</span>
+<span class="nc" id="L223">					closeWindow();</span>
+<span class="nc" id="L224">				}</span>
+
+			});
+<span class="nc" id="L227">			getRootPane().setDefaultButton(mOkButton);</span>
+<span class="nc" id="L228">			getContentPane().add(</span>
+<span class="nc" id="L229">					ButtonBarFactory.buildOKCancelBar(cancelButton, mOkButton),</span>
+<span class="nc" id="L230">					BorderLayout.SOUTH);</span>
+<span class="nc" id="L231">			setTitle(&quot;Enter Password Dialog&quot;);</span>
+<span class="nc" id="L232">			setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);</span>
+<span class="nc" id="L233">			addWindowListener(new WindowAdapter() {</span>
+				public void windowClosing(WindowEvent event) {
+<span class="nc" id="L235">					closeWindow();</span>
+<span class="nc" id="L236">				}</span>
+			});
+<span class="nc" id="L238">			Action action = new AbstractAction() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L241">					closeWindow();</span>
+<span class="nc" id="L242">				}</span>
+			};
+<span class="nc" id="L244">			Action actionSuccess = new AbstractAction() {</span>
+
+				public void actionPerformed(ActionEvent arg0) {
+<span class="nc" id="L247">					mSuccess = true;</span>
+<span class="nc" id="L248">					closeWindow();</span>
+<span class="nc" id="L249">				}</span>
+			};
+<span class="nc" id="L251">			Tools.addEscapeActionToDialog(this, action);</span>
+<span class="nc" id="L252">			Tools.addKeyActionToDialog(this, actionSuccess, &quot;ENTER&quot;,</span>
+<span class="nc" id="L253">					&quot;ok_dialog&quot;);</span>
+
+<span class="nc" id="L255">			pack();</span>
+<span class="nc" id="L256">			setVisible(true);</span>
+
+<span class="nc" id="L258">		}</span>
+
+		private void closeWindow() {
+<span class="nc" id="L261">			setVisible(false);</span>
+<span class="nc" id="L262">		}</span>
+
+		String getText(String text) {
+<span class="nc" id="L265">			return text;</span>
+		}
+
+		public void propertyChange(PropertyChangeEvent pEvt) {
+<span class="nc" id="L269">			logger.finest(&quot;Property change &quot; + pEvt);</span>
+<span class="nc" id="L270">			mOkButton.setEnabled(mFormDialogValidator.isValid());</span>
+<span class="nc" id="L271">		}</span>
+
+	}
+
+	public abstract int getPort();
+
+	public String getMapTitle(String pOldTitle, MapModule pMapModule,
+			MindMap pModel) {
+<span class="nc bnc" id="L279" title="All 2 branches missed.">		if (pModel.getModeController() != getMindMapController()) {</span>
+<span class="nc" id="L280">			return pOldTitle;</span>
+		}
+<span class="nc" id="L282">		CollaborationUserInformation userInfo = getMasterInformation();</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">		if (userInfo == null) {</span>
+<span class="nc" id="L284">			return pOldTitle;</span>
+		}
+<span class="nc" id="L286">		return pOldTitle</span>
+<span class="nc" id="L287">				+ Resources.getInstance().format(</span>
+<span class="nc" id="L288">						TITLE,</span>
+<span class="nc" id="L289">						new Object[] { this.getRole(),</span>
+<span class="nc" id="L290">								userInfo.getMasterHostname(),</span>
+<span class="nc" id="L291">								userInfo.getMasterIp(),</span>
+<span class="nc" id="L292">								new Integer(userInfo.getMasterPort()),</span>
+<span class="nc" id="L293">								userInfo.getUserIds() });</span>
+	}
+
+	public abstract CollaborationUserInformation getMasterInformation();
+
+	public String getPassword() {
+<span class="nc" id="L299">		return mPassword;</span>
+	}
+
+	/**
+	 * Deep search inside the {@link XmlAction} to find a hook (i.e. myself).
+	 * They should not be send over the wire.
+	 * 
+	 * @param pAction
+	 * @param pSearchString
+	 * @return
+	 */
+	private boolean visit(XmlAction pAction, String pSearchString) {
+<span class="nc bnc" id="L311" title="All 2 branches missed.">		if (pAction instanceof CompoundAction) {</span>
+<span class="nc" id="L312">			CompoundAction compound = (CompoundAction) pAction;</span>
+<span class="nc" id="L313">			boolean result = false;</span>
+<span class="nc" id="L314">			for (Iterator it = compound.getListChoiceList().iterator(); it</span>
+<span class="nc bnc" id="L315" title="All 2 branches missed.">					.hasNext();) {</span>
+<span class="nc" id="L316">				XmlAction action = (XmlAction) it.next();</span>
+<span class="nc" id="L317">				result |= visit(action, pSearchString);</span>
+			}
+<span class="nc" id="L319">			return result;</span>
+		}
+<span class="nc bnc" id="L321" title="All 2 branches missed.">		if (pAction instanceof HookNodeAction) {</span>
+<span class="nc" id="L322">			HookNodeAction hookNodeAction = (HookNodeAction) pAction;</span>
+<span class="nc bnc" id="L323" title="All 2 branches missed.">			if (Tools.safeEquals(hookNodeAction.getHookName(), pSearchString)) {</span>
+<span class="nc" id="L324">				return true;</span>
+			}
+		}
+<span class="nc" id="L327">		return false;</span>
+	}
+
+	/**
+	 * Try to lock, send update package to master (perhaps, myself), execute
+	 * action and unlock
+	 */
+	public ActionPair filterAction(ActionPair pPair) {
+<span class="nc bnc" id="L335" title="All 4 branches missed.">		if (pPair == null || !mFilterEnabled)</span>
+<span class="nc" id="L336">			return pPair;</span>
+		// Don't send any hook instantiations to others.
+<span class="nc bnc" id="L338" title="All 2 branches missed.">		if (visit(pPair.getDoAction(), SocketConnectionHook.SLAVE_HOOK_LABEL)) {</span>
+<span class="nc" id="L339">			return pPair;</span>
+		}
+<span class="nc bnc" id="L341" title="All 2 branches missed.">		if (visit(pPair.getDoAction(), MindMapMaster.MASTER_HOOK_LABEL)) {</span>
+<span class="nc" id="L342">			return pPair;</span>
+		}
+<span class="nc" id="L344">		String doAction = getMindMapController().marshall(pPair.getDoAction());</span>
+<span class="nc" id="L345">		String undoAction = getMindMapController().marshall(</span>
+<span class="nc" id="L346">				pPair.getUndoAction());</span>
+		try {
+<span class="nc" id="L348">			String lockId = lock(getUserName());</span>
+			/*
+			 * Blocking broadcast call: Client: send to master (who broadcasts
+			 * the command afterwards), Master: send to all clients.
+			 */
+<span class="nc" id="L353">			broadcastCommand(doAction, undoAction, lockId);</span>
+<span class="nc" id="L354">		} catch (UnableToGetLockException e) {</span>
+<span class="nc" id="L355">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L356">			return getEmptyActionPair();</span>
+<span class="nc" id="L357">		} catch (Exception e) {</span>
+<span class="nc" id="L358">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L359">			return getEmptyActionPair();</span>
+<span class="nc" id="L360">		} finally {</span>
+<span class="nc" id="L361">			unlock();</span>
+<span class="nc" id="L362">		}</span>
+<span class="nc" id="L363">		return pPair;</span>
+	}
+
+	public ActionPair getEmptyActionPair() {
+<span class="nc" id="L367">		return new ActionPair(new CompoundAction(), new CompoundAction());</span>
+	}
+
+<span class="nc" id="L370">	protected static class UnableToGetLockException extends Exception {</span>
+
+	}
+
+	/**
+	 * @param pUserName
+	 *            the user the lock belongs to.
+	 * @return The id associated with this lock.
+	 * @throws UnableToGetLockException
+	 * @throws InterruptedException
+	 */
+	protected abstract String lock(String pUserName)
+			throws UnableToGetLockException, InterruptedException;
+
+	/**
+	 * @return the user's name (to acquire a named lock)
+	 */
+	protected String getUserName() {
+<span class="nc" id="L388">		return mUserName;</span>
+	}
+
+	/**
+	 * Should send the command to the master, or, if the master itself, sends it
+	 * to the clients.
+	 * 
+	 * @throws Exception
+	 */
+	protected abstract void broadcastCommand(String pDoAction,
+			String pUndoAction, String pLockId) throws Exception;
+
+	/**
+	 * Unlocks the previous lock
+	 */
+	protected abstract void unlock();
+
+	protected void registerFilter() {
+<span class="nc" id="L406">		logger.info(&quot;Registering filter&quot;);</span>
+<span class="nc" id="L407">		getMindMapController().getActionFactory().registerFilter(this);</span>
+<span class="nc" id="L408">	}</span>
+
+	protected void deregisterFilter() {
+<span class="nc" id="L411">		logger.info(&quot;Deregistering filter&quot;);</span>
+<span class="nc" id="L412">		getMindMapController().getActionFactory().deregisterFilter(this);</span>
+<span class="nc" id="L413">	}</span>
+
+	protected void executeTransaction(final ActionPair pair) {
+<span class="nc" id="L416">		mFilterEnabled = false;</span>
+		try {
+<span class="nc" id="L418">			getMindMapController().doTransaction(&quot;update&quot;, pair);</span>
+<span class="nc" id="L419">		} finally {</span>
+<span class="nc" id="L420">			mFilterEnabled = true;</span>
+<span class="nc" id="L421">		}</span>
+<span class="nc" id="L422">	}</span>
+
+	/**
+	 * Closes the connection.
+	 */
+	public abstract void shutdown();
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>TimeManagementOrganizer.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">accessories.plugins.time</a> &gt; <span class="el_source">TimeManagementOrganizer.java</span></div><h1>TimeManagementOrganizer.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2005  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 02.05.2005
+ */
+
+package accessories.plugins.time;
+
+import java.util.Iterator;
+
+import javax.swing.Action;
+import javax.swing.JMenuItem;
+
+import freemind.controller.MenuItemEnabledListener;
+import freemind.extensions.HookRegistration;
+import freemind.extensions.PermanentNodeHook;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.common.plugins.ReminderHookBase;
+import freemind.modes.mindmapmode.actions.NodeHookAction;
+
+/**
+ * Enables the encrypt/decrypt menu item only if the map/node is encrypted.
+ * 
+ * @author foltin
+ * 
+ */
+public class TimeManagementOrganizer implements HookRegistration,
+		MenuItemEnabledListener {
+
+	private final ModeController controller;
+	private final MindMap mMap;
+	private final java.util.logging.Logger logger;
+
+<span class="nc" id="L52">	public TimeManagementOrganizer(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L53">		this.controller = controller;</span>
+<span class="nc" id="L54">		mMap = map;</span>
+<span class="nc" id="L55">		logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L56">	}</span>
+
+	public void register() {
+<span class="nc" id="L59">	}</span>
+
+	public void deRegister() {
+<span class="nc" id="L62">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.MenuItemEnabledListener#isEnabled(javax.swing.JMenuItem
+	 * , javax.swing.Action)
+	 */
+	public boolean isEnabled(JMenuItem item, Action action) {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (action instanceof NodeHookAction) {</span>
+<span class="nc" id="L73">			String hookName = ((NodeHookAction) action).getHookName();</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			if (hookName.equals(&quot;plugins/time/RemoveReminderHook.java&quot;)) {</span>
+<span class="nc" id="L75">				boolean visible = false;</span>
+<span class="nc" id="L76">				for (Iterator i = controller.getSelecteds().iterator(); i</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">						.hasNext();) {</span>
+<span class="nc" id="L78">					MindMapNode node = (MindMapNode) i.next();</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">					if (TimeManagementOrganizer.getHook(node) != null) {</span>
+<span class="nc" id="L80">						visible = true;</span>
+					}
+				}
+<span class="nc" id="L83">				item.setVisible(visible);</span>
+			}
+		}
+<span class="nc" id="L86">		return true;</span>
+	}
+
+	/**
+	 */
+	public static ReminderHookBase getHook(MindMapNode node) {
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		for (Iterator j = node.getActivatedHooks().iterator(); j.hasNext();) {</span>
+<span class="nc" id="L93">			PermanentNodeHook element = (PermanentNodeHook) j.next();</span>
+<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (element instanceof ReminderHookBase) {</span>
+<span class="nc" id="L95">				return (ReminderHookBase) element;</span>
+			}
+		}
+<span class="nc" id="L98">		return null;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

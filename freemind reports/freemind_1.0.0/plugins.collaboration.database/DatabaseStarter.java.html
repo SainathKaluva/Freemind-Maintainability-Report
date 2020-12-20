@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>DatabaseStarter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.database</a> &gt; <span class="el_source">DatabaseStarter.java</span></div><h1>DatabaseStarter.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2008  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 28.12.2008
+ */
+
+
+package plugins.collaboration.database;
+
+import java.io.File;
+import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.Vector;
+
+import freemind.common.NumberProperty;
+import freemind.common.StringProperty;
+import freemind.extensions.DontSaveMarker;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.view.mindmapview.NodeView;
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="nc" id="L48">public class DatabaseStarter extends DatabaseBasics implements</span>
+		PermanentNodeHook, DontSaveMarker {
+
+	private File mTempDbFile;
+
+	/**
+     *
+     */
+
+	public void startupMapHook() {
+<span class="nc" id="L58">		super.startupMapHook();</span>
+<span class="nc" id="L59">		MindMapController controller = getMindMapController();</span>
+<span class="nc" id="L60">		final StringProperty passwordProperty = new StringProperty(</span>
+<span class="nc" id="L61">				PASSWORD_DESCRIPTION, PASSWORD);</span>
+<span class="nc" id="L62">		final StringProperty passwordProperty2 = new StringProperty(</span>
+<span class="nc" id="L63">				PASSWORD_VERIFICATION_DESCRIPTION, PASSWORD_VERIFICATION);</span>
+		// StringProperty bindProperty = new StringProperty(
+		// &quot;IP address of the local machine, or 0.0.0.0 if &quot;, &quot;Host&quot;);
+<span class="nc" id="L66">		final NumberProperty portProperty = getPortProperty();</span>
+<span class="nc" id="L67">		Vector controls = new Vector();</span>
+<span class="nc" id="L68">		controls.add(passwordProperty);</span>
+<span class="nc" id="L69">		controls.add(passwordProperty2);</span>
+		// controls.add(bindProperty);
+<span class="nc" id="L71">		controls.add(portProperty);</span>
+<span class="nc" id="L72">		FormDialog dialog = new FormDialog(controller);</span>
+<span class="nc" id="L73">		dialog.setUp(controls, new FormDialogValidator() {</span>
+			public boolean isValid() {
+<span class="nc" id="L75">				logger.finest(&quot;Output valid?&quot;);</span>
+<span class="nc" id="L76">				return Tools.safeEquals(passwordProperty.getValue(),</span>
+<span class="nc" id="L77">						passwordProperty2.getValue());</span>
+			}
+		});
+<span class="nc bnc" id="L80" title="All 2 branches missed.">		if (!dialog.isSuccess())</span>
+<span class="nc" id="L81">			return;</span>
+<span class="nc" id="L82">		String password = passwordProperty.getValue();</span>
+<span class="nc" id="L83">		setPortProperty(portProperty);</span>
+		// start server:
+<span class="nc" id="L85">		logger.info(&quot;Start server...&quot;);</span>
+		try {
+<span class="nc" id="L87">			mTempDbFile = File.createTempFile(&quot;collaboration_database&quot;,</span>
+<span class="nc" id="L88">					&quot;.hsqldb&quot;, new File(controller.getFrame()</span>
+<span class="nc" id="L89">							.getFreemindDirectory()));</span>
+			// mTempDbFile.deleteOnExit();
+<span class="nc" id="L91">			logger.info(&quot;Start server in file &quot; + mTempDbFile);</span>
+<span class="nc" id="L92">			Thread server = new Thread(new Runnable() {</span>
+
+				public void run() {
+<span class="nc" id="L95">					org.hsqldb.Server.main(new String[] { &quot;-database.0&quot;,</span>
+							&quot;file:&quot; + mTempDbFile, &quot;-dbname.0&quot;, &quot;xdb&quot;, &quot;-port&quot;,
+							portProperty.getValue(), &quot;-no_system_exit&quot;, &quot;true&quot; });
+				}
+			});
+<span class="nc" id="L100">			server.start();</span>
+<span class="nc" id="L101">			Thread.sleep(1000);</span>
+<span class="nc" id="L102">			logger.info(&quot;Connect...&quot;);</span>
+<span class="nc" id="L103">			Class.forName(&quot;org.hsqldb.jdbcDriver&quot;);</span>
+<span class="nc" id="L104">			String url = &quot;jdbc:hsqldb:hsql://localhost:&quot;</span>
+<span class="nc" id="L105">					+ portProperty.getValue() + &quot;/xdb&quot;;</span>
+<span class="nc" id="L106">			logger.info(&quot;Connecting to &quot; + url);</span>
+<span class="nc" id="L107">			Connection connection = DriverManager.getConnection(url, &quot;sa&quot;, &quot;&quot;);</span>
+<span class="nc" id="L108">			mUpdateThread = new UpdateThread(connection, controller);</span>
+<span class="nc" id="L109">			mUpdateThread.setHost(Tools.getHostName());</span>
+<span class="nc" id="L110">			mUpdateThread.setPort(portProperty.getValue());</span>
+<span class="nc" id="L111">			mUpdateThread.setupTables(password);</span>
+<span class="nc" id="L112">			logger.info(&quot;Starting update thread...&quot;);</span>
+<span class="nc" id="L113">			mUpdateThread.start();</span>
+<span class="nc" id="L114">		} catch (Exception e) {</span>
+<span class="nc" id="L115">			freemind.main.Resources.getInstance().logException(e);</span>
+			// TODO: Need a better message here.
+<span class="nc" id="L117">			controller.getController().errorMessage(e.getLocalizedMessage());</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">			if (mUpdateThread != null) {</span>
+<span class="nc" id="L119">				mUpdateThread.shutdown(true);</span>
+			}
+<span class="nc" id="L121">			return;</span>
+		}
+<span class="nc" id="L123">	}</span>
+
+	public void loadFrom(XMLElement pChild) {
+		// this plugin should not be saved.
+<span class="nc" id="L127">	}</span>
+
+	public void save(XMLElement pXml) {
+		// this plugin should not be saved.
+		// nothing to do.
+<span class="nc" id="L132">	}</span>
+
+	public void shutdownMapHook() {
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (mUpdateThread != null) {</span>
+<span class="nc" id="L136">			mUpdateThread.deregisterFilter();</span>
+<span class="nc" id="L137">			mUpdateThread.signalEndOfSession();</span>
+<span class="nc" id="L138">			mUpdateThread.commitSuicide();</span>
+<span class="nc" id="L139">			mUpdateThread.shutdown(true);</span>
+			// remove temporary files:
+<span class="nc" id="L141">			logger.info(&quot;Remove temporary database files.&quot;);</span>
+<span class="nc" id="L142">			mTempDbFile.delete();</span>
+<span class="nc" id="L143">			new File(mTempDbFile.getAbsoluteFile() + &quot;.script&quot;).delete();</span>
+<span class="nc" id="L144">			new File(mTempDbFile.getAbsoluteFile() + &quot;.properties&quot;).delete();</span>
+		}
+<span class="nc" id="L146">		super.shutdownMapHook();</span>
+<span class="nc" id="L147">	}</span>
+
+	public void onAddChild(MindMapNode pAddedChildNode) {
+<span class="nc" id="L150">	}</span>
+
+	public void onAddChildren(MindMapNode pAddedChild) {
+<span class="nc" id="L153">	}</span>
+
+	public void onLostFocusNode(NodeView pNodeView) {
+<span class="nc" id="L156">	}</span>
+
+	public void onNewChild(MindMapNode pNewChildNode) {
+<span class="nc" id="L159">	}</span>
+
+	public void onRemoveChild(MindMapNode pOldChildNode) {
+<span class="nc" id="L162">	}</span>
+
+	public void onRemoveChildren(MindMapNode pOldChildNode, MindMapNode pOldDad) {
+<span class="nc" id="L165">	}</span>
+
+	public void onFocusNode(NodeView pNodeView) {
+<span class="nc" id="L168">	}</span>
+
+	public void onUpdateChildrenHook(MindMapNode pUpdatedNode) {
+<span class="nc" id="L171">	}</span>
+
+	public void onUpdateNodeHook() {
+<span class="nc" id="L174">	}</span>
+
+	public void onViewCreatedHook(NodeView pNodeView) {
+<span class="nc" id="L177">	}</span>
+
+	public void onViewRemovedHook(NodeView pNodeView) {
+<span class="nc" id="L180">	}</span>
+
+	public Integer getRole() {
+<span class="nc" id="L183">		return ROLE_MASTER;</span>
+	}
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#executeTransaction(freemind.modes.mindmapmode.actions.xml.ActionPair)
+	 */
+	protected void executeTransaction(final ActionPair pair)
+			throws InterruptedException, InvocationTargetException {
+<span class="nc" id="L191">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#registerFilter()
+	 */
+	public void registerFilter() {
+<span class="nc" id="L197">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#deregisterFilter()
+	 */
+	public void deregisterFilter() {
+<span class="nc" id="L203">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#filterAction(freemind.modes.mindmapmode.actions.xml.ActionPair)
+	 */
+	public ActionPair filterAction(ActionPair pPair) {
+<span class="nc" id="L209">		return null;</span>
+	}
+	public void processUnfinishedLinks() {
+<span class="nc" id="L212">	}</span>
+
+	/* (non-Javadoc)
+	 * @see freemind.extensions.PermanentNodeHook#saveHtml(java.io.Writer)
+	 */
+	public void saveHtml(Writer pFileout) {
+<span class="nc" id="L218">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

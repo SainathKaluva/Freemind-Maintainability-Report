@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>HookFactory.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.extensions</a> &gt; <span class="el_source">HookFactory.java</span></div><h1>HookFactory.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2005  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 31.12.2005
+ */
+/*$Id: HookFactory.java,v 1.1.4.9.2.1 2006/07/25 20:28:20 christianfoltin Exp $*/
+package freemind.extensions;
+
+import java.util.List;
+import java.util.Vector;
+
+import freemind.controller.actions.generated.instance.Plugin;
+import freemind.modes.MindMapNode;
+
+public interface HookFactory {
+
+	public static class RegistrationContainer {
+		public Class hookRegistrationClass;
+
+		public boolean isPluginBase;
+
+		public Plugin correspondingPlugin;
+
+<span class="nc" id="L40">		public RegistrationContainer() {</span>
+<span class="nc" id="L41">		}</span>
+	}
+
+	/**
+	 * @return a string vector with representatives for plugins.
+	 */
+	public abstract Vector getPossibleNodeHooks();
+
+	/**
+	 * @return a string vector with representatives for plugins.
+	 */
+	public abstract Vector getPossibleModeControllerHooks();
+
+	public abstract ModeControllerHook createModeControllerHook(String hookName);
+
+	/**
+	 * Do not call this method directly. Call ModeController.createNodeHook
+	 * instead.
+	 */
+	public abstract NodeHook createNodeHook(String hookName);
+
+	/**
+	 * @return null if not present, the hook otherwise.
+	 */
+	public abstract PermanentNodeHook getHookInNode(MindMapNode node,
+			String hookName);
+
+	/**
+	 * @return returns a list of menu position strings for the
+	 *         StructuredMenuHolder.
+	 */
+	public abstract List getHookMenuPositions(String hookName);
+
+	/**
+	 */
+	public abstract HookInstanciationMethod getInstanciationMethod(
+			String hookName);
+
+	/**
+	 * Each Plugin can have a list of HookRegistrations that are called after
+	 * the corresponding mode is enabled. (Like singletons.) One of these can
+	 * operate as the pluginBase that is accessible to every normal
+	 * plugin_action via the getPluginBaseClass method.
+	 * 
+	 * @return A list of RegistrationContainer elements. The field
+	 *         hookRegistrationClass of RegistrationContainer is a class that is
+	 *         (probably) of HookRegistration type. You have to register every
+	 *         registration via the registerRegistrationContainer method when
+	 *         instanciated (this is typically done in the ModeController).
+	 */
+	public abstract List getRegistrations();
+
+	/**
+	 * See getRegistrations. The registration makes sense for the factory, as
+	 * the factory observes every object creation. &lt;br&gt;
+	 * Moreover, the factory can tell other hooks it creates, who is its base
+	 * plugin.
+	 * 
+	 */
+	public abstract void registerRegistrationContainer(
+			HookFactory.RegistrationContainer container,
+			HookRegistration instanciatedRegistrationObject);
+
+	public abstract void deregisterAllRegistrationContainer();
+
+	/**
+	 * A plugin base class is a common registration class of multiple plugins.
+	 * It is useful to embrace several related plugins (example: EncryptedNote
+	 * -&gt; Registration).
+	 * 
+	 * @return the base class if declared and successfully instanciated or NULL.
+	 */
+	public abstract Object getPluginBaseClass(String hookName);
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

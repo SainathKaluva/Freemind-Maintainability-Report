@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>FindAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.common.actions</a> &gt; <span class="el_source">FindAction.java</span></div><h1>FindAction.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/*FreeMind - A Program for creating and viewing Mindmaps</span>
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+package freemind.modes.common.actions;
+
+import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.ListIterator;
+
+import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+
+import freemind.main.FreeMind;
+import freemind.main.HtmlTools;
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.modes.ControllerAdapter;
+import freemind.modes.MindMapNode;
+
+public class FindAction extends AbstractAction {
+	private final ControllerAdapter controller;
+
+	private ArrayList findNodesUnfoldedByLastFind;
+
+	private MindMapNode findFromNode;
+
+	private String searchTerm;
+
+	private Collection subterms;
+
+	/**
+	 * @return Returns the subterms.
+	 */
+	public Collection getSubterms() {
+<span class="nc" id="L67">		return subterms;</span>
+	}
+
+	public String getSearchTerm() {
+<span class="nc" id="L71">		return searchTerm;</span>
+	}
+
+	public String getFindFromText() {
+<span class="nc" id="L75">		String plainNodeText = HtmlTools.htmlToPlain(findFromNode.toString())</span>
+<span class="nc" id="L76">				.replaceAll(&quot;\n&quot;, &quot; &quot;);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">		return plainNodeText.length() &lt;= 30 ? plainNodeText : plainNodeText</span>
+<span class="nc" id="L78">				.substring(0, 30) + &quot;...&quot;;</span>
+	}
+
+	private boolean findCaseSensitive;
+
+	private LinkedList findNodeQueue;
+
+	private JDialog mDialog;
+
+	private int mResult;
+
+	private JCheckBox mFindInNotesTooBox;
+
+	private JTextField mSearchField;
+
+	/** This isn't stored and is per map. */
+	private String mLastSearchString;
+
+	public FindAction(ControllerAdapter controller) {
+<span class="nc" id="L97">		super(controller.getText(&quot;find&quot;), new ImageIcon(</span>
+<span class="nc" id="L98">				controller.getResource(&quot;images/filefind.png&quot;)));</span>
+<span class="nc" id="L99">		this.controller = controller;</span>
+<span class="nc" id="L100">	}</span>
+
+	public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L103">		displayDialog();</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">		if (mResult != JOptionPane.OK_OPTION) {</span>
+<span class="nc" id="L105">			return;</span>
+		}
+<span class="nc" id="L107">		String what = mSearchField.getText();</span>
+<span class="nc bnc" id="L108" title="All 4 branches missed.">		if (what == null || what.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L109">			return;</span>
+		}
+<span class="nc" id="L111">		Collection subterms = breakSearchTermIntoSubterms(what);</span>
+<span class="nc" id="L112">		this.searchTerm = what;</span>
+		// System.err.println(subterms);
+		/* caseSensitive=false */
+<span class="nc" id="L115">		boolean found = find(controller.getSelected(), subterms, false);</span>
+<span class="nc" id="L116">		controller.getView().repaint();</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (!found) {</span>
+<span class="nc" id="L118">			String messageText = controller.getText(&quot;no_found_from&quot;);</span>
+<span class="nc" id="L119">			String searchTerm = getSearchTermAsEscapedString(messageText);</span>
+<span class="nc" id="L120">			controller.getController().informationMessage(</span>
+<span class="nc" id="L121">					messageText.replaceAll(&quot;\\$1&quot;, searchTerm).replaceAll(</span>
+<span class="nc" id="L122">							&quot;\\$2&quot;, getFindFromText()),</span>
+<span class="nc" id="L123">					controller.getView().getSelected());</span>
+		}
+<span class="nc" id="L125">	}</span>
+
+	private void close(int pResult) {
+<span class="nc" id="L128">		mResult = pResult;</span>
+<span class="nc" id="L129">		mDialog.setVisible(false);</span>
+<span class="nc" id="L130">		mDialog.dispose();</span>
+		// Store &quot;find in notes too&quot; value to prop.
+<span class="nc bnc" id="L132" title="All 2 branches missed.">		if (pResult == JOptionPane.OK_OPTION) {</span>
+			Resources
+<span class="nc" id="L134">					.getInstance()</span>
+<span class="nc" id="L135">					.getProperties()</span>
+<span class="nc" id="L136">					.setProperty(FreeMind.RESOURCES_SEARCH_IN_NOTES_TOO,</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">							mFindInNotesTooBox.isSelected() ? &quot;true&quot; : &quot;false&quot;);</span>
+<span class="nc" id="L138">			mLastSearchString = mSearchField.getText();</span>
+		}
+<span class="nc" id="L140">	}</span>
+
+	void displayDialog() {
+<span class="nc" id="L143">		mDialog = null;</span>
+<span class="nc" id="L144">		mDialog = new JDialog(controller.getFrame().getJFrame(),</span>
+<span class="nc" id="L145">				controller.getText(&quot;find&quot;));</span>
+<span class="nc" id="L146">		mDialog.setModal(true);</span>
+<span class="nc" id="L147">		mDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);</span>
+<span class="nc" id="L148">		AbstractAction cancelAction = new AbstractAction() {</span>
+
+			public void actionPerformed(ActionEvent pE) {
+<span class="nc" id="L151">				close(JOptionPane.CANCEL_OPTION);</span>
+<span class="nc" id="L152">			}</span>
+		};
+<span class="nc" id="L154">		AbstractAction okAction = new AbstractAction() {</span>
+
+			public void actionPerformed(ActionEvent pE) {
+<span class="nc" id="L157">				close(JOptionPane.OK_OPTION);</span>
+<span class="nc" id="L158">			}</span>
+		};
+<span class="nc" id="L160">		Tools.addEscapeActionToDialog(mDialog, cancelAction);</span>
+<span class="nc" id="L161">		mDialog.addWindowListener(new WindowAdapter() {</span>
+			public void windowClosing(WindowEvent pE) {
+<span class="nc" id="L163">				close(JOptionPane.CANCEL_OPTION);</span>
+<span class="nc" id="L164">			}</span>
+		});
+<span class="nc" id="L166">		Container contentPane = mDialog.getContentPane();</span>
+<span class="nc" id="L167">		contentPane.setLayout(new GridBagLayout());</span>
+<span class="nc" id="L168">		contentPane.add(new JLabel(controller.getText(&quot;find_what&quot;)),</span>
+<span class="nc" id="L169">				new GridBagConstraints(1, 0, 1, 1, 1.0, 1.0,</span>
+<span class="nc" id="L170">						GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L171">						new Insets(5, 5, 0, 0), 0, 0));</span>
+<span class="nc" id="L172">		mSearchField = new JTextField(mLastSearchString);</span>
+<span class="nc" id="L173">		mSearchField.selectAll();</span>
+<span class="nc" id="L174">		mSearchField.setMinimumSize(new Dimension(500, 14));</span>
+<span class="nc" id="L175">		contentPane.add(mSearchField, new GridBagConstraints(2, 0, 10, 1, 1.0,</span>
+<span class="nc" id="L176">				1.0, GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L177">				new Insets(5, 5, 0, 0), 0, 0));</span>
+<span class="nc" id="L178">		ImageIcon findImage = new ImageIcon(Resources.getInstance()</span>
+<span class="nc" id="L179">				.getResource(&quot;images/filefind_big.png&quot;));</span>
+<span class="nc" id="L180">		contentPane.add(new JLabel(findImage), new GridBagConstraints(0, 0, 1,</span>
+<span class="nc" id="L181">				2, 1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L182">				new Insets(5, 5, 0, 0), 0, 0));</span>
+<span class="nc" id="L183">		mFindInNotesTooBox = new JCheckBox(</span>
+<span class="nc" id="L184">				controller</span>
+<span class="nc" id="L185">						.getText(&quot;ExtendedFindDialog.find_search_in_notes_too&quot;));</span>
+<span class="nc" id="L186">		mFindInNotesTooBox.setSelected(Resources.getInstance().getBoolProperty(</span>
+<span class="nc" id="L187">				FreeMind.RESOURCES_SEARCH_IN_NOTES_TOO));</span>
+<span class="nc" id="L188">		Tools.setLabelAndMnemonic(mFindInNotesTooBox, null);</span>
+<span class="nc" id="L189">		contentPane.add(mFindInNotesTooBox, new GridBagConstraints(0, 2, 3, 1,</span>
+<span class="nc" id="L190">				1.0, 1.0, GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L191">				new Insets(5, 5, 0, 0), 0, 0));</span>
+<span class="nc" id="L192">		JButton okButton = new JButton(</span>
+<span class="nc" id="L193">				controller.getText(&quot;ExtendedFindDialog.ok&quot;));</span>
+<span class="nc" id="L194">		Tools.setLabelAndMnemonic(okButton, null);</span>
+<span class="nc" id="L195">		okButton.addActionListener(okAction);</span>
+<span class="nc" id="L196">		contentPane.add(okButton, new GridBagConstraints(2, 3, 1, 1, 1.0, 1.0,</span>
+<span class="nc" id="L197">				GridBagConstraints.WEST, GridBagConstraints.BOTH, new Insets(5,</span>
+<span class="nc" id="L198">						5, 0, 0), 0, 0));</span>
+<span class="nc" id="L199">		JButton cancelButton = new JButton(</span>
+<span class="nc" id="L200">				controller.getText(&quot;ExtendedFindDialog.cancel&quot;));</span>
+<span class="nc" id="L201">		Tools.setLabelAndMnemonic(cancelButton, null);</span>
+<span class="nc" id="L202">		cancelButton.addActionListener(cancelAction);</span>
+<span class="nc" id="L203">		contentPane.add(cancelButton, new GridBagConstraints(3, 3, 1, 1, 1.0,</span>
+<span class="nc" id="L204">				1.0, GridBagConstraints.WEST, GridBagConstraints.BOTH,</span>
+<span class="nc" id="L205">				new Insets(5, 5, 0, 0), 0, 0));</span>
+<span class="nc" id="L206">		mDialog.getRootPane().setDefaultButton(okButton);</span>
+<span class="nc" id="L207">		mDialog.pack();</span>
+<span class="nc" id="L208">		Tools.setDialogLocationRelativeTo(mDialog, controller.getSelectedView());</span>
+<span class="nc" id="L209">		mDialog.setVisible(true);</span>
+<span class="nc" id="L210">	}</span>
+
+	private String getSearchTermAsEscapedString(String messageText) {
+<span class="nc bnc" id="L213" title="All 2 branches missed.">		String searchTerm = messageText.startsWith(&quot;&lt;html&gt;&quot;) ? HtmlTools</span>
+<span class="nc" id="L214">				.toXMLEscapedText(getSearchTerm()) : getSearchTerm();</span>
+		// Fix for
+		// https://sourceforge.net/tracker/?func=detail&amp;aid=3200783&amp;group_id=7118&amp;atid=107118
+		// Patch
+		// https://sourceforge.net/tracker/?func=detail&amp;aid=3276562&amp;group_id=7118&amp;atid=307118,
+		// thanks to the author
+<span class="nc" id="L220">		searchTerm = searchTerm.replace(&quot;$&quot;, &quot;\\$&quot;);</span>
+<span class="nc" id="L221">		return searchTerm;</span>
+	}
+
+	public static class FindNextAction extends AbstractAction {
+		private final ControllerAdapter controller;
+
+		private final FindAction find;
+
+		public FindNextAction(ControllerAdapter controller, FindAction find) {
+<span class="nc" id="L230">			super(controller.getText(&quot;find_next&quot;));</span>
+<span class="nc" id="L231">			this.controller = controller;</span>
+<span class="nc" id="L232">			this.find = find;</span>
+<span class="nc" id="L233">		}</span>
+
+		public void actionPerformed(ActionEvent e) {
+<span class="nc" id="L236">			Collection subterms = find.getSubterms();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">			if (subterms == null) {</span>
+<span class="nc" id="L238">				controller.getController().informationMessage(</span>
+<span class="nc" id="L239">						controller.getText(&quot;no_previous_find&quot;),</span>
+<span class="nc" id="L240">						controller.getView().getSelected());</span>
+<span class="nc" id="L241">				return;</span>
+			}
+<span class="nc" id="L243">			boolean found = find.findNext();</span>
+<span class="nc" id="L244">			controller.getView().repaint();</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">			if (!found) {</span>
+<span class="nc" id="L246">				String messageText = controller.getText(&quot;no_more_found_from&quot;);</span>
+<span class="nc" id="L247">				String searchTerm = find</span>
+<span class="nc" id="L248">						.getSearchTermAsEscapedString(messageText);</span>
+<span class="nc" id="L249">				controller.getController().informationMessage(</span>
+<span class="nc" id="L250">						messageText.replaceAll(&quot;\\$1&quot;, searchTerm).replaceAll(</span>
+<span class="nc" id="L251">								&quot;\\$2&quot;, find.getFindFromText()),</span>
+<span class="nc" id="L252">						controller.getView().getSelected());</span>
+			}
+<span class="nc" id="L254">		}</span>
+	}
+
+	public boolean find(MindMapNode node, Collection subterms,
+			boolean caseSensitive) {
+<span class="nc" id="L259">		findNodesUnfoldedByLastFind = new ArrayList();</span>
+<span class="nc" id="L260">		LinkedList nodes = new LinkedList();</span>
+<span class="nc" id="L261">		nodes.addFirst(node);</span>
+<span class="nc" id="L262">		findFromNode = node;</span>
+		Collection finalizedSubterms;
+<span class="nc bnc" id="L264" title="All 2 branches missed.">		if (!caseSensitive) {</span>
+<span class="nc" id="L265">			finalizedSubterms = new ArrayList();</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">			for (Iterator i = subterms.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L267">				finalizedSubterms.add(((String) i.next()).toLowerCase());</span>
+			}
+<span class="nc" id="L269">		} else {</span>
+<span class="nc" id="L270">			finalizedSubterms = subterms;</span>
+		}
+<span class="nc" id="L272">		return find(nodes, finalizedSubterms, caseSensitive);</span>
+	}
+
+	private boolean find(LinkedList /* queue of MindMapNode */nodes,
+			Collection subterms, boolean caseSensitive) {
+		// Precondition: if !caseSensitive then &gt;&gt;what&lt;&lt; is in lowercase.
+<span class="nc" id="L278">		boolean searchInNotesToo = Resources.getInstance().getBoolProperty(</span>
+<span class="nc" id="L279">				FreeMind.RESOURCES_SEARCH_IN_NOTES_TOO);</span>
+
+		// Fold the path of previously found node
+<span class="nc" id="L282">		boolean thereWereNodesToBeFolded = !findNodesUnfoldedByLastFind</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">				.isEmpty();</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">		if (!findNodesUnfoldedByLastFind.isEmpty()) {</span>
+
+			// if (false) {
+<span class="nc" id="L287">			ListIterator i = findNodesUnfoldedByLastFind</span>
+<span class="nc" id="L288">					.listIterator(findNodesUnfoldedByLastFind.size());</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">			while (i.hasPrevious()) {</span>
+<span class="nc" id="L290">				MindMapNode node = (MindMapNode) i.previous();</span>
+				try {
+<span class="nc" id="L292">					controller.setFolded(node, true);</span>
+<span class="nc" id="L293">				} catch (Exception e) {</span>
+				}
+			}
+<span class="nc" id="L296">			findNodesUnfoldedByLastFind = new ArrayList();</span>
+		}
+
+		// We implement width-first search.
+<span class="nc bnc" id="L300" title="All 2 branches missed.">		while (!nodes.isEmpty()) {</span>
+<span class="nc" id="L301">			MindMapNode node = (MindMapNode) nodes.removeFirst();</span>
+			// Add children to the queue
+<span class="nc bnc" id="L303" title="All 2 branches missed.">			for (ListIterator i = node.childrenUnfolded(); i.hasNext();) {</span>
+<span class="nc" id="L304">				nodes.addLast(i.next());</span>
+			}
+
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			if (!node.isVisible())</span>
+<span class="nc" id="L308">				continue;</span>
+
+			// Bug fix for
+			// http://sourceforge.net/tracker/?func=detail&amp;aid=3035387&amp;group_id=7118&amp;atid=107118
+<span class="nc" id="L312">			String nodeText = node.toString();</span>
+<span class="nc" id="L313">			nodeText = prepareTextContent(caseSensitive, nodeText);</span>
+			// End bug fix.
+<span class="nc" id="L315">			String noteText = node.getNoteText();</span>
+<span class="nc" id="L316">			noteText = prepareTextContent(caseSensitive, noteText);</span>
+
+<span class="nc" id="L318">			boolean found = true;</span>
+<span class="nc" id="L319">			boolean foundInNotes = false;</span>
+<span class="nc bnc" id="L320" title="All 2 branches missed.">			for (Iterator i = subterms.iterator(); i.hasNext();) {</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">				if (nodeText.indexOf((String) i.next()) &lt; 0) {</span>
+					// Subterm not found
+<span class="nc" id="L323">					found = false;</span>
+<span class="nc" id="L324">					break;</span>
+				}
+			}
+
+<span class="nc bnc" id="L328" title="All 4 branches missed.">			if ((!found) &amp;&amp; searchInNotesToo) {</span>
+				/* now, search the notes. */
+<span class="nc" id="L330">				found = true;</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">				for (Iterator i = subterms.iterator(); i.hasNext();) {</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">					if (noteText.indexOf((String) i.next()) &lt; 0) {</span>
+						// Subterm not found
+<span class="nc" id="L334">						found = false;</span>
+<span class="nc" id="L335">						break;</span>
+					}
+				}
+<span class="nc" id="L338">				foundInNotes = true;</span>
+			}
+<span class="nc bnc" id="L340" title="All 2 branches missed.">			if (found) { // Found</span>
+<span class="nc" id="L341">				displayNode(node, findNodesUnfoldedByLastFind);</span>
+<span class="nc" id="L342">				centerNode(node);</span>
+				if (foundInNotes) {
+					// TODO: Select text in notes window.
+				}
+				// Save the state for find next
+<span class="nc" id="L347">				this.subterms = subterms;</span>
+<span class="nc" id="L348">				findCaseSensitive = caseSensitive;</span>
+<span class="nc" id="L349">				findNodeQueue = nodes;</span>
+<span class="nc" id="L350">				return true;</span>
+			}
+		}
+
+<span class="nc" id="L354">		centerNode(findFromNode);</span>
+<span class="nc" id="L355">		return false;</span>
+	}
+
+	public String prepareTextContent(boolean caseSensitive, String nodeText) {
+<span class="nc bnc" id="L359" title="All 2 branches missed.">		if (nodeText == null) {</span>
+<span class="nc" id="L360">			nodeText = &quot;&quot;;</span>
+		}
+<span class="nc bnc" id="L362" title="All 2 branches missed.">		if (HtmlTools.isHtmlNode(nodeText)) {</span>
+<span class="nc" id="L363">			nodeText = HtmlTools.removeHtmlTagsFromString(nodeText);</span>
+<span class="nc" id="L364">			nodeText = HtmlTools.unescapeHTMLUnicodeEntity(nodeText);</span>
+		}
+<span class="nc bnc" id="L366" title="All 2 branches missed.">		if (!caseSensitive) {</span>
+<span class="nc" id="L367">			nodeText = nodeText.toLowerCase();</span>
+		}
+<span class="nc" id="L369">		return nodeText;</span>
+	}
+
+	private Collection breakSearchTermIntoSubterms(String searchTerm) {
+<span class="nc" id="L373">		ArrayList subterms = new ArrayList();</span>
+<span class="nc" id="L374">		StringBuffer subterm = new StringBuffer();</span>
+<span class="nc" id="L375">		int len = searchTerm.length();</span>
+		char myChar;
+<span class="nc" id="L377">		char previousChar = 'a';</span>
+<span class="nc" id="L378">		boolean withinQuotes = false;</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">		for (int i = 0; i &lt; len; ++i) {</span>
+<span class="nc" id="L380">			myChar = searchTerm.charAt(i);</span>
+<span class="nc bnc" id="L381" title="All 4 branches missed.">			if (myChar == ' ' &amp;&amp; withinQuotes) {</span>
+<span class="nc" id="L382">				subterm.append(myChar);</span>
+<span class="nc bnc" id="L383" title="All 4 branches missed.">			} else if ((myChar == ' ' &amp;&amp; !withinQuotes)) {</span>
+<span class="nc" id="L384">				subterms.add(subterm.toString());</span>
+<span class="nc" id="L385">				subterm.setLength(0);</span>
+<span class="nc bnc" id="L386" title="All 6 branches missed.">			} else if (myChar == '&quot;' &amp;&amp; i &gt; 0 &amp;&amp; i &lt; len - 1</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">					&amp;&amp; searchTerm.charAt(i - 1) != ' '</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">					&amp;&amp; searchTerm.charAt(i + 1) != ' ') {</span>
+				// Character &quot; surrounded by non-spaces
+<span class="nc" id="L390">				subterm.append(myChar);</span>
+<span class="nc bnc" id="L391" title="All 4 branches missed.">			} else if (myChar == '&quot;' &amp;&amp; withinQuotes) {</span>
+<span class="nc" id="L392">				withinQuotes = false;</span>
+<span class="nc bnc" id="L393" title="All 4 branches missed.">			} else if (myChar == '&quot;' &amp;&amp; !withinQuotes) {</span>
+<span class="nc" id="L394">				withinQuotes = true;</span>
+<span class="nc" id="L395">			} else {</span>
+<span class="nc" id="L396">				subterm.append(myChar);</span>
+			}
+<span class="nc" id="L398">			previousChar = myChar;</span>
+		}
+<span class="nc" id="L400">		subterms.add(subterm.toString());</span>
+<span class="nc" id="L401">		return subterms;</span>
+	}
+
+	/**
+	 * Display a node in the display (used by find and the goto action by arrow
+	 * link actions).
+	 */
+	public void displayNode(MindMapNode node, ArrayList nodesUnfoldedByDisplay) {
+		// Unfold the path to the node
+<span class="nc" id="L410">		Object[] path = controller.getMap().getPathToRoot(node);</span>
+		// Iterate the path with the exception of the last node
+<span class="nc bnc" id="L412" title="All 2 branches missed.">		for (int i = 0; i &lt; path.length - 1; i++) {</span>
+<span class="nc" id="L413">			MindMapNode nodeOnPath = (MindMapNode) path[i];</span>
+			// System.out.println(nodeOnPath);
+<span class="nc bnc" id="L415" title="All 2 branches missed.">			if (nodeOnPath.isFolded()) {</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">				if (nodesUnfoldedByDisplay != null)</span>
+<span class="nc" id="L417">					nodesUnfoldedByDisplay.add(nodeOnPath);</span>
+<span class="nc" id="L418">				controller.setFolded(nodeOnPath, false);</span>
+			}
+		}
+
+<span class="nc" id="L422">	}</span>
+
+	public boolean findNext() {
+		// Precodition: subterms != null. We check the precodition but give no
+		// message.
+
+		// The logic of find next is vulnerable. find next relies on the queue
+		// of nodes from previous find / find next. However, between previous
+		// find / find next and this find next, nodes could have been deleted
+		// or moved. The logic expects that no changes happened, even that no
+		// node has been folded / unfolded.
+
+		// You may want to come with more correct solution, but this one
+		// works for most uses, and does not cause any big trouble except
+		// perhaps for some uncaught exceptions. As a result, it is not very
+		// nice, but far from critical and working quite fine.
+
+<span class="nc bnc" id="L439" title="All 2 branches missed.">		if (subterms != null) {</span>
+<span class="nc" id="L440">			return find(findNodeQueue, subterms, findCaseSensitive);</span>
+		}
+<span class="nc" id="L442">		return false;</span>
+	}
+
+	/**
+	 */
+	private void centerNode(MindMapNode node) {
+		// Select the node and scroll to it.
+<span class="nc" id="L449">		controller.centerNode(node);</span>
+<span class="nc" id="L450">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

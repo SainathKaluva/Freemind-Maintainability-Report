@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>MindMapClient.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.collaboration.socket</a> &gt; <span class="el_source">MindMapClient.java</span></div><h1>MindMapClient.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2008  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 28.12.2008
+ */
+
+
+package plugins.collaboration.socket;
+
+import java.net.ConnectException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Vector;
+
+import freemind.common.NumberProperty;
+import freemind.common.StringProperty;
+import freemind.controller.actions.generated.instance.CollaborationUserInformation;
+import freemind.extensions.PermanentNodeHook;
+import freemind.main.Resources;
+import freemind.modes.mindmapmode.MindMapController;
+
+/**
+ * @author foltin
+ * 
+ */
+<span class="nc" id="L44">public class MindMapClient extends SocketBasics {</span>
+
+	private static final String HOST_PROPERTY = &quot;plugins.collaboration.database.host&quot;;
+
+	public void startupMapHook() {
+<span class="nc" id="L49">		super.startupMapHook();</span>
+<span class="nc" id="L50">		MindMapController controller = getMindMapController();</span>
+<span class="nc" id="L51">		StringProperty passwordProperty = new StringProperty(</span>
+<span class="nc" id="L52">				PASSWORD_DESCRIPTION, PASSWORD);</span>
+<span class="nc" id="L53">		StringProperty hostProperty = new StringProperty(HOST_DESCRIPTION, HOST);</span>
+<span class="nc" id="L54">		NumberProperty portProperty = getPortProperty();</span>
+		try {
+<span class="nc" id="L56">			SocketConnectionHook connectionHook = isConnected();</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">			if (connectionHook != null) {</span>
+				// I'm already present, so remove me.
+<span class="nc" id="L59">				logger.info(&quot;Deregister filter.&quot;);</span>
+<span class="nc" id="L60">				connectionHook.deregisterFilter();</span>
+<span class="nc" id="L61">				logger.info(&quot;Shutting down the permanent hook.&quot;);</span>
+<span class="nc" id="L62">				togglePermanentHook(controller, SLAVE_HOOK_LABEL);</span>
+<span class="nc" id="L63">				return;</span>
+			}
+			// get last value
+<span class="nc" id="L66">			hostProperty.setValue(controller.getFrame().getProperty(</span>
+<span class="nc" id="L67">					HOST_PROPERTY));</span>
+<span class="nc" id="L68">			Vector controls = new Vector();</span>
+<span class="nc" id="L69">			controls.add(passwordProperty);</span>
+<span class="nc" id="L70">			controls.add(hostProperty);</span>
+<span class="nc" id="L71">			controls.add(portProperty);</span>
+<span class="nc" id="L72">			FormDialog dialog = new FormDialog(controller);</span>
+<span class="nc" id="L73">			dialog.setUp(controls);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			if (!dialog.isSuccess())</span>
+<span class="nc" id="L75">				return;</span>
+<span class="nc" id="L76">			logger.info(&quot;Connect...&quot;);</span>
+<span class="nc" id="L77">			setPortProperty(portProperty);</span>
+			// store value for next time.
+<span class="nc" id="L79">			controller.getFrame().setProperty(HOST_PROPERTY,</span>
+<span class="nc" id="L80">					hostProperty.getValue());</span>
+<span class="nc" id="L81">			mPassword = passwordProperty.getValue();</span>
+<span class="nc" id="L82">			logger.info(&quot;Starting client thread...&quot;);</span>
+<span class="nc" id="L83">			int port = portProperty.getIntValue();</span>
+<span class="nc" id="L84">			Socket serverConnection = new Socket(hostProperty.getValue(), port);</span>
+<span class="nc" id="L85">			serverConnection</span>
+<span class="nc" id="L86">					.setSoTimeout(MindMapMaster.SOCKET_TIMEOUT_IN_MILLIES);</span>
+<span class="nc" id="L87">			ClientCommunication clientCommunication = new ClientCommunication(</span>
+<span class="nc" id="L88">					&quot;Client Communication&quot;, serverConnection,</span>
+<span class="nc" id="L89">					getMindMapController(), mPassword);</span>
+<span class="nc" id="L90">			clientCommunication.start();</span>
+<span class="nc" id="L91">		} catch (UnknownHostException e) {</span>
+<span class="nc" id="L92">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L93">			controller.getController().errorMessage(</span>
+<span class="nc" id="L94">					Resources.getInstance().format(</span>
+<span class="nc" id="L95">							UNKNWON_HOST_EXCEPTION_MESSAGE,</span>
+<span class="nc" id="L96">							new Object[] { e.getMessage() }));</span>
+<span class="nc" id="L97">			return;</span>
+<span class="nc" id="L98">		} catch (ConnectException e) {</span>
+<span class="nc" id="L99">			freemind.main.Resources.getInstance().logException(e);</span>
+<span class="nc" id="L100">			controller.getController().errorMessage(</span>
+<span class="nc" id="L101">					Resources.getInstance().format(</span>
+<span class="nc" id="L102">							CONNECT_EXCEPTION_MESSAGE,</span>
+<span class="nc" id="L103">							new Object[] { portProperty.getValue(),</span>
+<span class="nc" id="L104">									hostProperty.getValue(), e.getMessage() }));</span>
+<span class="nc" id="L105">			return;</span>
+<span class="nc" id="L106">		} catch (Exception e) {</span>
+<span class="nc" id="L107">			freemind.main.Resources.getInstance().logException(e);</span>
+			// Need a better message here.
+<span class="nc" id="L109">			controller.getController().errorMessage(</span>
+<span class="nc" id="L110">					e.getClass().getName() + &quot;: &quot; + e.getLocalizedMessage());</span>
+<span class="nc" id="L111">			return;</span>
+		}
+<span class="nc" id="L113">	}</span>
+
+	private SocketConnectionHook isConnected() {
+<span class="nc" id="L116">		Collection activatedHooks = getMindMapController().getRootNode()</span>
+<span class="nc" id="L117">				.getActivatedHooks();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		for (Iterator it = activatedHooks.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L119">			PermanentNodeHook hook = (PermanentNodeHook) it.next();</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">			if (hook instanceof SocketConnectionHook) {</span>
+<span class="nc" id="L121">				return (SocketConnectionHook) hook;</span>
+			}
+		}
+<span class="nc" id="L124">		return null;</span>
+	}
+
+	public Integer getRole() {
+<span class="nc" id="L128">		return ROLE_SLAVE;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#getPort()
+	 */
+	public int getPort() {
+<span class="nc" id="L137">		return 0;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#lock()
+	 */
+	protected String lock(String pUserName) throws UnableToGetLockException,
+			InterruptedException {
+<span class="nc" id="L147">		return null;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * plugins.collaboration.socket.SocketBasics#sendCommand(java.lang.String,
+	 * java.lang.String)
+	 */
+	protected void broadcastCommand(String pDoAction, String pUndoAction,
+			String pLockId) throws Exception {
+<span class="nc" id="L159">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#unlock()
+	 */
+	protected void unlock() {
+<span class="nc" id="L167">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#shutdown()
+	 */
+	public void shutdown() {
+<span class="nc" id="L175">	}</span>
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see plugins.collaboration.socket.SocketBasics#getMasterInformation()
+	 */
+	public CollaborationUserInformation getMasterInformation() {
+<span class="nc" id="L183">		return null;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

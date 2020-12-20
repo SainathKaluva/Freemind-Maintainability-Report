@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>CompareConditionAdapter.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.controller.filter.condition</a> &gt; <span class="el_source">CompareConditionAdapter.java</span></div><h1>CompareConditionAdapter.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2006 Joerg Mueller, Daniel Polansky, Christian Foltin, Dimitri Polivaev and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+/*
+ * Created on 17.05.2005
+ *
+ */
+package freemind.controller.filter.condition;
+
+import freemind.main.Resources;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+
+abstract class CompareConditionAdapter extends NodeCondition {
+
+	static final String IGNORE_CASE = &quot;ignore_case&quot;;
+	static final String VALUE = &quot;value&quot;;
+	private String conditionValue;
+	private boolean ignoreCase;
+
+	CompareConditionAdapter(String value, boolean ignoreCase) {
+<span class="nc" id="L38">		super();</span>
+<span class="nc" id="L39">		this.conditionValue = value;</span>
+<span class="nc" id="L40">		this.ignoreCase = ignoreCase;</span>
+<span class="nc" id="L41">	}</span>
+
+	protected int compareTo(String nodeValue) throws NumberFormatException {
+		try {
+<span class="nc" id="L45">			int i2 = Integer.parseInt(conditionValue);</span>
+<span class="nc" id="L46">			int i1 = Integer.parseInt(nodeValue);</span>
+<span class="nc bnc" id="L47" title="All 4 branches missed.">			return i1 &lt; i2 ? -1 : (i1 == i2 ? 0 : 1);</span>
+<span class="nc" id="L48">		} catch (NumberFormatException fne) {</span>
+		}
+		;
+		double d2;
+		try {
+<span class="nc" id="L53">			d2 = Double.parseDouble(conditionValue);</span>
+<span class="nc" id="L54">		} catch (NumberFormatException fne) {</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">			return ignoreCase ? nodeValue.compareToIgnoreCase(conditionValue)</span>
+<span class="nc" id="L56">					: nodeValue.compareTo(conditionValue);</span>
+		}
+		;
+<span class="nc" id="L59">		double d1 = Double.parseDouble(nodeValue);</span>
+<span class="nc" id="L60">		return Double.compare(d1, d2);</span>
+	}
+
+	public void saveAttributes(XMLElement child) {
+<span class="nc" id="L64">		super.saveAttributes(child);</span>
+<span class="nc" id="L65">		child.setAttribute(VALUE, conditionValue);</span>
+<span class="nc" id="L66">		child.setAttribute(IGNORE_CASE, Tools.BooleanToXml(ignoreCase));</span>
+<span class="nc" id="L67">	}</span>
+
+	public String createDescription(String attribute, int comparationResult,
+			boolean succeed) {
+		String simpleCondition;
+<span class="nc bnc" id="L72" title="All 4 branches missed.">		switch (comparationResult) {</span>
+		case -1:
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			simpleCondition = succeed ? ConditionFactory.FILTER_LT</span>
+<span class="nc" id="L75">					: ConditionFactory.FILTER_GE;</span>
+<span class="nc" id="L76">			break;</span>
+		case 0:
+<span class="nc" id="L78">			simpleCondition = Resources.getInstance().getResourceString(</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">					succeed ? ConditionFactory.FILTER_IS_EQUAL_TO</span>
+<span class="nc" id="L80">							: ConditionFactory.FILTER_IS_NOT_EQUAL_TO);</span>
+<span class="nc" id="L81">			break;</span>
+		case 1:
+<span class="nc bnc" id="L83" title="All 2 branches missed.">			simpleCondition = succeed ? ConditionFactory.FILTER_GT</span>
+<span class="nc" id="L84">					: ConditionFactory.FILTER_LE;</span>
+<span class="nc" id="L85">			break;</span>
+		default:
+<span class="nc" id="L87">			throw new IllegalArgumentException();</span>
+		}
+<span class="nc" id="L89">		return ConditionFactory.createDescription(attribute, simpleCondition,</span>
+<span class="nc" id="L90">				conditionValue, ignoreCase);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>

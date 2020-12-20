@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>NodeHookAction.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">freemind.modes.mindmapmode.actions</a> &gt; <span class="el_source">NodeHookAction.java</span></div><h1>NodeHookAction.java</h1><pre class="source lang-java linenums">/*FreeMind - A Program for creating and viewing Mindmaps
+ *Copyright (C) 2000-2004  Joerg Mueller, Daniel Polansky, Christian Foltin and others.
+ *
+ *See COPYING for Details
+ *
+ *This program is free software; you can redistribute it and/or
+ *modify it under the terms of the GNU General Public License
+ *as published by the Free Software Foundation; either version 2
+ *of the License, or (at your option) any later version.
+ *
+ *This program is distributed in the hope that it will be useful,
+ *but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *GNU General Public License for more details.
+ *
+ *You should have received a copy of the GNU General Public License
+ *along with this program; if not, write to the Free Software
+ *Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * Created on 26.07.2004
+ */
+
+package freemind.modes.mindmapmode.actions;
+
+import java.awt.event.ActionEvent;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Vector;
+import java.util.logging.Logger;
+
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
+
+import freemind.controller.MenuItemEnabledListener;
+import freemind.controller.MenuItemSelectedListener;
+import freemind.controller.actions.generated.instance.CompoundAction;
+import freemind.controller.actions.generated.instance.HookNodeAction;
+import freemind.controller.actions.generated.instance.NodeChildParameter;
+import freemind.controller.actions.generated.instance.NodeListMember;
+import freemind.controller.actions.generated.instance.XmlAction;
+import freemind.extensions.HookFactory;
+import freemind.extensions.HookInstanciationMethod;
+import freemind.extensions.NodeHook;
+import freemind.extensions.PermanentNodeHook;
+import freemind.extensions.PermanentNodeHookAdapter;
+import freemind.main.Tools;
+import freemind.main.XMLElement;
+import freemind.modes.MindMapNode;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.xml.ActionPair;
+import freemind.modes.mindmapmode.actions.xml.ActorXml;
+
+public class NodeHookAction extends FreemindAction implements HookAction,
+		ActorXml, MenuItemEnabledListener, MenuItemSelectedListener {
+	String _hookName;
+	MindMapController mMindMapController;
+
+	public MindMapController getController() {
+<span class="nc" id="L63">		return mMindMapController;</span>
+	}
+
+	private static Logger logger;
+
+	public NodeHookAction(String hookName, MindMapController controller) {
+<span class="nc" id="L69">		super(hookName, (ImageIcon) null, null);</span>
+<span class="nc" id="L70">		this._hookName = hookName;</span>
+<span class="nc" id="L71">		this.mMindMapController = controller;</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">		if (logger == null)</span>
+<span class="nc" id="L73">			logger = controller.getFrame().getLogger(this.getClass().getName());</span>
+<span class="nc" id="L74">		controller.getActionFactory().registerActor(this, getDoActionClass());</span>
+<span class="nc" id="L75">	}</span>
+
+	public void actionPerformed(ActionEvent arg0) {
+		// check, which method of invocation:
+		//
+<span class="nc" id="L80">		mMindMapController.getFrame().setWaitingCursor(true);</span>
+<span class="nc" id="L81">		invoke(mMindMapController.getSelected(),</span>
+<span class="nc" id="L82">				mMindMapController.getSelecteds());</span>
+<span class="nc" id="L83">		mMindMapController.getFrame().setWaitingCursor(false);</span>
+<span class="nc" id="L84">	}</span>
+
+	public void addHook(MindMapNode focussed, List selecteds, String hookName, Properties pHookProperties) {
+<span class="nc" id="L87">		HookNodeAction doAction = createHookNodeAction(focussed, selecteds,</span>
+<span class="nc" id="L88">				hookName, pHookProperties);</span>
+
+<span class="nc" id="L90">		XmlAction undoAction = null;</span>
+		// this is the non operation:
+<span class="nc" id="L92">		undoAction = new CompoundAction();</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">		if (getInstanciationMethod(hookName).isPermanent()) {</span>
+			// double application = remove.
+<span class="nc" id="L95">			undoAction = createHookNodeUndoAction(focussed, selecteds, hookName);</span>
+		}
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (getInstanciationMethod(hookName).isUndoable()) {</span>
+<span class="nc" id="L98">			getController().doTransaction(</span>
+<span class="nc" id="L99">					(String) getValue(NAME),</span>
+<span class="nc" id="L100">					new ActionPair(doAction, undoAction));</span>
+<span class="nc" id="L101">		} else {</span>
+			// direct invocation without undo and such stuff.
+<span class="nc" id="L103">			invoke(focussed, selecteds, hookName, null);</span>
+		}
+<span class="nc" id="L105">	}</span>
+
+	private XmlAction createHookNodeUndoAction(MindMapNode focussed,
+			List selecteds, String hookName) {
+<span class="nc" id="L109">		CompoundAction undoAction = new CompoundAction();</span>
+<span class="nc" id="L110">		HookNodeAction hookNodeAction = createHookNodeAction(focussed,</span>
+<span class="nc" id="L111">				selecteds, hookName, null);</span>
+<span class="nc" id="L112">		undoAction.addChoice(hookNodeAction);</span>
+<span class="nc" id="L113">		HookInstanciationMethod instMethod = getInstanciationMethod(hookName);</span>
+		// get destination nodes
+<span class="nc" id="L115">		Collection destinationNodes = instMethod.getDestinationNodes(</span>
+<span class="nc" id="L116">				mMindMapController, focussed, selecteds);</span>
+<span class="nc" id="L117">		MindMapNode adaptedFocussedNode = instMethod.getCenterNode(</span>
+<span class="nc" id="L118">				mMindMapController, focussed, selecteds);</span>
+		// test if hook already present
+<span class="nc" id="L120">		if (instMethod.isAlreadyPresent(mMindMapController, hookName,</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">				adaptedFocussedNode)) {</span>
+			// remove the hook:
+<span class="nc bnc" id="L123" title="All 2 branches missed.">			for (Iterator i = destinationNodes.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L124">				MindMapNode currentDestinationNode = (MindMapNode) i.next();</span>
+				// find the hook in the current node, if present:
+<span class="nc" id="L126">				for (Iterator j = currentDestinationNode.getActivatedHooks()</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">						.iterator(); j.hasNext();) {</span>
+<span class="nc" id="L128">					PermanentNodeHook hook = (PermanentNodeHook) j.next();</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">					if (hook.getName().equals(hookName)) {</span>
+<span class="nc" id="L130">						XMLElement child = new XMLElement();</span>
+<span class="nc" id="L131">						hook.save(child);</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">						if (child.countChildren() == 1) {</span>
+<span class="nc" id="L133">							XMLElement parameters = (XMLElement) child</span>
+<span class="nc" id="L134">									.getChildren().firstElement();</span>
+<span class="nc" id="L135">							if (Tools.safeEquals(parameters.getName(),</span>
+<span class="nc bnc" id="L136" title="All 2 branches missed.">									PermanentNodeHookAdapter.PARAMETERS)) {</span>
+								// standard save mechanism
+<span class="nc" id="L138">								for (Iterator it = parameters</span>
+<span class="nc" id="L139">										.enumerateAttributeNames(); it</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">										.hasNext();) {</span>
+<span class="nc" id="L141">									String name = (String) it.next();</span>
+<span class="nc" id="L142">									NodeChildParameter nodeHookChild = new NodeChildParameter();</span>
+<span class="nc" id="L143">									nodeHookChild.setKey(name);</span>
+<span class="nc" id="L144">									nodeHookChild.setValue(parameters</span>
+<span class="nc" id="L145">											.getStringAttribute(name));</span>
+<span class="nc" id="L146">									hookNodeAction</span>
+<span class="nc" id="L147">											.addNodeChildParameter(nodeHookChild);</span>
+								}
+
+<span class="nc" id="L150">							} else {</span>
+<span class="nc" id="L151">								logger.warning(&quot;Unusual save mechanism, implement me.&quot;);</span>
+							}
+<span class="nc" id="L153">						} else {</span>
+<span class="nc" id="L154">							logger.warning(&quot;Unusual save mechanism, implement me.&quot;);</span>
+						}
+						/*
+						 * fc, 30.7.2004: we have to break. otherwise the
+						 * collection is modified at two points (i.e., the
+						 * collection is not valid anymore after removing one
+						 * element). But this is no problem, as there exist only
+						 * &quot;once&quot; plugins currently.
+						 */
+<span class="nc" id="L163">						break;</span>
+					}
+				}
+			}
+		}
+<span class="nc" id="L168">		return undoAction;</span>
+	}
+
+	public void invoke(MindMapNode focussed, List selecteds) {
+<span class="nc" id="L172">		addHook(focussed, selecteds, _hookName, null);</span>
+<span class="nc" id="L173">	}</span>
+
+	private void invoke(MindMapNode focussed, List selecteds, String hookName,
+			XMLElement pXmlParent) {
+<span class="nc" id="L177">		logger.finest(&quot;invoke(selecteds) called.&quot;);</span>
+<span class="nc" id="L178">		HookInstanciationMethod instMethod = getInstanciationMethod(hookName);</span>
+		// get destination nodes
+<span class="nc" id="L180">		Collection destinationNodes = instMethod.getDestinationNodes(</span>
+<span class="nc" id="L181">				mMindMapController, focussed, selecteds);</span>
+<span class="nc" id="L182">		MindMapNode adaptedFocussedNode = instMethod.getCenterNode(</span>
+<span class="nc" id="L183">				mMindMapController, focussed, selecteds);</span>
+		// test if hook already present
+<span class="nc" id="L185">		if (instMethod.isAlreadyPresent(mMindMapController, hookName,</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">				adaptedFocussedNode)) {</span>
+			// remove the hook:
+<span class="nc bnc" id="L188" title="All 2 branches missed.">			for (Iterator i = destinationNodes.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L189">				MindMapNode currentDestinationNode = (MindMapNode) i.next();</span>
+				// find the hook ini the current node, if present:
+<span class="nc" id="L191">				for (Iterator j = currentDestinationNode.getActivatedHooks()</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">						.iterator(); j.hasNext();) {</span>
+<span class="nc" id="L193">					PermanentNodeHook hook = (PermanentNodeHook) j.next();</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">					if (hook.getName().equals(hookName)) {</span>
+<span class="nc" id="L195">						currentDestinationNode.removeHook(hook);</span>
+<span class="nc" id="L196">						mMindMapController.nodeChanged(currentDestinationNode);</span>
+						/*
+						 * fc, 30.7.2004: we have to break. otherwise the
+						 * collection is modified at two points (i.e., the
+						 * collection is not valid anymore after removing one
+						 * element). But this is no problem, as there exist only
+						 * &quot;once&quot; plugins currently.
+						 */
+<span class="nc" id="L204">						break;</span>
+					}
+				}
+			}
+<span class="nc" id="L208">		} else {</span>
+			// add the hook
+<span class="nc bnc" id="L210" title="All 2 branches missed.">			for (Iterator it = destinationNodes.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L211">				MindMapNode currentDestinationNode = (MindMapNode) it.next();</span>
+<span class="nc" id="L212">				NodeHook hook = mMindMapController.createNodeHook(hookName,</span>
+<span class="nc" id="L213">						currentDestinationNode, mMindMapController.getMap());</span>
+<span class="nc" id="L214">				logger.finest(&quot;created hook &quot; + hookName);</span>
+				// set parameters, if present
+<span class="nc bnc" id="L216" title="All 4 branches missed.">				if (pXmlParent != null &amp;&amp; hook instanceof PermanentNodeHook) {</span>
+<span class="nc" id="L217">					((PermanentNodeHook) hook).loadFrom(pXmlParent);</span>
+				}
+				// call invoke.
+<span class="nc" id="L220">				currentDestinationNode.invokeHook(hook);</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">				if (hook instanceof PermanentNodeHook) {</span>
+<span class="nc" id="L222">					PermanentNodeHook permHook = (PermanentNodeHook) hook;</span>
+<span class="nc" id="L223">					logger.finest(&quot;This is a permanent hook &quot; + hookName);</span>
+					// the focused receives the focus:
+<span class="nc bnc" id="L225" title="All 2 branches missed.">					if (currentDestinationNode == adaptedFocussedNode) {</span>
+<span class="nc" id="L226">						permHook.onFocusNode(mMindMapController</span>
+<span class="nc" id="L227">								.getNodeView(currentDestinationNode));</span>
+					}
+					// using this method, the map is dirty now. This is
+					// important to
+					// guarantee, that the hooks are saved.
+<span class="nc" id="L232">					mMindMapController.nodeChanged(currentDestinationNode);</span>
+				}
+			}
+<span class="nc" id="L235">			finishInvocation(focussed, selecteds, adaptedFocussedNode,</span>
+<span class="nc" id="L236">					destinationNodes);</span>
+		}
+<span class="nc" id="L238">	}</span>
+
+	/**
+	 * @param focussed
+	 *            The real focussed node
+	 * @param selecteds
+	 *            The list of selected nodes
+	 * @param adaptedFocussedNode
+	 *            The calculated focussed node (if the hook specifies, that the
+	 *            hook should apply to root, then this is the root node).
+	 * @param destinationNodes
+	 *            The calculated list of selected nodes (see last)
+	 */
+	private void finishInvocation(MindMapNode focussed, List selecteds,
+			MindMapNode adaptedFocussedNode, Collection destinationNodes) {
+		// restore selection only, if nothing selected.
+<span class="nc bnc" id="L254" title="All 2 branches missed.">		if (getController().getView().getSelecteds().size() == 0) {</span>
+			// select all destination nodes:
+<span class="nc" id="L256">			getController().select(focussed, selecteds);</span>
+		}
+<span class="nc" id="L258">	}</span>
+
+	/**
+	 */
+	private HookInstanciationMethod getInstanciationMethod(String hookName) {
+<span class="nc" id="L263">		HookFactory factory = getHookFactory();</span>
+		// determine instanciation method
+<span class="nc" id="L265">		HookInstanciationMethod instMethod = factory</span>
+<span class="nc" id="L266">				.getInstanciationMethod(hookName);</span>
+<span class="nc" id="L267">		return instMethod;</span>
+	}
+
+	/**
+	 */
+	private HookFactory getHookFactory() {
+<span class="nc" id="L273">		HookFactory factory = mMindMapController.getHookFactory();</span>
+<span class="nc" id="L274">		return factory;</span>
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * freemind.controller.MenuItemEnabledListener#isEnabled(javax.swing.JMenuItem
+	 * , javax.swing.Action)
+	 */
+	public boolean isEnabled(JMenuItem item, Action action) {
+<span class="nc bnc" id="L285" title="All 2 branches missed.">		if (mMindMapController.getView() == null) {</span>
+<span class="nc" id="L286">			return false;</span>
+		}
+<span class="nc" id="L288">		HookFactory factory = getHookFactory();</span>
+<span class="nc" id="L289">		Object baseClass = factory.getPluginBaseClass(_hookName);</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">		if (baseClass != null) {</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (baseClass instanceof MenuItemEnabledListener) {</span>
+<span class="nc" id="L292">				MenuItemEnabledListener listener = (MenuItemEnabledListener) baseClass;</span>
+<span class="nc" id="L293">				return listener.isEnabled(item, action);</span>
+			}
+		}
+
+<span class="nc" id="L297">		return true;</span>
+	}
+
+	public HookNodeAction createHookNodeAction(MindMapNode focussed,
+			List selecteds, String hookName, Properties pHookProperties) {
+<span class="nc" id="L302">		HookNodeAction hookNodeAction = new HookNodeAction();</span>
+<span class="nc" id="L303">		hookNodeAction.setNode(focussed.getObjectId(getController()));</span>
+<span class="nc" id="L304">		hookNodeAction.setHookName(hookName);</span>
+		// selectedNodes list
+<span class="nc bnc" id="L306" title="All 2 branches missed.">		for (Iterator i = selecteds.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L307">			MindMapNode node = (MindMapNode) i.next();</span>
+<span class="nc" id="L308">			NodeListMember nodeListMember = new NodeListMember();</span>
+<span class="nc" id="L309">			nodeListMember.setNode(node.getObjectId(getController()));</span>
+<span class="nc" id="L310">			hookNodeAction.addNodeListMember(nodeListMember);</span>
+		}
+<span class="nc bnc" id="L312" title="All 2 branches missed.">		if(pHookProperties != null) {</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">			for (Iterator it = pHookProperties.entrySet().iterator(); it.hasNext();) {</span>
+<span class="nc" id="L314">				Map.Entry entry = (Map.Entry) it.next();</span>
+<span class="nc" id="L315">				NodeChildParameter nodeChildParameter = new NodeChildParameter();</span>
+<span class="nc" id="L316">				nodeChildParameter.setKey((String) entry.getKey());</span>
+<span class="nc" id="L317">				nodeChildParameter.setValue((String) entry.getValue());</span>
+<span class="nc" id="L318">				hookNodeAction.addNodeChildParameter(nodeChildParameter);</span>
+			}
+		}
+<span class="nc" id="L321">		return hookNodeAction;</span>
+	}
+
+	public void act(XmlAction action) {
+<span class="nc bnc" id="L325" title="All 2 branches missed.">		if (action instanceof HookNodeAction) {</span>
+<span class="nc" id="L326">			HookNodeAction hookNodeAction = (HookNodeAction) action;</span>
+<span class="nc" id="L327">			MindMapNode selected = getController().getNodeFromID(</span>
+<span class="nc" id="L328">					hookNodeAction.getNode());</span>
+<span class="nc" id="L329">			Vector selecteds = new Vector();</span>
+<span class="nc" id="L330">			for (Iterator i = hookNodeAction.getListNodeListMemberList()</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">					.iterator(); i.hasNext();) {</span>
+<span class="nc" id="L332">				NodeListMember node = (NodeListMember) i.next();</span>
+<span class="nc" id="L333">				selecteds.add(getController().getNodeFromID(node.getNode()));</span>
+			}
+			// reconstruct child-xml:
+<span class="nc" id="L336">			XMLElement xmlParent = new XMLElement();</span>
+<span class="nc" id="L337">			xmlParent.setName(hookNodeAction.getHookName());</span>
+<span class="nc" id="L338">			XMLElement child = new XMLElement();</span>
+<span class="nc" id="L339">			xmlParent.addChild(child);</span>
+<span class="nc" id="L340">			child.setName(PermanentNodeHookAdapter.PARAMETERS);</span>
+<span class="nc" id="L341">			for (Iterator it = hookNodeAction.getListNodeChildParameterList()</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">					.iterator(); it.hasNext();) {</span>
+<span class="nc" id="L343">				NodeChildParameter childParameter = (NodeChildParameter) it</span>
+<span class="nc" id="L344">						.next();</span>
+<span class="nc" id="L345">				child.setAttribute(childParameter.getKey(),</span>
+<span class="nc" id="L346">						childParameter.getValue());</span>
+			}
+<span class="nc" id="L348">			invoke(selected, selecteds, hookNodeAction.getHookName(), xmlParent);</span>
+		}
+<span class="nc" id="L350">	}</span>
+
+	public Class getDoActionClass() {
+<span class="nc" id="L353">		return HookNodeAction.class;</span>
+	}
+
+	/**
+	 */
+	public String getHookName() {
+<span class="nc" id="L359">		return _hookName;</span>
+	}
+
+	public boolean isSelected(JMenuItem pCheckItem, Action pAction) {
+		// test if plugin has its own method:
+<span class="nc" id="L364">		HookFactory factory = getHookFactory();</span>
+<span class="nc" id="L365">		Object baseClass = factory.getPluginBaseClass(_hookName);</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">		if (baseClass != null) {</span>
+<span class="nc bnc" id="L367" title="All 2 branches missed.">			if (baseClass instanceof MenuItemSelectedListener) {</span>
+<span class="nc" id="L368">				MenuItemSelectedListener listener = (MenuItemSelectedListener) baseClass;</span>
+<span class="nc" id="L369">				return listener.isSelected(pCheckItem, pAction);</span>
+			}
+		}
+<span class="nc" id="L372">		MindMapNode focussed = mMindMapController.getSelected();</span>
+<span class="nc" id="L373">		List selecteds = mMindMapController.getSelecteds();</span>
+<span class="nc" id="L374">		HookInstanciationMethod instMethod = getInstanciationMethod(_hookName);</span>
+		// get destination nodes
+<span class="nc" id="L376">		Collection destinationNodes = instMethod.getDestinationNodes(</span>
+<span class="nc" id="L377">				mMindMapController, focussed, selecteds);</span>
+<span class="nc" id="L378">		MindMapNode adaptedFocussedNode = instMethod.getCenterNode(</span>
+<span class="nc" id="L379">				mMindMapController, focussed, selecteds);</span>
+		// test if hook already present
+<span class="nc" id="L381">		return instMethod.isAlreadyPresent(mMindMapController, _hookName,</span>
+<span class="nc" id="L382">				adaptedFocussedNode);</span>
+
+	}
+
+	public void removeHook(MindMapNode pFocussed, List pSelecteds,
+			String pHookName) {
+<span class="nc" id="L388">		HookNodeAction undoAction = createHookNodeAction(pFocussed, pSelecteds,</span>
+<span class="nc" id="L389">				pHookName, null);</span>
+
+<span class="nc" id="L391">		XmlAction doAction = null;</span>
+		// this is the non operation:
+<span class="nc" id="L393">		doAction = new CompoundAction();</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">		if (getInstanciationMethod(pHookName).isPermanent()) {</span>
+			// double application = remove.
+<span class="nc" id="L396">			doAction = createHookNodeUndoAction(pFocussed, pSelecteds,</span>
+<span class="nc" id="L397">					pHookName);</span>
+		}
+<span class="nc" id="L399">		getController().doTransaction(</span>
+<span class="nc" id="L400">				(String) getValue(NAME), new ActionPair(undoAction, doAction));</span>
+<span class="nc" id="L401">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (Failed Tests first) (11 May, 2016 1:00:36 PM)</div></body></html>

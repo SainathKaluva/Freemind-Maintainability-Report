@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>SDMetrics User Manual - Implementation of the Boolean Function</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel=stylesheet type="text/css" href="images/manlook.css">
+</head>
+<body>
+<table class="nav" width="100%"><tr><td class="nav" align="left"><a href="BoolFuncScenario.html">Prev</a> - <a href="BoolFuncUse.html">Next</a> - <a href="#pageBottom">Down</a><td class="nav" align="right"><a href="http://www.sdmetrics.com">SDMetrics - the UML design measurement tool</a></td></tr></table>
+<hr>
+<a href="index.html">Contents</a> > <a href="ExtendME.html">9 Extending the Metrics and Rule Engine</a> > <a href="CustBoolFunc.html">9.4 Boolean Functions</a> > 9.4.2 Implementation of the Boolean Function
+<hr>
+<h3><a name="BoolFuncImpl"></a>9.4.2 Implementation of the Boolean Function</h3>
+
+The following listing shows the complete implementation of the XOR function outlined
+in the previous section. The function successively evaluates the condition expressions
+passed as arguments to the XOR function. The result of the function is <code>true</code>
+if exactly one of the individual condition expressions is <code>true</code>:
+
+<pre>
+  package com.acme;
+
+  import com.sdmetrics.math.ExpressionNode;
+  import com.sdmetrics.metrics.BooleanOperation;
+  import com.sdmetrics.metrics.SDMetricsException;
+  import com.sdmetrics.metrics.Variables;
+  import com.sdmetrics.model.ModelElement;
+
+01 public class BooleanOperationXOR extends BooleanOperation {
+
+   @Override
+02 public boolean calculateValue(ModelElement element, 
+03                               ExpressionNode node,
+04                               Variables vars) 
+05                               throws SDMetricsException {
+
+06   int trueConditions = 0;
+07   int index = 0;
+08   while (index < node.getOperandCount() && trueConditions <= 1) {
+09     if (evalBooleanExpression(element, node.getOperand(index), vars)) {
+10       trueConditions++;
+       }
+11     index++;
+     }
+12   return trueConditions == 1;
+   }
+}
+</pre>
+
+Let's go through the salient points of this implementation line by line:
+<ul>
+<li>01: Boolean function classes must have public visibility, a default or no-argument 
+constructor, and extend the abstract class <tt>com.sdmetrics.metrics.BooleanOperation</tt>.
+<li>02: The base class defines the abstract method <tt>calculateValue</tt> which we must override. 
+Parameter <code>element</code> is the model element for which to evaluate the function.
+<li>03: Parameter <code>node</code> contains the operator tree for the function call. 
+The operands of the node represent the arguments passed into the function.
+<li>04: Parameter <code>vars</code> contains the values of the variables defined for the
+evaluation of the arguments to the function.
+<li>08: The XOR function in this example has an arbitrary number of arguments.
+Method <tt>getOperandCount()</tt> obtains the actual number of arguments passed to the
+function. Other functions may have a fixed number of arguments, in which case
+we would not need to determine the argument count. 
+<li>09: We use method <tt>evalBooleanExpression</tt> provided by the base class to
+evaluate the condition expressions that are passed as arguments to the XOR function,
+one by one.  
+Method <tt>node.getOperand(index)</tt> accesses the arguments to the XOR function
+by their index. The first argument has index 0, the second argument has index 1, and so on.
+<li>12: Boolean functions must return a value of type <code>boolean</code>. 
+</ul>
+
+<hr><a name="pageBottom"></a>
+<table class="nav" width="100%"><tr>
+<td width="40%" class="nav" align="left"><a href="BoolFuncScenario.html">Prev</a></td>
+<td width="20%" class="nav" align="center"><a href="CustBoolFunc.html">Up</a></td>
+<td width="40%" class="nav" align="right"><a href="BoolFuncUse.html">Next</a></td>
+</tr><tr><td class="nav" align="left">Section&nbsp;9.4.1 "Conception of a New Boolean Function"</td><td class="nav" align="center"><a href="index.html">Contents</a></td><td class="nav" align="right">Section&nbsp;9.4.3 "Using the New Boolean Function"</td></tr></table>
+
+</body>
+</html>

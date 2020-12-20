@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../.resources/report.gif" type="image/gif"/><title>ScriptingRegistration.java</title><link rel="stylesheet" href="../../../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../.sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">freemind (3 Jun, 2016 3:10:52 PM)</a> &gt; <a href="../../index.html" class="el_group">freemind</a> &gt; <a href="../index.html" class="el_bundle">freemind 1.0.0</a> &gt; <a href="index.source.html" class="el_package">plugins.script</a> &gt; <span class="el_source">ScriptingRegistration.java</span></div><h1>ScriptingRegistration.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">/**</span>
+ * 
+ */
+package plugins.script;
+
+import java.io.File;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Vector;
+
+import plugins.script.ScriptEditorPanel.ScriptHolder;
+import plugins.script.ScriptEditorPanel.ScriptModel;
+import plugins.script.ScriptingEngine.ErrorHandler;
+import freemind.common.BooleanProperty;
+import freemind.common.ScriptEditorProperty;
+import freemind.common.SeparatorProperty;
+import freemind.common.StringProperty;
+import freemind.common.TextTranslator;
+import freemind.controller.actions.generated.instance.Pattern;
+import freemind.controller.actions.generated.instance.ScriptEditorWindowConfigurationStorage;
+import freemind.extensions.HookRegistration;
+import freemind.main.FreeMind;
+import freemind.main.FreeMindMain.StartupDoneListener;
+import freemind.main.HtmlTools;
+import freemind.main.Tools;
+import freemind.main.Tools.BooleanHolder;
+import freemind.modes.MindMap;
+import freemind.modes.MindMapNode;
+import freemind.modes.ModeController;
+import freemind.modes.mindmapmode.MindMapController;
+import freemind.modes.mindmapmode.actions.ApplyPatternAction.ExternalPatternAction;
+import freemind.preferences.FreemindPropertyContributor;
+import freemind.preferences.layout.OptionPanel;
+
+public class ScriptingRegistration implements HookRegistration,
+		ExternalPatternAction, StartupDoneListener {
+
+	private static final class ScriptingPluginPropertyContributor implements
+			FreemindPropertyContributor {
+
+		private final MindMapController modeController;
+
+<span class="nc" id="L44">		public ScriptingPluginPropertyContributor(</span>
+				MindMapController modeController) {
+<span class="nc" id="L46">			this.modeController = modeController;</span>
+<span class="nc" id="L47">		}</span>
+
+		public List getControls(TextTranslator pTextTranslator) {
+<span class="nc" id="L50">			Vector controls = new Vector();</span>
+<span class="nc" id="L51">			controls.add(new OptionPanel.NewTabProperty(</span>
+<span class="nc" id="L52">					&quot;plugins/scripting/tab_name&quot;));</span>
+<span class="nc" id="L53">			controls.add(new SeparatorProperty(</span>
+<span class="nc" id="L54">					&quot;plugins/scripting/separatorPropertyName&quot;));</span>
+<span class="nc" id="L55">			controls.add(new BooleanProperty(</span>
+<span class="nc" id="L56">					FreeMind.RESOURCES_EXECUTE_SCRIPTS_WITHOUT_FILE_RESTRICTION</span>
+							+ &quot;.tooltip&quot;,
+<span class="nc" id="L58">					FreeMind.RESOURCES_EXECUTE_SCRIPTS_WITHOUT_FILE_RESTRICTION));</span>
+<span class="nc" id="L59">			controls.add(new BooleanProperty(</span>
+<span class="nc" id="L60">					FreeMind.RESOURCES_EXECUTE_SCRIPTS_WITHOUT_NETWORK_RESTRICTION</span>
+							+ &quot;.tooltip&quot;,
+<span class="nc" id="L62">					FreeMind.RESOURCES_EXECUTE_SCRIPTS_WITHOUT_NETWORK_RESTRICTION));</span>
+<span class="nc" id="L63">			controls.add(new BooleanProperty(</span>
+<span class="nc" id="L64">					FreeMind.RESOURCES_EXECUTE_SCRIPTS_WITHOUT_EXEC_RESTRICTION</span>
+							+ &quot;.tooltip&quot;,
+<span class="nc" id="L66">					FreeMind.RESOURCES_EXECUTE_SCRIPTS_WITHOUT_EXEC_RESTRICTION));</span>
+<span class="nc" id="L67">			controls.add(new BooleanProperty(</span>
+<span class="nc" id="L68">					FreeMind.RESOURCES_SIGNED_SCRIPT_ARE_TRUSTED + &quot;.tooltip&quot;,</span>
+<span class="nc" id="L69">					FreeMind.RESOURCES_SIGNED_SCRIPT_ARE_TRUSTED));</span>
+<span class="nc" id="L70">			controls.add(new StringProperty(</span>
+<span class="nc" id="L71">					FreeMind.RESOURCES_SCRIPT_USER_KEY_NAME_FOR_SIGNING</span>
+							+ &quot;.tooltip&quot;,
+<span class="nc" id="L73">					FreeMind.RESOURCES_SCRIPT_USER_KEY_NAME_FOR_SIGNING));</span>
+<span class="nc" id="L74">			return controls;</span>
+		}
+	}
+
+	private final class PatternScriptModel implements ScriptModel {
+
+		private String mScript;
+		private String mOriginalScript;
+
+<span class="nc" id="L83">		public PatternScriptModel(String pScript) {</span>
+<span class="nc" id="L84">			mScript = pScript;</span>
+<span class="nc" id="L85">			mOriginalScript = pScript;</span>
+<span class="nc" id="L86">		}</span>
+
+		public ScriptEditorWindowConfigurationStorage decorateDialog(
+				ScriptEditorPanel pPanel,
+				String pWindow_preference_storage_property) {
+<span class="nc" id="L91">			return (ScriptEditorWindowConfigurationStorage) controller</span>
+<span class="nc" id="L92">					.decorateDialog(pPanel, pWindow_preference_storage_property);</span>
+		}
+
+		public void endDialog(boolean pIsCanceled) {
+<span class="nc bnc" id="L96" title="All 2 branches missed.">			if (pIsCanceled) {</span>
+<span class="nc" id="L97">				mScript = mOriginalScript;</span>
+			}
+<span class="nc" id="L99">		}</span>
+
+		public boolean executeScript(int pIndex, PrintStream pOutStream,
+				ErrorHandler pErrorHandler) {
+<span class="nc" id="L103">			return ScriptingEngine.executeScript(controller.getSelected(),</span>
+<span class="nc" id="L104">					new BooleanHolder(true), mScript, controller,</span>
+<span class="nc" id="L105">					pErrorHandler, pOutStream, getScriptCookies());</span>
+		}
+
+		public int getAmountOfScripts() {
+<span class="nc" id="L109">			return 1;</span>
+		}
+
+		public ScriptHolder getScript(int pIndex) {
+<span class="nc" id="L113">			return new ScriptHolder(&quot;Script&quot;, mScript);</span>
+		}
+
+		public boolean isDirty() {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			return !Tools.safeEquals(mScript, mOriginalScript);</span>
+		}
+
+		public void setScript(int pIndex, ScriptHolder pScript) {
+<span class="nc" id="L121">			mScript = pScript.getScript();</span>
+<span class="nc" id="L122">		}</span>
+
+		public void storeDialogPositions(ScriptEditorPanel pPanel,
+				ScriptEditorWindowConfigurationStorage pStorage,
+				String pWindow_preference_storage_property) {
+<span class="nc" id="L127">			controller.storeDialogPositions(pPanel, pStorage,</span>
+<span class="nc" id="L128">					pWindow_preference_storage_property);</span>
+<span class="nc" id="L129">		}</span>
+
+		public String getScript() {
+<span class="nc" id="L132">			return mScript;</span>
+		}
+
+		public int addNewScript() {
+<span class="nc" id="L136">			return 0;</span>
+		}
+	}
+
+	private final MindMapController controller;
+	private final MindMap mMap;
+	private ScriptEditorProperty.ScriptEditorStarter mScriptEditorStarter;
+<span class="nc" id="L143">	private HashMap mScriptCookies = new HashMap();</span>
+	private ScriptingPluginPropertyContributor mScriptingPluginPropertyContributor;
+
+<span class="nc" id="L146">	public ScriptingRegistration(ModeController controller, MindMap map) {</span>
+<span class="nc" id="L147">		this.controller = (MindMapController) controller;</span>
+<span class="nc" id="L148">		mMap = map;</span>
+<span class="nc" id="L149">		ScriptingEngine.logger = controller.getFrame().getLogger(</span>
+<span class="nc" id="L150">				this.getClass().getName());</span>
+<span class="nc" id="L151">	}</span>
+
+	public void register() {
+<span class="nc" id="L154">		controller.registerPlugin(this);</span>
+<span class="nc" id="L155">		mScriptEditorStarter = new ScriptEditorProperty.ScriptEditorStarter() {</span>
+
+			public String startEditor(String pScriptInput) {
+<span class="nc" id="L158">				ScriptingEngine.logger.info(&quot;Start to edit script...&quot;</span>
+<span class="nc" id="L159">						+ pScriptInput);</span>
+<span class="nc" id="L160">				PatternScriptModel patternScriptModel = new PatternScriptModel(</span>
+<span class="nc" id="L161">						pScriptInput);</span>
+<span class="nc" id="L162">				ScriptEditorPanel scriptEditorPanel = new ScriptEditorPanel(</span>
+<span class="nc" id="L163">						patternScriptModel, controller.getFrame(), false);</span>
+<span class="nc" id="L164">				scriptEditorPanel.setVisible(true);</span>
+<span class="nc" id="L165">				return patternScriptModel.getScript();</span>
+			}
+		};
+<span class="nc" id="L168">		controller.registerPlugin(mScriptEditorStarter);</span>
+<span class="nc" id="L169">		mScriptingPluginPropertyContributor = new ScriptingPluginPropertyContributor(</span>
+<span class="nc" id="L170">				controller);</span>
+<span class="nc" id="L171">		OptionPanel.addContributor(mScriptingPluginPropertyContributor);</span>
+<span class="nc" id="L172">		controller.getFrame().registerStartupDoneListener(this);</span>
+<span class="nc" id="L173">	}</span>
+
+	public void deRegister() {
+<span class="nc" id="L176">		controller.deregisterPlugin(this);</span>
+<span class="nc" id="L177">		controller.deregisterPlugin(mScriptEditorStarter);</span>
+<span class="nc" id="L178">		OptionPanel.removeContributor(mScriptingPluginPropertyContributor);</span>
+<span class="nc" id="L179">	}</span>
+
+	public void act(MindMapNode node, Pattern pattern) {
+<span class="nc bnc" id="L182" title="All 2 branches missed.">		if (pattern.getPatternScript() != null</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">				&amp;&amp; pattern.getPatternScript().getValue() != null) {</span>
+<span class="nc" id="L184">			String scriptString = HtmlTools.toXMLUnescapedText(HtmlTools.unescapeHTMLUnicodeEntity(pattern</span>
+<span class="nc" id="L185">					.getPatternScript().getValue()));</span>
+<span class="nc" id="L186">			ScriptingEngine.logger.info(&quot;Executing script: &quot; +scriptString);</span>
+<span class="nc" id="L187">			executeScript(node, scriptString);</span>
+		}
+<span class="nc" id="L189">	}</span>
+
+	private void executeScript(MindMapNode node, String scriptString) {
+<span class="nc" id="L192">		ScriptingEngine.executeScript(node, new BooleanHolder(false),</span>
+<span class="nc" id="L193">				scriptString, controller, new ErrorHandler() {</span>
+					public void gotoLine(int pLineNumber) {
+<span class="nc" id="L195">					}</span>
+<span class="nc" id="L196">				}, System.out, getScriptCookies());</span>
+<span class="nc" id="L197">	}</span>
+
+	public HashMap getScriptCookies() {
+<span class="nc" id="L200">		return mScriptCookies;</span>
+	}
+
+	public void startupDone() {
+		/* Is there a startup groovy script? */
+<span class="nc" id="L205">		String startupScriptFile = System.getProperty(&quot;startup_groovy_script&quot;);</span>
+<span class="nc bnc" id="L206" title="All 4 branches missed.">		if (startupScriptFile != null &amp;&amp; !startupScriptFile.isEmpty()) {</span>
+<span class="nc" id="L207">			String expandFileName = Tools.expandFileName(startupScriptFile);</span>
+<span class="nc" id="L208">			ScriptingEngine.logger.info(&quot;Starting script at &quot; + expandFileName);</span>
+<span class="nc" id="L209">			String scriptString = Tools.getFile(new File(expandFileName));</span>
+<span class="nc bnc" id="L210" title="All 4 branches missed.">			if (scriptString != null &amp;&amp; !scriptString.isEmpty()) {</span>
+<span class="nc" id="L211">				ScriptingEngine.logger.info(&quot;Starting script &quot; + scriptString);</span>
+				try {
+<span class="nc" id="L213">					executeScript(controller.getRootNode(), scriptString);</span>
+<span class="nc" id="L214">				} catch (Exception e) {</span>
+<span class="nc" id="L215">					freemind.main.Resources.getInstance().logException(e);</span>
+				}
+<span class="nc" id="L217">			} else {</span>
+<span class="nc" id="L218">				ScriptingEngine.logger.warning(&quot;Starting script not found!&quot;);</span>
+			}
+		}
+<span class="nc" id="L221">	}</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.6.201602180812</span>freemind (3 Jun, 2016 3:10:52 PM)</div></body></html>
